@@ -5,6 +5,11 @@ import boto3
 import numpy as np
 import essentia.standard as es
 import logging
+from dotenv import load_dotenv
+
+# Load .env from the audioBackend folder
+env_path = os.path.join(os.path.dirname(__file__), "..", "audioBackend", ".env")
+load_dotenv(dotenv_path=env_path)
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -39,9 +44,9 @@ def download_from_s3(bucket: str, key: str, local_path: str) -> None:
     """Download a file from S3 to local path."""
     s3 = boto3.client(
         "s3",
-        aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
-        aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY"),
-        region_name=os.getenv("AWS_REGION", "us-east-1"),
+        aws_access_key_id=os.getenv("ACCESS_KEY_ID"),
+        aws_secret_access_key=os.getenv("SECRET_KEY"),
+        region_name=os.getenv("REGION", "ap-south-1"),
     )
     logger.info(f"Downloading s3://{bucket}/{key} -> {local_path}")
     try:

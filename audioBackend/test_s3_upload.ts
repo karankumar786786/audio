@@ -1,6 +1,7 @@
 import { AudioTranscoder } from "./src/lib/transcode/index";
 import { S3Service } from "./src/lib/storage/s3";
 import { RecombeeService } from "./src/lib/recommendation";
+import { AlgoliaService } from "./src/lib/search";
 import { config } from "dotenv";
 import * as path from "path";
 import * as fs from "fs";
@@ -128,9 +129,12 @@ export async function runAudioPipeline(
   const prodBucket = process.env.PROD_BUCKET_NAME || "videotranscodeprod";
   const basePath = process.env.BASE_PATH || "audios";
 
-  const recombeeDatabaseId = process.env.RECOMBEE_DATABASE_ID!;
-  const recombeeToken = process.env.RECOMBEE_PRIVATE_TOKEN!;
-  const recombeeRegion = process.env.RECOMBEE_REGION || "us-west";
+  const recombeeDatabaseId = process.env.RECOMBEE_DATABASE || "one-org-testaudio";
+  const recombeeToken = process.env.RECOMBEE_DATABASE_PRIVATE_TOKEN! || "Database private token";
+  const recombeeRegion = process.env.RECOMBEE_DATABASE_REGION || "eu-west";
+
+  const algoliaAppId = process.env.APP_ID!;
+  const algoliaApiKey = process.env.API_KEY!;
 
   const { key, itemId = key } = input;
   const filename = path.basename(key);
@@ -148,6 +152,12 @@ export async function runAudioPipeline(
     recombeeDatabaseId,
     recombeeToken,
     recombeeRegion
+  );
+  
+  const algoliaService = new AlgoliaService(
+    algoliaAppId, 
+    algoliaApiKey, 
+    "audios" // Assuming "audios" is the default search index name
   );
 
   try {
@@ -178,12 +188,22 @@ export async function runAudioPipeline(
     log("TRANSCODE", "✓ Transcription, transcoding, and prod upload complete");
 
     // ── 4. Extract audio features via FastAPI ───────────────────────────────
-    const features = await extractFeatures(prodBucket, `${prodS3Key}/index.m3u8`);
+    const features = await extractFeatures(tempBucket, key);
     log("FEATURES", `✓ 73-dim vector extracted (BPM: ${features.bpm.toFixed(1)})`);
 
     // ── 5. Save to Recombee ─────────────────────────────────────────────────
     await saveToRecombee(recombeeService, itemId, features, prodS3Key);
     log("RECOMBEE", `✓ Saved as item "${itemId}"`);
+
+    // ── 6. Save to Algolia ──────────────────────────────────────────────────
+    log("ALGOLIA", `Saving item ${itemId}`);
+    await algoliaService.save({
+      objectID: itemId,
+      s3Key: prodS3Key,
+      duration: features.duration,
+      bpm: features.bpm,
+    });
+    log("ALGOLIA", `✓ Saved as item "${itemId}"`);
 
     return {
       key,
