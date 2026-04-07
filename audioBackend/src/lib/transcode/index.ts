@@ -45,15 +45,15 @@ const WATCHER_CLOSE_DELAY_MS = 1500;
  *       └── audio/
  *           ├── 64kbps/
  *           │   ├── init.mp4
- *           │   ├── audio_00001.m4s
+ *           │   ├── 64kbps_00001.m4s
  *           │   └── playlist.m3u8
  *           ├── 128kbps/
  *           │   ├── init.mp4
- *           │   ├── audio_00001.m4s
+ *           │   ├── 128kbps_00001.m4s
  *           │   └── playlist.m3u8
  *           └── 320kbps/
  *               ├── init.mp4
- *               ├── audio_00001.m4s
+ *               ├── 320kbps_00001.m4s
  *               └── playlist.m3u8
  */
 export class AudioTranscoder {
@@ -225,7 +225,7 @@ export class AudioTranscoder {
                 `in=${toShaka(rawPath)}`,
                 `stream=audio`,
                 `init_segment=${toShaka(path.join(profileDir, "init.mp4"))}`,
-                `segment_template=${toShaka(path.join(profileDir, "audio_$Number%05d$.m4s"))}`,
+                `segment_template=${toShaka(path.join(profileDir, `${profile.label}_$Number%05d$.m4s`))}`,
                 `playlist_name=${toShaka(path.join(profileDir, "playlist.m3u8"))}`,
                 `hls_group_id=audio`,
                 `hls_name=${profile.label}`,

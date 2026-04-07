@@ -1,6 +1,8 @@
 import { AudioTranscoder } from "./src/lib/transcode/index";
 import { S3Service } from "./src/lib/storage/s3";
 import { config } from "dotenv";
+import * as path from "path";
+import * as fs from "fs";
 
 config();
 
@@ -8,31 +10,57 @@ async function run() {
     const region = process.env.REGION!;
     const accessKeyId = process.env.ACCESS_KEY_ID!;
     const secretAccessKey = process.env.SECRET_KEY!;
-    const bucketName = process.env.TEMP_BUCKET_NAME!; 
-    const basePath = process.env.BASE_PATH!;
+    
+    // Configurable buckets
+    const tempBucketName = process.env.TEMP_BUCKET_NAME || "videotranscodetemp"; 
+    const prodBucketName = process.env.PROD_BUCKET_NAME || "videotranscodeprod"; 
+    const basePath = process.env.BASE_PATH || "audios";
 
-    console.log("Initializing S3 with Region:", region, "Bucket:", bucketName);
+    // 1. You pass the S3 key as an argument, or use a default one
+    const tempS3Key = "Guru Randhawa - SIRRA ( Official Video ).m4a";
+
+    console.log(`Initializing S3 (Region: ${region})`);
 
     const s3Service = new S3Service(region, accessKeyId, secretAccessKey);
     const client = s3Service.getClient();
 
-    // The name of the folder created in S3 will be the basename of outputDir.
-    // So if outputDir is "./test_output_s3/song1", in S3 it will be <basePath>/song1
-    const inputAudio = "./Main Agar Saamne   Raaz   Dino Morea   Bipasha Basu   Abhijeet & Alka Yagnik   Hindi Hit Songs.m4a";
-    const outputDir = "./test_output_s3/Main_Agar_Saamne";
-    
-    const transcoder = new AudioTranscoder(
-        4, // segmentTime
-        client as any,
-        bucketName,
-        basePath
-    );
+    // Setup local paths
+    const localAudioPath = `./temp_downloads/${path.basename(tempS3Key)}`;
+    const outputDir = `./test_output_s3/${path.parse(tempS3Key).name}`;
 
     try {
-        await transcoder.transcode(inputAudio, outputDir);
-        console.log("Transcoding and S3 upload test successful!");
+        // 2. Download from Temporary Bucket
+        console.log(`\n⬇️ Downloading s3://${tempBucketName}/${tempS3Key} to ${localAudioPath}...`);
+        await s3Service.downloadObject(tempBucketName, tempS3Key, localAudioPath, (progress) => {
+            process.stdout.write(`\rDownloading: ${progress}%`);
+        });
+        console.log("\n✅ Download complete!");
+
+        // 3. Transcribe, Transcode, and Upload via AudioTranscoder
+        // The AudioTranscoder watcher automatically streams the files (including caption.json) to the Production bucket
+        console.log(`\n🎬 Starting transcoding pipeline (Target: s3://${prodBucketName}/${basePath})`);
+        const transcoder = new AudioTranscoder(
+            4, // segmentTime
+            client as any,
+            prodBucketName,
+            basePath
+        );
+
+        await transcoder.transcode(localAudioPath, outputDir);
+        console.log("\n✅ Transcoding, Transcription, and Production S3 upload completely successful!");
+
+        // 4. Local Cleanup
+        console.log("\n🧹 Cleaning up local files...");
+        fs.rmSync(localAudioPath, { force: true });
+        
+        // Sometimes you may want to keep the directory to inspect
+        // but as per the request, we completely wipe out the local files
+        fs.rmSync(outputDir, { recursive: true, force: true });
+        console.log("✅ Local cleanup complete!");
+
     } catch (e) {
-        console.error("Test failed:", e);
+        console.error("\n❌ Pipeline failed:", e);
     }
 }
+
 run();
