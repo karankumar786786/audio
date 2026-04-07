@@ -78,38 +78,93 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
     const audio = audioRef.current;
     if (!audio) return;
 
+    let destroyed = false;
+
     shaka.polyfill.installAll();
-    const player = new shaka.Player(audio);
+
+    if (!shaka.Player.isBrowserSupported()) {
+      console.warn('Shaka not supported, falling back to native audio');
+      audio.src = src;
+      audio.load();
+      setIsLoading(false);
+      return;
+    }
+
+    const player = new shaka.Player();
     playerRef.current = player;
 
-    player.addEventListener('error', (e: any) => console.error('Shaka:', e.detail));
+    player.configure({
+      streaming: {
+        retryParameters: {
+          maxAttempts: 4,
+          baseDelay: 1000,
+          backoffFactor: 2,
+          fuzzFactor: 0.5,
+          timeout: 30000,
+        },
+      },
+      manifest: {
+        retryParameters: {
+          maxAttempts: 4,
+          baseDelay: 1000,
+          backoffFactor: 2,
+          fuzzFactor: 0.5,
+          timeout: 30000,
+        },
+      },
+    });
+
+    player.addEventListener('error', (e: any) =>
+      console.error('Shaka error event:', e.detail)
+    );
 
     player.addEventListener('trackschanged', () => {
+      if (destroyed) return;
       const tracks: any[] = player.getVariantTracks();
-      const mapped: QualityTrack[] = tracks.map((t: any, i: number) => ({
+      const mapped: QualityTrack[] = tracks.map((t: any) => ({
         id: t.id,
         bandwidth: t.bandwidth,
-        label: t.bandwidth >= 1000000
-          ? `${Math.round(t.bandwidth / 1000000 * 10) / 10} Mbps`
-          : `${Math.round(t.bandwidth / 1000)} kbps`,
+        label:
+          t.bandwidth >= 1000000
+            ? `${Math.round((t.bandwidth / 1000000) * 10) / 10} Mbps`
+            : `${Math.round(t.bandwidth / 1000)} kbps`,
         active: t.active,
       }));
-      // dedupe by bandwidth, sort ascending
       const seen = new Set<number>();
-      const unique = mapped.filter(t => {
-        if (seen.has(t.bandwidth)) return false;
-        seen.add(t.bandwidth);
-        return true;
-      }).sort((a, b) => a.bandwidth - b.bandwidth);
+      const unique = mapped
+        .filter(t => {
+          if (seen.has(t.bandwidth)) return false;
+          seen.add(t.bandwidth);
+          return true;
+        })
+        .sort((a, b) => a.bandwidth - b.bandwidth);
       setQualityTracks(unique);
     });
 
-    setIsLoading(true);
-    player.load(src)
-      .then(() => setIsLoading(false))
-      .catch((e: any) => { console.error('Load error:', e); setIsLoading(false); });
+    const init = async () => {
+      try {
+        await player.attach(audio);
+        await player.load(src);
+        if (!destroyed) setIsLoading(false);
+      } catch (e: any) {
+        console.error('Shaka load failed (code', e?.code, '), falling back to native src:', e);
+        if (!destroyed) {
+          try { await player.detach(); } catch (_) {}
+          audio.src = src;
+          audio.load();
+          setIsLoading(false);
+          setQualityTracks([]);
+        }
+      }
+    };
 
-    return () => { player.destroy(); };
+    setIsLoading(true);
+    init();
+
+    return () => {
+      destroyed = true;
+      player.destroy();
+    };
   }, [src]);
 
   // RAF-based time sync
