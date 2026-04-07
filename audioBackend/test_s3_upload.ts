@@ -8,14 +8,10 @@ import * as fs from "fs";
 
 config();
 
-// ── Config ────────────────────────────────────────────────────────────────────
-
 const FEATURE_API_URL = process.env.FEATURE_API_URL || "http://localhost:8000";
 
 interface PipelineInput {
-  /** S3 key in the temp bucket (the raw upload) */
   key: string;
-  /** ID to use when saving to Recombee — defaults to the key */
   itemId?: string;
 }
 
@@ -24,10 +20,7 @@ interface PipelineResult {
   itemId: string;
   prodS3Path: string;
   recombeeItemId: string;
-  featureVector: number[];
 }
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
 
 function log(step: string, msg: string) {
   console.log(`[${step}] ${msg}`);
@@ -46,8 +39,6 @@ function safeRm(p: string) {
   }
 }
 
-// ── Step: Feature extraction via FastAPI ─────────────────────────────────────
-
 interface AudioFeatures {
   key: string;
   duration: number;
@@ -55,16 +46,9 @@ interface AudioFeatures {
   loudness: number;
   dynamic_complexity: number;
   bpm: number;
-  beats_count: number;
   spectral_centroid: number;
-  spectral_rolloff: number;
   spectral_flux: number;
   zero_crossing_rate: number;
-  mfcc_mean: number[];
-  mfcc_std: number[];
-  chroma_mean: number[];
-  mel_bands_mean: number[];
-  vector: number[];
 }
 
 async function extractFeatures(
@@ -87,8 +71,6 @@ async function extractFeatures(
   return res.json() as Promise<AudioFeatures>;
 }
 
-// ── Step: Save to Recombee ────────────────────────────────────────────────────
-
 async function saveToRecombee(
   recombee: RecombeeService,
   itemId: string,
@@ -96,7 +78,6 @@ async function saveToRecombee(
   s3Key: string
 ): Promise<void> {
   log("RECOMBEE", `Saving item ${itemId}`);
-
   await recombee.save({
     itemId,
     s3Key,
@@ -104,20 +85,11 @@ async function saveToRecombee(
     loudness: features.loudness,
     dynamicComplexity: features.dynamic_complexity,
     bpm: features.bpm,
-    beatsCount: features.beats_count,
     spectralCentroid: features.spectral_centroid,
-    spectralRolloff: features.spectral_rolloff,
     spectralFlux: features.spectral_flux,
     zeroCrossingRate: features.zero_crossing_rate,
-    // Recombee supports array properties — store the full vector for similarity
-    featureVector: features.vector,
-    mfccMean: features.mfcc_mean,
-    chromaMean: features.chroma_mean,
-    melBandsMean: features.mel_bands_mean,
   });
 }
-
-// ── Main pipeline ─────────────────────────────────────────────────────────────
 
 export async function runAudioPipeline(
   input: PipelineInput
@@ -129,39 +101,35 @@ export async function runAudioPipeline(
   const prodBucket = process.env.PROD_BUCKET_NAME || "videotranscodeprod";
   const basePath = process.env.BASE_PATH || "audios";
 
-  const recombeeDatabaseId = process.env.RECOMBEE_DATABASE || "one-org-testaudio";
-  const recombeeToken = process.env.RECOMBEE_DATABASE_PRIVATE_TOKEN! || "Database private token";
+  const recombeeDatabaseId = process.env.RECOMBEE_DATABASE!;
+  const recombeeToken = process.env.RECOMBEE_DATABASE_PRIVATE_TOKEN!;
   const recombeeRegion = process.env.RECOMBEE_DATABASE_REGION || "eu-west";
 
   const algoliaAppId = process.env.APP_ID!;
   const algoliaApiKey = process.env.API_KEY!;
 
-  const { key, itemId = key } = input;
+  const safeItemId = input.itemId || input.key.replace(/[^a-zA-Z0-9_\-]/g, "-");
+  const { key, itemId = safeItemId } = input;
   const filename = path.basename(key);
   const baseName = path.parse(filename).name;
 
   const localAudioPath = path.join("./temp_downloads", filename);
   const outputDir = path.join("./temp_output", baseName);
-
-  // The prod S3 key that AudioTranscoder will write to
   const prodS3Key = `${basePath}/${baseName}`;
 
   const s3Service = new S3Service(region, accessKeyId, secretAccessKey);
   const s3Client = s3Service.getClient();
+
   const recombeeService = new RecombeeService(
     recombeeDatabaseId,
     recombeeToken,
     recombeeRegion
   );
-  
-  const algoliaService = new AlgoliaService(
-    algoliaAppId, 
-    algoliaApiKey, 
-    "audios" // Assuming "audios" is the default search index name
-  );
+
+  const algoliaService = new AlgoliaService(algoliaAppId, algoliaApiKey, "audios");
 
   try {
-    // ── 1. Download from temp bucket ────────────────────────────────────────
+    // 1. Download from temp bucket
     log("DOWNLOAD", `s3://${tempBucket}/${key} → ${localAudioPath}`);
     fs.mkdirSync("./temp_downloads", { recursive: true });
 
@@ -170,32 +138,23 @@ export async function runAudioPipeline(
     });
     console.log("\n  ✓ Download complete");
 
-    // ── 2 & 3. Transcribe + transcode + upload to prod ──────────────────────
-    log(
-      "TRANSCODE",
-      `Starting pipeline → s3://${prodBucket}/${basePath}`
-    );
+    // 2. Transcode + upload to prod
+    log("TRANSCODE", `Starting pipeline → s3://${prodBucket}/${basePath}`);
     fs.mkdirSync(outputDir, { recursive: true });
 
-    const transcoder = new AudioTranscoder(
-      4,              // segmentTime (seconds)
-      s3Client as any,
-      prodBucket,
-      basePath
-    );
-
+    const transcoder = new AudioTranscoder(4, s3Client as any, prodBucket, basePath);
     await transcoder.transcode(localAudioPath, outputDir);
-    log("TRANSCODE", "✓ Transcription, transcoding, and prod upload complete");
+    log("TRANSCODE", "✓ Transcoding and prod upload complete");
 
-    // ── 4. Extract audio features via FastAPI ───────────────────────────────
+    // 3. Extract audio features
     const features = await extractFeatures(tempBucket, key);
-    log("FEATURES", `✓ 73-dim vector extracted (BPM: ${features.bpm.toFixed(1)})`);
+    log("FEATURES", `✓ Features extracted (BPM: ${features.bpm.toFixed(1)})`);
 
-    // ── 5. Save to Recombee ─────────────────────────────────────────────────
+    // 4. Save to Recombee
     await saveToRecombee(recombeeService, itemId, features, prodS3Key);
     log("RECOMBEE", `✓ Saved as item "${itemId}"`);
 
-    // ── 6. Save to Algolia ──────────────────────────────────────────────────
+    // 5. Save to Algolia
     log("ALGOLIA", `Saving item ${itemId}`);
     await algoliaService.save({
       objectID: itemId,
@@ -210,10 +169,8 @@ export async function runAudioPipeline(
       itemId,
       prodS3Path: `s3://${prodBucket}/${prodS3Key}`,
       recombeeItemId: itemId,
-      featureVector: features.vector,
     };
   } finally {
-    // ── Cleanup local temp files ────────────────────────────────────────────
     log("CLEANUP", "Removing local temp files…");
     safeRm(localAudioPath);
     safeRm(outputDir);
@@ -221,16 +178,13 @@ export async function runAudioPipeline(
   }
 }
 
-// ── CLI entrypoint ────────────────────────────────────────────────────────────
-
 async function main() {
-  // Accept key from CLI arg or env
   const key =
     process.argv[2] ||
     process.env.AUDIO_KEY ||
     "Guru Randhawa - SIRRA ( Official Video ).m4a";
 
-  const itemId = process.argv[3] || undefined; // optional explicit Recombee ID
+  const itemId = process.argv[3] || undefined;
 
   console.log(`\n🎵 Audio pipeline starting`);
   console.log(`   Key    : ${key}`);
@@ -238,15 +192,9 @@ async function main() {
 
   try {
     const result = await runAudioPipeline({ key, itemId });
-
     console.log("\n✅ Pipeline complete!");
     console.log("   Prod path     :", result.prodS3Path);
     console.log("   Recombee item :", result.recombeeItemId);
-    console.log(
-      "   Feature vector:",
-      `${result.featureVector.length} dims`,
-      `[${result.featureVector.slice(0, 4).map((v) => v.toFixed(3)).join(", ")}…]`
-    );
   } catch (err) {
     console.error("\n❌ Pipeline failed:", err);
     process.exit(1);
