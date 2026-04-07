@@ -1,0 +1,286 @@
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+Initializing S3 with Region: ap-south-1 Bucket: videotranscodetemp
+
+--- Starting Audio Transcoding Process ---
+Input:  ./Main Agar Saamne   Raaz   Dino Morea   Bipasha Basu   Abhijeet & Alka Yagnik   Hindi Hit Songs.m4a
+Output: ./test_output_s3/Main_Agar_Saamne
+
+📏 Duration: 322.06s — segment size: 4s
+
+👁  Watching ./test_output_s3/Main_Agar_Saamne for S3 uploads...
+   🎵 Transcoding audio → 64k AAC...
+   ✅ Audio transcoded → raw_audio_64kbps.m4a
+   🎵 Transcoding audio → 128k AAC...
+   ✅ Audio transcoded → raw_audio_128kbps.m4a
+   🎵 Transcoding audio → 320k AAC...
+   ✅ Audio transcoded → raw_audio_320kbps.m4a
+   📝 Generating transcription with Sarvam AI...
+Processing audio file: ./Main Agar Saamne   Raaz   Dino Morea   Bipasha Basu   Abhijeet & Alka Yagnik   Hindi Hit Songs.m4a
+Created job: 20260407_08b9f275-dcaf-4a41-8be5-86a15ac4dc71
+Uploading file...
+Starting job...
+Waiting for job to complete (this may take a few minutes)...
+Transcription successfully saved to: test_output_s3/Main_Agar_Saamne/caption.json
+   ✅ Transcription saved → caption.json
+   📦 Packaging with Shaka Packager...
+   ✅ MPD patched for VOD
+   ✅ Packaging complete
+👁  Watcher closed — waiting for in-flight uploads...
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/caption.json
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/64kbps/audio_00002.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/64kbps/audio_00004.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/64kbps/audio_00001.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/128kbps/audio_00003.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/128kbps/audio_00002.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/128kbps/audio_00004.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/128kbps/audio_00006.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/64kbps/audio_00003.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/320kbps/audio_00001.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/128kbps/audio_00001.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/128kbps/audio_00005.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/320kbps/audio_00005.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/320kbps/audio_00003.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/64kbps/audio_00006.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/64kbps/audio_00005.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/320kbps/audio_00006.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/64kbps/audio_00007.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/64kbps/audio_00023.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/128kbps/audio_00007.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/320kbps/audio_00010.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/320kbps/audio_00004.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/128kbps/audio_00020.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/64kbps/audio_00027.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/320kbps/audio_00027.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/64kbps/audio_00019.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/128kbps/audio_00018.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/64kbps/audio_00018.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/320kbps/audio_00016.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/128kbps/audio_00025.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/320kbps/audio_00012.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/320kbps/audio_00019.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/64kbps/audio_00010.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/320kbps/audio_00013.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/320kbps/audio_00015.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/128kbps/audio_00023.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/320kbps/audio_00014.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/320kbps/audio_00025.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/320kbps/audio_00002.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/128kbps/audio_00019.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/128kbps/audio_00026.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/64kbps/audio_00020.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/320kbps/audio_00018.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/320kbps/audio_00022.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/320kbps/audio_00020.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/128kbps/audio_00027.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/320kbps/audio_00021.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/320kbps/audio_00024.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/320kbps/audio_00009.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/128kbps/audio_00010.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/64kbps/audio_00021.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/128kbps/audio_00024.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/64kbps/audio_00017.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/128kbps/audio_00022.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/64kbps/audio_00030.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/64kbps/audio_00026.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/128kbps/audio_00021.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/320kbps/audio_00023.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/320kbps/audio_00017.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/64kbps/audio_00015.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/64kbps/audio_00022.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/320kbps/audio_00011.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/320kbps/audio_00026.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/64kbps/audio_00025.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/64kbps/audio_00011.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/128kbps/audio_00017.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/64kbps/audio_00024.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/64kbps/audio_00031.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/64kbps/audio_00029.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/128kbps/audio_00016.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/128kbps/audio_00014.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/64kbps/audio_00012.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/64kbps/audio_00014.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/64kbps/audio_00013.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/128kbps/audio_00029.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/64kbps/audio_00028.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/128kbps/audio_00011.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/128kbps/audio_00012.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/128kbps/audio_00028.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/64kbps/audio_00016.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/320kbps/audio_00046.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/128kbps/audio_00015.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/64kbps/audio_00040.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/64kbps/audio_00036.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/64kbps/audio_00037.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/64kbps/audio_00039.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/64kbps/audio_00008.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/128kbps/audio_00013.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/64kbps/audio_00042.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/128kbps/audio_00009.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/128kbps/audio_00050.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/320kbps/audio_00043.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/64kbps/audio_00044.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/320kbps/audio_00042.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/128kbps/audio_00038.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/320kbps/audio_00031.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/128kbps/audio_00040.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/128kbps/audio_00042.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/64kbps/audio_00038.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/128kbps/audio_00043.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/320kbps/audio_00032.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/64kbps/audio_00043.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/128kbps/audio_00041.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/128kbps/audio_00047.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/320kbps/audio_00047.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/128kbps/audio_00046.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/64kbps/audio_00049.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/320kbps/audio_00045.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/320kbps/audio_00040.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/64kbps/audio_00048.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/128kbps/audio_00037.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/128kbps/audio_00035.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/320kbps/audio_00041.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/128kbps/audio_00045.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/128kbps/audio_00034.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/320kbps/audio_00036.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/320kbps/audio_00033.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/128kbps/audio_00036.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/128kbps/audio_00051.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/320kbps/audio_00044.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/320kbps/audio_00037.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/320kbps/audio_00035.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/320kbps/audio_00038.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/64kbps/audio_00009.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/128kbps/audio_00008.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/320kbps/audio_00034.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/320kbps/audio_00039.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/128kbps/audio_00039.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/128kbps/audio_00048.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/64kbps/audio_00052.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/64kbps/audio_00053.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/128kbps/audio_00049.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/64kbps/audio_00045.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/320kbps/audio_00007.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/64kbps/audio_00046.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/64kbps/audio_00051.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/64kbps/audio_00050.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/128kbps/audio_00044.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/64kbps/audio_00047.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/320kbps/audio_00008.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/64kbps/audio_00070.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/64kbps/audio_00068.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/128kbps/audio_00033.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/128kbps/audio_00069.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/64kbps/audio_00035.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/64kbps/audio_00033.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/64kbps/audio_00066.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/320kbps/audio_00054.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/64kbps/audio_00067.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/320kbps/audio_00064.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/64kbps/audio_00072.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/128kbps/audio_00032.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/320kbps/audio_00028.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/64kbps/audio_00073.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/320kbps/audio_00029.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/64kbps/audio_00058.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/320kbps/audio_00055.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/64kbps/audio_00069.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/128kbps/audio_00030.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/320kbps/audio_00057.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/64kbps/audio_00041.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/320kbps/audio_00069.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/64kbps/audio_00032.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/128kbps/audio_00055.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/128kbps/audio_00056.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/320kbps/audio_00056.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/128kbps/audio_00057.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/64kbps/audio_00071.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/128kbps/audio_00074.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/128kbps/audio_00060.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/128kbps/audio_00062.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/128kbps/audio_00063.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/320kbps/audio_00053.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/128kbps/audio_00070.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/128kbps/audio_00065.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/128kbps/audio_00061.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/128kbps/audio_00075.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/128kbps/audio_00059.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/128kbps/audio_00071.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/128kbps/audio_00064.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/128kbps/audio_00058.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/128kbps/audio_00072.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/320kbps/audio_00030.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/128kbps/audio_00067.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/64kbps/audio_00064.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/64kbps/audio_00063.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/128kbps/audio_00073.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/128kbps/audio_00076.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/128kbps/audio_00066.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/64kbps/audio_00034.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/320kbps/audio_00066.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/64kbps/audio_00076.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/64kbps/audio_00074.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/64kbps/audio_00060.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/64kbps/audio_00061.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/64kbps/audio_00062.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/320kbps/audio_00058.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/320kbps/audio_00059.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/64kbps/audio_00075.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/320kbps/audio_00067.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/320kbps/audio_00063.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/320kbps/audio_00061.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/64kbps/audio_00059.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/320kbps/audio_00060.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/320kbps/audio_00068.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/128kbps/audio_00068.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/64kbps/audio_00065.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/128kbps/audio_00031.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/320kbps/init.mp4
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/320kbps/audio_00062.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/128kbps/init.mp4
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/320kbps/audio_00065.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/64kbps/init.mp4
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/320kbps/audio_00081.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/64kbps/audio_00081.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/320kbps/playlist.m3u8
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/128kbps/audio_00081.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/master.mpd
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/320kbps/audio_00048.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/64kbps/playlist.m3u8
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/320kbps/audio_00078.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/master.m3u8
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/320kbps/audio_00079.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/128kbps/audio_00053.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/320kbps/audio_00051.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/320kbps/audio_00080.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/64kbps/audio_00055.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/128kbps/playlist.m3u8
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/320kbps/audio_00050.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/64kbps/audio_00057.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/320kbps/audio_00052.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/128kbps/audio_00052.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/128kbps/audio_00054.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/64kbps/audio_00054.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/64kbps/audio_00056.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/320kbps/audio_00049.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/320kbps/audio_00077.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/320kbps/audio_00070.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/64kbps/audio_00077.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/64kbps/audio_00079.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/128kbps/audio_00078.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/128kbps/audio_00080.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/64kbps/audio_00078.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/320kbps/audio_00071.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/128kbps/audio_00079.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/64kbps/audio_00080.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/128kbps/audio_00077.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/320kbps/audio_00072.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/320kbps/audio_00073.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/320kbps/audio_00076.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/320kbps/audio_00075.m4s
+   ☁️  Uploaded → s3://videotranscodetemp/audios/Main_Agar_Saamne/audio/320kbps/audio_00074.m4s
+☁️  All uploads settled
+
+--- Audio Transcoding Completed ---
+Outputs: ./test_output_s3/Main_Agar_Saamne
+
+Transcoding and S3 upload test successful!

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--Generated with https://github.com/shaka-project/shaka-packager version v3.7.1-454f193-release-->
+<MPD xmlns="urn:mpeg:dash:schema:mpd:2011" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="urn:mpeg:dash:schema:mpd:2011 DASH-MPD.xsd" profiles="urn:mpeg:dash:profile:isoff-live:2011" minBufferTime="PT2S" type="static" mediaPresentationDuration="PT322.06076S">
+  <Period id="0">
+    <AdaptationSet id="0" contentType="audio" startWithSAP="1" segmentAlignment="true">
+      <Representation id="0" bandwidth="64000" codecs="mp4a.40.2" mimeType="audio/mp4" audioSamplingRate="44100">
+        <AudioChannelConfiguration schemeIdUri="urn:mpeg:dash:23003:3:audio_channel_configuration:2011" value="2"/>
+        <SegmentTemplate timescale="44100" initialization="audio/64kbps/init.mp4" media="audio/64kbps/audio_$Number%05d$.m4s" startNumber="1" duration="176400"/>
+      </Representation>
+      <Representation id="1" bandwidth="128000" codecs="mp4a.40.2" mimeType="audio/mp4" audioSamplingRate="44100">
+        <AudioChannelConfiguration schemeIdUri="urn:mpeg:dash:23003:3:audio_channel_configuration:2011" value="2"/>
+        <SegmentTemplate timescale="44100" initialization="audio/128kbps/init.mp4" media="audio/128kbps/audio_$Number%05d$.m4s" startNumber="1" duration="176400"/>
+      </Representation>
+      <Representation id="2" bandwidth="320000" codecs="mp4a.40.2" mimeType="audio/mp4" audioSamplingRate="44100">
+        <AudioChannelConfiguration schemeIdUri="urn:mpeg:dash:23003:3:audio_channel_configuration:2011" value="2"/>
+        <SegmentTemplate timescale="44100" initialization="audio/320kbps/init.mp4" media="audio/320kbps/audio_$Number%05d$.m4s" startNumber="1" duration="176400"/>
+      </Representation>
+    </AdaptationSet>
+  </Period>
+</MPD>

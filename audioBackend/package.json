@@ -1,0 +1,32 @@
+{
+  "name": "audiobackend",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "bun --watch src/index.ts",
+    "setup": "bun run setup/index.ts"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.1025.0",
+    "@neondatabase/serverless": "^1.0.2",
+    "algoliasearch": "^5.50.1",
+    "chokidar": "^5.0.0",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.1",
+    "express": "^5.2.1",
+    "helmet": "^8.1.0",
+    "p-limit": "^7.3.0",
+    "recombee-api-client": "^6.1.0",
+    "sarvamai": "^1.1.6",
+    "zod": "^4.3.6"
+  }
+}
