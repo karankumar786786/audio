@@ -6,7 +6,7 @@ export interface SongRecord {
     id: string;
     title: string;
     artistName: string;
-    timeInMs: number;
+    duration: number;
     songKey: string;
     imageKey: string;
     language: string;

@@ -36,9 +36,16 @@ export class SongController {
     async createSong(req: Request, res: Response, next: NextFunction) {
         const input: CreateSongInput = req.body;
         const tempId = signatureService.generateSignedId();
+
+        // Ensure project-local 'tmp' directory exists
+        const baseTmpDir = path.join(process.cwd(), "tmp");
+        if (!fs.existsSync(baseTmpDir)) {
+            fs.mkdirSync(baseTmpDir, { recursive: true });
+        }
         
-        const localDownloadPath = path.join(os.tmpdir(), `song-${Date.now()}-${path.basename(input.tempSongKey)}`);
-        const outputDir = path.join(os.tmpdir(), `transcode-${Date.now()}`);
+        const timestamp = Date.now();
+        const localDownloadPath = path.join(baseTmpDir, `${path.basename(tempId)}`);
+        const outputDir = path.join(baseTmpDir, `${timestamp}${tempId}`);
         
         try {
             console.log(`[PIPELINE] Starting for song: ${input.title} (ID: ${tempId})`);
@@ -81,7 +88,7 @@ export class SongController {
                 id: tempId,
                 title: input.title,
                 artistName: input.artistName,
-                timeInMs: input.timeInMs,
+                duration: features.duration,
                 songKey: prodSongKey,
                 imageKey: input.imageKey,
                 language: language,
@@ -99,7 +106,7 @@ export class SongController {
                 id: tempId,
                 title: input.title,
                 artistName: input.artistName,
-                timeInMs: input.timeInMs,
+                duration: features.duration,
                 songKey: prodSongKey,
                 imageKey: input.imageKey,
                 language: language,

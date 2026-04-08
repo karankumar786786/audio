@@ -20,7 +20,7 @@ export interface RecommendationSchema {
   id: string;
   title: string;
   artistName: string;
-  timeInMs: number;
+  duration: number;
   songKey: string;
   imageKey: string;
   loudness: number;
@@ -43,7 +43,7 @@ const SCHEMA_FIELDS: Record<
 > = {
   title: "string",
   artistName: "string",
-  timeInMs: "double",
+  duration: "double",
   songKey: "string",
   imageKey: "string",
   loudness: "double",

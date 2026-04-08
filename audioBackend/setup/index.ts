@@ -12,7 +12,7 @@ const sql = neon(`${process.env.DATABASE_URL}`);
       id VARCHAR(255) PRIMARY KEY,
       title VARCHAR(255) NOT NULL,
       artist_name VARCHAR(255) NOT NULL,
-      time_in_ms INT CHECK (time_in_ms > 0),
+      duration DOUBLE PRECISION NOT NULL,
       song_key TEXT NOT NULL,
       image_key TEXT NOT NULL,
       language VARCHAR(255) NOT NULL,

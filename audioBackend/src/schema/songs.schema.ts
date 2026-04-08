@@ -3,7 +3,6 @@ import { z } from "zod";
 export const CreateSongSchema = z.object({
   title: z.string().min(1, "Title is required"),
   artistName: z.string().min(1, "Artist name is required"),
-  timeInMs: z.number().positive("Time in ms must be positive"),
   tempSongKey: z.string().min(1, "Temporary song key is required"),
   imageKey: z.string().min(1, "Image key is required"),
 });
@@ -14,7 +13,7 @@ export const songSchema = z.object({
     id: z.string().optional(),
     title: z.string().min(1, { message: "title is required" }),
     artistName: z.string().min(1, { message: "artistName is required" }),
-    timeInMs: z.number().int().positive(),
+    duration: z.number().int().positive(),
     songKey: z.string().min(1, { message: "songKey is required" }),
     imageKey: z.string().min(1, { message: "imageKey is required" }),
     language: z.string().min(1, { message: "language is required" }),
