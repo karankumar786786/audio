@@ -8,7 +8,8 @@ import {
     transcodingService, 
     recommendationService, 
     searchService, 
-    signatureService 
+    signatureService, 
+    logger 
 } from "../infra";
 import type { CreateSongInput } from "../schema/songs.schema";
 import { ApiResponse } from "../utils/ApiResponse";
@@ -47,20 +48,20 @@ export class SongController {
         const outputDir = path.join(baseTmpDir, `${timestamp}${tempId}`);
         
         try {
-            console.log(`[PIPELINE] Starting for song: ${input.title} (ID: ${tempId})`);
+            logger.info(`[PIPELINE] Starting for song: ${input.title} (ID: ${tempId})`);
             await storageService.headObject(TEMP_BUCKET,input.tempSongKey);
             // 1. Download from Temp S3
-            console.log(`[STEP 1] Downloading s3://${TEMP_BUCKET}/${input.tempSongKey}`);
+            logger.info(`[STEP 1] Downloading s3://${TEMP_BUCKET}/${input.tempSongKey}`);
             await storageService.downloadObject(TEMP_BUCKET, input.tempSongKey, localDownloadPath);
 
             // 2. Transcode & Upload to Prod S3
             // The transcoder now handles transcription internally and returns the languageCode.
-            console.log(`[STEP 2] Transcoding, transcribing, and uploading to s3://${PROD_BUCKET}`);
+            logger.info(`[STEP 2] Transcoding, transcribing, and uploading to s3://${PROD_BUCKET}`);
             const languageCode = await transcodingService.transcode(localDownloadPath, outputDir);
             const language: string = languageMapper.getName(languageCode);
 
             // 3. Extract Audio Features (FastAPI)
-            console.log(`[STEP 3] Extracting features from FastAPI...`);
+            logger.info(`[STEP 3] Extracting features from FastAPI...`);
             const featureRes = await fetch(FEATURE_API_URL, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -78,7 +79,7 @@ export class SongController {
             const prodSongKey = `${process.env.BASE_PATH || "audios"}/${audioName}`;
 
             // 5. Index in Recombee
-            console.log(`[STEP 5] Indexing in Recombee...`);
+            logger.info(`[STEP 5] Indexing in Recombee...`);
             await recommendationService.create({
                 id: tempId,
                 title: input.title,
@@ -96,7 +97,7 @@ export class SongController {
             });
 
             // 6. Index in Algolia
-            console.log(`[STEP 6] Indexing in Algolia...`);
+            logger.info(`[STEP 6] Indexing in Algolia...`);
             await searchService.save({
                 id: tempId,
                 title: input.title,
@@ -107,7 +108,7 @@ export class SongController {
                 language: language,
             });
 
-            console.log(`[PIPELINE] Success! Song ID: ${tempId}`);
+            logger.info(`[PIPELINE] Success! Song ID: ${tempId}`);
 
             return res.status(201).json(new ApiResponse(201, "Song created and processed successfully", {
                 id: tempId,
@@ -117,7 +118,7 @@ export class SongController {
             }));
 
         } catch (error: any) {
-            console.error(`[PIPELINE] Failed:`, error);
+            logger.error(`[PIPELINE] Failed:`, error);
             next(error);
         } finally {
             // Cleanup
@@ -125,7 +126,7 @@ export class SongController {
                 if (fs.existsSync(localDownloadPath)) fs.unlinkSync(localDownloadPath);
                 if (fs.existsSync(outputDir)) fs.rmSync(outputDir, { recursive: true, force: true });
             } catch (cleanupError) {
-                console.error(`[CLEANUP] Warning: Failed to clean up temp files:`, cleanupError);
+                logger.error(cleanupError, `[CLEANUP] Warning: Failed to clean up temp files:`);
             }
         }
     }

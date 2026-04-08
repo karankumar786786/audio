@@ -34,10 +34,12 @@ export class AlgoliaService {
 
     private readonly client: SearchClient;
     private readonly indexName: string;
+    private readonly logger: any;
 
-    constructor(appId: string, apiKey: string, indexName: string) {
+    constructor(appId: string, apiKey: string, indexName: string, logger: any) {
         this.client = algoliasearch(appId, apiKey);
         this.indexName = indexName;
+        this.logger = logger;
     }
 
     async save(record: SearchRecord): Promise<string> {

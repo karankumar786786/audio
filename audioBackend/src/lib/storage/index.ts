@@ -1,5 +1,5 @@
-import * as fs from "fs";
-import * as path from "path";
+import * as fs from "node:fs";
+import * as path from "node:path";
 import {
     S3Client,
     PutObjectCommand,
@@ -9,16 +9,18 @@ import {
 } from "@aws-sdk/client-s3";
 
 export class S3Service {
+    private readonly logger: any;
 
     private readonly client: S3Client;
 
-    constructor(region: string, accessKeyId: string, secretAccessKey: string) {
+    constructor(region: string, accessKeyId: string, secretAccessKey: string, logger: any) {
         this.client = new S3Client({
             region,
             credentials: { accessKeyId, secretAccessKey },
             requestChecksumCalculation: "WHEN_SUPPORTED",
             responseChecksumValidation: "WHEN_SUPPORTED",
         });
+        this.logger = logger;
     }
 
     async uploadObject(
@@ -43,7 +45,7 @@ export class S3Service {
                 return;
             } catch (err: any) {
                 lastError = err;
-                console.warn(`⚠️  Upload attempt ${i + 1} failed for ${key}: ${err.message}`);
+                this.logger.warn(err, `⚠️  Upload attempt ${i + 1} failed for ${key}: ${err.message}`);
                 if (i < maxRetries - 1) {
                     await new Promise(r => setTimeout(r, 1000 * (i + 1))); // Exponential backoff
                 }

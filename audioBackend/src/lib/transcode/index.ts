@@ -5,7 +5,7 @@ import { promisify } from "node:util";
 import chokidar, { FSWatcher } from "chokidar";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import pLimit from "p-limit";
-import { generateTranscribe } from "../transcribeAudio";
+import { TranscriptionService } from "../transcribeAudio";
 
 const execFileAsync = promisify(execFile);
 
@@ -64,32 +64,38 @@ export class AudioTranscoder {
     private readonly pendingUploads = new Set<Promise<void>>();
     private readonly limit = pLimit(5);
     private readonly bucketName: string;
+    private readonly logger: any;
+    private readonly transcriptionService: TranscriptionService;
 
     constructor(
         segmentTime: number = 4,
         client: S3Client,
         basePath: string,
         bucketName: string,
+        logger: any,
+        transcriptionService: TranscriptionService
     ) {
         this.segmentTime = segmentTime;
         this.client = client;
         this.basePath = basePath;
         this.bucketName = bucketName;
+        this.logger = logger;
+        this.transcriptionService = transcriptionService;
     }
 
     // ── Public API ────────────────────────────────────────────────────────────
 
     async transcode(inputAudio: string, outputDir: string): Promise<string> {
-        console.log(`\n--- Starting Audio Transcoding Process ---`);
-        console.log(`Input:  ${inputAudio}`);
-        console.log(`Output: ${outputDir}\n`);
+        this.logger.info(`\n--- Starting Audio Transcoding Process ---`);
+        this.logger.info(`Input:  ${inputAudio}`);
+        this.logger.info(`Output: ${outputDir}\n`);
 
         fs.mkdirSync(outputDir, { recursive: true });
 
         const duration = await this.getAudioDuration(inputAudio);
         if (duration <= 0) throw new Error("Invalid audio duration, cannot transcode");
 
-        console.log(`📏 Duration: ${duration.toFixed(2)}s — segment size: ${this.segmentTime}s\n`);
+        this.logger.info(`📏 Duration: ${duration.toFixed(2)}s — segment size: ${this.segmentTime}s\n`);
 
         const audioName = path.basename(outputDir);
 
@@ -110,10 +116,10 @@ export class AudioTranscoder {
         // STEP 4 — Flush watcher, wait for all in-flight uploads
         await this.closeWatcher(watcher);
 
+        
+        this.logger.info(`\n--- Audio Transcoding Completed ---`);
+        this.logger.info(`Outputs: ${outputDir}\n`);
         return languageCode;
-
-        console.log(`\n--- Audio Transcoding Completed ---`);
-        console.log(`Outputs: ${outputDir}\n`);
     }
 
     // ── Private — Probing ─────────────────────────────────────────────────────
@@ -130,13 +136,13 @@ export class AudioTranscoder {
             audioPath,
         ]);
 
-        if (stderr) console.warn("ffprobe warning:", stderr);
+        if (stderr) this.logger.warn(`ffprobe warning: ${stderr}`);
 
         const data = JSON.parse(stdout);
         const duration = parseFloat(data.format?.duration ?? "0");
 
         if (duration === 0) {
-            console.error("ffprobe returned 0 duration. Output:", stdout);
+            this.logger.error(`ffprobe returned 0 duration. Output: ${stdout}`);
         }
 
         return duration;
@@ -154,7 +160,7 @@ export class AudioTranscoder {
 
         for (const profile of AUDIO_QUALITY_PROFILES) {
             const outPath = path.join(audioDir, `raw_audio_${profile.label}.m4a`);
-            console.log(`   🎵 Transcoding audio → ${profile.bitrate} AAC...`);
+            this.logger.info(`   🎵 Transcoding audio → ${profile.bitrate} AAC...`);
 
             const args = [
                 "-y",
@@ -171,10 +177,10 @@ export class AudioTranscoder {
 
             try {
                 await execFileAsync("ffmpeg", args);
-                console.log(`   ✅ Audio transcoded → ${path.basename(outPath)}`);
+                this.logger.info(`   ✅ Audio transcoded → ${path.basename(outPath)}`);
                 rawPaths.push(outPath);
             } catch (err: any) {
-                console.error(`   ❌ Failed to transcode audio:`, err.message ?? err);
+                this.logger.error(err, `   ❌ Failed to transcode audio: ${err.message ?? err}`);
                 throw err;
             }
         }
@@ -188,18 +194,18 @@ export class AudioTranscoder {
      * Failure is NON-FATAL — a warning is logged and transcoding continues.
      */
     private async generateCaptions(inputAudio: string, outputDir: string): Promise<string> {
-        console.log(`   📝 Generating transcription with Sarvam AI...`);
+        this.logger.info(`   📝 Generating transcription with Sarvam AI...`);
 
         // Emit at the same level as master files
         const jsonOut = path.join(outputDir, "caption.json");
 
         try {
-            const result = await generateTranscribe(inputAudio, jsonOut);
-            console.log(`   ✅ Transcription saved → caption.json`);
+            const result = await this.transcriptionService.generateTranscribe(inputAudio, jsonOut);
+            this.logger.info(`   ✅ Transcription saved → caption.json`);
             return result.languageCode;
         } catch (err: any) {
             // Transcription generation is optional — never fail the pipeline over it
-            console.warn(`   ⚠️  Transcription generation skipped (${err.message ?? err})`);
+            this.logger.warn(err, `   ⚠️  Transcription generation skipped (${err.message ?? err})`);
             return "unknown";
         }
     }
@@ -214,7 +220,7 @@ export class AudioTranscoder {
      *   - DASH manifest       (master.mpd)
      */
     private async runShakaPackager(outputDir: string, rawAudioPaths: string[]): Promise<void> {
-        console.log(`   📦 Packaging with Shaka Packager...`);
+        this.logger.info(`   📦 Packaging with Shaka Packager...`);
 
         const toShaka = (p: string) => p.replace(/\\/g, "/");
         const audioDir = path.join(outputDir, "audio");
@@ -258,9 +264,9 @@ export class AudioTranscoder {
         try {
             await execFileAsync("packager", args);
             await this.patchMpdForVod(path.join(outputDir, "master.mpd"));
-            console.log(`   ✅ Packaging complete`);
+            this.logger.info(`   ✅ Packaging complete`);
         } catch (err: any) {
-            console.error(`   ❌ Packaging failed:`, err.message ?? err);
+            this.logger.error(err, `   ❌ Packaging failed: ${err.message ?? err}`);
             throw err;
         }
     }
@@ -286,7 +292,7 @@ export class AudioTranscoder {
         }
 
         fs.writeFileSync(mpdPath, content, "utf-8");
-        console.log(`   ✅ MPD patched for VOD`);
+        this.logger.info(`   ✅ MPD patched for VOD`);
     }
 
     // ── Private — S3 upload ───────────────────────────────────────────────────
@@ -308,9 +314,9 @@ export class AudioTranscoder {
 
         watcher.on("add", (fp) => this.scheduleUpload(fp, outputDir, audioName, bucketName));
         watcher.on("change", (fp) => this.scheduleUpload(fp, outputDir, audioName, bucketName));
-        watcher.on("error", (err) => console.error("🔴 Watcher error:", err));
+        watcher.on("error", (err) => this.logger.error(err, "🔴 Watcher error:"));
 
-        console.log(`👁  Watching ${outputDir} for S3 uploads...`);
+        this.logger.info(`👁  Watching ${outputDir} for S3 uploads...`);
         return watcher;
     }
 
@@ -343,14 +349,14 @@ export class AudioTranscoder {
                     CacheControl: "no-transform",
                 }));
 
-                console.log(`   ☁️  Uploaded → s3://${bucketName}/${s3Key}`);
+                this.logger.info(`   ☁️  Uploaded → s3://${bucketName}/${s3Key}`);
                 return;
             } catch (err: any) {
-                console.warn(`   ⚠️  Upload attempt ${i + 1} failed for ${relPath}: ${err.message}`);
+                this.logger.warn(err, `   ⚠️  Upload attempt ${i + 1} failed for ${relPath}: ${err.message}`);
                 if (i < maxRetries - 1) {
                     await new Promise(r => setTimeout(r, 1000 * (i + 1)));
                 } else {
-                    console.error(`   ❌ Final upload failure for ${filePath}:`, err.message ?? err);
+                    this.logger.error(err, `   ❌ Final upload failure for ${filePath}: ${err.message ?? err}`);
                 }
             }
         }
@@ -375,11 +381,11 @@ export class AudioTranscoder {
             // Delay must exceed awaitWriteFinish.stabilityThreshold (500ms)
             setTimeout(() => {
                 watcher.close().then(async () => {
-                    console.log("👁  Watcher closed — waiting for in-flight uploads...");
+                    this.logger.info("👁  Watcher closed — waiting for in-flight uploads...");
                     if (this.pendingUploads.size > 0) {
                         await Promise.allSettled(Array.from(this.pendingUploads));
                     }
-                    console.log("☁️  All uploads settled");
+                    this.logger.info("☁️  All uploads settled");
                     resolve();
                 });
             }, WATCHER_CLOSE_DELAY_MS);

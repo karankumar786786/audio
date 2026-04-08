@@ -5,6 +5,7 @@ import { errorHandler } from "./middlewares/errorHandler";
 import { ApiError } from "./utils/ApiError";
 import helmet from "helmet";
 import {masterRouter} from "./router";
+import { logger } from "./infra";
 config();
 
 const app = express();
@@ -29,5 +30,5 @@ app.use((req, res, next) => {
 app.use(errorHandler);
 
 app.listen(Number(PORT),async ()=>{
-    console.log(`server started at port ${PORT}`);
+    logger.info(`server started at port ${PORT}`);
 })

@@ -58,13 +58,16 @@ const SCHEMA_FIELDS: Record<
 export class RecommendationServiceImpl implements RecommendationService<RecommendationSchema>{
   private readonly client: InstanceType<typeof ApiClient>;
   private readonly DEFAULT_TIMEOUT = 10_000;
+  private readonly logger: any;
 
   constructor(
     databaseId: string,
     privateToken: string,
-    region: string = "us-west"
+    region: string = "us-west",
+    logger: any
   ) {
     this.client = new ApiClient(databaseId, privateToken, { region });
+    this.logger = logger;
   }
 
   // ---------------------------------------------------------------------------
