@@ -10,14 +10,14 @@ export const CreateSongSchema = z.object({
 export type CreateSongInput = z.infer<typeof CreateSongSchema>;
 
 export const songSchema = z.object({
-    id: z.string().optional(),
-    title: z.string().min(1, { message: "title is required" }),
-    artistName: z.string().min(1, { message: "artistName is required" }),
-    duration: z.number().int().positive(),
-    songKey: z.string().min(1, { message: "songKey is required" }),
-    imageKey: z.string().min(1, { message: "imageKey is required" }),
-    language: z.string().min(1, { message: "language is required" }),
-    createdAt: z.string().datetime().optional(),
+  id: z.string().optional(),
+  title: z.string().min(1, { message: "title is required" }),
+  artistName: z.string().min(1, { message: "artistName is required" }),
+  duration: z.number().int().positive(),
+  songKey: z.string().min(1, { message: "songKey is required" }),
+  imageKey: z.string().min(1, { message: "imageKey is required" }),
+  language: z.string().min(1, { message: "language is required" }),
+  createdAt: z.string().datetime().optional(),
 });
 
 export type SongSchema = z.infer<typeof songSchema>;

@@ -1,5 +1,5 @@
 import { neon } from "@neondatabase/serverless";
-import {config} from "dotenv";
+import { config } from "dotenv";
 config();
 
 const sql = neon(`${process.env.DATABASE_URL}`);
@@ -19,7 +19,7 @@ const sql = neon(`${process.env.DATABASE_URL}`);
       created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
       )
       `;
-      
+
     await sql`
       CREATE TABLE IF NOT EXISTS artists (
         id VARCHAR(255) PRIMARY KEY,
@@ -136,6 +136,31 @@ const sql = neon(`${process.env.DATABASE_URL}`);
       )
     `
 
+    await sql`
+    CREATE TABLE IF NOT EXISTS song_processing_job (
+      id VARCHAR(255) PRIMARY KEY,
+      title VARCHAR(255) NOT NULL,
+      artist_name VARCHAR(255) NOT NULL,
+      duration DOUBLE PRECISION,
+      temp_song_key TEXT NOT NULL,
+      song_key TEXT,
+      image_key TEXT NOT NULL,
+      language VARCHAR(255),
+      sample_rate DOUBLE PRECISION,
+      loudness DOUBLE PRECISION,
+      dynamic_complexity DOUBLE PRECISION,
+      bpm DOUBLE PRECISION,
+      spectral_centroid DOUBLE PRECISION,
+      spectral_flux DOUBLE PRECISION,
+      zero_crossing_rate DOUBLE PRECISION,
+      transcoding_id VARCHAR(255),
+      transcoding_attempt INT DEFAULT 0,
+      transcribing_id VARCHAR(255),
+      transcribing_attempt INT DEFAULT 0,
+      status VARCHAR(50) NOT NULL DEFAULT 'pending'
+      CHECK (status IN ('pending', 'processing', 'completed'))
+    );
+    `;
     await sql`CREATE INDEX IF NOT EXISTS idx_artist_name ON songs(artist_name);`;
 
     console.log("✅ All tables created successfully");
