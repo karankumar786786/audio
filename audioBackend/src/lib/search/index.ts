@@ -1,10 +1,34 @@
 import { algoliasearch } from "algoliasearch";
 import type { SearchClient } from "algoliasearch";
 
-export interface AlgoliaRecord {
-    objectID?: string;
-    [key: string]: unknown;
+
+export interface SongRecord {
+    id: string;
+    title: string;
+    artistName: string;
+    timeInMs: number;
+    songUrl: string;
+    imageUrl: string;
+    language: string;
 }
+
+export interface ArtistRecord {
+    id: string;
+    name: string;
+    about: string;
+    dob: string;
+    coverImageUrl: string;
+    bannerImageUrl: string;
+}
+
+export interface SystemPlaylistRecord {
+    id: string;
+    name: string;
+    coverImageUrl: string;
+    bannerImageUrl: string;
+}
+
+export type SearchRecord = SongRecord | ArtistRecord | SystemPlaylistRecord;
 
 export class AlgoliaService {
 
@@ -12,22 +36,25 @@ export class AlgoliaService {
     private readonly indexName: string;
 
     constructor(appId: string, apiKey: string, indexName: string) {
-        this.client    = algoliasearch(appId, apiKey);
+        this.client = algoliasearch(appId, apiKey);
         this.indexName = indexName;
     }
 
-    async save(record: AlgoliaRecord): Promise<string> {
+    async save(record: SearchRecord): Promise<string> {
         const result = await this.client.saveObject({
             indexName: this.indexName,
-            body:      record,
+            body: {
+                ...record,
+                objectID: record.id,
+            },
         });
         if (!result.objectID) throw new Error("Algolia did not return an objectID");
         return result.objectID;
     }
 
-    async search<T = AlgoliaRecord>(query: string): Promise<T[]> {
+    async search<T = SearchRecord>(query: string): Promise<T[]> {
         const { hits } = await this.client.searchSingleIndex<T>({
-            indexName:    this.indexName,
+            indexName: this.indexName,
             searchParams: { query },
         });
         return hits;

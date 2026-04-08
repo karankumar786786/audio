@@ -8,9 +8,6 @@ const sql = neon(`${process.env.DATABASE_URL}`);
   try {
     // 🎵 SONGS
     await sql`
-    DROP TABLE IF EXISTS songs;
-    `;
-    await sql`
     CREATE TABLE IF NOT EXISTS songs (
       id VARCHAR(255) PRIMARY KEY,
       title VARCHAR(255) NOT NULL,
@@ -23,10 +20,6 @@ const sql = neon(`${process.env.DATABASE_URL}`);
       )
       `;
       
-      // 🎤 ARTISTS
-      await sql`
-      DROP TABLE IF EXISTS artists;
-      `;
     await sql`
       CREATE TABLE IF NOT EXISTS artists (
         id VARCHAR(255) PRIMARY KEY,
@@ -41,15 +34,11 @@ const sql = neon(`${process.env.DATABASE_URL}`);
 
     // 📀 SYSTEM PLAYLIST
     await sql`
-      DROP TABLE IF EXISTS system_playlists;
-      `;
-    await sql`
       CREATE TABLE IF NOT EXISTS system_playlists (
         id VARCHAR(255) PRIMARY KEY,
-        playlist_name VARCHAR(255) NOT NULL,
+        name VARCHAR(255) NOT NULL,
         coverImageUrl TEXT NOT NULL,
         bannerImageUrl TEXT NOT NULL,
-        about TEXT NOT NULL,
         created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
       )
@@ -124,7 +113,6 @@ const sql = neon(`${process.env.DATABASE_URL}`);
     `;
 
     // 🕑 USER HISTORY (no FK to user)
-    await sql`DROP TABLE IF EXISTS user_history;`;
     await sql`
       CREATE TABLE IF NOT EXISTS user_history (
         id VARCHAR(255) PRIMARY KEY,
