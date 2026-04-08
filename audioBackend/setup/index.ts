@@ -139,6 +139,7 @@ const sql = neon(`${process.env.DATABASE_URL}`);
     await sql`
     CREATE TABLE IF NOT EXISTS song_processing_job (
       id VARCHAR(255) PRIMARY KEY,
+      job_id VARCHAR(255),
       title VARCHAR(255) NOT NULL,
       artist_name VARCHAR(255) NOT NULL,
       duration DOUBLE PRECISION,

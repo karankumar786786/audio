@@ -36,6 +36,7 @@ interface AudioFeatures {
 export class SongController {
 
     async createSong(req: Request, res: Response, next: NextFunction) {
+        const jobId = signatureService.generateSignedId();
         const input: CreateSongInput = req.body;
         const tempId = signatureService.generateSignedId();
 

@@ -17,10 +17,11 @@ const sql = neon(`${process.env.DATABASE_URL}`);
         await sql`DROP TABLE IF EXISTS system_playlists CASCADE;`;
         await sql`DROP TABLE IF EXISTS artists CASCADE;`;
         await sql`DROP TABLE IF EXISTS songs CASCADE;`;
+        await sql`DROP TABLE IF EXISTS song_processing_job CASCADE;`;
 
 
 
-        console.log("✅ All tables created successfully");
+        console.log("✅ All tables deleted successfully");
     } catch (err) {
         console.error("❌ Error creating tables:", err);
     }

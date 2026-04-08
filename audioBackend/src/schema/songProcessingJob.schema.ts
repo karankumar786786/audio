@@ -4,6 +4,7 @@ export const SongProcessingJobStatusSchema = z.enum(['pending', 'processing', 'c
 
 export const SongProcessingJobSchema = z.object({
   id: z.string(),
+  jobId: z.string(),
   title: z.string().min(1, "Title is required"),
   artistName: z.string().min(1, "Artist name is required"),
   duration: z.number().optional().nullable(),

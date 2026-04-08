@@ -8,13 +8,14 @@ export class SongProcessingJobRepository {
     async create(data: CreateJobData): Promise<SongProcessingJob> {
         const [job] = await db`
             INSERT INTO song_processing_job (
-                id, title, artist_name, duration, temp_song_key, song_key, image_key, 
+                id, job_id,title, artist_name, duration, temp_song_key, song_key, image_key, 
                 language, sample_rate, loudness, dynamic_complexity, bpm, 
                 spectral_centroid, spectral_flux, zero_crossing_rate, 
                 transcoding_id, transcribing_id, status
             )
             VALUES (
                 ${data.id}, 
+                ${data.jobId},
                 ${data.title}, 
                 ${data.artistName},
                 ${data.duration ?? null}, 
@@ -94,6 +95,7 @@ export class SongProcessingJobRepository {
     private mapRow(row: Record<string, any>): SongProcessingJob {
         return {
             id: row.id,
+            jobId: row.job_id,
             title: row.title,
             artistName: row.artist_name,
             duration: row.duration,
