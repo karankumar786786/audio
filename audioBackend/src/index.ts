@@ -1,11 +1,14 @@
 import express from "express";
 import cors from "cors";
-import {config} from "dotenv";
+import { config } from "dotenv";
 import { errorHandler } from "./middlewares/errorHandler";
 import { ApiError } from "./utils/ApiError";
 import helmet from "helmet";
-import {masterRouter} from "./router";
+import { masterRouter } from "./router";
 import { logger } from "./infra";
+import { serve } from "inngest/express";
+import { inngest } from "./infra";
+import { functions } from "./inngest";
 config();
 
 const app = express();
@@ -19,6 +22,7 @@ app.use(helmet());
 app.use(express.urlencoded({ extended: true }));
 
 // Routes Implementation
+app.use("/api/inngest", serve({ client: inngest, functions }));
 app.use("/api/v1", masterRouter);
 
 // Not Found Route (should be AFTER all actual routes and BEFORE error handler)

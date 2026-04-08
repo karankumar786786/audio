@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const SongProcessingJobStatusSchema = z.enum(['pending', 'processing', 'completed']);
+export const SongProcessingJobStatusSchema = z.enum(['pending', 'processing', 'completed', 'failed', 'cancelled']);
 
 export const SongProcessingJobSchema = z.object({
   id: z.string(),

@@ -5,7 +5,8 @@
   "private": true,
   "scripts": {
     "dev": "bun --watch src/index.ts",
-    "setup": "bun run setup/index.ts"
+    "setup": "bun run setup/index.ts",
+    "inngest": "bunx inngest-cli@latest dev"
   },
   "devDependencies": {
     "@types/bun": "latest",
@@ -25,6 +26,7 @@
     "dotenv": "^17.4.1",
     "express": "^5.2.1",
     "helmet": "^8.1.0",
+    "inngest": "^4.2.0",
     "p-limit": "^7.3.0",
     "pino": "^10.3.1",
     "recombee-api-client": "^6.1.0",

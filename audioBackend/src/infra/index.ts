@@ -1,5 +1,6 @@
 import { config } from "dotenv";
 import { neon } from "@neondatabase/serverless";
+import {Inngest} from "inngest";
 config();
 
 import { AlgoliaService } from "../lib/search";
@@ -69,3 +70,5 @@ export const signatureService = new SignatureUtility(
 // Repositories
 export const songRepository = new SongRepository();
 export const songProcessingJobRepository = new SongProcessingJobRepository();
+
+export const inngest = new Inngest({id:"test-music"})
