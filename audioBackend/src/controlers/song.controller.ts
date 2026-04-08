@@ -45,7 +45,10 @@ export async function createSong(req: Request, res: Response, next: NextFunction
         tempSongKey: input.tempSongKey,
         imageKey: input.imageKey,
         savedInSearch: false,
-        savedInRecommendation: false
+        savedInRecommendation: false,
+        transcoded: false,
+        transcribed: false,
+        extractedFeatures: false
     });
 
     // Ensure project-local 'tmp' directory exists
@@ -72,6 +75,13 @@ export async function createSong(req: Request, res: Response, next: NextFunction
         // 2. Transcode & Upload segments to Prod S3
         logger.info(`[STEP 2] Transcoding and uploading multi-bitrate segments...`);
         await transcodingService.transcode(localDownloadPath, outputDir);
+        
+        const audioName = path.basename(outputDir);
+        await songProcessingJobRepository.update(songId, { 
+            transcodingAttempt: 1,
+            transcodingId: audioName,
+            transcoded: true
+        });
 
         // 3. Extract Audio Features (FastAPI)
         logger.info(`[STEP 3] Extracting spectral features via FastAPI...`);
@@ -80,16 +90,24 @@ export async function createSong(req: Request, res: Response, next: NextFunction
             bucket: TEMP_BUCKET,
         });
         const features = response.data as AudioFeatures;
+        
+        await songProcessingJobRepository.update(songId, { extractedFeatures: true });
 
         // 4. Transcription
-        const audioName = path.basename(outputDir);
         const prodSongKey = `${process.env.BASE_PATH || "audios"}/${audioName}`;
+        const captionPath = `${prodSongKey}/caption.json`;
         logger.info(`[STEP 4] Generating transcription and saving to S3...`);
         const { language } = await transcriptionService.generateTranscribe(
             localDownloadPath, 
             PROD_BUCKET, 
-            `${prodSongKey}/caption.json`
+            captionPath
         );
+        
+        await songProcessingJobRepository.update(songId, { 
+            transcribingAttempt: 1,
+            transcribingId: captionPath,
+            transcribed: true
+        });
 
         // Update Job with collected metadata
         await songProcessingJobRepository.update(songId, {

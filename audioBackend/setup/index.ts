@@ -17,7 +17,7 @@ const sql = neon(`${process.env.DATABASE_URL}`);
       image_key TEXT NOT NULL,
       language VARCHAR(255) NOT NULL,
       job_id VARCHAR(255) NOT NULL,
-      created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+      created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
       )
       `;
 
@@ -159,8 +159,11 @@ const sql = neon(`${process.env.DATABASE_URL}`);
       saved_in_recommendation BOOLEAN DEFAULT false,
       transcoding_id VARCHAR(255),
       transcoding_attempt INT DEFAULT 0,
+      transcoded BOOLEAN DEFAULT false,
       transcribing_id VARCHAR(255),
       transcribing_attempt INT DEFAULT 0,
+      transcribed BOOLEAN DEFAULT false,
+      extracted_features BOOLEAN DEFAULT false,
       status VARCHAR(50) NOT NULL DEFAULT 'pending'
       CHECK (status IN ('pending', 'processing', 'completed'))
     );
