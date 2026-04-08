@@ -5,6 +5,7 @@ import {
     PutObjectCommand,
     GetObjectCommand,
     DeleteObjectCommand,
+    HeadObjectCommand,
 } from "@aws-sdk/client-s3";
 
 export class S3Service {
@@ -96,5 +97,15 @@ export class S3Service {
     }
     getClient() {
         return this.client;
+    }
+
+    async headObject(bucket:string,key:string):Promise<void>{
+        const command = new HeadObjectCommand(
+            {
+                Key: key,
+                Bucket: bucket
+            }
+        );
+        await this.client.send(command);
     }
 }

@@ -2,6 +2,7 @@ import { type Request, type Response, type NextFunction } from "express";
 import * as path from "node:path";
 import * as fs from "node:fs";
 import {languageMapper} from "../utils/langugaeMapper.utils";
+
 import { 
     storageService, 
     transcodingService, 
@@ -47,7 +48,7 @@ export class SongController {
         
         try {
             console.log(`[PIPELINE] Starting for song: ${input.title} (ID: ${tempId})`);
-
+            await storageService.headObject(TEMP_BUCKET,input.tempSongKey);
             // 1. Download from Temp S3
             console.log(`[STEP 1] Downloading s3://${TEMP_BUCKET}/${input.tempSongKey}`);
             await storageService.downloadObject(TEMP_BUCKET, input.tempSongKey, localDownloadPath);
