@@ -1,13 +1,13 @@
 import { config } from "dotenv";
-import {neon} from "@neondatabase/serverless";
+import { neon } from "@neondatabase/serverless";
 config();
 
 import { AlgoliaService } from "../lib/search";
-import { S3Service } from "../lib/storage/s3";
+import { S3Service } from "../lib/storage";
 import { AudioTranscoder } from "../lib/transcode";
-import { RecommendationServiceImpl } from "../lib/recommendation/recombee";
-import { SignatureUtility } from "../lib/signature/signature";
-import { generateTranscribe } from "../lib/transcribeAudio/generateTranscribe";
+import { RecommendationServiceImpl } from "../lib/recommendation";
+import { SignatureUtility } from "../lib/signature";
+import { generateTranscribe } from "../lib/transcribeAudio";
 
 // Database export
 export const db = neon(`${process.env.DATABASE_URL}`);

@@ -5,7 +5,7 @@ import { promisify } from "node:util";
 import chokidar, { FSWatcher } from "chokidar";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import pLimit from "p-limit";
-import { generateTranscribe } from "../transcribeAudio/generateTranscribe";
+import { generateTranscribe } from "../transcribeAudio";
 
 const execFileAsync = promisify(execFile);
 
@@ -21,7 +21,7 @@ export interface AudioQualityProfile {
 
 /** Multi-bitrate AAC profiles used for audio transcoding. */
 export const AUDIO_QUALITY_PROFILES: AudioQualityProfile[] = [
-    { label: "64kbps",  bitrate: "64k",  sampleRate: 44100, channels: 2, bandwidth: 64000 },
+    { label: "64kbps", bitrate: "64k", sampleRate: 44100, channels: 2, bandwidth: 64000 },
     { label: "128kbps", bitrate: "128k", sampleRate: 44100, channels: 2, bandwidth: 128000 },
     { label: "320kbps", bitrate: "320k", sampleRate: 44100, channels: 2, bandwidth: 320000 },
 ];
@@ -109,7 +109,7 @@ export class AudioTranscoder {
 
         // STEP 4 — Flush watcher, wait for all in-flight uploads
         await this.closeWatcher(watcher);
-        
+
         return languageCode;
 
         console.log(`\n--- Audio Transcoding Completed ---`);
@@ -241,9 +241,9 @@ export class AudioTranscoder {
             ...streamDescriptors,
 
             // ── Global flags ─────────────────────────────────────────────────
-            "--mpd_output",                 toShaka(path.join(outputDir, "master.mpd")),
+            "--mpd_output", toShaka(path.join(outputDir, "master.mpd")),
             "--hls_master_playlist_output", toShaka(path.join(outputDir, "master.m3u8")),
-            "--segment_duration",           this.segmentTime.toString(),
+            "--segment_duration", this.segmentTime.toString(),
 
             // Forces type="static" VOD MPD
             "--generate_static_live_mpd",
@@ -306,9 +306,9 @@ export class AudioTranscoder {
             },
         });
 
-        watcher.on("add",    (fp) => this.scheduleUpload(fp, outputDir, audioName, bucketName));
+        watcher.on("add", (fp) => this.scheduleUpload(fp, outputDir, audioName, bucketName));
         watcher.on("change", (fp) => this.scheduleUpload(fp, outputDir, audioName, bucketName));
-        watcher.on("error",  (err) => console.error("🔴 Watcher error:", err));
+        watcher.on("error", (err) => console.error("🔴 Watcher error:", err));
 
         console.log(`👁  Watching ${outputDir} for S3 uploads...`);
         return watcher;
@@ -327,8 +327,8 @@ export class AudioTranscoder {
         bucketName: string,
         maxRetries = 10,
     ): Promise<void> {
-        const relPath     = path.relative(outputDir, filePath);
-        const s3Key       = `${this.basePath}/${audioName}/${relPath}`.replace(/\\/g, "/");
+        const relPath = path.relative(outputDir, filePath);
+        const s3Key = `${this.basePath}/${audioName}/${relPath}`.replace(/\\/g, "/");
         const contentType = this.resolveContentType(filePath);
 
         for (let i = 0; i < maxRetries; i++) {
@@ -360,11 +360,11 @@ export class AudioTranscoder {
         const ext = path.extname(filePath).toLowerCase();
         const map: Record<string, string> = {
             ".m3u8": "application/vnd.apple.mpegurl",
-            ".mpd":  "application/dash+xml",
-            ".mp4":  "audio/mp4",           // init.mp4
-            ".m4s":  "audio/mp4",           // CMAF audio segments
-            ".m4a":  "audio/mp4",
-            ".vtt":  "text/vtt",            // WebVTT captions
+            ".mpd": "application/dash+xml",
+            ".mp4": "audio/mp4",           // init.mp4
+            ".m4s": "audio/mp4",           // CMAF audio segments
+            ".m4a": "audio/mp4",
+            ".vtt": "text/vtt",            // WebVTT captions
             ".json": "application/json",    // JSON transcription
         };
         return map[ext] ?? "application/octet-stream";
