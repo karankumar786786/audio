@@ -2,31 +2,36 @@ import { SarvamAIClient } from "sarvamai";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import * as os from "node:os";
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import {languageMapper} from "./langugaeMapper.utils";
 
 export class TranscriptionService {
     private readonly logger: any;
     private readonly apiKey: string;
     private readonly client: SarvamAIClient;
+    private readonly s3Client: S3Client;
 
-    constructor(logger: any) {
+    constructor(
+        logger: any,
+        apiKey: string,
+        s3Client: S3Client
+    ) {
         this.logger = logger;
-        const apiKey = process.env.SARVAM_API_KEY;
-        if (!apiKey) {
-            throw new Error("SARVAM_API_KEY not found in environment variables");
-        }
         this.apiKey = apiKey;
         this.client = new SarvamAIClient({
             apiSubscriptionKey: this.apiKey
         });
+        this.s3Client = s3Client;
     }
 
     /**
-     * Generates transcription for a given audio file and saves it to a specified JSON file path.
+     * Generates transcription for a given audio file and uploads it to S3.
      *
      * @param audioFilePath - Absolute or relative path to the input audio file.
-     * @param outputJsonFilePath - Absolute or relative path where the final JSON transcription should be saved.
+     * @param bucketName    - The S3 bucket to upload to.
+     * @param key           - The S3 key (path) to save the JSON to.
      */
-    async generateTranscribe(audioFilePath: string, outputJsonFilePath: string): Promise<{ languageCode: string }> {
+    async generateTranscribe(audioFilePath: string, bucketName: string, key: string): Promise<{ language: string }> {
         if (!fs.existsSync(audioFilePath)) {
             throw new Error(`Audio file not found: ${audioFilePath}`);
         }
@@ -42,14 +47,14 @@ export class TranscriptionService {
         this.logger.info(`Created job: ${job.jobId}`);
 
         // Upload and process files
-        this.logger.info("Uploading file...");
+        this.logger.info("Uploading file to Sarvam AI...");
         await job.uploadFiles([audioFilePath]);
 
-        this.logger.info("Starting job...");
+        this.logger.info("Starting Sarvam AI job...");
         await job.start();
 
         // Wait for completion
-        this.logger.info("Waiting for job to complete (this may take a few minutes)...");
+        this.logger.info("Waiting for transcription job to complete...");
         await job.waitUntilComplete();
 
         // Check file-level results
@@ -66,7 +71,7 @@ export class TranscriptionService {
             throw new Error("Job completed but file was not marked as successful or failed.");
         }
 
-        // Download to a temporary directory
+        // Download to a temporary directory to extract content
         const tempOutputDir = fs.mkdtempSync(path.join(os.tmpdir(), "sarvam-transcribe-"));
 
         try {
@@ -81,23 +86,23 @@ export class TranscriptionService {
 
             const sourceJsonPath = path.join(tempOutputDir, jsonFile);
 
-            // Extract the languageCode
+            // Extract the languageCode and full content
             const transcriptionContent = fs.readFileSync(sourceJsonPath, "utf-8");
             const transcriptionData = JSON.parse(transcriptionContent);
             const languageCode = transcriptionData.language_code || "unknown";
 
-            // Ensure the target directory exists
-            const targetDir = path.dirname(outputJsonFilePath);
-            if (!fs.existsSync(targetDir)) {
-                fs.mkdirSync(targetDir, { recursive: true });
-            }
+            // Upload the JSON directly to S3
+            this.logger.info(`   ☁️  Uploading transcription JSON to s3://${bucketName}/${key}`);
+            await this.s3Client.send(new PutObjectCommand({
+                Bucket: bucketName,
+                Key: key,
+                Body: transcriptionContent,
+                ContentType: "application/json",
+                CacheControl: "no-transform",
+            }));
 
-            // Copy the JSON to the requested output path
-            fs.copyFileSync(sourceJsonPath, outputJsonFilePath);
-
-            this.logger.info(`Transcription successfully saved to: ${outputJsonFilePath}`);
-
-            return { languageCode };
+            this.logger.info(`   ✅ Transcription successfully saved to S3`);
+            return { language:languageMapper.getName(languageCode) };
         } finally {
             // Clean up the temporary directory
             fs.rmSync(tempOutputDir, { recursive: true, force: true });

@@ -5,7 +5,6 @@ import { promisify } from "node:util";
 import chokidar, { FSWatcher } from "chokidar";
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import pLimit from "p-limit";
-import { TranscriptionService } from "../transcribeAudio";
 
 const execFileAsync = promisify(execFile);
 
@@ -65,7 +64,6 @@ export class AudioTranscoder {
     private readonly limit = pLimit(5);
     private readonly bucketName: string;
     private readonly logger: any;
-    private readonly transcriptionService: TranscriptionService;
 
     constructor(
         segmentTime: number = 4,
@@ -73,19 +71,17 @@ export class AudioTranscoder {
         basePath: string,
         bucketName: string,
         logger: any,
-        transcriptionService: TranscriptionService
     ) {
         this.segmentTime = segmentTime;
         this.client = client;
         this.basePath = basePath;
         this.bucketName = bucketName;
         this.logger = logger;
-        this.transcriptionService = transcriptionService;
     }
 
     // ── Public API ────────────────────────────────────────────────────────────
 
-    async transcode(inputAudio: string, outputDir: string): Promise<string> {
+    async transcode(inputAudio: string, outputDir: string): Promise<void> {
         this.logger.info(`\n--- Starting Audio Transcoding Process ---`);
         this.logger.info(`Input:  ${inputAudio}`);
         this.logger.info(`Output: ${outputDir}\n`);
@@ -107,19 +103,19 @@ export class AudioTranscoder {
         fs.mkdirSync(audioDir, { recursive: true });
         const rawAudioPaths = await this.transcodeAudio(inputAudio, audioDir);
 
-        // STEP 2 — Generate JSON transcription via Sarvam AI (non-fatal)
-        const languageCode = await this.generateCaptions(inputAudio, outputDir);
 
-        // STEP 3 — Package → master.m3u8 + master.mpd
+        // STEP 2 — Package → master.m3u8 + master.mpd
         await this.runShakaPackager(outputDir, rawAudioPaths);
 
-        // STEP 4 — Flush watcher, wait for all in-flight uploads
+        // STEP 3 — Flush watcher, wait for all in-flight uploads
         await this.closeWatcher(watcher);
 
-        
+        // CLEANUP — Remove local transcoded files after upload
+        fs.rmSync(outputDir, { recursive: true, force: true });
+        this.logger.info(`🧹 Local transcoding directory cleaned up: ${outputDir}`);
+
         this.logger.info(`\n--- Audio Transcoding Completed ---`);
         this.logger.info(`Outputs: ${outputDir}\n`);
-        return languageCode;
     }
 
     // ── Private — Probing ─────────────────────────────────────────────────────
@@ -187,28 +183,6 @@ export class AudioTranscoder {
         return rawPaths;
     }
 
-    /**
-     * Calls the `generateTranscribe` function to generate a JSON transcription file from the audio.
-     * The resulting file is predictably named so the client can always locate it.
-     *
-     * Failure is NON-FATAL — a warning is logged and transcoding continues.
-     */
-    private async generateCaptions(inputAudio: string, outputDir: string): Promise<string> {
-        this.logger.info(`   📝 Generating transcription with Sarvam AI...`);
-
-        // Emit at the same level as master files
-        const jsonOut = path.join(outputDir, "caption.json");
-
-        try {
-            const result = await this.transcriptionService.generateTranscribe(inputAudio, jsonOut);
-            this.logger.info(`   ✅ Transcription saved → caption.json`);
-            return result.languageCode;
-        } catch (err: any) {
-            // Transcription generation is optional — never fail the pipeline over it
-            this.logger.warn(err, `   ⚠️  Transcription generation skipped (${err.message ?? err})`);
-            return "unknown";
-        }
-    }
 
     // ── Private — Shaka Packager ──────────────────────────────────────────────
 

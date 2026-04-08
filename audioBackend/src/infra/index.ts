@@ -33,7 +33,11 @@ export const storageService = new S3Service(
 );
 
 // Transcription Service
-export const transcriptionService = new TranscriptionService(logger);
+export const transcriptionService = new TranscriptionService(
+    logger,
+    `${process.env.SARVAM_API_KEY}`,
+    storageService.getClient()
+);
 
 // Transcoding Service
 export const transcodingService = new AudioTranscoder(
@@ -42,7 +46,6 @@ export const transcodingService = new AudioTranscoder(
     `${process.env.BASE_PATH}`,
     `${process.env.PRODUCTION_BUCKET_NAME}`,
     logger,
-    transcriptionService
 );
 
 // Recommendation Service
