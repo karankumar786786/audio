@@ -1,5 +1,5 @@
-import { db } from "../infra/db";
-import { type SongSchema } from "../schema/songs.schema";
+import { db } from "../infra";
+import type { SongSchema } from "../schema/songs.schema";
 import type { Repository } from "../type/repository.type";
 import { randomUUIDv7 } from "bun";
 
@@ -11,17 +11,15 @@ export class SongRepository implements Repository<SongSchema, CreateSongData, Up
     async create(data: CreateSongData): Promise<SongSchema> {
         const id = randomUUIDv7();
         const [song] = await db`
-            INSERT INTO songs (id, title, artist_name, time_in_ms, genre, song_url, image_url, language, algolia_object_id)
+            INSERT INTO songs (id, title, artist_name, time_in_ms, song_key, image_key, language)
             VALUES (
                 ${id},
                 ${data.title},
                 ${data.artistName},
                 ${data.timeInMs},
-                ${data.genre},
-                ${data.songUrl},
-                ${data.imageUrl},
-                ${data.language},
-                ${data.algoliaObjectId}
+                ${data.songKey},
+                ${data.imageKey},
+                ${data.language}
             )
             RETURNING *
         `;
@@ -46,14 +44,12 @@ export class SongRepository implements Repository<SongSchema, CreateSongData, Up
         const [song] = await db`
             UPDATE songs
             SET
-                title             = COALESCE(${data.title ?? null}, title),
-                artist_name       = COALESCE(${data.artistName ?? null}, artist_name),
-                time_in_ms        = COALESCE(${data.timeInMs ?? null}, time_in_ms),
-                genre             = COALESCE(${data.genre ?? null}, genre),
-                song_url          = COALESCE(${data.songUrl ?? null}, song_url),
-                image_url         = COALESCE(${data.imageUrl ?? null}, image_url),
-                language          = COALESCE(${data.language ?? null}, language),
-                algolia_object_id = COALESCE(${data.algoliaObjectId ?? null}, algolia_object_id)
+                title       = COALESCE(${data.title ?? null}, title),
+                artist_name = COALESCE(${data.artistName ?? null}, artist_name),
+                time_in_ms  = COALESCE(${data.timeInMs ?? null}, time_in_ms),
+                song_key    = COALESCE(${data.songKey ?? null}, song_key),
+                image_key   = COALESCE(${data.imageKey ?? null}, image_key),
+                language    = COALESCE(${data.language ?? null}, language)
             WHERE id = ${id}
             RETURNING *
         `;
@@ -77,11 +73,9 @@ export class SongRepository implements Repository<SongSchema, CreateSongData, Up
             title: row.title as string,
             artistName: row.artist_name as string,
             timeInMs: row.time_in_ms as number,
-            genre: row.genre as string,
-            songUrl: row.song_url as string,
-            imageUrl: row.image_url as string,
+            songKey: row.song_key as string,
+            imageKey: row.image_key as string,
             language: row.language as string,
-            algoliaObjectId: row.algolia_object_id as string,
             createdAt: (row.created_at as Date)?.toISOString(),
         };
     }

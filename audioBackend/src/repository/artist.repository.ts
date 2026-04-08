@@ -1,4 +1,4 @@
-import { db } from "../infra/db";
+import { db } from "../infra";
 import { type ArtistSchema } from "../schema/artist.schema";
 import type { Repository } from "../type/repository.type";
 import { randomUUIDv7 } from "bun";
@@ -11,12 +11,14 @@ export class ArtistRepository implements Repository<ArtistSchema, CreateArtistDa
     async create(data: CreateArtistData): Promise<ArtistSchema> {
         const id = randomUUIDv7();
         const [artist] = await db`
-            INSERT INTO artists (id, name, about, dob)
+            INSERT INTO artists (id, name, about, dob, cover_image_key, banner_image_key)
             VALUES (
                 ${id},
                 ${data.name},
                 ${data.about},
-                ${data.dob}
+                ${data.dob},
+                ${data.coverImageKey},
+                ${data.bannerImageKey}
             )
             RETURNING *
         `;
@@ -41,9 +43,11 @@ export class ArtistRepository implements Repository<ArtistSchema, CreateArtistDa
         const [artist] = await db`
             UPDATE artists
             SET
-                name  = COALESCE(${data.name ?? null}, name),
-                about = COALESCE(${data.about ?? null}, about),
-                dob   = COALESCE(${data.dob ?? null}, dob)
+                name              = COALESCE(${data.name ?? null}, name),
+                about             = COALESCE(${data.about ?? null}, about),
+                dob               = COALESCE(${data.dob ?? null}, dob),
+                cover_image_key   = COALESCE(${data.coverImageKey ?? null}, cover_image_key),
+                banner_image_key  = COALESCE(${data.bannerImageKey ?? null}, banner_image_key)
             WHERE id = ${id}
             RETURNING *
         `;
@@ -67,6 +71,8 @@ export class ArtistRepository implements Repository<ArtistSchema, CreateArtistDa
             name: row.name as string,
             about: row.about as string,
             dob: (row.dob as Date)?.toISOString(),
+            coverImageKey: row.cover_image_key as string,
+            bannerImageKey: row.banner_image_key as string,
             createdAt: (row.created_at as Date)?.toISOString(),
         };
     }

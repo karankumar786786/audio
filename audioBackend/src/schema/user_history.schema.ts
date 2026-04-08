@@ -5,7 +5,8 @@ export const userHistorySchema = z.object({
     id: z.string().optional(),
     userId: z.string().min(1, { message: "userId is required" }),
     songId: z.string().min(1, { message: "songId is required" }),
-    listenedAt: z.iso.datetime().optional(),
+    part: z.number().int().min(0),
+    listenedAt: z.string().datetime().optional(),
 });
 
 export type UserHistorySchema = z.infer<typeof userHistorySchema>;

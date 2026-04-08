@@ -1,4 +1,5 @@
 import { config } from "dotenv";
+import {neon} from "@neondatabase/serverless";
 config();
 
 import { AlgoliaService } from "../lib/search";
@@ -8,8 +9,8 @@ import { RecommendationServiceImpl } from "../lib/recommendation/recombee";
 import { SignatureUtility } from "../lib/signature/signature";
 import { generateTranscribe } from "../lib/transcribeAudio/generateTranscribe";
 
-// Database re-export
-export { db } from "./db";
+// Database export
+export const db = neon(`${process.env.DATABASE_URL}`);
 
 // Search Service
 export const searchService = new AlgoliaService(
@@ -29,8 +30,8 @@ export const storageService = new S3Service(
 export const transcodingService = new AudioTranscoder(
     6,
     storageService.getClient(),
-    `${process.env.PRODUCTION_BUCKET_NAME}`,
-    `${process.env.BASE_PATH}`
+    `${process.env.BASE_PATH}`,
+    `${process.env.PRODUCTION_BUCKET_NAME}`
 );
 
 // Recommendation Service

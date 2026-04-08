@@ -1,4 +1,4 @@
-import { db } from "../infra/db";
+import { db } from "../infra";
 import { type UserPlaylistSchema, type UserPlaylistSongSchema } from "../schema/user_playlist.schema";
 import type { Repository } from "../type/repository.type";
 import { randomUUIDv7 } from "bun";

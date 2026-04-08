@@ -1,4 +1,4 @@
-import { db } from "../infra/db";
+import { db } from "../infra";
 import { type SystemPlaylistSchema, type SystemPlaylistSongSchema } from "../schema/system_playlist.schema";
 import type { Repository } from "../type/repository.type";
 import { randomUUIDv7 } from "bun";
@@ -11,11 +11,12 @@ export class SystemPlaylistRepository implements Repository<SystemPlaylistSchema
     async create(data: CreatePlaylistData): Promise<SystemPlaylistSchema> {
         const id = randomUUIDv7();
         const [playlist] = await db`
-            INSERT INTO system_playlists (id, playlist_name, about)
+            INSERT INTO system_playlists (id, name, cover_image_key, banner_image_key)
             VALUES (
                 ${id},
-                ${data.playlistName},
-                ${data.about}
+                ${data.name},
+                ${data.coverImageKey},
+                ${data.bannerImageKey}
             )
             RETURNING *
         `;
@@ -40,9 +41,10 @@ export class SystemPlaylistRepository implements Repository<SystemPlaylistSchema
         const [playlist] = await db`
             UPDATE system_playlists
             SET
-                playlist_name = COALESCE(${data.playlistName ?? null}, playlist_name),
-                about         = COALESCE(${data.about ?? null}, about),
-                updated_at    = NOW()
+                name             = COALESCE(${data.name ?? null}, name),
+                cover_image_key  = COALESCE(${data.coverImageKey ?? null}, cover_image_key),
+                banner_image_key = COALESCE(${data.bannerImageKey ?? null}, banner_image_key),
+                updated_at       = NOW()
             WHERE id = ${id}
             RETURNING *
         `;
@@ -94,8 +96,9 @@ export class SystemPlaylistRepository implements Repository<SystemPlaylistSchema
     private mapRow(row: Record<string, any>): SystemPlaylistSchema {
         return {
             id: row.id as string,
-            playlistName: row.playlist_name as string,
-            about: row.about as string,
+            name: row.name as string,
+            coverImageKey: row.cover_image_key as string,
+            bannerImageKey: row.banner_image_key as string,
             createdAt: (row.created_at as Date)?.toISOString(),
             updatedAt: (row.updated_at as Date)?.toISOString(),
         };

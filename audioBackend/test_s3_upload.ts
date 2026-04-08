@@ -1,6 +1,6 @@
 import { AudioTranscoder } from "./src/lib/transcode/index";
 import { S3Service } from "./src/lib/storage/s3";
-import { RecombeeService } from "./src/lib/recommendation";
+import { RecombeeService } from ".";
 import { AlgoliaService } from "./src/lib/search";
 import { config } from "dotenv";
 import * as path from "path";

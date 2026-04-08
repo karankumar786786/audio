@@ -1,4 +1,4 @@
-import { db } from "../infra/db";
+import { db } from "../infra";
 import { type UserHistorySchema } from "../schema/user_history.schema";
 import type { Repository } from "../type/repository.type";
 import { randomUUIDv7 } from "bun";
@@ -11,11 +11,12 @@ export class UserHistoryRepository implements Repository<UserHistorySchema, Crea
     async create(data: CreateHistoryData): Promise<UserHistorySchema> {
         const id = randomUUIDv7();
         const [entry] = await db`
-            INSERT INTO user_history (id, user_id, song_id)
+            INSERT INTO user_history (id, user_id, song_id, part)
             VALUES (
                 ${id},
                 ${data.userId},
-                ${data.songId}
+                ${data.songId},
+                ${data.part}
             )
             RETURNING *
         `;
@@ -64,6 +65,7 @@ export class UserHistoryRepository implements Repository<UserHistorySchema, Crea
             id: row.id as string,
             userId: row.user_id as string,
             songId: row.song_id as string,
+            part: row.part as number,
             listenedAt: (row.listened_at as Date)?.toISOString(),
         };
     }

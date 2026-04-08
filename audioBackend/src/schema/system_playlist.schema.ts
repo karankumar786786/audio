@@ -2,10 +2,11 @@ import { z } from "zod";
 
 export const systemPlaylistSchema = z.object({
     id: z.string().optional(),
-    playlistName: z.string().min(1, { message: "playlistName is required" }),
-    about: z.string().min(1, { message: "about is required" }),
-    createdAt: z.iso.datetime().optional(),
-    updatedAt: z.iso.datetime().optional(),
+    name: z.string().min(1, { message: "name is required" }),
+    coverImageKey: z.string().min(1, { message: "coverImageKey is required" }),
+    bannerImageKey: z.string().min(1, { message: "bannerImageKey is required" }),
+    createdAt: z.string().datetime().optional(),
+    updatedAt: z.string().datetime().optional(),
 });
 
 export type SystemPlaylistSchema = z.infer<typeof systemPlaylistSchema>;

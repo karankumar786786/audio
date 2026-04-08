@@ -60,21 +60,21 @@ export class AudioTranscoder {
 
     private readonly segmentTime: number;
     private readonly client: S3Client;
-    private readonly bucketName: string;
     private readonly basePath: string;
     private readonly pendingUploads = new Set<Promise<void>>();
     private readonly limit = pLimit(5);
+    private readonly bucketName: string;
 
     constructor(
         segmentTime: number = 4,
         client: S3Client,
-        bucketName: string,
         basePath: string,
+        bucketName: string,
     ) {
         this.segmentTime = segmentTime;
         this.client = client;
-        this.bucketName = bucketName;
         this.basePath = basePath;
+        this.bucketName = bucketName;
     }
 
     // ── Public API ────────────────────────────────────────────────────────────
@@ -94,7 +94,7 @@ export class AudioTranscoder {
         const audioName = path.basename(outputDir);
 
         // Watch outputDir and stream new files to S3 as they appear
-        const watcher = this.watchAndUpload(outputDir, audioName);
+        const watcher = this.watchAndUpload(outputDir, audioName, this.bucketName);
 
         // STEP 1 — Transcode input → multi-bitrate AACs
         const audioDir = path.join(outputDir, "audio");
@@ -291,7 +291,7 @@ export class AudioTranscoder {
      * Watches outputDir with chokidar and uploads every new/changed file to S3.
      * The intermediate raw_audio.m4a is excluded from uploads.
      */
-    private watchAndUpload(outputDir: string, audioName: string): FSWatcher {
+    private watchAndUpload(outputDir: string, audioName: string, bucketName: string): FSWatcher {
         const watcher = chokidar.watch(outputDir, {
             persistent: true,
             ignoreInitial: false,           // upload files that already exist
@@ -302,16 +302,16 @@ export class AudioTranscoder {
             },
         });
 
-        watcher.on("add",    (fp) => this.scheduleUpload(fp, outputDir, audioName));
-        watcher.on("change", (fp) => this.scheduleUpload(fp, outputDir, audioName));
+        watcher.on("add",    (fp) => this.scheduleUpload(fp, outputDir, audioName, bucketName));
+        watcher.on("change", (fp) => this.scheduleUpload(fp, outputDir, audioName, bucketName));
         watcher.on("error",  (err) => console.error("🔴 Watcher error:", err));
 
         console.log(`👁  Watching ${outputDir} for S3 uploads...`);
         return watcher;
     }
 
-    private scheduleUpload(filePath: string, outputDir: string, audioName: string): void {
-        const p = this.limit(() => this.uploadFileToS3(filePath, outputDir, audioName))
+    private scheduleUpload(filePath: string, outputDir: string, audioName: string, bucketName: string): void {
+        const p = this.limit(() => this.uploadFileToS3(filePath, outputDir, audioName, bucketName))
             .finally(() => this.pendingUploads.delete(p));
         this.pendingUploads.add(p);
     }
@@ -320,6 +320,7 @@ export class AudioTranscoder {
         filePath: string,
         outputDir: string,
         audioName: string,
+        bucketName: string,
         maxRetries = 10,
     ): Promise<void> {
         const relPath     = path.relative(outputDir, filePath);
@@ -331,14 +332,14 @@ export class AudioTranscoder {
                 const body = fs.readFileSync(filePath);
 
                 await this.client.send(new PutObjectCommand({
-                    Bucket: this.bucketName,
+                    Bucket: bucketName,
                     Key: s3Key,
                     Body: body,
                     ContentType: contentType,
                     CacheControl: "no-transform",
                 }));
 
-                console.log(`   ☁️  Uploaded → s3://${this.bucketName}/${s3Key}`);
+                console.log(`   ☁️  Uploaded → s3://${bucketName}/${s3Key}`);
                 return;
             } catch (err: any) {
                 console.warn(`   ⚠️  Upload attempt ${i + 1} failed for ${relPath}: ${err.message}`);
@@ -372,7 +373,7 @@ export class AudioTranscoder {
                 watcher.close().then(async () => {
                     console.log("👁  Watcher closed — waiting for in-flight uploads...");
                     if (this.pendingUploads.size > 0) {
-                        await Promise.allSettled([...this.pendingUploads]);
+                        await Promise.allSettled(Array.from(this.pendingUploads));
                     }
                     console.log("☁️  All uploads settled");
                     resolve();
