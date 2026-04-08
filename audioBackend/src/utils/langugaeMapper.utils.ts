@@ -272,8 +272,8 @@ export class LanguageMapper {
    * @example
    * mapper.getName("pa-IN") // "Punjabi"
    */
-  getName(code: string): string | null {
-    return this.getInfo(code)?.name ?? null;
+  getName(code: string): string | "unknown" {
+    return this.getInfo(code)?.name ?? "unknown";
   }
 
   /**
@@ -337,4 +337,4 @@ export class LanguageMapper {
 // ─── Singleton export ─────────────────────────────────────────────────────────
 
 /** Pre-built singleton — import and use directly without instantiation. */
-export const sarvamLanguageMapper = new LanguageMapper();
+export const languageMapper = new LanguageMapper();

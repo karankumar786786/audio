@@ -2,6 +2,7 @@ import { type Request, type Response, type NextFunction } from "express";
 import * as path from "node:path";
 import * as fs from "node:fs";
 import * as os from "node:os";
+import {languageMapper} from "../utils/langugaeMapper.utils";
 import { 
     storageService, 
     transcodingService, 
@@ -69,7 +70,7 @@ export class SongController {
             // 4. Transcribe (Sarvam AI)
             console.log(`[STEP 4] Transcribing audio...`);
             const { languageCode } = await transcribeAudio(localDownloadPath, path.join(outputDir, "transcription.json"));
-
+            const language:string = languageMapper.getName(languageCode);
             // Use the basename of outputDir as the identifier in S3 if transcoder uses it
             const audioName = path.basename(outputDir);
             const prodSongKey = `${process.env.BASE_PATH || "audios"}/${audioName}`;
@@ -83,7 +84,7 @@ export class SongController {
                 timeInMs: input.timeInMs,
                 songKey: prodSongKey,
                 imageKey: input.imageKey,
-                language: languageCode,
+                language: language,
                 bpm: features.bpm,
                 loudness: features.loudness,
                 dynamicComplexity: features.dynamic_complexity,
@@ -101,7 +102,7 @@ export class SongController {
                 timeInMs: input.timeInMs,
                 songKey: prodSongKey,
                 imageKey: input.imageKey,
-                language: languageCode,
+                language: language,
             });
 
             console.log(`[PIPELINE] Success! Song ID: ${tempId}`);
@@ -109,7 +110,7 @@ export class SongController {
             return res.status(201).json(new ApiResponse(201, "Song created and processed successfully", {
                 id: tempId,
                 songKey: prodSongKey,
-                languageCode,
+                language,
                 features
             }));
 
