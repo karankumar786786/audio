@@ -91,7 +91,17 @@ export async function createSong(req: Request, res: Response, next: NextFunction
         });
         const features = response.data as AudioFeatures;
         
-        await songProcessingJobRepository.update(songId, { extractedFeatures: true });
+        await songProcessingJobRepository.update(songId, {
+            duration: features.duration,
+            sampleRate: features.sample_rate,
+            loudness: features.loudness,
+            dynamicComplexity: features.dynamic_complexity,
+            bpm: features.bpm,
+            spectralCentroid: features.spectral_centroid,
+            spectralFlux: features.spectral_flux,
+            zeroCrossingRate: features.zero_crossing_rate,
+            extractedFeatures: true
+        });
 
         // 4. Transcription
         const prodSongKey = `${process.env.BASE_PATH || "audios"}/${audioName}`;
@@ -111,15 +121,7 @@ export async function createSong(req: Request, res: Response, next: NextFunction
 
         // Update Job with collected metadata
         await songProcessingJobRepository.update(songId, {
-            duration: features.duration,
             language: language,
-            sampleRate: features.sample_rate,
-            loudness: features.loudness,
-            dynamicComplexity: features.dynamic_complexity,
-            bpm: features.bpm,
-            spectralCentroid: features.spectral_centroid,
-            spectralFlux: features.spectral_flux,
-            zeroCrossingRate: features.zero_crossing_rate,
             songKey: prodSongKey
         });
 
