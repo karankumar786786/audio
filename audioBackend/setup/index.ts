@@ -8,36 +8,47 @@ const sql = neon(`${process.env.DATABASE_URL}`);
   try {
     // 🎵 SONGS
     await sql`
-      CREATE TABLE IF NOT EXISTS songs (
-        id VARCHAR(255) PRIMARY KEY,
-        title VARCHAR(255) NOT NULL,
-        artist_name VARCHAR(255) NOT NULL,
-        time_in_ms INT CHECK (time_in_ms > 0),
-        genre VARCHAR(255) NOT NULL,
-        song_url TEXT NOT NULL,
-        image_url TEXT NOT NULL,
-        language VARCHAR(255) NOT NULL,
-        algolia_object_id VARCHAR(255) NOT NULL,
-        created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
-      )
+    DROP TABLE IF EXISTS songs;
     `;
-
-    // 🎤 ARTISTS
+    await sql`
+    CREATE TABLE IF NOT EXISTS songs (
+      id VARCHAR(255) PRIMARY KEY,
+      title VARCHAR(255) NOT NULL,
+      artist_name VARCHAR(255) NOT NULL,
+      time_in_ms INT CHECK (time_in_ms > 0),
+      song_url TEXT NOT NULL,
+      image_url TEXT NOT NULL,
+      language VARCHAR(255) NOT NULL,
+      created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+      )
+      `;
+      
+      // 🎤 ARTISTS
+      await sql`
+      DROP TABLE IF EXISTS artists;
+      `;
     await sql`
       CREATE TABLE IF NOT EXISTS artists (
         id VARCHAR(255) PRIMARY KEY,
         name VARCHAR(255) NOT NULL,
         about TEXT NOT NULL,
         dob TIMESTAMPTZ NOT NULL,
+        coverImageUrl TEXT NOT NULL,
+        bannerImageUrl TEXT NOT NULL,
         created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
       )
     `;
 
     // 📀 SYSTEM PLAYLIST
     await sql`
+      DROP TABLE IF EXISTS system_playlists;
+      `;
+    await sql`
       CREATE TABLE IF NOT EXISTS system_playlists (
         id VARCHAR(255) PRIMARY KEY,
         playlist_name VARCHAR(255) NOT NULL,
+        coverImageUrl TEXT NOT NULL,
+        bannerImageUrl TEXT NOT NULL,
         about TEXT NOT NULL,
         created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
@@ -97,12 +108,29 @@ const sql = neon(`${process.env.DATABASE_URL}`);
       )
     `;
 
+    await sql`
+      CREATE TABLE IF NOT EXISTS user_favourite_songs (
+        id VARCHAR(255) PRIMARY KEY,
+        user_id VARCHAR(255) NOT NULL,
+        song_id VARCHAR(255) NOT NULL,
+
+        CONSTRAINT fk_user_favourite_song
+          FOREIGN KEY (song_id)
+          REFERENCES songs(id)
+          ON DELETE CASCADE,
+
+        CONSTRAINT unique_user_favourite_song UNIQUE (user_id, song_id)
+      )
+    `;
+
     // 🕑 USER HISTORY (no FK to user)
+    await sql`DROP TABLE IF EXISTS user_history;`;
     await sql`
       CREATE TABLE IF NOT EXISTS user_history (
         id VARCHAR(255) PRIMARY KEY,
         user_id VARCHAR(255) NOT NULL,
         song_id VARCHAR(255) NOT NULL,
+        part INT NOT NULL,
         listened_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 
         CONSTRAINT fk_history_song
@@ -111,8 +139,16 @@ const sql = neon(`${process.env.DATABASE_URL}`);
           ON DELETE CASCADE
       )
     `;
+
+    await sql`
+      CREATE TABLE IF NOT EXISTS user_search_history(
+      id VARCHAR(255) PRIMARY KEY,
+      user_id VARCHAR(255) NOT NULL,
+      searched_text VARCHAR(255) NOT NULL
+      )
+    `
+
     await sql`CREATE INDEX IF NOT EXISTS idx_artist_name ON songs(artist_name);`;
-    await sql`CREATE INDEX IF NOT EXISTS idx_song_genre ON songs(genre);`;
 
     console.log("✅ All tables created successfully");
   } catch (err) {

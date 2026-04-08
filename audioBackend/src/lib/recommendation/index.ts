@@ -11,7 +11,11 @@ export class RecombeeService {
 
     private readonly client: InstanceType<typeof ApiClient>;
 
-    constructor(databaseId: string, privateToken: string, region: string = "us-west") {
+    constructor(
+        databaseId: string,
+        privateToken: string,
+        region: string = "us-west"
+        ) {
         this.client = new ApiClient(databaseId, privateToken, { region });
     }
 
