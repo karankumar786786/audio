@@ -1,12 +1,10 @@
 import { type Request, type Response, type NextFunction } from "express";
 import * as path from "node:path";
 import * as fs from "node:fs";
-import * as os from "node:os";
 import {languageMapper} from "../utils/langugaeMapper.utils";
 import { 
     storageService, 
     transcodingService, 
-    transcribeAudio, 
     recommendationService, 
     searchService, 
     signatureService 
