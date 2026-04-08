@@ -10,7 +10,7 @@ import * as os from "node:os";
  * @param audioFilePath - Absolute or relative path to the input audio file.
  * @param outputJsonFilePath - Absolute or relative path where the final JSON transcription should be saved.
  */
-export async function generateTranscribe(audioFilePath: string, outputJsonFilePath: string): Promise<void> {
+export async function generateTranscribe(audioFilePath: string, outputJsonFilePath: string): Promise<{ languageCode: string }> {
     const apiKey = process.env.SARVAM_API_KEY;
     if (!apiKey) {
         throw new Error("SARVAM_API_KEY not found in environment variables");
@@ -75,6 +75,11 @@ export async function generateTranscribe(audioFilePath: string, outputJsonFilePa
 
         const sourceJsonPath = path.join(tempOutputDir, jsonFile);
 
+        // Extract the languageCode from the JSON before we clean up
+        const transcriptionContent = fs.readFileSync(sourceJsonPath, "utf-8");
+        const transcriptionData = JSON.parse(transcriptionContent);
+        const languageCode = transcriptionData.language_code || "unknown";
+
         // Ensure the target directory exists
         const targetDir = path.dirname(outputJsonFilePath);
         if (!fs.existsSync(targetDir)) {
@@ -85,6 +90,8 @@ export async function generateTranscribe(audioFilePath: string, outputJsonFilePa
         fs.copyFileSync(sourceJsonPath, outputJsonFilePath);
 
         console.log(`Transcription successfully saved to: ${outputJsonFilePath}`);
+
+        return { languageCode };
     } finally {
         // Clean up the temporary directory
         fs.rmSync(tempOutputDir, { recursive: true, force: true });

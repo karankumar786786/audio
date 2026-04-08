@@ -233,12 +233,6 @@ export class RecommendationServiceImpl implements RecommendationService<Recommen
         "timeInMs",
         "songUrl",
         "imageUrl",
-        "bpm",
-        "loudness",
-        "dynamicComplexity",
-        "spectralCentroid",
-        "spectralFlux",
-        "zeroCrossingRate",
         "language",
       ],
     });

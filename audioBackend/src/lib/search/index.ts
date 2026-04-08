@@ -60,6 +60,15 @@ export class AlgoliaService {
         return hits;
     }
 
+    async setSettings(attributes: string[]): Promise<void> {
+        await this.client.setSettings({
+            indexName: this.indexName,
+            indexSettings: {
+                searchableAttributes: attributes,
+            },
+        });
+    }
+
     async delete(objectID: string): Promise<void> {
         await this.client.deleteObject({
             indexName: this.indexName,
