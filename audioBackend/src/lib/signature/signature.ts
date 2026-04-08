@@ -16,7 +16,7 @@ export class SignatureUtility {
      * This makes the ID self-verifying.
      */
     generateSignedId(): string {
-        const uuid = crypto.randomUUID().replaceAll("-","");
+        const uuid = crypto.randomUUID().replace(/-/g, "");
         const signature = crypto
             .createHmac(SignatureUtility.ALGORITHM, this.SECRET)
             .update(uuid)

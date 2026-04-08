@@ -79,7 +79,7 @@ export class AudioTranscoder {
 
     // ── Public API ────────────────────────────────────────────────────────────
 
-    async transcode(inputAudio: string, outputDir: string): Promise<void> {
+    async transcode(inputAudio: string, outputDir: string): Promise<string> {
         console.log(`\n--- Starting Audio Transcoding Process ---`);
         console.log(`Input:  ${inputAudio}`);
         console.log(`Output: ${outputDir}\n`);
@@ -102,13 +102,15 @@ export class AudioTranscoder {
         const rawAudioPaths = await this.transcodeAudio(inputAudio, audioDir);
 
         // STEP 2 — Generate JSON transcription via Sarvam AI (non-fatal)
-        await this.generateCaptions(inputAudio, outputDir);
+        const languageCode = await this.generateCaptions(inputAudio, outputDir);
 
         // STEP 3 — Package → master.m3u8 + master.mpd
         await this.runShakaPackager(outputDir, rawAudioPaths);
 
         // STEP 4 — Flush watcher, wait for all in-flight uploads
         await this.closeWatcher(watcher);
+        
+        return languageCode;
 
         console.log(`\n--- Audio Transcoding Completed ---`);
         console.log(`Outputs: ${outputDir}\n`);
@@ -185,18 +187,20 @@ export class AudioTranscoder {
      *
      * Failure is NON-FATAL — a warning is logged and transcoding continues.
      */
-    private async generateCaptions(inputAudio: string, outputDir: string): Promise<void> {
+    private async generateCaptions(inputAudio: string, outputDir: string): Promise<string> {
         console.log(`   📝 Generating transcription with Sarvam AI...`);
 
         // Emit at the same level as master files
         const jsonOut = path.join(outputDir, "caption.json");
 
         try {
-            await generateTranscribe(inputAudio, jsonOut);
+            const result = await generateTranscribe(inputAudio, jsonOut);
             console.log(`   ✅ Transcription saved → caption.json`);
+            return result.languageCode;
         } catch (err: any) {
             // Transcription generation is optional — never fail the pipeline over it
             console.warn(`   ⚠️  Transcription generation skipped (${err.message ?? err})`);
+            return "unknown";
         }
     }
 

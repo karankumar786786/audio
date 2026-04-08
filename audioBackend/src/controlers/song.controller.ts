@@ -55,10 +55,10 @@ export class SongController {
             await storageService.downloadObject(TEMP_BUCKET, input.tempSongKey, localDownloadPath);
 
             // 2. Transcode & Upload to Prod S3
-            // The transcoder expects an output directory where it will place master.m3u8, etc.
-            // and it will upload them to the prod bucket under the basePath/<audioName> structure.
-            console.log(`[STEP 2] Transcoding and uploading to s3://${PROD_BUCKET}`);
-            await transcodingService.transcode(localDownloadPath, outputDir);
+            // The transcoder now handles transcription internally and returns the languageCode.
+            console.log(`[STEP 2] Transcoding, transcribing, and uploading to s3://${PROD_BUCKET}`);
+            const languageCode = await transcodingService.transcode(localDownloadPath, outputDir);
+            const language: string = languageMapper.getName(languageCode);
 
             // 3. Extract Audio Features (FastAPI)
             console.log(`[STEP 3] Extracting features from FastAPI...`);
@@ -74,10 +74,6 @@ export class SongController {
             }
             const features = (await featureRes.json()) as AudioFeatures;
 
-            // 4. Transcribe (Sarvam AI)
-            console.log(`[STEP 4] Transcribing audio...`);
-            const { languageCode } = await transcribeAudio(localDownloadPath, path.join(outputDir, "transcription.json"));
-            const language:string = languageMapper.getName(languageCode);
             // Use the basename of outputDir as the identifier in S3 if transcoder uses it
             const audioName = path.basename(outputDir);
             const prodSongKey = `${process.env.BASE_PATH || "audios"}/${audioName}`;
