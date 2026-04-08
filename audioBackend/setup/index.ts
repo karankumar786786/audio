@@ -13,8 +13,8 @@ const sql = neon(`${process.env.DATABASE_URL}`);
       title VARCHAR(255) NOT NULL,
       artist_name VARCHAR(255) NOT NULL,
       time_in_ms INT CHECK (time_in_ms > 0),
-      song_url TEXT NOT NULL,
-      image_url TEXT NOT NULL,
+      song_key TEXT NOT NULL,
+      image_key TEXT NOT NULL,
       language VARCHAR(255) NOT NULL,
       created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
       )
@@ -26,8 +26,8 @@ const sql = neon(`${process.env.DATABASE_URL}`);
         name VARCHAR(255) NOT NULL,
         about TEXT NOT NULL,
         dob TIMESTAMPTZ NOT NULL,
-        coverImageUrl TEXT NOT NULL,
-        bannerImageUrl TEXT NOT NULL,
+        cover_image_key TEXT NOT NULL,
+        banner_image_key TEXT NOT NULL,
         created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
       )
     `;
@@ -37,8 +37,8 @@ const sql = neon(`${process.env.DATABASE_URL}`);
       CREATE TABLE IF NOT EXISTS system_playlists (
         id VARCHAR(255) PRIMARY KEY,
         name VARCHAR(255) NOT NULL,
-        coverImageUrl TEXT NOT NULL,
-        bannerImageUrl TEXT NOT NULL,
+        cover_image_key TEXT NOT NULL,
+        banner_image_key TEXT NOT NULL,
         created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
       )

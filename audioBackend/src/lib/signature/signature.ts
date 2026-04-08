@@ -2,16 +2,23 @@ import * as crypto from 'crypto';
 
 export class SignatureUtility {
     private static readonly ALGORITHM = 'sha256';
-    private static readonly SECRET = process.env.SIGNATURE_SECRET || 'fallback-secret-for-dev-only-change-in-prod';
+    private  readonly SECRET:string = 'fallback-secret-for-dev-only-change-in-prod';
+
+    /**
+     *
+     */
+    constructor(secret:string) {
+        this.SECRET = secret;
+    }
 
     /**
      * Generates a secure Signed ID in the format `uuid.signature`.
      * This makes the ID self-verifying.
      */
-    static generateSignedId(): string {
+    generateSignedId(): string {
         const uuid = crypto.randomUUID();
         const signature = crypto
-            .createHmac(this.ALGORITHM, this.SECRET)
+            .createHmac(SignatureUtility.ALGORITHM, this.SECRET)
             .update(uuid)
             .digest('hex');
         return `${uuid}.${signature}`;
@@ -21,7 +28,7 @@ export class SignatureUtility {
      * Verifies if a provided Signed ID is valid.
      * Expects format: `uuid.signature`
      */
-    static verifyId(signedId: string): boolean {
+    verifyId(signedId: string): boolean {
         if (!signedId || typeof signedId !== 'string') return false;
 
         const parts = signedId.split('.');
@@ -33,7 +40,7 @@ export class SignatureUtility {
         if (!uuid || !providedSignature) return false;
 
         const expectedSignature = crypto
-            .createHmac(this.ALGORITHM, this.SECRET)
+            .createHmac(SignatureUtility.ALGORITHM, this.SECRET)
             .update(uuid)
             .digest('hex');
 

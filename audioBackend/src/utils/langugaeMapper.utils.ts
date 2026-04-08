@@ -250,7 +250,7 @@ const LANGUAGE_MAP: Record<SarvamLanguageCode, LanguageInfo> = {
 
 // ─── Class ────────────────────────────────────────────────────────────────────
 
-export class SarvamLanguageMapper {
+export class LanguageMapper {
   private readonly map: Record<SarvamLanguageCode, LanguageInfo> = LANGUAGE_MAP;
 
   // ── Lookups ──────────────────────────────────────────────────────────────────
@@ -337,4 +337,4 @@ export class SarvamLanguageMapper {
 // ─── Singleton export ─────────────────────────────────────────────────────────
 
 /** Pre-built singleton — import and use directly without instantiation. */
-export const sarvamLanguageMapper = new SarvamLanguageMapper();
+export const sarvamLanguageMapper = new LanguageMapper();

@@ -21,8 +21,8 @@ export interface RecommendationSchema {
   title: string;
   artistName: string;
   timeInMs: number;
-  songUrl: string;
-  imageUrl: string;
+  songKey: string;
+  imageKey: string;
   loudness: number;
   dynamicComplexity: number;
   bpm: number;
@@ -44,8 +44,8 @@ const SCHEMA_FIELDS: Record<
   title: "string",
   artistName: "string",
   timeInMs: "double",
-  songUrl: "string",
-  imageUrl: "string",
+  songKey: "string",
+  imageKey: "string",
   loudness: "double",
   dynamicComplexity: "double",
   bpm: "double",

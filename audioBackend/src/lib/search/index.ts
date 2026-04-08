@@ -7,8 +7,8 @@ export interface SongRecord {
     title: string;
     artistName: string;
     timeInMs: number;
-    songUrl: string;
-    imageUrl: string;
+    songKey: string;
+    imageKey: string;
     language: string;
 }
 
@@ -17,15 +17,15 @@ export interface ArtistRecord {
     name: string;
     about: string;
     dob: string;
-    coverImageUrl: string;
-    bannerImageUrl: string;
+    coverImageKey: string;
+    bannerImageKey: string;
 }
 
 export interface SystemPlaylistRecord {
     id: string;
     name: string;
-    coverImageUrl: string;
-    bannerImageUrl: string;
+    coverImageKey: string;
+    bannerImageKey: string;
 }
 
 export type SearchRecord = SongRecord | ArtistRecord | SystemPlaylistRecord;
