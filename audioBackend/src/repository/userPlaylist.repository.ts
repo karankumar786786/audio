@@ -1,19 +1,18 @@
-import { db } from "../infra";
-import { type UserPlaylistSchema, type UserPlaylistSongSchema } from "../schema/user_playlist.schema";
-import type { Repository } from "../type/repository.type";
 import { randomUUIDv7 } from "bun";
+import { db } from "../infra";
+import { type UserPlaylistSchema, type UserPlaylistSongSchema } from "../schema/userPlaylist.schema";
+import type { Repository } from "../type/repository.type";
 
-type CreatePlaylistData = Omit<UserPlaylistSchema, "id">;
-type UpdatePlaylistData = Partial<CreatePlaylistData>;
 
-export class UserPlaylistRepository implements Repository<UserPlaylistSchema, CreatePlaylistData, UpdatePlaylistData> {
+type UpdatePlaylistData = Partial<UserPlaylistSchema>;
 
-    async create(data: CreatePlaylistData): Promise<UserPlaylistSchema> {
-        const id = randomUUIDv7();
+export class UserPlaylistRepository implements Repository<UserPlaylistSchema, UserPlaylistSchema, UpdatePlaylistData> {
+
+    async create(data: UserPlaylistSchema): Promise<UserPlaylistSchema> {
         const [playlist] = await db`
             INSERT INTO user_playlists (id, name, user_id)
             VALUES (
-                ${id},
+                ${data.id},
                 ${data.name},
                 ${data.userId}
             )

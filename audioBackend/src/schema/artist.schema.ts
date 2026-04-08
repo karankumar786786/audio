@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const artistSchema = z.object({
-    id: z.string().optional(),
+    id: z.string(),
     name: z.string().min(1, { message: "name is required" }),
     about: z.string().min(1, { message: "about is required" }),
     dob: z.string().datetime({ message: "dob must be a valid ISO datetime" }),

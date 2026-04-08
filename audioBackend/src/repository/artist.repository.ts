@@ -1,19 +1,17 @@
 import { db } from "../infra";
 import { type ArtistSchema } from "../schema/artist.schema";
 import type { Repository } from "../type/repository.type";
-import { randomUUIDv7 } from "bun";
 
-type CreateArtistData = Omit<ArtistSchema, "id" | "createdAt">;
+type CreateArtistData = Omit<ArtistSchema, "createdAt">;
 type UpdateArtistData = Partial<CreateArtistData>;
 
 export class ArtistRepository implements Repository<ArtistSchema, CreateArtistData, UpdateArtistData> {
 
     async create(data: CreateArtistData): Promise<ArtistSchema> {
-        const id = randomUUIDv7();
         const [artist] = await db`
             INSERT INTO artists (id, name, about, dob, cover_image_key, banner_image_key)
             VALUES (
-                ${id},
+                ${data.id},
                 ${data.name},
                 ${data.about},
                 ${data.dob},

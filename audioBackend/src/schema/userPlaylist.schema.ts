@@ -2,7 +2,7 @@ import { z } from "zod";
 
 // Schema for creating/validating a user playlist
 export const userPlaylistSchema = z.object({
-    id: z.string().optional(),
+    id: z.string(),
     name: z.string().min(1, { message: "Playlist name is required" }),
     userId: z.string().min(1, { message: "userId is required" }),
 });

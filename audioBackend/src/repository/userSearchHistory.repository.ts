@@ -1,18 +1,17 @@
 import { db } from "../infra";
-import { type UserSearchHistorySchema } from "../schema/user_search_history.schema";
+import { type UserSearchHistorySchema } from "../schema/userSearchHistory.schema";
 import type { Repository } from "../type/repository.type";
 import { randomUUIDv7 } from "bun";
 
-type CreateSearchData = Omit<UserSearchHistorySchema, "id">;
-type UpdateSearchData = Partial<CreateSearchData>;
 
-export class UserSearchHistoryRepository implements Repository<UserSearchHistorySchema, CreateSearchData, UpdateSearchData> {
+type UpdateSearchData = Partial<UserSearchHistorySchema>;
 
-    async create(data: CreateSearchData): Promise<UserSearchHistorySchema> {
-        const id = randomUUIDv7();
+export class UserSearchHistoryRepository implements Repository<UserSearchHistorySchema, UserSearchHistorySchema, UpdateSearchData> {
+
+    async create(data: UserSearchHistorySchema): Promise<UserSearchHistorySchema> {
         const [entry] = await db`
             INSERT INTO user_search_history (id, user_id, searched_text)
-            VALUES (${id}, ${data.userId}, ${data.searchedText})
+            VALUES (${data.id}, ${data.userId}, ${data.searchedText})
             RETURNING *
         `;
         if (!entry) throw new Error("Failed to record search history");

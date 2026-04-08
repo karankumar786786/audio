@@ -1,18 +1,17 @@
 import { db } from "../infra";
-import { type UserFavouriteSongSchema } from "../schema/user_favourite_song.schema";
+import { type UserFavouriteSongSchema } from "../schema/userFavouriteSong.schema";
 import type { Repository } from "../type/repository.type";
-import { randomUUIDv7 } from "bun";
 
-type CreateFavouriteData = Omit<UserFavouriteSongSchema, "id">;
-type UpdateFavouriteData = Partial<CreateFavouriteData>;
 
-export class UserFavouriteSongRepository implements Repository<UserFavouriteSongSchema, CreateFavouriteData, UpdateFavouriteData> {
 
-    async create(data: CreateFavouriteData): Promise<UserFavouriteSongSchema> {
-        const id = randomUUIDv7();
+type UpdateFavouriteData = Partial<UserFavouriteSongSchema>;
+
+export class UserFavouriteSongRepository implements Repository<UserFavouriteSongSchema, UserFavouriteSongSchema, UpdateFavouriteData> {
+
+    async create(data: UserFavouriteSongSchema): Promise<UserFavouriteSongSchema> {
         const [entry] = await db`
             INSERT INTO user_favourite_songs (id, user_id, song_id)
-            VALUES (${id}, ${data.userId}, ${data.songId})
+            VALUES (${data.id}, ${data.userId}, ${data.songId})
             ON CONFLICT (user_id, song_id) DO NOTHING
             RETURNING *
         `;

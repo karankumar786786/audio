@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const systemPlaylistSchema = z.object({
-    id: z.string().optional(),
+    id: z.string(),
     name: z.string().min(1, { message: "name is required" }),
     coverImageKey: z.string().min(1, { message: "coverImageKey is required" }),
     bannerImageKey: z.string().min(1, { message: "bannerImageKey is required" }),

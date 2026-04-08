@@ -1,19 +1,18 @@
 import { db } from "../infra";
-import { type UserHistorySchema } from "../schema/user_history.schema";
+import { type UserHistorySchema } from "../schema/userHistory.schema";
 import type { Repository } from "../type/repository.type";
 import { randomUUIDv7 } from "bun";
 
-type CreateHistoryData = Omit<UserHistorySchema, "id" | "listenedAt">;
+type CreateHistoryData = Omit<UserHistorySchema, "listenedAt">;
 type UpdateHistoryData = Partial<CreateHistoryData>;
 
 export class UserHistoryRepository implements Repository<UserHistorySchema, CreateHistoryData, UpdateHistoryData> {
 
     async create(data: CreateHistoryData): Promise<UserHistorySchema> {
-        const id = randomUUIDv7();
         const [entry] = await db`
             INSERT INTO user_history (id, user_id, song_id, part)
             VALUES (
-                ${id},
+                ${data.id},
                 ${data.userId},
                 ${data.songId},
                 ${data.part}

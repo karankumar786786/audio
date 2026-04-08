@@ -1,13 +1,11 @@
 import { db } from "../infra";
 import { type SongProcessingJob } from "../schema/songProcessingJob.schema";
-import { randomUUIDv7 } from "bun";
 
-type CreateJobData = Omit<SongProcessingJob, "id" | "transcodingAttempt" | "transcribingAttempt" | "status">;
+type CreateJobData = Omit<SongProcessingJob, "transcodingAttempt" | "transcribingAttempt" | "status">;
 type UpdateJobData = Partial<SongProcessingJob>;
 
 export class SongProcessingJobRepository {
     async create(data: CreateJobData): Promise<SongProcessingJob> {
-        const id = randomUUIDv7();
         const [job] = await db`
             INSERT INTO song_processing_job (
                 id, title, artist_name, duration, temp_song_key, song_key, image_key, 
@@ -16,12 +14,22 @@ export class SongProcessingJobRepository {
                 transcoding_id, transcribing_id, status
             )
             VALUES (
-                ${id}, ${data.title}, ${data.artistName}, ${data.duration ?? null}, 
-                ${data.tempSongKey}, ${data.songKey ?? null}, ${data.imageKey}, 
-                ${data.language ?? null}, ${data.sampleRate ?? null}, ${data.loudness ?? null}, 
-                ${data.dynamicComplexity ?? null}, ${data.bpm ?? null}, 
-                ${data.spectralCentroid ?? null}, ${data.spectralFlux ?? null}, 
-                ${data.zeroCrossingRate ?? null}, ${data.transcodingId ?? null}, 
+                ${data.id}, 
+                ${data.title}, 
+                ${data.artistName},
+                ${data.duration ?? null}, 
+                ${data.tempSongKey}, 
+                ${data.songKey ?? null}, 
+                ${data.imageKey}, 
+                ${data.language ?? null}, 
+                ${data.sampleRate ?? null}, 
+                ${data.loudness ?? null}, 
+                ${data.dynamicComplexity ?? null}, 
+                ${data.bpm ?? null}, 
+                ${data.spectralCentroid ?? null}, 
+                ${data.spectralFlux ?? null}, 
+                ${data.zeroCrossingRate ?? null}, 
+                ${data.transcodingId ?? null}, 
                 ${data.transcribingId ?? null}, 'pending'
             )
             RETURNING *

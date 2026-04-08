@@ -10,7 +10,7 @@ export const CreateSongSchema = z.object({
 export type CreateSongInput = z.infer<typeof CreateSongSchema>;
 
 export const songSchema = z.object({
-  id: z.string().optional(),
+  id: z.string(),
   title: z.string().min(1, { message: "title is required" }),
   artistName: z.string().min(1, { message: "artistName is required" }),
   duration: z.number().int().positive(),

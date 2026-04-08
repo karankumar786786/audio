@@ -55,9 +55,6 @@ export class SongController {
             // 1. Download from Temp S3
             logger.info(`[STEP 1] Downloading s3://${TEMP_BUCKET}/${input.tempSongKey}`);
             await storageService.downloadObject(TEMP_BUCKET, input.tempSongKey, localDownloadPath);
-
-            
-
             // 2. Transcode & Upload to Prod S3
             // The transcoder now handles transcription internally and returns the languageCode.
             logger.info(`[STEP 2] Transcoding, transcribing, and uploading to s3://${PROD_BUCKET}`);

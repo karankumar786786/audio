@@ -3,7 +3,7 @@ import { z } from "zod";
 export const SongProcessingJobStatusSchema = z.enum(['pending', 'processing', 'completed']);
 
 export const SongProcessingJobSchema = z.object({
-  id: z.string().optional(),
+  id: z.string(),
   title: z.string().min(1, "Title is required"),
   artistName: z.string().min(1, "Artist name is required"),
   duration: z.number().optional().nullable(),

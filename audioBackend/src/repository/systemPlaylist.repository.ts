@@ -1,19 +1,18 @@
 import { db } from "../infra";
-import { type SystemPlaylistSchema, type SystemPlaylistSongSchema } from "../schema/system_playlist.schema";
+import { type SystemPlaylistSchema, type SystemPlaylistSongSchema } from "../schema/systemPlaylist.schema";
 import type { Repository } from "../type/repository.type";
 import { randomUUIDv7 } from "bun";
 
-type CreatePlaylistData = Omit<SystemPlaylistSchema, "id" | "createdAt" | "updatedAt">;
+type CreatePlaylistData = Omit<SystemPlaylistSchema,  "createdAt" | "updatedAt">;
 type UpdatePlaylistData = Partial<CreatePlaylistData>;
 
 export class SystemPlaylistRepository implements Repository<SystemPlaylistSchema, CreatePlaylistData, UpdatePlaylistData> {
 
     async create(data: CreatePlaylistData): Promise<SystemPlaylistSchema> {
-        const id = randomUUIDv7();
         const [playlist] = await db`
             INSERT INTO system_playlists (id, name, cover_image_key, banner_image_key)
             VALUES (
-                ${id},
+                ${data.id},
                 ${data.name},
                 ${data.coverImageKey},
                 ${data.bannerImageKey}
