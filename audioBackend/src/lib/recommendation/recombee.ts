@@ -8,7 +8,11 @@ interface RecommendationService<T> {
   addUser(userId: string): Promise<void>;
   addListen(userId: string, id: string, portion: number): Promise<void>;
   addLike(userId: string, id: string): Promise<void>;
-  delete(id: string): Promise<void>;
+  addFavorite(userId: string, itemId: string): Promise<void>;
+  removeFavorite(userId: string, itemId: string): Promise<void>;
+  addToPlaylist(userId: string, itemId: string): Promise<void>;
+  removeFromPlaylist(userId: string, itemId: string): Promise<void>;
+  delete(itemId: string): Promise<void>;
   recommendUser(userId: string, limit: number): Promise<Partial<T>[]>;
 }
 
@@ -118,8 +122,8 @@ export class RecommendationServiceImpl implements RecommendationService<Recommen
   /**
    * Deletes an item and all associated interaction data from the catalogue.
    */
-  async delete(id: string): Promise<void> {
-    const req = new requests.DeleteItem(id);
+  async delete(itemId: string): Promise<void> {
+    const req = new requests.DeleteItem(itemId);
     await this.send(req);
   }
 
@@ -165,6 +169,42 @@ export class RecommendationServiceImpl implements RecommendationService<Recommen
     const req = new requests.AddBookmark(userId, id, {
       cascadeCreate: true,
     });
+    await this.send(req);
+  }
+
+  /**
+   * Records a "favorite" interaction (alias for Bookmark).
+   */
+  async addFavorite(userId: string, itemId: string): Promise<void> {
+    const req = new requests.AddBookmark(userId, itemId, {
+      cascadeCreate: true,
+    });
+    await this.send(req);
+  }
+
+  /**
+   * Removes a "favorite" interaction.
+   */
+  async removeFavorite(userId: string, itemId: string): Promise<void> {
+    const req = new requests.DeleteBookmark(userId, itemId);
+    await this.send(req);
+  }
+
+  /**
+   * Records an "add to playlist" interaction (mapped to CartAddition).
+   */
+  async addToPlaylist(userId: string, itemId: string): Promise<void> {
+    const req = new requests.AddCartAddition(userId, itemId, {
+      cascadeCreate: true,
+    });
+    await this.send(req);
+  }
+
+  /**
+   * Removes an "add to playlist" interaction.
+   */
+  async removeFromPlaylist(userId: string, itemId: string): Promise<void> {
+    const req = new requests.DeleteCartAddition(userId, itemId);
     await this.send(req);
   }
 
