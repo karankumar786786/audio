@@ -2,7 +2,6 @@ import { type Request, type Response, type NextFunction } from "express";
 import * as path from "node:path";
 import * as fs from "node:fs";
 import axios from "axios";
-import { promises as fsa } from "fs";
 import {
     storageService,
     transcodingService,
@@ -10,19 +9,18 @@ import {
     searchService,
     signatureService,
     logger,
-    transcriptionService
+    transcriptionService,
+    songRepository,
+    songProcessingJobRepository
 } from "../infra";
 import type { CreateSongInput } from "../schema/songs.schema";
 import { ApiResponse } from "../utils/ApiResponse";
-
-
 
 const TEMP_BUCKET = process.env.TEMP_BUCKET_NAME || "videotranscodetemp";
 const PROD_BUCKET = process.env.PRODUCTION_BUCKET_NAME || "videotranscodeprod";
 const FEATURE_API_URL = process.env.FEATURE_API_URL || "http://localhost:8000";
 
 interface AudioFeatures {
-    key: string;
     duration: number;
     sample_rate: number;
     loudness: number;
@@ -33,12 +31,22 @@ interface AudioFeatures {
     zero_crossing_rate: number;
 }
 
-
-
 export async function createSong(req: Request, res: Response, next: NextFunction) {
-    const jobId = signatureService.generateSignedId();
     const input: CreateSongInput = req.body;
-    const tempId = signatureService.generateSignedId();
+    const jobId = signatureService.generateSignedId();
+    const songId = signatureService.generateSignedId();
+
+    // 1. Initialize Processing Job
+    await songProcessingJobRepository.create({
+        id: songId, 
+        jobId: jobId,
+        title: input.title,
+        artistName: input.artistName,
+        tempSongKey: input.tempSongKey,
+        imageKey: input.imageKey,
+        savedInSearch: false,
+        savedInRecommendation: false
+    });
 
     // Ensure project-local 'tmp' directory exists
     const baseTmpDir = path.join(process.cwd(), "tmp");
@@ -47,42 +55,75 @@ export async function createSong(req: Request, res: Response, next: NextFunction
     }
 
     const timestamp = Date.now();
-    const localDownloadPath = path.join(baseTmpDir, `${path.basename(tempId)}`);
-    const outputDir = path.join(baseTmpDir, `${timestamp}${tempId}`);
+    const localDownloadPath = path.join(baseTmpDir, `${path.basename(songId)}`);
+    const outputDir = path.join(baseTmpDir, `${timestamp}${songId}`);
 
     try {
-        logger.info(`[PIPELINE] Starting for song: ${input.title} (ID: ${tempId})`);
+        logger.info(`[PIPELINE] Starting Job ${jobId} for song: ${input.title}`);
+
+        // Update status to processing
+        await songProcessingJobRepository.update(songId, { status: "processing" });
+
+        // 1. Verify existence and Download from Temp S3
         await storageService.headObject(TEMP_BUCKET, input.tempSongKey);
-        // 1. Download from Temp S3
-        logger.info(`[STEP 1] Downloading s3://${TEMP_BUCKET}/${input.tempSongKey}`);
+        logger.info(`[STEP 1] Downloading raw audio from s3://${TEMP_BUCKET}/${input.tempSongKey}`);
         await storageService.downloadObject(TEMP_BUCKET, input.tempSongKey, localDownloadPath);
-        // 2. Transcode & Upload to Prod S3
-        // The transcoder now handles transcription internally and returns the languageCode.
-        logger.info(`[STEP 2] Transcoding, transcribing, and uploading to s3://${PROD_BUCKET}`);
+
+        // 2. Transcode & Upload segments to Prod S3
+        logger.info(`[STEP 2] Transcoding and uploading multi-bitrate segments...`);
         await transcodingService.transcode(localDownloadPath, outputDir);
-        await fsa.access(localDownloadPath);
-        await fsa.unlink(localDownloadPath);
+
         // 3. Extract Audio Features (FastAPI)
-        logger.info(`[STEP 3] Extracting features from FastAPI...`);
+        logger.info(`[STEP 3] Extracting spectral features via FastAPI...`);
         const response = await axios.post(FEATURE_API_URL, {
             key: input.tempSongKey,
             bucket: TEMP_BUCKET,
         });
-
         const features = response.data as AudioFeatures;
 
-        // Use the basename of outputDir as the identifier in S3 if transcoder uses it
+        // 4. Transcription
         const audioName = path.basename(outputDir);
         const prodSongKey = `${process.env.BASE_PATH || "audios"}/${audioName}`;
-        await storageService.headObject(TEMP_BUCKET, input.tempSongKey);
-        // 1. Download from Temp S3
-        logger.info(`[STEP 1] Downloading s3://${TEMP_BUCKET}/${input.tempSongKey}`);
-        await storageService.downloadObject(TEMP_BUCKET, input.tempSongKey, localDownloadPath);
-        const { language } = await transcriptionService.generateTranscribe(localDownloadPath, PROD_BUCKET, `${prodSongKey}/caption.json`)
-        // 5. Index in Recombee
-        logger.info(`[STEP 5] Indexing in Recombee...`);
+        logger.info(`[STEP 4] Generating transcription and saving to S3...`);
+        const { language } = await transcriptionService.generateTranscribe(
+            localDownloadPath, 
+            PROD_BUCKET, 
+            `${prodSongKey}/caption.json`
+        );
+
+        // Update Job with collected metadata
+        await songProcessingJobRepository.update(songId, {
+            duration: features.duration,
+            language: language,
+            sampleRate: features.sample_rate,
+            loudness: features.loudness,
+            dynamicComplexity: features.dynamic_complexity,
+            bpm: features.bpm,
+            spectralCentroid: features.spectral_centroid,
+            spectralFlux: features.spectral_flux,
+            zeroCrossingRate: features.zero_crossing_rate,
+            songKey: prodSongKey
+        });
+
+        // 5. Create Final Song Record
+        logger.info(`[STEP 5] Moving data to permanent song library...`);
+        await songRepository.create({
+            id: songId,
+            jobId: jobId,
+            title: input.title,
+            artistName: input.artistName,
+            duration: Math.floor(features.duration * 1000), // convert to ms
+            songKey: prodSongKey,
+            imageKey: input.imageKey,
+            language: language,
+        });
+
+        // 6. Secondary Indexing
+        logger.info(`[STEP 6] Syncing with search and recommendation engines...`);
+        
+        // 6a. Recombee
         await recommendationService.create({
-            id: tempId,
+            id: songId,
             title: input.title,
             artistName: input.artistName,
             duration: features.duration,
@@ -96,11 +137,11 @@ export async function createSong(req: Request, res: Response, next: NextFunction
             spectralFlux: features.spectral_flux,
             zeroCrossingRate: features.zero_crossing_rate,
         });
+        await songProcessingJobRepository.update(songId, { savedInRecommendation: true });
 
-        // 6. Index in Algolia
-        logger.info(`[STEP 6] Indexing in Algolia...`);
+        // 6b. Algolia
         await searchService.save({
-            id: tempId,
+            id: songId,
             title: input.title,
             artistName: input.artistName,
             duration: features.duration,
@@ -108,21 +149,26 @@ export async function createSong(req: Request, res: Response, next: NextFunction
             imageKey: input.imageKey,
             language: language,
         });
+        await songProcessingJobRepository.update(songId, { savedInSearch: true });
 
-        logger.info(`[PIPELINE] Success! Song ID: ${tempId}`);
+        // Finish Job
+        await songProcessingJobRepository.update(songId, { status: "completed" });
+        logger.info(`[PIPELINE] Job ${jobId} successful!`);
 
-        return res.status(201).json(new ApiResponse(201, "Song created and processed successfully", {
-            id: tempId,
+        return res.status(201).json(new ApiResponse(201, "Song processed and published successfully", {
+            id: songId,
+            jobId: jobId,
             songKey: prodSongKey,
             language,
             features
         }));
 
     } catch (error: any) {
-        logger.error(`[PIPELINE] Failed:`, error);
+        logger.error(`[PIPELINE] Job ${jobId} failed:`, error);
+        // We could update job status to 'failed' if we add it to the schema/db check
         next(error);
     } finally {
-        // Cleanup
+        // Final Cleanup
         try {
             if (fs.existsSync(localDownloadPath)) fs.unlinkSync(localDownloadPath);
             if (fs.existsSync(outputDir)) fs.rmSync(outputDir, { recursive: true, force: true });
@@ -131,4 +177,3 @@ export async function createSong(req: Request, res: Response, next: NextFunction
         }
     }
 }
-

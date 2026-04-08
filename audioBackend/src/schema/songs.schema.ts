@@ -17,6 +17,7 @@ export const songSchema = z.object({
   songKey: z.string().min(1, { message: "songKey is required" }),
   imageKey: z.string().min(1, { message: "imageKey is required" }),
   language: z.string().min(1, { message: "language is required" }),
+  jobId: z.string(),
   createdAt: z.string().datetime().optional(),
 });
 

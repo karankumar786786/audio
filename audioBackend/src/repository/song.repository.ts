@@ -9,7 +9,7 @@ export class SongRepository implements Repository<SongSchema, CreateSongData, Up
 
     async create(data: CreateSongData): Promise<SongSchema> {
         const [song] = await db`
-            INSERT INTO songs (id, title, artist_name, time_in_ms, song_key, image_key, language)
+            INSERT INTO songs (id, title, artist_name, time_in_ms, song_key, image_key, language, job_id)
             VALUES (
                 ${data.id},
                 ${data.title},
@@ -17,7 +17,8 @@ export class SongRepository implements Repository<SongSchema, CreateSongData, Up
                 ${data.duration},
                 ${data.songKey},
                 ${data.imageKey},
-                ${data.language}
+                ${data.language},
+                ${data.jobId}
             )
             RETURNING *
         `;
@@ -47,7 +48,8 @@ export class SongRepository implements Repository<SongSchema, CreateSongData, Up
                 time_in_ms  = COALESCE(${data.duration ?? null}, time_in_ms),
                 song_key    = COALESCE(${data.songKey ?? null}, song_key),
                 image_key   = COALESCE(${data.imageKey ?? null}, image_key),
-                language    = COALESCE(${data.language ?? null}, language)
+                language    = COALESCE(${data.language ?? null}, language),
+                job_id      = COALESCE(${data.jobId ?? null}, job_id)
             WHERE id = ${id}
             RETURNING *
         `;
@@ -74,6 +76,7 @@ export class SongRepository implements Repository<SongSchema, CreateSongData, Up
             songKey: row.song_key as string,
             imageKey: row.image_key as string,
             language: row.language as string,
+            jobId: row.job_id as string,
             createdAt: (row.created_at as Date)?.toISOString(),
         };
     }

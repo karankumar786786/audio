@@ -56,7 +56,16 @@ export const recommendationService = new RecommendationServiceImpl(
     logger
 );
 
+import { 
+    SongRepository, 
+    SongProcessingJobRepository 
+} from "../repository";
+
 // Signature Service
 export const signatureService = new SignatureUtility(
     `${process.env.SIGNATURE_SECRET}`
 );
+
+// Repositories
+export const songRepository = new SongRepository();
+export const songProcessingJobRepository = new SongProcessingJobRepository();

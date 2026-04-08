@@ -11,6 +11,7 @@ export class SongProcessingJobRepository {
                 id, job_id,title, artist_name, duration, temp_song_key, song_key, image_key, 
                 language, sample_rate, loudness, dynamic_complexity, bpm, 
                 spectral_centroid, spectral_flux, zero_crossing_rate, 
+                saved_in_search, saved_in_recommendation,
                 transcoding_id, transcribing_id, status
             )
             VALUES (
@@ -30,6 +31,8 @@ export class SongProcessingJobRepository {
                 ${data.spectralCentroid ?? null}, 
                 ${data.spectralFlux ?? null}, 
                 ${data.zeroCrossingRate ?? null}, 
+                ${data.savedInSearch ?? false}, 
+                ${data.savedInRecommendation ?? false},
                 ${data.transcodingId ?? null}, 
                 ${data.transcribingId ?? null}, 'pending'
             )
@@ -65,6 +68,8 @@ export class SongProcessingJobRepository {
                 spectral_centroid    = COALESCE(${data.spectralCentroid ?? null}, spectral_centroid),
                 spectral_flux        = COALESCE(${data.spectralFlux ?? null}, spectral_flux),
                 zero_crossing_rate   = COALESCE(${data.zeroCrossingRate ?? null}, zero_crossing_rate),
+                saved_in_search      = COALESCE(${data.savedInSearch ?? null}, saved_in_search),
+                saved_in_recommendation = COALESCE(${data.savedInRecommendation ?? null}, saved_in_recommendation),
                 transcoding_id       = COALESCE(${data.transcodingId ?? null}, transcoding_id),
                 transcoding_attempt  = COALESCE(${data.transcodingAttempt ?? null}, transcoding_attempt),
                 transcribing_id      = COALESCE(${data.transcribingId ?? null}, transcribing_id),
@@ -110,6 +115,8 @@ export class SongProcessingJobRepository {
             spectralCentroid: row.spectral_centroid,
             spectralFlux: row.spectral_flux,
             zeroCrossingRate: row.zero_crossing_rate,
+            savedInSearch: row.saved_in_search,
+            savedInRecommendation: row.saved_in_recommendation,
             transcodingId: row.transcoding_id,
             transcodingAttempt: row.transcoding_attempt,
             transcribingId: row.transcribing_id,

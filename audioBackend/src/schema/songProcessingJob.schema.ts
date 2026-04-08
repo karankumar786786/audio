@@ -23,6 +23,8 @@ export const SongProcessingJobSchema = z.object({
   transcodingAttempt: z.number().default(0),
   transcribingId: z.string().optional().nullable(),
   transcribingAttempt: z.number().default(0),
+  savedInSearch: z.boolean().default(false),
+  savedInRecommendation: z.boolean().default(false),
   status: SongProcessingJobStatusSchema.default('pending'),
 });
 

@@ -16,7 +16,8 @@ const sql = neon(`${process.env.DATABASE_URL}`);
       song_key TEXT NOT NULL,
       image_key TEXT NOT NULL,
       language VARCHAR(255) NOT NULL,
-      created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+      job_id VARCHAR(255) NOT NULL,
+      created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
       )
       `;
 
@@ -154,6 +155,8 @@ const sql = neon(`${process.env.DATABASE_URL}`);
       spectral_centroid DOUBLE PRECISION,
       spectral_flux DOUBLE PRECISION,
       zero_crossing_rate DOUBLE PRECISION,
+      saved_in_search BOOLEAN DEFAULT false,
+      saved_in_recommendation BOOLEAN DEFAULT false,
       transcoding_id VARCHAR(255),
       transcoding_attempt INT DEFAULT 0,
       transcribing_id VARCHAR(255),
