@@ -10,6 +10,12 @@ import { RecommendationServiceImpl } from "../lib/recommendation";
 import { SignatureUtility } from "../lib/signature";
 import { TranscriptionService } from "../lib/transcribeAudio";
 import { logger } from "../observablity/logger";
+import { SongService } from "../services/song.service";
+import { ArtistService } from "../services/artist.service";
+import { PlaylistService } from "../services/playlist.service";
+import { UserService } from "../services/user.service";
+import { InteractionService } from "../services/interaction.service";
+import { SearchService } from "../services/search.service";
 
 // Logger export
 export { logger };
@@ -82,5 +88,13 @@ export const userPlaylistRepository = new UserPlaylistRepository();
 export const userFavouriteSongRepository = new UserFavouriteSongRepository();
 export const userHistoryRepository = new UserHistoryRepository();
 export const userSearchHistoryRepository = new UserSearchHistoryRepository();
+
+// Services
+export const songService = new SongService();
+export const artistService = new ArtistService();
+export const playlistService = new PlaylistService();
+export const userService = new UserService();
+export const interactionService = new InteractionService();
+export const internalSearchService = new SearchService();
 
 export const inngest = new Inngest({id:"test-music"})

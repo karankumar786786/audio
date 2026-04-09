@@ -31,10 +31,20 @@ export class UserHistoryRepository implements Repository<UserHistorySchema, Crea
         return this.mapRow(entry);
     }
 
-    /** Returns full listen history for a given user, newest first. */
-    async getByUserId(userId: string): Promise<UserHistorySchema[]> {
+    async countByUserId(userId: string): Promise<number> {
+        const [row] = await db`
+            SELECT count(*)::int as count FROM user_history WHERE user_id = ${userId}
+        `;
+        return row?.count || 0;
+    }
+
+    /** Returns paginated listen history for a given user, newest first. */
+    async getByUserId(userId: string, limit?: number, offset?: number): Promise<UserHistorySchema[]> {
         const rows = await db`
-            SELECT * FROM user_history WHERE user_id = ${userId} ORDER BY listened_at DESC
+            SELECT * FROM user_history 
+            WHERE user_id = ${userId} 
+            ORDER BY listened_at DESC
+            LIMIT ${limit ?? null} OFFSET ${offset ?? null}
         `;
         return rows.map((row) => this.mapRow(row));
     }

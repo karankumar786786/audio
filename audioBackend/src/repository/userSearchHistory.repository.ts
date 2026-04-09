@@ -26,11 +26,19 @@ export class UserSearchHistoryRepository implements Repository<UserSearchHistory
         return this.mapRow(entry);
     }
 
-    async getByUserId(userId: string): Promise<UserSearchHistorySchema[]> {
+    async countByUserId(userId: string): Promise<number> {
+        const [row] = await db`
+            SELECT count(*)::int as count FROM user_search_history WHERE user_id = ${userId}
+        `;
+        return row?.count || 0;
+    }
+
+    async getByUserId(userId: string, limit?: number, offset?: number): Promise<UserSearchHistorySchema[]> {
         const rows = await db`
             SELECT * FROM user_search_history 
             WHERE user_id = ${userId} 
             ORDER BY id DESC -- UUIDv7 is sortable by time
+            LIMIT ${limit ?? null} OFFSET ${offset ?? null}
         `;
         return rows.map((row) => this.mapRow(row));
     }

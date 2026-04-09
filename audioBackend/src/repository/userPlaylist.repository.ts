@@ -30,10 +30,19 @@ export class UserPlaylistRepository implements Repository<UserPlaylistSchema, Us
         return this.mapRow(playlist);
     }
 
-    /** Returns all playlists for a given user. */
-    async getByUserId(userId: string): Promise<UserPlaylistSchema[]> {
+    async countByUserId(userId: string): Promise<number> {
+        const [row] = await db`
+            SELECT count(*)::int as count FROM user_playlists WHERE user_id = ${userId}
+        `;
+        return row?.count || 0;
+    }
+
+    /** Returns paginated playlists for a given user. */
+    async getByUserId(userId: string, limit?: number, offset?: number): Promise<UserPlaylistSchema[]> {
         const rows = await db`
-            SELECT * FROM user_playlists WHERE user_id = ${userId}
+            SELECT * FROM user_playlists 
+            WHERE user_id = ${userId}
+            LIMIT ${limit ?? null} OFFSET ${offset ?? null}
         `;
         return rows.map((row) => this.mapRow(row));
     }
@@ -88,9 +97,19 @@ export class UserPlaylistRepository implements Repository<UserPlaylistSchema, Us
         return this.mapSongRow(entry);
     }
 
-    async getSongs(playlistId: string): Promise<UserPlaylistSongSchema[]> {
+    async countSongs(playlistId: string): Promise<number> {
+        const [row] = await db`
+            SELECT count(*)::int as count FROM user_playlist_songs 
+            WHERE playlist_id = ${playlistId}
+        `;
+        return row?.count || 0;
+    }
+
+    async getSongs(playlistId: string, limit?: number, offset?: number): Promise<UserPlaylistSongSchema[]> {
         const rows = await db`
-            SELECT * FROM user_playlist_songs WHERE playlist_id = ${playlistId}
+            SELECT * FROM user_playlist_songs 
+            WHERE playlist_id = ${playlistId}
+            LIMIT ${limit ?? null} OFFSET ${offset ?? null}
         `;
         return rows.map((row) => this.mapSongRow(row));
     }

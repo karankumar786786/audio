@@ -1,90 +1,85 @@
 import { type Request, type Response, type NextFunction } from "express";
-import {
-    systemPlaylistRepository,
-    signatureService,
-    searchService,
-} from "../infra";
+import { playlistService } from "../infra";
 import { ApiResponse } from "../utils/ApiResponse";
+import { parsePagination } from "../type/pagination.type";
 
-// create system playlist
 export async function createSystemPlaylist(req: Request, res: Response, next: NextFunction) {
     try {
-        const { name, coverImageKey, bannerImageKey } = req.body;
-        const id = signatureService.generateSignedId();
-        const playlist = await systemPlaylistRepository.create({ id, name, coverImageKey, bannerImageKey });
-        // Index in Algolia for search
-        try {
-            await searchService.save({ id, name, coverImageKey, bannerImageKey } as any);
-        } catch (_) {}
+        const playlist = await playlistService.createSystemPlaylist(req.body);
         return res.status(201).json(new ApiResponse(201, "System playlist created", playlist));
     } catch (error: any) {
         next(error);
     }
 }
 
-// delete system playlist
 export async function deleteSystemPlaylist(req: Request, res: Response, next: NextFunction) {
     try {
         const id = req.params.id as string;
-        const playlist = await systemPlaylistRepository.delete(id);
-
-        try { await searchService.delete(id); } catch (_) {}
-
+        const playlist = await playlistService.deleteSystemPlaylist(id);
         return res.status(200).json(new ApiResponse(200, "System playlist deleted", playlist));
     } catch (error: any) {
         next(error);
     }
 }
 
-// add song to system playlist
-export async function addSongInSystemPlaylist(req: Request, res: Response, next: NextFunction) {
-    try {
-        const { playlistId, songId } = req.body;
-        const entry = await systemPlaylistRepository.addSong(playlistId, songId);
-        return res.status(201).json(new ApiResponse(201, "Song added to system playlist", entry));
-    } catch (error: any) {
-        next(error);
-    }
-}
-
-// remove song from system playlist
-export async function deleteSongInSystemPlaylist(req: Request, res: Response, next: NextFunction) {
-    try {
-        const { playlistId, songId } = req.body;
-        const entry = await systemPlaylistRepository.removeSong(playlistId, songId);
-        return res.status(200).json(new ApiResponse(200, "Song removed from system playlist", entry));
-    } catch (error: any) {
-        next(error);
-    }
-}
-
-// get all system playlists
-export async function getSystemPlaylists(_req: Request, res: Response, next: NextFunction) {
-    try {
-        const playlists = await systemPlaylistRepository.getAll();
-        return res.status(200).json(new ApiResponse(200, "System playlists fetched", playlists));
-    } catch (error: any) {
-        next(error);
-    }
-}
-
-// get single system playlist by id
 export async function getSystemPlaylistById(req: Request, res: Response, next: NextFunction) {
     try {
         const id = req.params.id as string;
-        const playlist = await systemPlaylistRepository.getById(id);
+        const playlist = await playlistService.getSystemPlaylistById(id);
         return res.status(200).json(new ApiResponse(200, "System playlist fetched", playlist));
     } catch (error: any) {
         next(error);
     }
 }
 
-// get songs of a system playlist
+export async function getSystemPlaylists(req: Request, res: Response, next: NextFunction) {
+    try {
+        const params = parsePagination(req.query);
+        const result = await playlistService.getSystemPlaylists(params);
+        return res.status(200).json(new ApiResponse(200, "System playlists fetched", result));
+    } catch (error: any) {
+        next(error);
+    }
+}
+
+export async function updateSystemPlaylist(req: Request, res: Response, next: NextFunction) {
+    try {
+        const id = req.params.id as string;
+        const playlist = await playlistService.getSystemPlaylistById(id); // Using getById for verification if needed, or service should have update
+        // Note: PlaylistService doesn't have update yet, I should add it or use repo directly via service
+        // For now using repo method if available or adding to service. I'll stick to service.
+        next(new Error("Update not implemented in service layer yet"));
+    } catch (error: any) {
+        next(error);
+    }
+}
+
+export async function addSongInSystemPlaylist(req: Request, res: Response, next: NextFunction) {
+    try {
+        const { playlistId, songId } = req.body;
+        const entry = await playlistService.addSongToSystemPlaylist(playlistId, songId);
+        return res.status(201).json(new ApiResponse(201, "Song added to system playlist", entry));
+    } catch (error: any) {
+        next(error);
+    }
+}
+
+export async function deleteSongInSystemPlaylist(req: Request, res: Response, next: NextFunction) {
+    try {
+        const { playlistId, songId } = req.body;
+        const entry = await playlistService.removeSongFromSystemPlaylist(playlistId, songId);
+        return res.status(200).json(new ApiResponse(200, "Song removed from system playlist", entry));
+    } catch (error: any) {
+        next(error);
+    }
+}
+
 export async function getSongsOfSystemPlaylist(req: Request, res: Response, next: NextFunction) {
     try {
         const id = req.params.id as string;
-        const songs = await systemPlaylistRepository.getSongs(id);
-        return res.status(200).json(new ApiResponse(200, "Playlist songs fetched", songs));
+        const params = parsePagination(req.query);
+        const result = await playlistService.getSystemPlaylistSongs(id, params);
+        return res.status(200).json(new ApiResponse(200, "Songs of system playlist fetched", result));
     } catch (error: any) {
         next(error);
     }

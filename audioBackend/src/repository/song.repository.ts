@@ -35,8 +35,17 @@ export class SongRepository implements Repository<SongSchema, CreateSongData, Up
         return this.mapRow(song);
     }
 
-    async getAll(): Promise<SongSchema[]> {
-        const songs = await db`SELECT * FROM songs ORDER BY created_at DESC`;
+    async count(): Promise<number> {
+        const [row] = await db`SELECT count(*)::int as count FROM songs`;
+        return row?.count || 0;
+    }
+
+    async getAll(limit?: number, offset?: number): Promise<SongSchema[]> {
+        const songs = await db`
+            SELECT * FROM songs 
+            ORDER BY created_at DESC
+            LIMIT ${limit ?? null} OFFSET ${offset ?? null}
+        `;
         return songs.map((row) => this.mapRow(row));
     }
 

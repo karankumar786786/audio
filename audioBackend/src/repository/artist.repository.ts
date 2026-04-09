@@ -32,8 +32,17 @@ export class ArtistRepository implements Repository<ArtistSchema, CreateArtistDa
         return this.mapRow(artist);
     }
 
-    async getAll(): Promise<ArtistSchema[]> {
-        const artists = await db`SELECT * FROM artists ORDER BY created_at DESC`;
+    async count(): Promise<number> {
+        const [row] = await db`SELECT count(*)::int as count FROM artists`;
+        return row?.count || 0;
+    }
+
+    async getAll(limit?: number, offset?: number): Promise<ArtistSchema[]> {
+        const artists = await db`
+            SELECT * FROM artists 
+            ORDER BY created_at DESC
+            LIMIT ${limit ?? null} OFFSET ${offset ?? null}
+        `;
         return artists.map((row) => this.mapRow(row));
     }
 

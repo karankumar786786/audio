@@ -31,8 +31,17 @@ export class SystemPlaylistRepository implements Repository<SystemPlaylistSchema
         return this.mapRow(playlist);
     }
 
-    async getAll(): Promise<SystemPlaylistSchema[]> {
-        const rows = await db`SELECT * FROM system_playlists ORDER BY created_at DESC`;
+    async count(): Promise<number> {
+        const [row] = await db`SELECT count(*)::int as count FROM system_playlists`;
+        return row?.count || 0;
+    }
+
+    async getAll(limit?: number, offset?: number): Promise<SystemPlaylistSchema[]> {
+        const rows = await db`
+            SELECT * FROM system_playlists 
+            ORDER BY created_at DESC
+            LIMIT ${limit ?? null} OFFSET ${offset ?? null}
+        `;
         return rows.map((row) => this.mapRow(row));
     }
 
@@ -83,9 +92,19 @@ export class SystemPlaylistRepository implements Repository<SystemPlaylistSchema
         return this.mapSongRow(entry);
     }
 
-    async getSongs(playlistId: string): Promise<SystemPlaylistSongSchema[]> {
+    async countSongs(playlistId: string): Promise<number> {
+        const [row] = await db`
+            SELECT count(*)::int as count FROM system_playlist_songs 
+            WHERE playlist_id = ${playlistId}
+        `;
+        return row?.count || 0;
+    }
+
+    async getSongs(playlistId: string, limit?: number, offset?: number): Promise<SystemPlaylistSongSchema[]> {
         const rows = await db`
-            SELECT * FROM system_playlist_songs WHERE playlist_id = ${playlistId}
+            SELECT * FROM system_playlist_songs 
+            WHERE playlist_id = ${playlistId}
+            LIMIT ${limit ?? null} OFFSET ${offset ?? null}
         `;
         return rows.map((row) => this.mapSongRow(row));
     }

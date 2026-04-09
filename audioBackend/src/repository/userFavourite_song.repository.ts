@@ -36,9 +36,18 @@ export class UserFavouriteSongRepository implements Repository<UserFavouriteSong
         return this.mapRow(entry);
     }
 
-    async getByUserId(userId: string): Promise<UserFavouriteSongSchema[]> {
+    async countByUserId(userId: string): Promise<number> {
+        const [row] = await db`
+            SELECT count(*)::int as count FROM user_favourite_songs WHERE user_id = ${userId}
+        `;
+        return row?.count || 0;
+    }
+
+    async getByUserId(userId: string, limit?: number, offset?: number): Promise<UserFavouriteSongSchema[]> {
         const rows = await db`
-            SELECT * FROM user_favourite_songs WHERE user_id = ${userId}
+            SELECT * FROM user_favourite_songs 
+            WHERE user_id = ${userId}
+            LIMIT ${limit ?? null} OFFSET ${offset ?? null}
         `;
         return rows.map((row) => this.mapRow(row));
     }

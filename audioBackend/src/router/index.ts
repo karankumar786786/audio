@@ -6,6 +6,7 @@ import { systemPlaylistRouter } from "./systemPlaylist.route";
 import { userPlaylistRouter } from "./userPlaylist.route";
 import { artistRouter } from "./artist.route";
 import { searchRouter } from "./search.route";
+import { miscRouter } from "./misc.route";
 
 export const masterRouter = Router();
 
@@ -16,3 +17,4 @@ masterRouter.use("/system-playlists", systemPlaylistRouter);
 masterRouter.use("/playlists", userPlaylistRouter);
 masterRouter.use("/artists", artistRouter);
 masterRouter.use("/search", searchRouter);
+masterRouter.use("/misc", miscRouter);
