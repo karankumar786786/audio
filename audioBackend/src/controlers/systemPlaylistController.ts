@@ -12,12 +12,10 @@ export async function createSystemPlaylist(req: Request, res: Response, next: Ne
         const { name, coverImageKey, bannerImageKey } = req.body;
         const id = signatureService.generateSignedId();
         const playlist = await systemPlaylistRepository.create({ id, name, coverImageKey, bannerImageKey });
-
         // Index in Algolia for search
         try {
             await searchService.save({ id, name, coverImageKey, bannerImageKey } as any);
         } catch (_) {}
-
         return res.status(201).json(new ApiResponse(201, "System playlist created", playlist));
     } catch (error: any) {
         next(error);

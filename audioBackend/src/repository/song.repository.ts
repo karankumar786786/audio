@@ -3,7 +3,8 @@ import type { SongSchema } from "../schema/songs.schema";
 import type { Repository } from "../type/repository.type";
 
 type CreateSongData = Omit<SongSchema, "createdAt">;
-type UpdateSongData = Partial<CreateSongData>;
+type partial = Partial<CreateSongData>;
+type UpdateSongData = Omit<partial,"songKey" | 'language' | 'jobId' | 'duration'>;
 
 export class SongRepository implements Repository<SongSchema, CreateSongData, UpdateSongData> {
 
@@ -45,11 +46,7 @@ export class SongRepository implements Repository<SongSchema, CreateSongData, Up
             SET
                 title       = COALESCE(${data.title ?? null}, title),
                 artist_name = COALESCE(${data.artistName ?? null}, artist_name),
-                duration  = COALESCE(${data.duration ?? null}, time_in_ms),
-                song_key    = COALESCE(${data.songKey ?? null}, song_key),
                 image_key   = COALESCE(${data.imageKey ?? null}, image_key),
-                language    = COALESCE(${data.language ?? null}, language),
-                job_id      = COALESCE(${data.jobId ?? null}, job_id)
             WHERE id = ${id}
             RETURNING *
         `;
@@ -61,6 +58,7 @@ export class SongRepository implements Repository<SongSchema, CreateSongData, Up
         const [song] = await db`
             DELETE FROM songs WHERE id = ${id} RETURNING *
         `;
+        
         if (!song) throw new Error(`Song with id ${id} not found`);
         return this.mapRow(song);
     }

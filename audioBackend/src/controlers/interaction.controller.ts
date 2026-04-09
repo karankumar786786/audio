@@ -1,9 +1,9 @@
 import { type Request, type Response, type NextFunction } from "express";
-import { randomUUIDv7 } from "bun";
 import {
     userHistoryRepository,
     recommendationService,
     db,
+    signatureService,
 } from "../infra";
 import { ApiResponse } from "../utils/ApiResponse";
 
@@ -11,7 +11,7 @@ import { ApiResponse } from "../utils/ApiResponse";
 export async function addListen(req: Request, res: Response, next: NextFunction) {
     try {
         const { userId, songId, part } = req.body;
-        const id = randomUUIDv7();
+        const id = signatureService.generateSignedId();
         const entry = await userHistoryRepository.create({ id, userId, songId, part: part ?? 100 });
 
         // Sync listen portion with Recombee (part is 0-100, Recombee expects 0-1)
