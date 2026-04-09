@@ -55,7 +55,7 @@ export async function deleteSongInUserPlaylist(req: Request, res: Response, next
     }
 }
 
-export async function getSongsOfUserPlaylist(req: Request, res: Response, next: NextFunction) {
+export async function getUserPlaylistSongs(req: Request, res: Response, next: NextFunction) {
     try {
         const id = req.params.id as string;
         const params = parsePagination(req.query);
