@@ -14,6 +14,7 @@ interface RecommendationService<T> {
   removeFromPlaylist(userId: string, id: string): Promise<void>;
   delete(id: string): Promise<void>;
   recommendUser(userId: string, limit: number): Promise<Partial<T>[]>;
+  resetDatabase(): Promise<void>;
 }
 
 export interface RecommendationSchema {
@@ -248,5 +249,11 @@ export class RecommendationServiceImpl implements RecommendationService<Recommen
       id: r.id,
       ...(r.values as Omit<RecommendationSchema, "id">),
     }));
+  }
+
+  async resetDatabase(): Promise<void> {
+    this.logger.info(`[RECOMBEE] Resetting whole database`);
+    const req = new requests.ResetDatabase();
+    await this.send(req);
   }
 }

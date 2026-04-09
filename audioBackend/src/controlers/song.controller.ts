@@ -12,11 +12,8 @@ export async function createSong(req: Request, res: Response, next: NextFunction
     const input: CreateSongInput = req.body;
     const jobId = signatureService.generateSignedId();
     const songId = signatureService.generateSignedId();
-
     try {
         logger.info(`[CONTROLLER] Initializing Processing Job ${jobId} for song: ${input.title}`);
-
-        // 1. Initialize Processing Job in DB
         await songProcessingJobRepository.create({
             id: songId, 
             jobId: jobId,
@@ -30,8 +27,6 @@ export async function createSong(req: Request, res: Response, next: NextFunction
             transcribed: false,
             extractedFeatures: false,
         });
-
-        // 2. Trigger the first step of the chained Inngest Workflow
         await inngest.send({
             name: "audio/song.transcode",
             data: {
@@ -39,15 +34,12 @@ export async function createSong(req: Request, res: Response, next: NextFunction
                 jobId,
             }
         });
-
         logger.info(`[CONTROLLER] Dispatched Inngest event for Job ${jobId}`);
-
         return res.status(202).json(new ApiResponse(202, "Song processing initiated successfully", {
             id: songId,
             jobId: jobId,
             status: "pending"
         }));
-
     } catch (error: any) {
         logger.error(`[CONTROLLER] Failed to initiate job ${jobId}:`, error);
         next(error);

@@ -5,13 +5,9 @@ export const indexRecombee = inngest.createFunction(
     async ({ event, step }: any) => {
         const { jobId, songId } = event.data;
         logger.info(`[RECOMBEE] Received trigger for songId: ${songId}, jobId: ${jobId}`);
-        
-        // Fetch data
         const job = await step.run("fetch-job-data", async () => {
             return await songProcessingJobRepository.getById(songId);
         });
-
-        // Step 1: Sync with Recombee
         await step.run("sync-with-recombee", async () => {
             logger.info(`[INDEXING] Syncing song ${songId} (Job: ${jobId}) with Recombee`);
             await recommendationService.create({
@@ -31,13 +27,10 @@ export const indexRecombee = inngest.createFunction(
             });
             await songProcessingJobRepository.update(songId, { savedInRecommendation: true });
         });
-
-        // Step 2: Trigger Algolia
         await step.sendEvent("trigger-algolia-indexing", {
             name: "audio/song.index.algolia",
             data: { jobId, songId }
         });
-
         return { status: "success", jobId, songId };
     }
 );

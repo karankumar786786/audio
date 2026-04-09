@@ -77,4 +77,18 @@ export class AlgoliaService {
             objectID,
         });
     }
+
+    async clearIndex(): Promise<void> {
+        this.logger.info(`[ALGOLIA] Clearing index: ${this.indexName}`);
+        await this.client.clearObjects({
+            indexName: this.indexName,
+        });
+    }
+
+    async deleteIndex(): Promise<void> {
+        this.logger.info(`[ALGOLIA] Deleting index: ${this.indexName}`);
+        await this.client.deleteIndex({
+            indexName: this.indexName,
+        });
+    }
 }

@@ -5,7 +5,6 @@ export const processExtractedFeatures = inngest.createFunction(
     async ({ event, step }: any) => {
         const { jobId, songId, features } = event.data;
         logger.info(`[FEATURES] Received callback for songId: ${songId}, jobId: ${jobId}`);
-        
         await step.run("update-job-metadata", async () => {
             logger.info(`[FEATURES] Saving extracted features to DB for song ${songId} (Job: ${jobId})`);
             await songProcessingJobRepository.update(songId, {
@@ -20,8 +19,6 @@ export const processExtractedFeatures = inngest.createFunction(
                 extractedFeatures: true
             });
         });
-
-        // Trigger Recombee Indexing
         await step.sendEvent("trigger-recombee", {
             name: "audio/song.index.recombee",
             data: { jobId, songId }

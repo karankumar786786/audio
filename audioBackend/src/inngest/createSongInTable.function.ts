@@ -1,4 +1,5 @@
-import { inngest, songRepository, songProcessingJobRepository, logger } from "../infra";
+import { inngest, songRepository, songProcessingJobRepository, logger, storageService } from "../infra";
+import type { SongProcessingJob } from "../schema";
 
 export const finalizeSong = inngest.createFunction(
     { id: "finalize-song", triggers: [{ event: "audio/song.final.create" }] as any },
@@ -7,10 +8,9 @@ export const finalizeSong = inngest.createFunction(
         logger.info(`[FINALIZE] Received trigger for songId: ${songId}, jobId: ${jobId}`);
         
         // Fetch final state from job record
-        const job = await step.run("fetch-final-job-data", async () => {
+        const job:SongProcessingJob = await step.run("fetch-final-job-data", async () => {
             return await songProcessingJobRepository.getById(songId);
         });
-
         // Step 1: Create the actual song record in the library
         await step.run("create-permanent-song-record", async () => {
             logger.info(`[FINALIZE] Creating permanent library record for song ${songId} (Job: ${jobId})`);
@@ -31,6 +31,9 @@ export const finalizeSong = inngest.createFunction(
             logger.info(`[PIPELINE] Song ${songId} successfully finished.`);
         });
 
+        await step.run("clear temp bucket", async () => {
+            await storageService.deleteObject(process.env.TEMP_BUCKET_NAME!,job.tempSongKey);
+        });
         return { status: "success", jobId, songId };
     }
 );
