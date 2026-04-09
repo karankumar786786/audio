@@ -59,7 +59,13 @@ export const recommendationService = new RecommendationServiceImpl(
 
 import { 
     SongRepository, 
-    SongProcessingJobRepository 
+    SongProcessingJobRepository,
+    ArtistRepository,
+    SystemPlaylistRepository,
+    UserPlaylistRepository,
+    UserFavouriteSongRepository,
+    UserHistoryRepository,
+    UserSearchHistoryRepository,
 } from "../repository";
 
 // Signature Service
@@ -70,5 +76,11 @@ export const signatureService = new SignatureUtility(
 // Repositories
 export const songRepository = new SongRepository();
 export const songProcessingJobRepository = new SongProcessingJobRepository();
+export const artistRepository = new ArtistRepository();
+export const systemPlaylistRepository = new SystemPlaylistRepository();
+export const userPlaylistRepository = new UserPlaylistRepository();
+export const userFavouriteSongRepository = new UserFavouriteSongRepository();
+export const userHistoryRepository = new UserHistoryRepository();
+export const userSearchHistoryRepository = new UserSearchHistoryRepository();
 
 export const inngest = new Inngest({id:"test-music"})
