@@ -1,5 +1,6 @@
 import { Router } from "express";
 import {
+    createUser,
     addSongInUserFavourites,
     deleteSongInUserFavourites,
     getUserFavourites,
@@ -10,6 +11,10 @@ import {
 } from "../controlers/user.controller";
 
 export const userRouter = Router();
+
+// Create / upsert user (for testing & Auth0 post-login callback)
+userRouter.post("/", createUser);
+
 
 // Favourites
 userRouter.post("/favourites", addSongInUserFavourites);

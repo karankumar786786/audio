@@ -2,6 +2,23 @@ import { type Request, type Response, type NextFunction } from "express";
 import { signatureService, userService } from "../infra";
 import { ApiResponse } from "../utils/ApiResponse";
 import { parsePagination } from "../type/pagination.type";
+import { createUserSchema } from "../schema/user.schema";
+import { ApiError } from "../utils/ApiError";
+
+export async function createUser(req: Request, res: Response, next: NextFunction) {
+    try {
+        const parsed = createUserSchema.safeParse(req.body);
+        if (!parsed.success) {
+            return next(new ApiError(400, parsed.error.issues[0]?.message ?? "Invalid input"));
+        }
+        const { id, email } = parsed.data;
+        const user = await userService.createUser(id, email);
+        return res.status(201).json(new ApiResponse(201, "User created successfully", user));
+    } catch (error: any) {
+        next(error);
+    }
+}
+
 
 export async function addSongInUserFavourites(req: Request, res: Response, next: NextFunction) {
     try {

@@ -1,6 +1,7 @@
 import { config } from "dotenv";
 import { neon } from "@neondatabase/serverless";
 import {Inngest} from "inngest";
+import ImageKit from "imagekit";
 config();
 
 import { AlgoliaService } from "../lib/search";
@@ -71,6 +72,7 @@ import {
     UserPlaylistRepository,
     UserFavouriteSongRepository,
     UserHistoryRepository,
+    UserRepository,
     UserSearchHistoryRepository,
 } from "../repository";
 
@@ -87,6 +89,7 @@ export const systemPlaylistRepository = new SystemPlaylistRepository();
 export const userPlaylistRepository = new UserPlaylistRepository();
 export const userFavouriteSongRepository = new UserFavouriteSongRepository();
 export const userHistoryRepository = new UserHistoryRepository();
+export const userRepository = new UserRepository();
 export const userSearchHistoryRepository = new UserSearchHistoryRepository();
 
 // Services
@@ -98,3 +101,11 @@ export const interactionService = new InteractionService();
 export const internalSearchService = new SearchService();
 
 export const inngest = new Inngest({id:"test-music"})
+
+export const imagekitClient = new ImageKit(
+    {
+        publicKey:process.env.IMAGEKIT_PUBLIC_KEY!,
+        privateKey: process.env.IMAGEKIT_PRIVATE_KEY!,
+        urlEndpoint: process.env.IMAGEKIT_URL_ENDPOINT!
+    }
+)

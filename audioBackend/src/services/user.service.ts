@@ -1,6 +1,7 @@
 import { 
     userFavouriteSongRepository, 
     userHistoryRepository, 
+    userRepository,
     userSearchHistoryRepository,
     recommendationService
 } from "../infra";
@@ -8,6 +9,13 @@ import type { PaginationParams, PaginatedResult } from "../type/pagination.type"
 import { buildPaginatedResult } from "../type/pagination.type";
 
 export class UserService {
+    // ── Users ────────────────────────────────────────────────────────────────────
+
+    /** Upsert a user by Auth0 id. Safe to call on every login. */
+    async createUser(id: string, email: string) {
+        return await userRepository.create({ id, email });
+    }
+
     // ── Favourites ──────────────────────────────────────────────────────────────
 
     async addFavourite(userId: string, songId: string, id: string) {

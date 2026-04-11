@@ -8,6 +8,15 @@ const sql = neon(`${process.env.DATABASE_URL}`);
     try {
         console.log("🚀 Initializing database schema...");
 
+        // 👤 USERS (Auth0 id is used as primary key in production)
+        await sql`
+            CREATE TABLE IF NOT EXISTS users (
+                id VARCHAR(255) PRIMARY KEY,
+                email VARCHAR(255) NOT NULL UNIQUE,
+                created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+            )
+        `;
+
         // 🎵 SONGS
         await sql`
         CREATE TABLE IF NOT EXISTS songs (
@@ -75,6 +84,11 @@ const sql = neon(`${process.env.DATABASE_URL}`);
                 name VARCHAR(255) NOT NULL,
                 user_id VARCHAR(255) NOT NULL,
 
+                CONSTRAINT fk_user_playlist_user
+                    FOREIGN KEY (user_id)
+                    REFERENCES users(id)
+                    ON DELETE CASCADE,
+
                 CONSTRAINT unique_user_playlist UNIQUE (name, user_id)
             )
         `;
@@ -106,6 +120,11 @@ const sql = neon(`${process.env.DATABASE_URL}`);
                 user_id VARCHAR(255) NOT NULL,
                 song_id VARCHAR(255) NOT NULL,
 
+                CONSTRAINT fk_user_favourite_user
+                    FOREIGN KEY (user_id)
+                    REFERENCES users(id)
+                    ON DELETE CASCADE,
+
                 CONSTRAINT fk_user_favourite_song
                     FOREIGN KEY (song_id)
                     REFERENCES songs(id)
@@ -124,6 +143,11 @@ const sql = neon(`${process.env.DATABASE_URL}`);
                 part INT NOT NULL,
                 listened_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 
+                CONSTRAINT fk_history_user
+                    FOREIGN KEY (user_id)
+                    REFERENCES users(id)
+                    ON DELETE CASCADE,
+
                 CONSTRAINT fk_history_song
                     FOREIGN KEY (song_id)
                     REFERENCES songs(id)
@@ -135,7 +159,12 @@ const sql = neon(`${process.env.DATABASE_URL}`);
             CREATE TABLE IF NOT EXISTS user_search_history(
             id VARCHAR(255) PRIMARY KEY,
             user_id VARCHAR(255) NOT NULL,
-            searched_text VARCHAR(255) NOT NULL
+            searched_text VARCHAR(255) NOT NULL,
+
+            CONSTRAINT fk_search_history_user
+                FOREIGN KEY (user_id)
+                REFERENCES users(id)
+                ON DELETE CASCADE
             )
         `
 

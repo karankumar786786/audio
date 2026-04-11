@@ -2,6 +2,7 @@ export * from "./artist.schema";
 export * from "./songProcessingJob.schema";
 export * from "./songs.schema";
 export * from "./systemPlaylist.schema";
+export * from "./user.schema";
 export * from "./userFavouriteSong.schema";
 export * from "./userHistory.schema";
 export * from "./userPlaylist.schema";

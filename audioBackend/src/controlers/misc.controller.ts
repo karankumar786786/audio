@@ -1,6 +1,7 @@
 import { type Request, type Response, type NextFunction } from "express";
 import { signatureService, storageService } from "../infra";
 import { ApiResponse } from "../utils/ApiResponse";
+import {imagekitClient} from "../infra";
 
 /**
  * Controller for miscellaneous operations like generating pre-signed URLs.
