@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "dev": "bun --watch src/index.ts",
-    "inngest": "npx --yes --ignore-scripts=false inngest-cli@latest dev",
+    "inngest": "npx inngest-cli@latest dev",
     "db:init": "bun run scripts/db/init.ts",
     "db:clean": "bun run scripts/db/clean.ts",
     "db:deep-clean": "bun run scripts/db/deep-clean.ts",

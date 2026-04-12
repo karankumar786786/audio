@@ -11,7 +11,7 @@ import {
 
 export const systemPlaylistRouter = Router();
 
-systemPlaylistRouter.post("/create", createSystemPlaylist);
+systemPlaylistRouter.post("/", createSystemPlaylist);
 systemPlaylistRouter.get("/", getSystemPlaylists);
 systemPlaylistRouter.get("/:id", getSystemPlaylistById);
 systemPlaylistRouter.get("/:id/songs", getSongsOfSystemPlaylist);

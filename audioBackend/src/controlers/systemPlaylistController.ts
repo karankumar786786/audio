@@ -1,11 +1,27 @@
 import { type Request, type Response, type NextFunction } from "express";
 import { playlistService } from "../infra";
 import { ApiResponse } from "../utils/ApiResponse";
+import { ApiError } from "../utils/ApiError";
 import { parsePagination } from "../type/pagination.type";
+import { systemPlaylistSchema, systemPlaylistSongSchema } from "../schema/systemPlaylist.schema";
+import { z } from "zod";
+
+// Validation schema for create (id, createdAt, updatedAt are server-generated)
+const createSystemPlaylistInput = systemPlaylistSchema
+    .omit({ id: true, createdAt: true, updatedAt: true })
+    .extend({
+        name: z.string({ error: "name is required" }).min(1, { message: "name cannot be empty" }),
+        coverImageKey: z.string({ error: "coverImageKey is required" }).min(1, { message: "coverImageKey cannot be empty" }),
+        bannerImageKey: z.string({ error: "bannerImageKey is required" }).min(1, { message: "bannerImageKey cannot be empty" }),
+    });
 
 export async function createSystemPlaylist(req: Request, res: Response, next: NextFunction) {
     try {
-        const playlist = await playlistService.createSystemPlaylist(req.body);
+        const parsed = createSystemPlaylistInput.safeParse(req.body);
+        if (!parsed.success) {
+            return next(new ApiError(400, parsed.error.issues[0]?.message ?? "Invalid input"));
+        }
+        const playlist = await playlistService.createSystemPlaylist(parsed.data);
         return res.status(201).json(new ApiResponse(201, "System playlist created", playlist));
     } catch (error: any) {
         next(error);
@@ -56,7 +72,13 @@ export async function updateSystemPlaylist(req: Request, res: Response, next: Ne
 
 export async function addSongInSystemPlaylist(req: Request, res: Response, next: NextFunction) {
     try {
-        const { playlistId, songId } = req.body;
+        const parsed = systemPlaylistSongSchema
+            .omit({ id: true })
+            .safeParse(req.body);
+        if (!parsed.success) {
+            return next(new ApiError(400, parsed.error.issues[0]?.message ?? "Invalid input"));
+        }
+        const { playlistId, songId } = parsed.data;
         const entry = await playlistService.addSongToSystemPlaylist(playlistId, songId);
         return res.status(201).json(new ApiResponse(201, "Song added to system playlist", entry));
     } catch (error: any) {

@@ -13,7 +13,7 @@ export const masterRouter = Router();
 masterRouter.use("/songs", songRouter);
 masterRouter.use("/users", userRouter);
 masterRouter.use("/interactions", interactionRouter);
-masterRouter.use("/system-playlists", systemPlaylistRouter);
+masterRouter.use("/systemplaylists", systemPlaylistRouter);
 masterRouter.use("/playlists", userPlaylistRouter);
 masterRouter.use("/artists", artistRouter);
 masterRouter.use("/search", searchRouter);

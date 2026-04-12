@@ -10,7 +10,7 @@ import {
 
 export const artistRouter = Router();
 
-artistRouter.post("/create", createArtist);
+artistRouter.post("/", createArtist);
 artistRouter.get("/", getArtists);
 artistRouter.get("/:id", getArtistById);
 artistRouter.get("/:id/songs", getSongsOfArtist);

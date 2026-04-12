@@ -1,11 +1,23 @@
 import { type Request, type Response, type NextFunction } from "express";
 import { artistService } from "../infra";
 import { ApiResponse } from "../utils/ApiResponse";
+import { ApiError } from "../utils/ApiError";
 import { parsePagination } from "../type/pagination.type";
+import { artistSchema, coerceDob } from "../schema/artist.schema";
 
 export async function createArtist(req: Request, res: Response, next: NextFunction) {
     try {
-        const artist = await artistService.createArtist(req.body);
+        const parsed = artistSchema
+            .omit({ id: true, createdAt: true })
+            .safeParse(req.body);
+
+        if (!parsed.success) {
+            return next(new ApiError(400, parsed.error.issues[0]?.message ?? "Invalid input"));
+        }
+
+        // Coerce dob to ISO datetime so Postgres TIMESTAMPTZ is happy
+        const body = { ...parsed.data, dob: coerceDob(parsed.data.dob) };
+        const artist = await artistService.createArtist(body);
         return res.status(201).json(new ApiResponse(201, "Artist created", artist));
     } catch (error: any) {
         next(error);
