@@ -51,11 +51,11 @@ export class InteractionService {
         return buildPaginatedResult(trending, total, params);
     }
 
-    async getRecommendations(userId: string, limit: number) {
+    async getRecommendations(userId: string, limit: number): Promise<PaginatedResult<any>> {
         const recommendations = await recommendationService.recommendUser(userId, limit);
         const songIds = recommendations.map(r => r.id);
         
-        if (songIds.length === 0) return [];
+        if (songIds.length === 0) return buildPaginatedResult([], 0, { page: 1, limit });
 
         // Fetch full song data from Postgres
         const songs = await db`
@@ -75,6 +75,8 @@ export class InteractionService {
 
         // Re-order songs to match Recombee's ranking
         const songMap = new Map(songs.map(s => [s.id, s]));
-        return songIds.map(id => songMap.get(id)).filter(Boolean);
+        const result = songIds.map(id => songMap.get(id)).filter(Boolean);
+        
+        return buildPaginatedResult(result, result.length, { page: 1, limit });
     }
 }
