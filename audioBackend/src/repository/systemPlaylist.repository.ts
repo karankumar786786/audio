@@ -100,13 +100,24 @@ export class SystemPlaylistRepository implements Repository<SystemPlaylistSchema
         return row?.count || 0;
     }
 
-    async getSongs(playlistId: string, limit?: number, offset?: number): Promise<SystemPlaylistSongSchema[]> {
+    async getSongs(playlistId: string, limit?: number, offset?: number): Promise<any[]> {
         const rows = await db`
-            SELECT * FROM system_playlist_songs 
-            WHERE playlist_id = ${playlistId}
+            SELECT 
+                s.id,
+                s.title,
+                s.artist_name AS "artistName",
+                s.duration,
+                s.song_key AS "songKey",
+                s.image_key AS "imageKey",
+                s.language,
+                s.job_id AS "jobId",
+                s.created_at AS "createdAt"
+            FROM system_playlist_songs sps
+            JOIN songs s ON s.id = sps.song_id
+            WHERE sps.playlist_id = ${playlistId}
             LIMIT ${limit ?? null} OFFSET ${offset ?? null}
         `;
-        return rows.map((row) => this.mapSongRow(row));
+        return rows;
     }
 
     // Maps DB snake_case row → camelCase SystemPlaylistSchema

@@ -52,6 +52,29 @@ export class InteractionService {
     }
 
     async getRecommendations(userId: string, limit: number) {
-        return await recommendationService.recommendUser(userId, limit);
+        const recommendations = await recommendationService.recommendUser(userId, limit);
+        const songIds = recommendations.map(r => r.id);
+        
+        if (songIds.length === 0) return [];
+
+        // Fetch full song data from Postgres
+        const songs = await db`
+            SELECT 
+                id,
+                title,
+                artist_name AS "artistName",
+                duration,
+                song_key AS "songKey",
+                image_key AS "imageKey",
+                language,
+                job_id AS "jobId",
+                created_at AS "createdAt"
+            FROM songs
+            WHERE id = ANY(${songIds})
+        `;
+
+        // Re-order songs to match Recombee's ranking
+        const songMap = new Map(songs.map(s => [s.id, s]));
+        return songIds.map(id => songMap.get(id)).filter(Boolean);
     }
 }

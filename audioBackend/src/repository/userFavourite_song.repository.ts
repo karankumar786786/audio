@@ -34,13 +34,24 @@ export class UserFavouriteSongRepository implements Repository<UserFavouriteSong
         return row?.count || 0;
     }
 
-    async getByUserId(userId: string, limit?: number, offset?: number): Promise<UserFavouriteSongSchema[]> {
+    async getByUserId(userId: string, limit?: number, offset?: number): Promise<any[]> {
         const rows = await db`
-            SELECT * FROM user_favourite_songs 
-            WHERE user_id = ${userId}
+            SELECT 
+                s.id,
+                s.title,
+                s.artist_name AS "artistName",
+                s.duration,
+                s.song_key AS "songKey",
+                s.image_key AS "imageKey",
+                s.language,
+                s.job_id AS "jobId",
+                s.created_at AS "createdAt"
+            FROM user_favourite_songs ufs
+            JOIN songs s ON s.id = ufs.song_id
+            WHERE ufs.user_id = ${userId}
             LIMIT ${limit ?? null} OFFSET ${offset ?? null}
         `;
-        return rows.map((row) => this.mapRow(row));
+        return rows;
     }
 
     async getAll(): Promise<UserFavouriteSongSchema[]> {

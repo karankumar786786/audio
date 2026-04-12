@@ -105,13 +105,24 @@ export class UserPlaylistRepository implements Repository<UserPlaylistSchema, Us
         return row?.count || 0;
     }
 
-    async getSongs(playlistId: string, limit?: number, offset?: number): Promise<UserPlaylistSongSchema[]> {
+    async getSongs(playlistId: string, limit?: number, offset?: number): Promise<any[]> {
         const rows = await db`
-            SELECT * FROM user_playlist_songs 
-            WHERE playlist_id = ${playlistId}
+            SELECT 
+                s.id,
+                s.title,
+                s.artist_name AS "artistName",
+                s.duration,
+                s.song_key AS "songKey",
+                s.image_key AS "imageKey",
+                s.language,
+                s.job_id AS "jobId",
+                s.created_at AS "createdAt"
+            FROM user_playlist_songs ups
+            JOIN songs s ON s.id = ups.song_id
+            WHERE ups.playlist_id = ${playlistId}
             LIMIT ${limit ?? null} OFFSET ${offset ?? null}
         `;
-        return rows.map((row) => this.mapSongRow(row));
+        return rows;
     }
 
     // Maps DB snake_case row → camelCase UserPlaylistSchema
