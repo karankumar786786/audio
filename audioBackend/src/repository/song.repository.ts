@@ -55,7 +55,7 @@ export class SongRepository implements Repository<SongSchema, CreateSongData, Up
             SET
                 title       = COALESCE(${data.title ?? null}, title),
                 artist_name = COALESCE(${data.artistName ?? null}, artist_name),
-                image_key   = COALESCE(${data.imageKey ?? null}, image_key),
+                image_key   = COALESCE(${data.imageKey ?? null}, image_key)
             WHERE id = ${id}
             RETURNING *
         `;

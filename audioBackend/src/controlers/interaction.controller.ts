@@ -1,11 +1,19 @@
 import { type Request, type Response, type NextFunction } from "express";
 import { interactionService } from "../infra";
 import { ApiResponse } from "../utils/ApiResponse";
+import { ApiError } from "../utils/ApiError";
 import { parsePagination } from "../type/pagination.type";
+import { userHistorySchema } from "../schema/userHistory.schema";
+
+const addListenInput = userHistorySchema.pick({ userId: true, songId: true, part: true });
 
 export async function addListen(req: Request, res: Response, next: NextFunction) {
     try {
-        const { userId, songId, part } = req.body;
+        const parsed = addListenInput.safeParse(req.body);
+        if (!parsed.success) {
+            return next(new ApiError(400, parsed.error.issues[0]?.message ?? "Invalid input"));
+        }
+        const { userId, songId, part } = parsed.data;
         const entry = await interactionService.recordListen(userId, songId, part);
         return res.status(201).json(new ApiResponse(201, "Listen recorded", entry));
     } catch (error: any) {

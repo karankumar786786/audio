@@ -5,9 +5,8 @@ import { CreateSongSchema } from "../schema/songs.schema";
 
 export const songRouter = Router();
 
-songRouter.post("/create", validate(CreateSongSchema), createSong);
+songRouter.post("/", validate(CreateSongSchema), createSong);
 songRouter.get("/", getSongs);
-songRouter.get("/search", searchSongs);
 songRouter.get("/:id", getSongById);
 songRouter.put("/:id", updateSong);
 songRouter.delete("/:id", deleteSong);

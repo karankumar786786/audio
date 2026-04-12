@@ -15,16 +15,7 @@ export class UserFavouriteSongRepository implements Repository<UserFavouriteSong
             ON CONFLICT (user_id, song_id) DO NOTHING
             RETURNING *
         `;
-        // If conflict occurs, the entry will be undefined. We can either return the existing or throw.
-        // For simplicity, if it fails to return (e.g. conflict), we try to fetch it.
-        if (!entry) {
-            const [existing] = await db`
-                SELECT * FROM user_favourite_songs 
-                WHERE user_id = ${data.userId} AND song_id = ${data.songId}
-            `;
-            if (!existing) throw new Error("Failed to create or retrieve favourite entry");
-            return this.mapRow(existing);
-        }
+        if (!entry) throw new Error("Song already exists in favourites");
         return this.mapRow(entry);
     }
 

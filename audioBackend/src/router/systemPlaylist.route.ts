@@ -13,8 +13,8 @@ export const systemPlaylistRouter = Router();
 
 systemPlaylistRouter.post("/", createSystemPlaylist);
 systemPlaylistRouter.get("/", getSystemPlaylists);
+systemPlaylistRouter.post("/songs", addSongInSystemPlaylist);
+systemPlaylistRouter.delete("/songs", deleteSongInSystemPlaylist);
 systemPlaylistRouter.get("/:id", getSystemPlaylistById);
 systemPlaylistRouter.get("/:id/songs", getSongsOfSystemPlaylist);
 systemPlaylistRouter.delete("/:id", deleteSystemPlaylist);
-systemPlaylistRouter.post("/songs", addSongInSystemPlaylist);
-systemPlaylistRouter.delete("/songs", deleteSongInSystemPlaylist);

@@ -234,9 +234,9 @@ export class RecommendationServiceImpl implements RecommendationService<Recommen
       includedProperties: [
         "title",
         "artistName",
-        "timeInMs",
-        "songUrl",
-        "imageUrl",
+        "duration",
+        "songKey",
+        "imageKey",
         "language",
       ],
     });

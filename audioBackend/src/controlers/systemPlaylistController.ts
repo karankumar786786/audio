@@ -88,6 +88,12 @@ export async function addSongInSystemPlaylist(req: Request, res: Response, next:
 
 export async function deleteSongInSystemPlaylist(req: Request, res: Response, next: NextFunction) {
     try {
+        const parsed = systemPlaylistSongSchema
+            .omit({ id: true })
+            .safeParse(req.body);
+        if (!parsed.success) {
+            return next(new ApiError(400, parsed.error.issues[0]?.message ?? "Invalid input"));
+        };
         const { playlistId, songId } = req.body;
         const entry = await playlistService.removeSongFromSystemPlaylist(playlistId, songId);
         return res.status(200).json(new ApiResponse(200, "Song removed from system playlist", entry));

@@ -3,7 +3,10 @@ import { signatureService, userService } from "../infra";
 import { ApiResponse } from "../utils/ApiResponse";
 import { parsePagination } from "../type/pagination.type";
 import { createUserSchema } from "../schema/user.schema";
+import { userFavouriteSongSchema } from "../schema/userFavouriteSong.schema";
 import { ApiError } from "../utils/ApiError";
+
+const favouriteSongInput = userFavouriteSongSchema.pick({ userId: true, songId: true });
 
 export async function createUser(req: Request, res: Response, next: NextFunction) {
     try {
@@ -22,7 +25,11 @@ export async function createUser(req: Request, res: Response, next: NextFunction
 
 export async function addSongInUserFavourites(req: Request, res: Response, next: NextFunction) {
     try {
-        const { userId, songId } = req.body;
+        const parsed = favouriteSongInput.safeParse(req.body);
+        if (!parsed.success) {
+            return next(new ApiError(400, parsed.error.issues[0]?.message ?? "Invalid input"));
+        }
+        const { userId, songId } = parsed.data;
         const id = signatureService.generateSignedId();
         const entry = await userService.addFavourite(userId, songId, id);
         return res.status(201).json(new ApiResponse(201, "Song added to favourites", entry));
@@ -33,7 +40,11 @@ export async function addSongInUserFavourites(req: Request, res: Response, next:
 
 export async function deleteSongInUserFavourites(req: Request, res: Response, next: NextFunction) {
     try {
-        const { userId, songId } = req.body;
+        const parsed = favouriteSongInput.safeParse(req.body);
+        if (!parsed.success) {
+            return next(new ApiError(400, parsed.error.issues[0]?.message ?? "Invalid input"));
+        }
+        const { userId, songId } = parsed.data;
         const entry = await userService.removeFavourite(userId, songId);
         return res.status(200).json(new ApiResponse(200, "Song removed from favourites", entry));
     } catch (error: any) {
