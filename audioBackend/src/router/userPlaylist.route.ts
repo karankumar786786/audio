@@ -10,9 +10,9 @@ import {
 
 export const userPlaylistRouter = Router();
 
-userPlaylistRouter.post("/create", createUserPlaylist);
+userPlaylistRouter.post("/", createUserPlaylist);
 userPlaylistRouter.get("/user/:userId", getUserPlaylists);
-userPlaylistRouter.get("/:id/songs", getUserPlaylistSongs);
-userPlaylistRouter.delete("/:id", deleteUserPlaylist);
 userPlaylistRouter.post("/songs", addSongInUserPlaylist);
 userPlaylistRouter.delete("/songs", deleteSongInUserPlaylist);
+userPlaylistRouter.get("/:id/songs", getUserPlaylistSongs);
+userPlaylistRouter.delete("/:id", deleteUserPlaylist);

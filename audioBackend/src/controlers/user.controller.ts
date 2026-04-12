@@ -4,9 +4,11 @@ import { ApiResponse } from "../utils/ApiResponse";
 import { parsePagination } from "../type/pagination.type";
 import { createUserSchema } from "../schema/user.schema";
 import { userFavouriteSongSchema } from "../schema/userFavouriteSong.schema";
+import { userSearchHistorySchema } from "../schema/userSearchHistory.schema";
 import { ApiError } from "../utils/ApiError";
 
 const favouriteSongInput = userFavouriteSongSchema.pick({ userId: true, songId: true });
+const searchHistoryInput = userSearchHistorySchema.pick({ userId: true, searchedText: true });
 
 export async function createUser(req: Request, res: Response, next: NextFunction) {
     try {
@@ -87,7 +89,11 @@ export async function getUserSearchHistory(req: Request, res: Response, next: Ne
 
 export async function saveUserSearchHistory(req: Request, res: Response, next: NextFunction) {
     try {
-        const { userId, searchedText } = req.body;
+        const parsed = searchHistoryInput.safeParse(req.body);
+        if (!parsed.success) {
+            return next(new ApiError(400, parsed.error.issues[0]?.message ?? "Invalid input"));
+        }
+        const { userId, searchedText } = parsed.data;
         const id = signatureService.generateSignedId();
         const entry = await userService.saveSearchHistory(userId, searchedText, id);
         return res.status(201).json(new ApiResponse(201, "Search history saved", entry));

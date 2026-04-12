@@ -2,10 +2,22 @@ import { type Request, type Response, type NextFunction } from "express";
 import { playlistService, signatureService } from "../infra";
 import { ApiResponse } from "../utils/ApiResponse";
 import { parsePagination } from "../type/pagination.type";
+import { userPlaylistSchema, userPlaylistSongSchema } from "../schema/userPlaylist.schema";
+import { ApiError } from "../utils/ApiError";
+import { z } from "zod";
+
+const createPlaylistInput = userPlaylistSchema.pick({ name: true, userId: true });
+const playlistSongInput = userPlaylistSongSchema.pick({ playlistId: true, songId: true }).extend({
+    userId: z.string({error:"userId is required"}).min(1, { message: "userId is required" })
+});
 
 export async function createUserPlaylist(req: Request, res: Response, next: NextFunction) {
     try {
-        const { name, userId } = req.body;
+        const parsed = createPlaylistInput.safeParse(req.body);
+        if (!parsed.success) {
+            return next(new ApiError(400, parsed.error.issues[0]?.message ?? "Invalid input"));
+        }
+        const { name, userId } = parsed.data;
         const id = signatureService.generateSignedId();
         const playlist = await playlistService.createUserPlaylist({ id, name, userId });
         return res.status(201).json(new ApiResponse(201, "User playlist created", playlist));
@@ -37,7 +49,11 @@ export async function deleteUserPlaylist(req: Request, res: Response, next: Next
 
 export async function addSongInUserPlaylist(req: Request, res: Response, next: NextFunction) {
     try {
-        const { playlistId, songId, userId } = req.body;
+        const parsed = playlistSongInput.safeParse(req.body);
+        if (!parsed.success) {
+            return next(new ApiError(400, parsed.error.issues[0]?.message ?? "Invalid input"));
+        }
+        const { playlistId, songId, userId } = parsed.data;
         const entry = await playlistService.addSongToUserPlaylist(playlistId, songId, userId);
         return res.status(201).json(new ApiResponse(201, "Song added to user playlist", entry));
     } catch (error: any) {
@@ -47,7 +63,11 @@ export async function addSongInUserPlaylist(req: Request, res: Response, next: N
 
 export async function deleteSongInUserPlaylist(req: Request, res: Response, next: NextFunction) {
     try {
-        const { playlistId, songId, userId } = req.body;
+        const parsed = playlistSongInput.safeParse(req.body);
+        if (!parsed.success) {
+            return next(new ApiError(400, parsed.error.issues[0]?.message ?? "Invalid input"));
+        }
+        const { playlistId, songId, userId } = parsed.data;
         const entry = await playlistService.removeSongFromUserPlaylist(playlistId, songId, userId);
         return res.status(200).json(new ApiResponse(200, "Song removed from user playlist", entry));
     } catch (error: any) {
