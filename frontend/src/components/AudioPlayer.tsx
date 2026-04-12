@@ -72,58 +72,123 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
   useEffect(() => {
     if (!captionUri) return;
     fetch(captionUri)
-      .then(r => r.json())
-      .then(data => {
-        const words = data?.words;
-        if (Array.isArray(words) && words.length > 0) {
-          // Process AssemblyAI word-level data into displayable chunks
+      .then(async r => {
+        const text = await r.text();
+        if (text.trim().startsWith('WEBVTT')) {
+          // Parse generic WebVTT
+          const lines = text.split('\n');
           const chunks: TranscriptionEntry[] = [];
-          let currentChunkWords: WordEntry[] = [];
+          let currentChunk: TranscriptionEntry | null = null;
           
-          for (let i = 0; i < words.length; i++) {
-            const w = words[i];
-            const wordStart = w.start / 1000;
-            const wordEnd = w.end / 1000;
-            const wordEntry = { text: w.text, start: wordStart, end: wordEnd };
+          const timeToSeconds = (timeStr: string) => {
+            const parts = timeStr.split(':');
+            let seconds = 0;
+            if (parts.length === 3) {
+              seconds += parseFloat(parts[0]) * 3600;
+              seconds += parseFloat(parts[1]) * 60;
+              seconds += parseFloat(parts[2]);
+            } else if (parts.length === 2) {
+              seconds += parseFloat(parts[0]) * 60;
+              seconds += parseFloat(parts[1]);
+            }
+            return seconds;
+          };
+
+          for (let i = 0; i < lines.length; i++) {
+            const line = lines[i].trim();
+            if (!line || line.startsWith('WEBVTT')) continue;
             
-            if (currentChunkWords.length === 0) {
-              currentChunkWords.push(wordEntry);
-            } else {
-              const lastWord = currentChunkWords[currentChunkWords.length - 1];
-              const gap = wordStart - lastWord.end;
-              // Break chunk if pause > 0.8s or more than 12 words in current chunk
-              if (gap > 0.8 || currentChunkWords.length >= 12) {
-                chunks.push({
-                  transcript: currentChunkWords.map(c => c.text).join(' '),
-                  start_time_seconds: currentChunkWords[0].start,
-                  end_time_seconds: lastWord.end + (gap > 0 ? Math.min(gap, 2) : 0),
-                  speaker_id: w.speaker || 'Unknown',
-                  words: currentChunkWords,
-                });
-                currentChunkWords = [wordEntry];
+            if (line.includes('-->')) {
+              const [startStr, endStr] = line.split('-->').map(s => s.trim());
+              currentChunk = {
+                start_time_seconds: timeToSeconds(startStr),
+                end_time_seconds: timeToSeconds(endStr),
+                transcript: '',
+                words: [] // Will populate if karaoke tags exist
+              };
+              chunks.push(currentChunk);
+            } else if (currentChunk) {
+              // Parse karaoke tags e.g., "<00:00:22.220>तू"
+              const wordMatches = Array.from(line.matchAll(/<([\d:.]+)>\s*([^<]+)/g));
+              if (wordMatches.length > 0) {
+                 wordMatches.forEach((match, idx) => {
+                     const t = timeToSeconds(match[1]);
+                     const wText = match[2].trim();
+                     if (!wText) return;
+                     
+                     const wStart = t;
+                     // Estimate word end time using next word's start time, or chunk end time
+                     let wEnd = currentChunk!.end_time_seconds;
+                     if (idx < wordMatches.length - 1) {
+                         wEnd = timeToSeconds(wordMatches[idx+1][1]);
+                     }
+                     currentChunk!.words.push({ text: wText, start: wStart, end: wEnd });
+                 });
+                 // Strip tags for clean text
+                 const cleanLine = line.replace(/<[^>]+>/g, '').trim().replace(/\s+/g, ' ');
+                 if (currentChunk.transcript) currentChunk.transcript += ' ';
+                 currentChunk.transcript += cleanLine;
               } else {
-                currentChunkWords.push(wordEntry);
+                 if (currentChunk.transcript) currentChunk.transcript += ' ';
+                 currentChunk.transcript += line;
               }
             }
           }
-          if (currentChunkWords.length > 0) {
-            chunks.push({
-              transcript: currentChunkWords.map(c => c.text).join(' '),
-              start_time_seconds: currentChunkWords[0].start,
-              end_time_seconds: currentChunkWords[currentChunkWords.length - 1].end + 2.0,
-              speaker_id: 'Unknown',
-              words: currentChunkWords,
-            });
-          }
           setTranscriptions(chunks);
         } else {
-          // Fallback to legacy structure if present
-          const entries = data?.diarized_transcript?.entries;
-          if (Array.isArray(entries)) {
-            setTranscriptions(entries.map((e: any) => ({
-              ...e,
-              words: [], // Legacy format doesn't have word-level data
-            })));
+          // Parse as legacy JSON (AssemblyAI format)
+          const data = JSON.parse(text);
+          const words = data?.words;
+          if (Array.isArray(words) && words.length > 0) {
+            // Process AssemblyAI word-level data into displayable chunks
+            const chunks: TranscriptionEntry[] = [];
+            let currentChunkWords: WordEntry[] = [];
+            
+            for (let i = 0; i < words.length; i++) {
+              const w = words[i];
+              const wordStart = w.start / 1000;
+              const wordEnd = w.end / 1000;
+              const wordEntry = { text: w.text, start: wordStart, end: wordEnd };
+              
+              if (currentChunkWords.length === 0) {
+                currentChunkWords.push(wordEntry);
+              } else {
+                const lastWord = currentChunkWords[currentChunkWords.length - 1];
+                const gap = wordStart - lastWord.end;
+                // Break chunk if pause > 0.8s or more than 12 words in current chunk
+                if (gap > 0.8 || currentChunkWords.length >= 12) {
+                  chunks.push({
+                    transcript: currentChunkWords.map(c => c.text).join(' '),
+                    start_time_seconds: currentChunkWords[0].start,
+                    end_time_seconds: lastWord.end + (gap > 0 ? Math.min(gap, 2) : 0),
+                    speaker_id: w.speaker || 'Unknown',
+                    words: currentChunkWords,
+                  });
+                  currentChunkWords = [wordEntry];
+                } else {
+                  currentChunkWords.push(wordEntry);
+                }
+              }
+            }
+            if (currentChunkWords.length > 0) {
+              chunks.push({
+                transcript: currentChunkWords.map(c => c.text).join(' '),
+                start_time_seconds: currentChunkWords[0].start,
+                end_time_seconds: currentChunkWords[currentChunkWords.length - 1].end + 2.0,
+                speaker_id: 'Unknown',
+                words: currentChunkWords,
+              });
+            }
+            setTranscriptions(chunks);
+          } else {
+            // Fallback to legacy structure if present
+            const entries = data?.diarized_transcript?.entries;
+            if (Array.isArray(entries)) {
+              setTranscriptions(entries.map((e: any) => ({
+                ...e,
+                words: [], // Legacy format doesn't have word-level data
+              })));
+            }
           }
         }
       })
@@ -237,9 +302,15 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
     }
     // update caption
     const t = audio.currentTime;
-    const active = transcriptions.find(
-      e => t >= e.start_time_seconds && t <= e.end_time_seconds
-    ) ?? null;
+    // Reverse loop to prefer the most recent active caption in case of VTT edge overlap
+    let active: TranscriptionEntry | null = null;
+    for (let i = transcriptions.length - 1; i >= 0; i--) {
+      const e = transcriptions[i];
+      if (t >= e.start_time_seconds && t <= e.end_time_seconds) {
+        active = e;
+        break;
+      }
+    }
     setCurrentCaption(active);
     animFrameRef.current = requestAnimationFrame(syncTime);
   }, [isDraggingScrubber, transcriptions]);

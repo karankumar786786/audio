@@ -5,8 +5,8 @@ import Footer from './components/Footer';
 import AudioPlayer from './components/AudioPlayer';
 
 const App: React.FC = () => {
-  const manifestUri = 'https://videotranscodeprod.s3.ap-south-1.amazonaws.com/audios/t_eaab2e5b95aa4681bb4875de74bf97f1.c949e0e6531af568e4574db6141fec9ad379c0705f04f82d0433e968235520d8/master.mpd';
-  const captionUri  = 'https://videotranscodeprod.s3.ap-south-1.amazonaws.com/audios/t_eaab2e5b95aa4681bb4875de74bf97f1.c949e0e6531af568e4574db6141fec9ad379c0705f04f82d0433e968235520d8/caption.json';
+  const manifestUri = 'https://videotranscodeprod.s3.ap-south-1.amazonaws.com/audios/t_6fa538734d56454c987a368264f3b018.fe6152575500a264e481c15d2784e609037bcfeba12f2820ea32330d53e8ea66/master.mpd';
+  const captionUri  = 'https://videotranscodeprod.s3.ap-south-1.amazonaws.com/audios/t_6fa538734d56454c987a368264f3b018.fe6152575500a264e481c15d2784e609037bcfeba12f2820ea32330d53e8ea66/caption.vtt';
   const posterUrl   = 'https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?q=80&w=2070&auto=format&fit=crop';
 
   return (

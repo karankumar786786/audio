@@ -67,7 +67,79 @@ export class TranscriptionService {
                 CacheControl: "no-transform",
             }));
 
-            this.logger.info(`   ✅ Transcription successfully saved to S3`);
+            // Generate and upload VTT subtitles with Karaoke word-level tags
+            const words = transcript.words;
+            let vttContent = "WEBVTT\n\n";
+            
+            if (Array.isArray(words) && words.length > 0) {
+                const formatVttTime = (ms: number) => {
+                    const date = new Date(ms);
+                    const hh = String(Math.floor(ms / 3600000)).padStart(2, '0');
+                    const mm = String(date.getUTCMinutes()).padStart(2, '0');
+                    const ss = String(date.getUTCSeconds()).padStart(2, '0');
+                    const mmm = String(date.getUTCMilliseconds()).padStart(3, '0');
+                    return `${hh}:${mm}:${ss}.${mmm}`;
+                };
+
+                let currentChunkWords: any[] = [];
+                const chunks: any[] = [];
+
+                for (let i = 0; i < words.length; i++) {
+                    const w = words[i];
+                    if (!w) continue;
+                    
+                    if (currentChunkWords.length === 0) {
+                        currentChunkWords.push(w);
+                    } else {
+                        const lastWord = currentChunkWords[currentChunkWords.length - 1];
+                        const gap = w.start - lastWord.end;
+                        if (gap > 800 || currentChunkWords.length >= 12) {
+                            chunks.push([...currentChunkWords]);
+                            currentChunkWords = [w];
+                        } else {
+                            currentChunkWords.push(w);
+                        }
+                    }
+                }
+                if (currentChunkWords.length > 0) {
+                    chunks.push([...currentChunkWords]);
+                }
+
+                chunks.forEach((chunk: any[], idx: number) => {
+                    const startTime = formatVttTime(chunk[0].start);
+                    let baseEndMs = chunk[chunk.length - 1].end;
+                    const nextChunkStartMs = chunks[idx + 1] ? chunks[idx + 1][0].start : Infinity;
+                    
+                    // Add tail, but strictly prevent overlapping with the next line!
+                    let finalEndMs = baseEndMs + 2000;
+                    if (finalEndMs > nextChunkStartMs) {
+                        finalEndMs = nextChunkStartMs;
+                    }
+                    const endTime = formatVttTime(finalEndMs);
+                    
+                    vttContent += `${startTime} --> ${endTime}\n`;
+                    
+                    // Karaoke formatted line: <00:00:22.220>तू <00:00:22.600>मेरी ...
+                    const line = chunk.map((w: any) => `<${formatVttTime(w.start)}>${w.text}`).join(' ');
+                    vttContent += line + '\n\n';
+                });
+            } else {
+                // fallback to native if no words
+                vttContent = await this.client.transcripts.subtitles(transcript.id, "vtt");
+            }
+
+            const vttKey = key.replace('.json', '.vtt');
+
+            this.logger.info(`   ☁️  Uploading AssemblyAI transcript VTT to s3://${bucketName}/${vttKey}`);
+            await this.s3Client.send(new PutObjectCommand({
+                Bucket: bucketName,
+                Key: vttKey,
+                Body: vttContent,
+                ContentType: "text/vtt",
+                CacheControl: "no-transform",
+            }));
+
+            this.logger.info(`   ✅ Transcription successfully saved to S3 (JSON and VTT)`);
             
             // Map the detected language code to its name
             const languageName = languageMapper.getName(languageCode);

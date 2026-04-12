@@ -33,7 +33,7 @@ export const transcribeSong = inngest.createFunction(
                 );
                 await songProcessingJobRepository.update(songId, { 
                     transcribingAttempt: 1,
-                    transcribingId: captionPath,
+                    transcribingId: captionPath.replace('.json', '.vtt'),
                     transcribed: true,
                     language: result.language,
                     songKey: prodSongKey
