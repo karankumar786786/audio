@@ -20,8 +20,8 @@ export async function getPreSignedUrlForSongs(req: Request, res: Response, next:
 export async function getPreSignedUrlForImage(req: Request, res: Response, next: NextFunction) {
     try {
         const tempKey = signatureService.generateSignedId();
-        const url = await storageService.getPresignedUrl(process.env.IMAGE_BUCKET_NAME!, tempKey);
-        return res.json(new ApiResponse(200, "URL generated successfully", { tempKey, url }));
+        const authParams = imagekitClient.getAuthenticationParameters();
+        return res.json(new ApiResponse(200, "URL generated successfully", { tempKey, ...authParams }));
     } catch (error: any) {
         next(error);
     }
