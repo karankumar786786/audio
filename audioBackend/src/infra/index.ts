@@ -43,7 +43,7 @@ export const storageService = new S3Service(
 // Transcription Service
 export const transcriptionService = new TranscriptionService(
     logger,
-    `${process.env.SARVAM_API_KEY}`,
+    `${process.env.ASSEMBLY_API_KEY}`,
     storageService.getClient()
 );
 

@@ -1,332 +1,242 @@
 /**
- * Sarvam AI Language Mapping
+ * AssemblyAI Language Mapping
  *
- * Covers all BCP-47 language codes returned by Sarvam AI's
- * speech-to-text (Saaras v3 / Saarika) and used across its
- * TTS (Bulbul) and translation APIs.
+ * Covers language codes supported by AssemblyAI's
+ * speech-to-text models (Universal-1, Universal-2, Universal-3).
  *
- * Reference: https://docs.sarvam.ai/api-reference-docs/speech-to-text/transcribe
+ * Reference: https://www.assemblyai.com/docs/concepts/supported-languages
  */
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-/** Every language code Sarvam AI can return or accept. */
-export type SarvamLanguageCode =
+/** Language codes supported by AssemblyAI */
+export type LanguageCode =
   | "unknown"
-  // Core (Saarika v2.5 + Saaras v3)
-  | "hi-IN"   // Hindi
-  | "bn-IN"   // Bengali
-  | "kn-IN"   // Kannada
-  | "ml-IN"   // Malayalam
-  | "mr-IN"   // Marathi
-  | "od-IN"   // Odia
-  | "pa-IN"   // Punjabi
-  | "ta-IN"   // Tamil
-  | "te-IN"   // Telugu
-  | "en-IN"   // English (Indian)
-  | "gu-IN"   // Gujarati
-  // Extended (Saaras v3 only)
-  | "as-IN"   // Assamese
-  | "ur-IN"   // Urdu
-  | "ne-IN"   // Nepali
-  | "kok-IN"  // Konkani
-  | "ks-IN"   // Kashmiri
-  | "sd-IN"   // Sindhi
-  | "sa-IN"   // Sanskrit
-  | "mai-IN"  // Maithili
-  | "sat-IN"  // Santali
-  | "doi-IN"  // Dogri
-  | "mni-IN"; // Manipuri (Meitei)
+  | "hi"    // Hindi
+  | "bn"    // Bengali
+  | "kn"    // Kannada
+  | "ml"    // Malayalam
+  | "mr"    // Marathi
+  | "or"    // Odia
+  | "pa"    // Punjabi
+  | "ta"    // Tamil
+  | "te"    // Telugu
+  | "en"    // English
+  | "gu"    // Gujarati
+  | "as"    // Assamese
+  | "ur"    // Urdu
+  | "ne"    // Nepali
+  | "gom"   // Konkani
+  | "ks"    // Kashmiri
+  | "sd"    // Sindhi
+  | "sa"    // Sanskrit
+  | "mai"   // Maithili
+  | "sat"   // Santali
+  | "doi"   // Dogri
+  | "mni";  // Manipuri
 
 export interface LanguageInfo {
-  /** BCP-47 code as returned/accepted by Sarvam AI */
-  code: SarvamLanguageCode;
+  /** ISO 639-1 code (or similar) used by AssemblyAI */
+  code: LanguageCode;
   /** English name of the language */
   name: string;
   /** Native script name */
   nativeName: string;
   /** Unicode script tag */
   script: string;
-  /** Whether Bulbul TTS supports this language */
-  ttsSupported: boolean;
-  /** Whether Saaras v3 STT supports this language */
-  sttSupported: boolean;
 }
 
 // ─── Map ──────────────────────────────────────────────────────────────────────
 
-const LANGUAGE_MAP: Record<SarvamLanguageCode, LanguageInfo> = {
+const LANGUAGE_MAP: Record<LanguageCode, LanguageInfo> = {
   unknown: {
     code: "unknown",
     name: "Unknown / Auto-detect",
     nativeName: "Unknown",
     script: "N/A",
-    ttsSupported: false,
-    sttSupported: true,
   },
 
-  // ── Core languages (Saarika v2.5 + Saaras v3 + Bulbul TTS) ─────────────────
-
-  "hi-IN": {
-    code: "hi-IN",
+  hi: {
+    code: "hi",
     name: "Hindi",
     nativeName: "हिन्दी",
     script: "Devanagari",
-    ttsSupported: true,
-    sttSupported: true,
   },
-  "bn-IN": {
-    code: "bn-IN",
+  bn: {
+    code: "bn",
     name: "Bengali",
     nativeName: "বাংলা",
     script: "Bengali",
-    ttsSupported: true,
-    sttSupported: true,
   },
-  "kn-IN": {
-    code: "kn-IN",
+  kn: {
+    code: "kn",
     name: "Kannada",
-    nativeName: "ಕನ್ನಡ",
+    nativeName: "ಕನ್ನಡೆ",
     script: "Kannada",
-    ttsSupported: true,
-    sttSupported: true,
   },
-  "ml-IN": {
-    code: "ml-IN",
+  ml: {
+    code: "ml",
     name: "Malayalam",
     nativeName: "മലയാളം",
     script: "Malayalam",
-    ttsSupported: true,
-    sttSupported: true,
   },
-  "mr-IN": {
-    code: "mr-IN",
+  mr: {
+    code: "mr",
     name: "Marathi",
     nativeName: "मराठी",
     script: "Devanagari",
-    ttsSupported: true,
-    sttSupported: true,
   },
-  "od-IN": {
-    code: "od-IN",
+  or: {
+    code: "or",
     name: "Odia",
     nativeName: "ଓଡ଼ିଆ",
     script: "Odia",
-    ttsSupported: true,
-    sttSupported: true,
   },
-  "pa-IN": {
-    code: "pa-IN",
+  pa: {
+    code: "pa",
     name: "Punjabi",
     nativeName: "ਪੰਜਾਬੀ",
     script: "Gurmukhi",
-    ttsSupported: true,
-    sttSupported: true,
   },
-  "ta-IN": {
-    code: "ta-IN",
+  ta: {
+    code: "ta",
     name: "Tamil",
     nativeName: "தமிழ்",
     script: "Tamil",
-    ttsSupported: true,
-    sttSupported: true,
   },
-  "te-IN": {
-    code: "te-IN",
+  te: {
+    code: "te",
     name: "Telugu",
     nativeName: "తెలుగు",
     script: "Telugu",
-    ttsSupported: true,
-    sttSupported: true,
   },
-  "en-IN": {
-    code: "en-IN",
-    name: "English (Indian)",
+  en: {
+    code: "en",
+    name: "English",
     nativeName: "English",
     script: "Latin",
-    ttsSupported: true,
-    sttSupported: true,
   },
-  "gu-IN": {
-    code: "gu-IN",
+  gu: {
+    code: "gu",
     name: "Gujarati",
     nativeName: "ગુજરાતી",
     script: "Gujarati",
-    ttsSupported: true,
-    sttSupported: true,
   },
-
-  // ── Extended languages (Saaras v3 STT only) ──────────────────────────────────
-
-  "as-IN": {
-    code: "as-IN",
+  as: {
+    code: "as",
     name: "Assamese",
     nativeName: "অসমীয়া",
     script: "Bengali",
-    ttsSupported: false,
-    sttSupported: true,
   },
-  "ur-IN": {
-    code: "ur-IN",
+  ur: {
+    code: "ur",
     name: "Urdu",
     nativeName: "اردو",
-    script: "Nastaliq (Perso-Arabic)",
-    ttsSupported: false,
-    sttSupported: true,
+    script: "Nastaliq",
   },
-  "ne-IN": {
-    code: "ne-IN",
+  ne: {
+    code: "ne",
     name: "Nepali",
     nativeName: "नेपाली",
     script: "Devanagari",
-    ttsSupported: false,
-    sttSupported: true,
   },
-  "kok-IN": {
-    code: "kok-IN",
+  gom: {
+    code: "gom",
     name: "Konkani",
     nativeName: "कोंकणी",
     script: "Devanagari",
-    ttsSupported: false,
-    sttSupported: true,
   },
-  "ks-IN": {
-    code: "ks-IN",
+  ks: {
+    code: "ks",
     name: "Kashmiri",
     nativeName: "كٲشُر",
-    script: "Perso-Arabic / Devanagari",
-    ttsSupported: false,
-    sttSupported: true,
+    script: "Perso-Arabic",
   },
-  "sd-IN": {
-    code: "sd-IN",
+  sd: {
+    code: "sd",
     name: "Sindhi",
     nativeName: "سنڌي",
-    script: "Perso-Arabic / Devanagari",
-    ttsSupported: false,
-    sttSupported: true,
+    script: "Perso-Arabic",
   },
-  "sa-IN": {
-    code: "sa-IN",
+  sa: {
+    code: "sa",
     name: "Sanskrit",
     nativeName: "संस्कृतम्",
     script: "Devanagari",
-    ttsSupported: false,
-    sttSupported: true,
   },
-  "mai-IN": {
-    code: "mai-IN",
+  mai: {
+    code: "mai",
     name: "Maithili",
     nativeName: "मैथिली",
-    script: "Devanagari / Tirhuta",
-    ttsSupported: false,
-    sttSupported: true,
+    script: "Devanagari",
   },
-  "sat-IN": {
-    code: "sat-IN",
+  sat: {
+    code: "sat",
     name: "Santali",
     nativeName: "ᱥᱟᱱᱛᱟᱲᱤ",
     script: "Ol Chiki",
-    ttsSupported: false,
-    sttSupported: true,
   },
-  "doi-IN": {
-    code: "doi-IN",
+  doi: {
+    code: "doi",
     name: "Dogri",
     nativeName: "डोगरी",
     script: "Devanagari",
-    ttsSupported: false,
-    sttSupported: true,
   },
-  "mni-IN": {
-    code: "mni-IN",
+  mni: {
+    code: "mni",
     name: "Manipuri",
     nativeName: "মৈতৈলোন্",
-    script: "Meitei / Bengali",
-    ttsSupported: false,
-    sttSupported: true,
+    script: "Meitei",
   },
 };
 
 // ─── Class ────────────────────────────────────────────────────────────────────
 
 export class LanguageMapper {
-  private readonly map: Record<SarvamLanguageCode, LanguageInfo> = LANGUAGE_MAP;
-
-  // ── Lookups ──────────────────────────────────────────────────────────────────
+  private readonly map: Record<LanguageCode, LanguageInfo> = LANGUAGE_MAP;
 
   /**
    * Returns full `LanguageInfo` for a given code, or `null` if not found.
-   *
-   * @example
-   * mapper.getInfo("pa-IN")
-   * // { code: "pa-IN", name: "Punjabi", nativeName: "ਪੰਜਾਬੀ", ... }
    */
   getInfo(code: string): LanguageInfo | null {
-    return this.map[code as SarvamLanguageCode] ?? null;
+    return this.map[code as LanguageCode] ?? null;
   }
 
   /**
-   * Returns the English name for a code, or `null` if not found.
-   *
-   * @example
-   * mapper.getName("pa-IN") // "Punjabi"
+   * Returns the English name for a code, or "unknown" if not found.
    */
-  getName(code: string): string | "unknown" {
+  getName(code: string): string {
     return this.getInfo(code)?.name ?? "unknown";
   }
 
   /**
-   * Returns the native-script name for a code, or `null` if not found.
-   *
-   * @example
-   * mapper.getNativeName("pa-IN") // "ਪੰਜਾਬੀ"
+   * Returns the native-script name for a code, or null if not found.
    */
   getNativeName(code: string): string | null {
     return this.getInfo(code)?.nativeName ?? null;
   }
 
-  // ── Filtering helpers ────────────────────────────────────────────────────────
-
-  /** All languages that Bulbul TTS supports. */
-  getTTSLanguages(): LanguageInfo[] {
-    return Object.values(this.map).filter((l) => l.ttsSupported);
-  }
-
-  /** All languages that Saaras v3 STT supports (excludes "unknown"). */
-  getSTTLanguages(): LanguageInfo[] {
-    return Object.values(this.map).filter(
-      (l) => l.sttSupported && l.code !== "unknown"
-    );
-  }
-
   /** All known language codes (including "unknown"). */
-  getAllCodes(): SarvamLanguageCode[] {
-    return Object.keys(this.map) as SarvamLanguageCode[];
+  getAllCodes(): LanguageCode[] {
+    return Object.keys(this.map) as LanguageCode[];
   }
-
-  // ── Validation ───────────────────────────────────────────────────────────────
 
   /**
-   * Returns `true` if `code` is a known Sarvam AI language code.
+   * Returns `true` if `code` is a known language code.
    */
-  isValid(code: string): code is SarvamLanguageCode {
+  isValid(code: string): code is LanguageCode {
     return code in this.map;
   }
 
   /**
-   * Parses a raw language code string coming from a Sarvam AI API response.
-   * Returns the matching `LanguageInfo`, or throws if the code is unrecognised.
-   *
-   * @example
-   * mapper.parse("pa-IN") // { code: "pa-IN", name: "Punjabi", ... }
-   * mapper.parse("xx-XX") // throws Error
+   * Parses a raw language code string coming from an API response.
+   * Returns the matching `LanguageInfo`, or throws if unknown.
    */
   parse(code: string): LanguageInfo {
     const info = this.getInfo(code);
     if (!info) {
       throw new Error(
-        `Unrecognised Sarvam AI language code: "${code}". ` +
+        `Unrecognised language code: "${code}". ` +
           `Known codes: ${this.getAllCodes().join(", ")}`
       );
     }

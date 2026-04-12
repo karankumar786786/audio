@@ -2,11 +2,18 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 // @ts-ignore
 import shaka from 'shaka-player/dist/shaka-player.compiled.js';
 
+interface WordEntry {
+  text: string;
+  start: number;
+  end: number;
+}
+
 interface TranscriptionEntry {
   transcript: string;
   start_time_seconds: number;
   end_time_seconds: number;
   speaker_id?: string;
+  words: WordEntry[];
 }
 
 interface QualityTrack {
@@ -67,8 +74,58 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
     fetch(captionUri)
       .then(r => r.json())
       .then(data => {
-        const entries = data?.diarized_transcript?.entries;
-        if (Array.isArray(entries)) setTranscriptions(entries);
+        const words = data?.words;
+        if (Array.isArray(words) && words.length > 0) {
+          // Process AssemblyAI word-level data into displayable chunks
+          const chunks: TranscriptionEntry[] = [];
+          let currentChunkWords: WordEntry[] = [];
+          
+          for (let i = 0; i < words.length; i++) {
+            const w = words[i];
+            const wordStart = w.start / 1000;
+            const wordEnd = w.end / 1000;
+            const wordEntry = { text: w.text, start: wordStart, end: wordEnd };
+            
+            if (currentChunkWords.length === 0) {
+              currentChunkWords.push(wordEntry);
+            } else {
+              const lastWord = currentChunkWords[currentChunkWords.length - 1];
+              const gap = wordStart - lastWord.end;
+              // Break chunk if pause > 0.8s or more than 12 words in current chunk
+              if (gap > 0.8 || currentChunkWords.length >= 12) {
+                chunks.push({
+                  transcript: currentChunkWords.map(c => c.text).join(' '),
+                  start_time_seconds: currentChunkWords[0].start,
+                  end_time_seconds: lastWord.end + (gap > 0 ? Math.min(gap, 2) : 0),
+                  speaker_id: w.speaker || 'Unknown',
+                  words: currentChunkWords,
+                });
+                currentChunkWords = [wordEntry];
+              } else {
+                currentChunkWords.push(wordEntry);
+              }
+            }
+          }
+          if (currentChunkWords.length > 0) {
+            chunks.push({
+              transcript: currentChunkWords.map(c => c.text).join(' '),
+              start_time_seconds: currentChunkWords[0].start,
+              end_time_seconds: currentChunkWords[currentChunkWords.length - 1].end + 2.0,
+              speaker_id: 'Unknown',
+              words: currentChunkWords,
+            });
+          }
+          setTranscriptions(chunks);
+        } else {
+          // Fallback to legacy structure if present
+          const entries = data?.diarized_transcript?.entries;
+          if (Array.isArray(entries)) {
+            setTranscriptions(entries.map((e: any) => ({
+              ...e,
+              words: [], // Legacy format doesn't have word-level data
+            })));
+          }
+        }
       })
       .catch(console.error);
   }, [captionUri]);
@@ -419,18 +476,39 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
           )}
         </div>
 
-        {/* Caption */}
+        {/* Caption (Word-level Highlight) */}
         <div style={{
-          minHeight: '52px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-          padding: '4px 28px 12px', textAlign: 'center',
+          minHeight: '64px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+          padding: '4px 28px 16px', textAlign: 'center',
         }}>
           {currentCaption && (
-            <p style={{
-              margin: 0, fontSize: '15px', fontWeight: 500, lineHeight: 1.5,
-              color: 'rgba(255,255,255,0.85)',
+            <div style={{
+              margin: 0, fontSize: '18px', fontWeight: 600, lineHeight: 1.4,
+              display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '4px 8px',
             }}>
-              {currentCaption.transcript}
-            </p>
+              {currentCaption.words && currentCaption.words.length > 0 ? (
+                currentCaption.words.map((word, idx) => {
+                  const isActive = currentTime >= word.start && currentTime <= word.end;
+                  return (
+                    <span
+                      key={idx}
+                      style={{
+                        color: isActive ? '#fff' : 'rgba(255,255,255,0.25)',
+                        transition: 'color 0.15s ease, transform 0.15s ease',
+                        transform: isActive ? 'scale(1.05)' : 'scale(1)',
+                        display: 'inline-block',
+                      }}
+                    >
+                      {word.text}
+                    </span>
+                  );
+                })
+              ) : (
+                <span style={{ color: 'rgba(255,255,255,0.85)' }}>
+                  {currentCaption.transcript}
+                </span>
+              )}
+            </div>
           )}
         </div>
 

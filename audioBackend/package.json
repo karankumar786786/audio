@@ -33,6 +33,7 @@
     "@imagekit/nodejs": "^7.4.0",
     "@neondatabase/serverless": "^1.0.2",
     "algoliasearch": "^5.50.1",
+    "assemblyai": "^4.29.0",
     "axios": "^1.14.0",
     "chokidar": "^5.0.0",
     "cors": "^2.8.6",
@@ -44,7 +45,6 @@
     "p-limit": "^7.3.0",
     "pino": "^10.3.1",
     "recombee-api-client": "^6.1.0",
-    "sarvamai": "^1.1.6",
     "zod": "^4.3.6"
   }
 }
