@@ -1,12 +1,7 @@
 import { Router } from "express";
-import { createSong, updateSong, deleteSong, getSongs, getSongById, searchSongs } from "../controlers/song.controller";
-import { validate } from "../middlewares/validate.middleware";
-import { CreateSongSchema } from "../schema/songs.schema";
+import { getSongs, getSongById } from "../controlers/song.controller";
 
 export const songRouter = Router();
 
-songRouter.post("/", validate(CreateSongSchema), createSong);
 songRouter.get("/", getSongs);
 songRouter.get("/:id", getSongById);
-songRouter.put("/:id", updateSong);
-songRouter.delete("/:id", deleteSong);

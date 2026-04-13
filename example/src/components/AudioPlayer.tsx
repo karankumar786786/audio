@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 // @ts-ignore
-import shaka from 'shaka-player/dist/shaka-player.compiled.js';
+import shaka from 'shaka-player';
 
 interface WordEntry {
   text: string;
@@ -79,7 +79,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
           const lines = text.split('\n');
           const chunks: TranscriptionEntry[] = [];
           let currentChunk: TranscriptionEntry | null = null;
-          
+
           const timeToSeconds = (timeStr: string) => {
             const parts = timeStr.split(':');
             let seconds = 0;
@@ -97,7 +97,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
           for (let i = 0; i < lines.length; i++) {
             const line = lines[i].trim();
             if (!line || line.startsWith('WEBVTT')) continue;
-            
+
             if (line.includes('-->')) {
               const [startStr, endStr] = line.split('-->').map(s => s.trim());
               currentChunk = {
@@ -111,26 +111,26 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
               // Parse karaoke tags e.g., "<00:00:22.220>तू"
               const wordMatches = Array.from(line.matchAll(/<([\d:.]+)>\s*([^<]+)/g));
               if (wordMatches.length > 0) {
-                 wordMatches.forEach((match, idx) => {
-                     const t = timeToSeconds(match[1]);
-                     const wText = match[2].trim();
-                     if (!wText) return;
-                     
-                     const wStart = t;
-                     // Estimate word end time using next word's start time, or chunk end time
-                     let wEnd = currentChunk!.end_time_seconds;
-                     if (idx < wordMatches.length - 1) {
-                         wEnd = timeToSeconds(wordMatches[idx+1][1]);
-                     }
-                     currentChunk!.words.push({ text: wText, start: wStart, end: wEnd });
-                 });
-                 // Strip tags for clean text
-                 const cleanLine = line.replace(/<[^>]+>/g, '').trim().replace(/\s+/g, ' ');
-                 if (currentChunk.transcript) currentChunk.transcript += ' ';
-                 currentChunk.transcript += cleanLine;
+                wordMatches.forEach((match, idx) => {
+                  const t = timeToSeconds(match[1]);
+                  const wText = match[2].trim();
+                  if (!wText) return;
+
+                  const wStart = t;
+                  // Estimate word end time using next word's start time, or chunk end time
+                  let wEnd = currentChunk!.end_time_seconds;
+                  if (idx < wordMatches.length - 1) {
+                    wEnd = timeToSeconds(wordMatches[idx + 1][1]);
+                  }
+                  currentChunk!.words.push({ text: wText, start: wStart, end: wEnd });
+                });
+                // Strip tags for clean text
+                const cleanLine = line.replace(/<[^>]+>/g, '').trim().replace(/\s+/g, ' ');
+                if (currentChunk.transcript) currentChunk.transcript += ' ';
+                currentChunk.transcript += cleanLine;
               } else {
-                 if (currentChunk.transcript) currentChunk.transcript += ' ';
-                 currentChunk.transcript += line;
+                if (currentChunk.transcript) currentChunk.transcript += ' ';
+                currentChunk.transcript += line;
               }
             }
           }
@@ -143,13 +143,13 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
             // Process AssemblyAI word-level data into displayable chunks
             const chunks: TranscriptionEntry[] = [];
             let currentChunkWords: WordEntry[] = [];
-            
+
             for (let i = 0; i < words.length; i++) {
               const w = words[i];
               const wordStart = w.start / 1000;
               const wordEnd = w.end / 1000;
               const wordEntry = { text: w.text, start: wordStart, end: wordEnd };
-              
+
               if (currentChunkWords.length === 0) {
                 currentChunkWords.push(wordEntry);
               } else {
@@ -271,7 +271,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
       } catch (e: any) {
         console.error('Shaka load failed (code', e?.code, '), falling back to native src:', e);
         if (!destroyed) {
-          try { await player.detach(); } catch (_) {}
+          try { await player.detach(); } catch (_) { }
           audio.src = src;
           audio.load();
           setIsLoading(false);
@@ -668,8 +668,8 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
             {isLoading
               ? <div style={{ width: '20px', height: '20px', border: '2px solid rgba(255,255,255,0.4)', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
               : isPlaying
-                ? <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>
-                : <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style={{ marginLeft: '2px' }}><polygon points="5,3 19,12 5,21"/></svg>
+                ? <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1" /><rect x="14" y="4" width="4" height="16" rx="1" /></svg>
+                : <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" style={{ marginLeft: '2px' }}><polygon points="5,3 19,12 5,21" /></svg>
             }
           </button>
 
@@ -690,10 +690,10 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({
         }}>
           <button onClick={toggleMute} style={{ ...iconBtnStyle, flexShrink: 0 }}>
             {volumePct === 0
-              ? <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polygon points="11,5 6,9 2,9 2,15 6,15 11,19"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
+              ? <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polygon points="11,5 6,9 2,9 2,15 6,15 11,19" /><line x1="23" y1="9" x2="17" y2="15" /><line x1="17" y1="9" x2="23" y2="15" /></svg>
               : volumePct < 50
-                ? <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polygon points="11,5 6,9 2,9 2,15 6,15 11,19"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
-                : <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polygon points="11,5 6,9 2,9 2,15 6,15 11,19"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+                ? <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polygon points="11,5 6,9 2,9 2,15 6,15 11,19" /><path d="M15.54 8.46a5 5 0 0 1 0 7.07" /></svg>
+                : <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polygon points="11,5 6,9 2,9 2,15 6,15 11,19" /><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07" /></svg>
             }
           </button>
 
