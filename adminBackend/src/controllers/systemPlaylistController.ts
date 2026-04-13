@@ -1,7 +1,7 @@
 import { type Request, type Response, type NextFunction } from "express";
 import { playlistService } from "../infra";
 import { ApiResponse } from "../utils/ApiResponse";
-import { parsePagination } from "../type/pagination.type";
+import { parsePagination } from "../types/pagination.type";
 
 export async function createSystemPlaylist(req: Request, res: Response, next: NextFunction) {
     try {

@@ -1,7 +1,7 @@
 import { type Request, type Response, type NextFunction } from "express";
 import { artistService } from "../infra";
 import { ApiResponse } from "../utils/ApiResponse";
-import { parsePagination } from "../type/pagination.type";
+import { parsePagination } from "../types/pagination.type";
 import { coerceDob } from "../schema/artist.schema";
 
 export async function createArtist(req: Request, res: Response, next: NextFunction) {

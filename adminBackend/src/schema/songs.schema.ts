@@ -22,3 +22,5 @@ export const songSchema = z.object({
 });
 
 export type SongSchema = z.infer<typeof songSchema>;
+
+export const updateSongSchema = CreateSongSchema.partial();

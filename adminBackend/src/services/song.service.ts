@@ -1,23 +1,23 @@
-import { 
-    songRepository, 
-    songProcessingJobRepository, 
-    signatureService, 
+import {
+    songRepository,
+    songProcessingJobRepository,
+    signatureService,
     inngest,
     logger,
     searchService,
     recommendationService
 } from "../infra";
 import type { CreateSongInput, SongSchema } from "../schema/songs.schema";
-import type { PaginationParams, PaginatedResult } from "../type/pagination.type";
-import { buildPaginatedResult } from "../type/pagination.type";
+import type { PaginationParams, PaginatedResult } from "../types/pagination.type";
+import { buildPaginatedResult } from "../types/pagination.type";
 
 export class SongService {
     async createSong(input: CreateSongInput) {
         const jobId = signatureService.generateSignedId();
         const songId = signatureService.generateSignedId();
-        
+
         logger.info(`[SERVICE] Initializing Processing Job ${jobId} for song: ${input.title}`);
-        
+
         await songProcessingJobRepository.create({
             id: songId,
             jobId: jobId,
@@ -41,7 +41,7 @@ export class SongService {
         });
 
         logger.info(`[SERVICE] Dispatched Inngest event for Job ${jobId}`);
-        
+
         return {
             id: songId,
             jobId: jobId,
@@ -55,18 +55,14 @@ export class SongService {
             songRepository.getAll(params.limit, offset),
             songRepository.count()
         ]);
-        
-        return buildPaginatedResult(data, total, params);
-    }
 
-    async getSongById(id: string): Promise<SongSchema> {
-        return await songRepository.getById(id);
+        return buildPaginatedResult(data, total, params);
     }
 
     async updateSong(id: string, data: any): Promise<SongSchema> {
         // Best effort update in search index if title/artist changes
         const song = await songRepository.update(id, data);
-        
+
         try {
             await searchService.save(song as any);
         } catch (err) {

@@ -8,9 +8,9 @@ import {
     updateArtist,
 } from "../controllers/artistContoller";
 import { validate } from "../middlewares/validate.middleware";
-import { artistSchema } from "../schema/artist.schema";
+import { artistSchema, createArtistInput } from "../schema/artist.schema";
 
-const createArtistInput = artistSchema.omit({ id: true, createdAt: true });
+
 
 export const artistRouter = Router();
 
@@ -18,5 +18,5 @@ artistRouter.post("/", validate(createArtistInput), createArtist);
 artistRouter.get("/", getArtists);
 artistRouter.get("/:id", getArtistById);
 artistRouter.get("/:id/songs", getSongsOfArtist);
-artistRouter.put("/:id", updateArtist);
+artistRouter.put("/:id", validate(artistSchema.partial()), updateArtist);
 artistRouter.delete("/:id", deleteArtist);

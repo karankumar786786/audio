@@ -19,3 +19,14 @@ export const systemPlaylistSongSchema = z.object({
 });
 
 export type SystemPlaylistSongSchema = z.infer<typeof systemPlaylistSongSchema>;
+
+export const createSystemPlaylistInput = systemPlaylistSchema
+    .omit({ id: true, createdAt: true, updatedAt: true })
+    .extend({
+        name: z.string({ error: "name is required" }).min(1, { message: "name cannot be empty" }),
+        coverImageKey: z.string({ error: "coverImageKey is required" }).min(1, { message: "coverImageKey cannot be empty" }),
+        bannerImageKey: z.string({ error: "bannerImageKey is required" }).min(1, { message: "bannerImageKey cannot be empty" }),
+    });
+
+
+export const systemPlaylistSongInput = systemPlaylistSongSchema.omit({ id: true });

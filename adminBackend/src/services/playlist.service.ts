@@ -1,12 +1,12 @@
-import { 
-    systemPlaylistRepository, 
+import {
+    systemPlaylistRepository,
     userPlaylistRepository,
-    signatureService, 
+    signatureService,
     searchService,
     recommendationService
 } from "../infra";
-import type { PaginationParams, PaginatedResult } from "../type/pagination.type";
-import { buildPaginatedResult } from "../type/pagination.type";
+import type { PaginationParams, PaginatedResult } from "../types/pagination.type";
+import { buildPaginatedResult } from "../types/pagination.type";
 
 export class PlaylistService {
     // ── System Playlists ────────────────────────────────────────────────────────
@@ -17,7 +17,7 @@ export class PlaylistService {
 
         try {
             await searchService.save({ id, ...data } as any);
-        } catch (_) {}
+        } catch (_) { }
 
         return playlist;
     }
@@ -46,7 +46,7 @@ export class PlaylistService {
 
     async deleteSystemPlaylist(id: string) {
         const playlist = await systemPlaylistRepository.delete(id);
-        try { await searchService.delete(id); } catch (_) {}
+        try { await searchService.delete(id); } catch (_) { }
         return playlist;
     }
 
@@ -84,13 +84,13 @@ export class PlaylistService {
 
     async addSongToUserPlaylist(playlistId: string, songId: string, userId: string) {
         const entry = await userPlaylistRepository.addSong(playlistId, songId);
-        try { await recommendationService.addToPlaylist(userId, songId); } catch (_) {}
+        try { await recommendationService.addToPlaylist(userId, songId); } catch (_) { }
         return entry;
     }
 
     async removeSongFromUserPlaylist(playlistId: string, songId: string, userId: string) {
         const entry = await userPlaylistRepository.removeSong(playlistId, songId);
-        try { await recommendationService.removeFromPlaylist(userId, songId); } catch (_) {}
+        try { await recommendationService.removeFromPlaylist(userId, songId); } catch (_) { }
         return entry;
     }
 

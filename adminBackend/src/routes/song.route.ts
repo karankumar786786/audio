@@ -4,15 +4,13 @@ import {
     updateSong, 
     deleteSong, 
     getSongs, 
-    getSongById 
 } from "../controllers/song.controller";
 import { validate } from "../middlewares/validate.middleware";
-import { CreateSongSchema } from "../schema/songs.schema";
+import { CreateSongSchema, updateSongSchema } from "../schema/songs.schema";
 
 export const songRouter = Router();
 
 songRouter.post("/", validate(CreateSongSchema), createSong);
 songRouter.get("/", getSongs);
-songRouter.get("/:id", getSongById);
-songRouter.put("/:id", validate(CreateSongSchema.partial()), updateSong);
+songRouter.put("/:id", validate(updateSongSchema), updateSong);
 songRouter.delete("/:id", deleteSong);

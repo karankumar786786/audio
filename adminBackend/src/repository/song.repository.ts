@@ -1,10 +1,10 @@
 import { db } from "../infra";
 import type { SongSchema } from "../schema/songs.schema";
-import type { Repository } from "../type/repository.type";
+import type { Repository } from "../types/repository.type";
 
 type CreateSongData = Omit<SongSchema, "createdAt">;
 type partial = Partial<CreateSongData>;
-type UpdateSongData = Omit<partial,"songKey" | 'language' | 'jobId' | 'duration'>;
+type UpdateSongData = Omit<partial, "songKey" | 'language' | 'jobId' | 'duration'>;
 
 export class SongRepository implements Repository<SongSchema, CreateSongData, UpdateSongData> {
 
@@ -67,7 +67,7 @@ export class SongRepository implements Repository<SongSchema, CreateSongData, Up
         const [song] = await db`
             DELETE FROM songs WHERE id = ${id} RETURNING *
         `;
-        
+
         if (!song) throw new Error(`Song with id ${id} not found`);
         return this.mapRow(song);
     }

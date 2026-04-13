@@ -9,18 +9,9 @@ import {
     getSongsOfSystemPlaylist,
 } from "../controllers/systemPlaylistController";
 import { validate } from "../middlewares/validate.middleware";
-import { systemPlaylistSchema, systemPlaylistSongSchema } from "../schema/systemPlaylist.schema";
-import { z } from "zod";
+import { createSystemPlaylistInput, systemPlaylistSongInput } from "../schema/systemPlaylist.schema";
 
-const createSystemPlaylistInput = systemPlaylistSchema
-    .omit({ id: true, createdAt: true, updatedAt: true })
-    .extend({
-        name: z.string({ error: "name is required" }).min(1, { message: "name cannot be empty" }),
-        coverImageKey: z.string({ error: "coverImageKey is required" }).min(1, { message: "coverImageKey cannot be empty" }),
-        bannerImageKey: z.string({ error: "bannerImageKey is required" }).min(1, { message: "bannerImageKey cannot be empty" }),
-    });
 
-const systemPlaylistSongInput = systemPlaylistSongSchema.omit({ id: true });
 
 export const systemPlaylistRouter = Router();
 

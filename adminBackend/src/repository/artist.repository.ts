@@ -1,6 +1,6 @@
 import { db } from "../infra";
 import { type ArtistSchema } from "../schema/artist.schema";
-import type { Repository } from "../type/repository.type";
+import type { Repository } from "../types/repository.type";
 
 type CreateArtistData = Omit<ArtistSchema, "createdAt">;
 type UpdateArtistData = Partial<CreateArtistData>;

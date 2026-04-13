@@ -1,9 +1,9 @@
 import { db } from "../infra";
 import { type SystemPlaylistSchema, type SystemPlaylistSongSchema } from "../schema/systemPlaylist.schema";
-import type { Repository } from "../type/repository.type";
+import type { Repository } from "../types/repository.type";
 import { randomUUIDv7 } from "bun";
 
-type CreatePlaylistData = Omit<SystemPlaylistSchema,  "createdAt" | "updatedAt">;
+type CreatePlaylistData = Omit<SystemPlaylistSchema, "createdAt" | "updatedAt">;
 type UpdatePlaylistData = Partial<CreatePlaylistData>;
 
 export class SystemPlaylistRepository implements Repository<SystemPlaylistSchema, CreatePlaylistData, UpdatePlaylistData> {

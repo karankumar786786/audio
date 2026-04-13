@@ -1,7 +1,7 @@
 import { randomUUIDv7 } from "bun";
 import { db } from "../infra";
 import { type UserPlaylistSchema, type UserPlaylistSongSchema } from "../schema/userPlaylist.schema";
-import type { Repository } from "../type/repository.type";
+import type { Repository } from "../types/repository.type";
 
 
 type UpdatePlaylistData = Partial<UserPlaylistSchema>;
