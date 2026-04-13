@@ -50,16 +50,14 @@ export const signatureService = new SignatureUtility(
 
 import { 
     ArtistRepository,
-    SystemPlaylistRepository,
-    UserPlaylistRepository,
+    PlaylistRepository,
     SongRepository,
     SongProcessingJobRepository,
 } from "../repository";
 
 // Repositories
 export const artistRepository = new ArtistRepository();
-export const systemPlaylistRepository = new SystemPlaylistRepository();
-export const userPlaylistRepository = new UserPlaylistRepository();
+export const playlistRepository = new PlaylistRepository();
 export const songRepository = new SongRepository();
 export const songProcessingJobRepository = new SongProcessingJobRepository();
 

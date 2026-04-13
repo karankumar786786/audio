@@ -1,5 +1,5 @@
 import { type Request, type Response, type NextFunction } from "express";
-import { songService } from "../infra";
+import { signatureService, songService } from "../infra";
 import { ApiResponse } from "../utils/ApiResponse";
 import { parsePagination } from "../types/pagination.type";
 
@@ -15,6 +15,7 @@ export async function createSong(req: Request, res: Response, next: NextFunction
 export async function updateSong(req: Request, res: Response, next: NextFunction) {
     try {
         const id = req.params.id as string;
+        signatureService.verifyId(id,"songId");
         const song = await songService.updateSong(id, req.body);
         return res.status(200).json(new ApiResponse(200, "Song updated", song));
     } catch (error: any) {
@@ -25,6 +26,7 @@ export async function updateSong(req: Request, res: Response, next: NextFunction
 export async function deleteSong(req: Request, res: Response, next: NextFunction) {
     try {
         const id = req.params.id as string;
+        signatureService.verifyId(id,"songId");
         const song = await songService.deleteSong(id);
         return res.status(200).json(new ApiResponse(200, "Song deleted", song));
     } catch (error: any) {

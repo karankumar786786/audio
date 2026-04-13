@@ -28,16 +28,22 @@ export class SignatureUtility {
      * Verifies if a provided Signed ID is valid.
      * Expects format: `uuid.signature`
      */
-    verifyId(signedId: string): boolean {
-        if (!signedId || typeof signedId !== 'string') return false;
+    verifyId(signedId: string,ref:string = "id") {
+        if (!signedId || typeof signedId !== 'string') {
+            throw new Error(`invalid ${ref} recived`);
+        };
 
         const parts = signedId.split('.');
-        if (parts.length !== 2) return false;
+        if (parts.length !== 2) {
+            throw new Error(`invalid ${ref} recived`);
+        }
 
         const uuid = parts[0];
         const providedSignature = parts[1];
 
-        if (!uuid || !providedSignature) return false;
+        if (!uuid || !providedSignature) {
+            throw new Error(`invalid ${ref} recived`);
+        }
 
         const expectedSignature = crypto
             .createHmac(SignatureUtility.ALGORITHM, this.SECRET)
@@ -50,7 +56,7 @@ export class SignatureUtility {
                 Buffer.from(expectedSignature, 'hex')
             );
         } catch (e) {
-            return false;
+            throw new Error(`invalid ${ref} recived`);
         }
     }
 }

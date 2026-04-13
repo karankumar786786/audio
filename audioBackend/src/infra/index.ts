@@ -1,6 +1,6 @@
 import { config } from "dotenv";
 import { neon } from "@neondatabase/serverless";
-import {Inngest} from "inngest";
+import { Inngest } from "inngest";
 import ImageKit from "imagekit";
 config();
 
@@ -64,11 +64,11 @@ export const recommendationService = new RecommendationServiceImpl(
     logger
 );
 
-import { 
-    SongRepository, 
+import {
+    SongRepository,
     SongProcessingJobRepository,
     ArtistRepository,
-    SystemPlaylistRepository,
+    PlaylistRepository,
     UserPlaylistRepository,
     UserFavouriteSongRepository,
     UserHistoryRepository,
@@ -85,7 +85,7 @@ export const signatureService = new SignatureUtility(
 export const songRepository = new SongRepository();
 export const songProcessingJobRepository = new SongProcessingJobRepository();
 export const artistRepository = new ArtistRepository();
-export const systemPlaylistRepository = new SystemPlaylistRepository();
+export const playlistRepository = new PlaylistRepository();
 export const userPlaylistRepository = new UserPlaylistRepository();
 export const userFavouriteSongRepository = new UserFavouriteSongRepository();
 export const userHistoryRepository = new UserHistoryRepository();
@@ -100,11 +100,11 @@ export const userService = new UserService();
 export const interactionService = new InteractionService();
 export const internalSearchService = new SearchService();
 
-export const inngest = new Inngest({id:"test-music"})
+export const inngest = new Inngest({ id: "test-music" })
 
 export const imagekitClient = new ImageKit(
     {
-        publicKey:process.env.IMAGEKIT_PUBLIC_KEY!,
+        publicKey: process.env.IMAGEKIT_PUBLIC_KEY!,
         privateKey: process.env.IMAGEKIT_PRIVATE_KEY!,
         urlEndpoint: process.env.IMAGEKIT_URL_ENDPOINT!
     }

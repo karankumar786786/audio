@@ -21,14 +21,15 @@ export interface ArtistRecord {
     bannerImageKey: string;
 }
 
-export interface SystemPlaylistRecord {
+export interface PlaylistRecord {
     id: string;
     name: string;
     coverImageKey: string;
     bannerImageKey: string;
 }
 
-export type SearchRecord = SongRecord | ArtistRecord | SystemPlaylistRecord;
+export type SearchRecord = SongRecord | ArtistRecord | PlaylistRecord;
+
 
 export class AlgoliaService {
 

@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const systemPlaylistSchema = z.object({
+export const playlistSchema = z.object({
     id: z.string(),
     name: z.string().min(1, { message: "name is required" }),
     coverImageKey: z.string().min(1, { message: "coverImageKey is required" }),
@@ -9,18 +9,18 @@ export const systemPlaylistSchema = z.object({
     updatedAt: z.string().datetime().optional(),
 });
 
-export type SystemPlaylistSchema = z.infer<typeof systemPlaylistSchema>;
+export type PlaylistSchema = z.infer<typeof playlistSchema>;
 
-// Schema for adding a song to a system playlist
-export const systemPlaylistSongSchema = z.object({
+// Schema for adding a song to a playlist
+export const playlistSongSchema = z.object({
     id: z.string().optional(),
     playlistId: z.string({error:"valid playlistId is required"}).min(1, { message: "playlistId is required" }),
     songId: z.string({error:"valid songId is required"}).min(1, { message: "songId is required" }),
 });
 
-export type SystemPlaylistSongSchema = z.infer<typeof systemPlaylistSongSchema>;
+export type PlaylistSongSchema = z.infer<typeof playlistSongSchema>;
 
-export const createSystemPlaylistInput = systemPlaylistSchema
+export const createPlaylistInput = playlistSchema
     .omit({ id: true, createdAt: true, updatedAt: true })
     .extend({
         name: z.string({ error: "name is required" }).min(1, { message: "name cannot be empty" }),
@@ -29,4 +29,4 @@ export const createSystemPlaylistInput = systemPlaylistSchema
     });
 
 
-export const systemPlaylistSongInput = systemPlaylistSongSchema.omit({ id: true });
+export const playlistSongInput = playlistSongSchema.omit({ id: true });

@@ -1,53 +1,48 @@
 import { db } from "../infra";
-import { type SystemPlaylistSchema, type SystemPlaylistSongSchema } from "../schema/systemPlaylist.schema";
-import type { Repository } from "../type/repository.type";
+import { type PlaylistSchema, type PlaylistSongSchema } from "../schema/playlist.schema";
+import type { Repository } from "../types/repository.type";
 import { randomUUIDv7 } from "bun";
 
-type CreatePlaylistData = Omit<SystemPlaylistSchema,  "createdAt" | "updatedAt">;
+type CreatePlaylistData = Omit<PlaylistSchema, "createdAt" | "updatedAt">;
 type UpdatePlaylistData = Partial<CreatePlaylistData>;
 
-export class SystemPlaylistRepository implements Repository<SystemPlaylistSchema, CreatePlaylistData, UpdatePlaylistData> {
+export class PlaylistRepository implements Repository<PlaylistSchema, CreatePlaylistData, UpdatePlaylistData> {
 
-    async create(data: CreatePlaylistData): Promise<SystemPlaylistSchema> {
+    async create(data: CreatePlaylistData): Promise<PlaylistSchema> {
         const [playlist] = await db`
-            INSERT INTO system_playlists (id, name, cover_image_key, banner_image_key)
-            VALUES (
-                ${data.id},
-                ${data.name},
-                ${data.coverImageKey},
-                ${data.bannerImageKey}
-            )
+            INSERT INTO playlists (id, name, cover_image_key, banner_image_key)
+            VALUES (${data.id}, ${data.name}, ${data.coverImageKey}, ${data.bannerImageKey})
             RETURNING *
         `;
-        if (!playlist) throw new Error("Failed to create system playlist");
+        if (!playlist) throw new Error("Failed to create playlist");
         return this.mapRow(playlist);
     }
 
-    async getById(id: string): Promise<SystemPlaylistSchema> {
+    async getById(id: string): Promise<PlaylistSchema> {
         const [playlist] = await db`
-            SELECT * FROM system_playlists WHERE id = ${id}
+            SELECT * FROM playlists WHERE id = ${id}
         `;
-        if (!playlist) throw new Error(`System playlist with id ${id} not found`);
+        if (!playlist) throw new Error(`Playlist with id ${id} not found`);
         return this.mapRow(playlist);
     }
 
     async count(): Promise<number> {
-        const [row] = await db`SELECT count(*)::int as count FROM system_playlists`;
+        const [row] = await db`SELECT count(*)::int as count FROM playlists`;
         return row?.count || 0;
     }
 
-    async getAll(limit?: number, offset?: number): Promise<SystemPlaylistSchema[]> {
+    async getAll(limit?: number, offset?: number): Promise<PlaylistSchema[]> {
         const rows = await db`
-            SELECT * FROM system_playlists 
+            SELECT * FROM playlists 
             ORDER BY created_at DESC
             LIMIT ${limit ?? null} OFFSET ${offset ?? null}
         `;
         return rows.map((row) => this.mapRow(row));
     }
 
-    async update(id: string, data: UpdatePlaylistData): Promise<SystemPlaylistSchema> {
+    async update(id: string, data: UpdatePlaylistData): Promise<PlaylistSchema> {
         const [playlist] = await db`
-            UPDATE system_playlists
+            UPDATE playlists
             SET
                 name             = COALESCE(${data.name ?? null}, name),
                 cover_image_key  = COALESCE(${data.coverImageKey ?? null}, cover_image_key),
@@ -56,24 +51,24 @@ export class SystemPlaylistRepository implements Repository<SystemPlaylistSchema
             WHERE id = ${id}
             RETURNING *
         `;
-        if (!playlist) throw new Error(`System playlist with id ${id} not found`);
+        if (!playlist) throw new Error(`Playlist with id ${id} not found`);
         return this.mapRow(playlist);
     }
 
-    async delete(id: string): Promise<SystemPlaylistSchema> {
+    async delete(id: string): Promise<PlaylistSchema> {
         const [playlist] = await db`
-            DELETE FROM system_playlists WHERE id = ${id} RETURNING *
+            DELETE FROM playlists WHERE id = ${id} RETURNING *
         `;
-        if (!playlist) throw new Error(`System playlist with id ${id} not found`);
+        if (!playlist) throw new Error(`Playlist with id ${id} not found`);
         return this.mapRow(playlist);
     }
 
     // ── Playlist ↔ Song join operations ────────────────────────────────────────
 
-    async addSong(playlistId: string, songId: string): Promise<SystemPlaylistSongSchema> {
+    async addSong(playlistId: string, songId: string): Promise<PlaylistSongSchema> {
         const id = randomUUIDv7();
         const [entry] = await db`
-            INSERT INTO system_playlist_songs (id, playlist_id, song_id)
+            INSERT INTO playlist_songs (id, playlist_id, song_id)
             VALUES (${id}, ${playlistId}, ${songId})
             ON CONFLICT (playlist_id, song_id) DO NOTHING
             RETURNING *
@@ -82,9 +77,9 @@ export class SystemPlaylistRepository implements Repository<SystemPlaylistSchema
         return this.mapSongRow(entry);
     }
 
-    async removeSong(playlistId: string, songId: string): Promise<SystemPlaylistSongSchema> {
+    async removeSong(playlistId: string, songId: string): Promise<PlaylistSongSchema> {
         const [entry] = await db`
-            DELETE FROM system_playlist_songs
+            DELETE FROM playlist_songs
             WHERE playlist_id = ${playlistId} AND song_id = ${songId}
             RETURNING *
         `;
@@ -94,7 +89,7 @@ export class SystemPlaylistRepository implements Repository<SystemPlaylistSchema
 
     async countSongs(playlistId: string): Promise<number> {
         const [row] = await db`
-            SELECT count(*)::int as count FROM system_playlist_songs 
+            SELECT count(*)::int as count FROM playlist_songs 
             WHERE playlist_id = ${playlistId}
         `;
         return row?.count || 0;
@@ -112,7 +107,7 @@ export class SystemPlaylistRepository implements Repository<SystemPlaylistSchema
                 s.language,
                 s.job_id AS "jobId",
                 s.created_at AS "createdAt"
-            FROM system_playlist_songs sps
+            FROM playlist_songs sps
             JOIN songs s ON s.id = sps.song_id
             WHERE sps.playlist_id = ${playlistId}
             LIMIT ${limit ?? null} OFFSET ${offset ?? null}
@@ -120,9 +115,9 @@ export class SystemPlaylistRepository implements Repository<SystemPlaylistSchema
         return rows;
     }
 
-    // Maps DB snake_case row → camelCase SystemPlaylistSchema
+    // Maps DB snake_case row → camelCase PlaylistSchema
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private mapRow(row: Record<string, any>): SystemPlaylistSchema {
+    private mapRow(row: Record<string, any>): PlaylistSchema {
         return {
             id: row.id as string,
             name: row.name as string,
@@ -133,9 +128,9 @@ export class SystemPlaylistRepository implements Repository<SystemPlaylistSchema
         };
     }
 
-    // Maps DB snake_case row → camelCase SystemPlaylistSongSchema
+    // Maps DB snake_case row → camelCase PlaylistSongSchema
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private mapSongRow(row: Record<string, any>): SystemPlaylistSongSchema {
+    private mapSongRow(row: Record<string, any>): PlaylistSongSchema {
         return {
             id: row.id as string,
             playlistId: row.playlist_id as string,
@@ -143,3 +138,4 @@ export class SystemPlaylistRepository implements Repository<SystemPlaylistSchema
         };
     }
 }
+
