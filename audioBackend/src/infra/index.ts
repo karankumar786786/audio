@@ -86,7 +86,6 @@ export const inngest = new Inngest({ id: "test-music" });
 
 const artistRepository = new ArtistRepository(db, logger.child({ service: "ArtistRepository" }));
 const songRepository = new SongRepository(db, logger.child({ service: "SongRepository" }));
-const songProcessingJobRepository = new SongProcessingJobRepository(db, logger.child({ service: "JobRepository" }));
 const playlistRepository = new PlaylistRepository(db, logger.child({ service: "PlaylistRepository" }));
 const userPlaylistRepository = new UserPlaylistRepository(db, logger.child({ service: "UserPlaylistRepository" }));
 const userFavouriteSongRepository = new UserFavouriteSongRepository(db, logger.child({ service: "UserFavouriteSongRepository" }));

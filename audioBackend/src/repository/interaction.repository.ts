@@ -56,4 +56,13 @@ export class InteractionRepository {
             WHERE id = ANY(${songIds})
         `;
     }
+
+    async recordListen(userId: string, songId: string): Promise<any> {
+        const [interaction] = await this.db`
+            INSERT INTO user_history (user_id, song_id)
+            VALUES (${userId}, ${songId})
+            RETURNING *
+        `;
+        return interaction;
+    }
 }

@@ -112,6 +112,19 @@ export class SongProcessingJobRepository {
         return jobs.map((row) => this.mapRow(row));
     }
 
+    async updateStatus(id: string, status: string, songId?: string): Promise<SongProcessingJob> {
+        const [job] = await this.db`
+            UPDATE song_processing_job
+            SET 
+                status = ${status},
+                song_id = ${songId ?? null}
+            WHERE id = ${id}
+            RETURNING *
+        `;
+        if (!job) throw new Error(`Job with id ${id} not found`);
+        return this.mapRow(job);
+    }
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private mapRow(row: Record<string, any>): SongProcessingJob {
         return {

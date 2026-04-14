@@ -1,0 +1,277 @@
+$ vitest run
+
+ RUN  v4.1.4 /Users/karan/Desktop/audio/audioBackend
+
+stdout | src/repository/user-favourite-song.repository.test.ts
+◇ injected env (0) from .env.test // tip: ⌁ auth for agents [www.vestauth.com]
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+
+stdout | src/services/interaction.service.test.ts
+◇ injected env (0) from .env.test // tip: ◈ encrypted .env [www.dotenvx.com]
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+
+stdout | tests/e2e/artist.api.test.ts
+◇ injected env (0) from .env.test // tip: ⌘ enable debugging { debug: true }
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+
+stdout | src/repository/interaction.repository.test.ts
+◇ injected env (0) from .env.test // tip: ◈ secrets for agents [www.dotenvx.com]
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+
+stdout | src/repository/song-processing-job.repository.test.ts
+◇ injected env (0) from .env.test // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+◇ injected env (0) from .env // tip: ◈ encrypted .env [www.dotenvx.com]
+
+stdout | src/services/search.service.test.ts
+◇ injected env (0) from .env.test // tip: ⌘ suppress logs { quiet: true }
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
+
+stdout | src/repository/user-playlist.repository.test.ts
+◇ injected env (0) from .env.test // tip: ◈ secrets for agents [www.dotenvx.com]
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+
+ ✓ src/repository/user-favourite-song.repository.test.ts (3 tests) 7ms
+ ✓ src/repository/user-playlist.repository.test.ts (4 tests) 10ms
+ ❯ src/repository/interaction.repository.test.ts (3 tests | 1 failed) 10ms
+     ✓ should fetch trending songs correctly 6ms
+     ✓ should fetch songs by ids 0ms
+     × should record listen correctly 2ms
+ ❯ src/services/search.service.test.ts (2 tests | 2 failed) 8ms
+     × should perform unified search across multiple indexes 5ms
+     × should return empty results if search fails or is empty 1ms
+ ❯ src/repository/song-processing-job.repository.test.ts (3 tests | 1 failed) 13ms
+     ✓ should create a job correctly 6ms
+     × should update status correctly 5ms
+     ✓ should fetch job by id 1ms
+ ❯ src/services/interaction.service.test.ts (3 tests | 1 failed) 11ms
+     × should record listen with both history and analytics 7ms
+     ✓ should fetch trending results paginated 1ms
+     ✓ should fetch recommendations and map to full song objects 0ms
+stdout | src/services/user.service.test.ts
+◇ injected env (0) from .env.test // tip: ⌘ suppress logs { quiet: true }
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+
+stdout | src/repository/artist.repository.test.ts
+◇ injected env (0) from .env.test // tip: ◈ encrypted .env [www.dotenvx.com]
+◇ injected env (0) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+
+stdout | src/services/artist.service.test.ts
+◇ injected env (0) from .env.test // tip: ⌘ suppress logs { quiet: true }
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+
+stdout | src/repository/playlist.repository.test.ts
+◇ injected env (0) from .env.test // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+
+stdout | src/repository/song.repository.test.ts
+◇ injected env (0) from .env.test // tip: ⌘ enable debugging { debug: true }
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+
+stdout | src/services/song.service.test.ts
+◇ injected env (0) from .env.test // tip: ⌘ multiple files { path: ['.env.local', '.env'] }
+◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
+
+ ✓ src/repository/artist.repository.test.ts (2 tests) 7ms
+ ✓ src/repository/song.repository.test.ts (4 tests) 10ms
+ ✓ src/services/artist.service.test.ts (2 tests) 9ms
+ ✓ src/repository/playlist.repository.test.ts (4 tests) 15ms
+ ✓ src/services/song.service.test.ts (2 tests) 5ms
+ ✓ src/services/user.service.test.ts (3 tests) 8ms
+stdout | src/repository/user-history.repository.test.ts
+◇ injected env (0) from .env.test // tip: ⌘ suppress logs { quiet: true }
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+
+stdout | src/repository/user.repository.test.ts
+◇ injected env (0) from .env.test // tip: ⌘ override existing { override: true }
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+
+stdout | src/repository/user-search-history.repository.test.ts
+◇ injected env (0) from .env.test // tip: ◈ encrypted .env [www.dotenvx.com]
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+
+stdout | src/services/playlist.service.test.ts
+◇ injected env (0) from .env.test // tip: ⌘ suppress logs { quiet: true }
+◇ injected env (0) from .env // tip: ⌘ custom filepath { path: '/custom/path/.env' }
+
+ ✓ src/repository/user-history.repository.test.ts (2 tests) 7ms
+ ✓ src/repository/user.repository.test.ts (3 tests) 5ms
+ ✓ src/repository/user-search-history.repository.test.ts (3 tests) 6ms
+ ✓ src/services/playlist.service.test.ts (3 tests) 5ms
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[32m[ArtistRepository][0m create method is available[39m
+stdout | tests/e2e/artist.api.test.ts
+◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
+
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[32m[ArtistRepository][0m getById method is available[39m
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[32m[ArtistRepository][0m count method is available[39m
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[32m[ArtistRepository][0m getAll method is available[39m
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[32m[ArtistRepository][0m update method is available[39m
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[32m[ArtistRepository][0m delete method is available[39m
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[32m[ArtistRepository][0m mapRow method is available[39m
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[35m[SongRepository][0m create method is available[39m
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[35m[SongRepository][0m getById method is available[39m
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[35m[SongRepository][0m count method is available[39m
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[35m[SongRepository][0m getAll method is available[39m
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[35m[SongRepository][0m update method is available[39m
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[35m[SongRepository][0m delete method is available[39m
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[35m[SongRepository][0m getByArtistName method is available[39m
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[35m[SongRepository][0m countByArtistName method is available[39m
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[35m[SongRepository][0m mapRow method is available[39m
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[34m[PlaylistRepository][0m create method is available[39m
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[34m[PlaylistRepository][0m getById method is available[39m
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[34m[PlaylistRepository][0m count method is available[39m
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[34m[PlaylistRepository][0m getAll method is available[39m
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[34m[PlaylistRepository][0m update method is available[39m
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[34m[PlaylistRepository][0m delete method is available[39m
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[34m[PlaylistRepository][0m addSong method is available[39m
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[34m[PlaylistRepository][0m removeSong method is available[39m
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[34m[PlaylistRepository][0m countSongs method is available[39m
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[34m[PlaylistRepository][0m getSongs method is available[39m
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[34m[PlaylistRepository][0m mapRow method is available[39m
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[34m[PlaylistRepository][0m mapSongRow method is available[39m
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[34m[UserPlaylistRepository][0m create method is available[39m
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[34m[UserPlaylistRepository][0m getById method is available[39m
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[34m[UserPlaylistRepository][0m countByUserId method is available[39m
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[34m[UserPlaylistRepository][0m getByUserId method is available[39m
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[34m[UserPlaylistRepository][0m getAll method is available[39m
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[34m[UserPlaylistRepository][0m update method is available[39m
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[34m[UserPlaylistRepository][0m delete method is available[39m
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[34m[UserPlaylistRepository][0m addSong method is available[39m
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[34m[UserPlaylistRepository][0m removeSong method is available[39m
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[34m[UserPlaylistRepository][0m countSongs method is available[39m
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[34m[UserPlaylistRepository][0m getSongs method is available[39m
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[34m[UserPlaylistRepository][0m mapRow method is available[39m
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[34m[UserPlaylistRepository][0m mapSongRow method is available[39m
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[35m[UserFavouriteSongRepository][0m create method is available[39m
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[35m[UserFavouriteSongRepository][0m getById method is available[39m
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[35m[UserFavouriteSongRepository][0m countByUserId method is available[39m
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[35m[UserFavouriteSongRepository][0m getByUserId method is available[39m
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[35m[UserFavouriteSongRepository][0m getAll method is available[39m
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[35m[UserFavouriteSongRepository][0m update method is available[39m
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[35m[UserFavouriteSongRepository][0m delete method is available[39m
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[35m[UserFavouriteSongRepository][0m remove method is available[39m
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[35m[UserFavouriteSongRepository][0m mapRow method is available[39m
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[33m[UserHistoryRepository][0m create method is available[39m
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[33m[UserHistoryRepository][0m getById method is available[39m
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[33m[UserHistoryRepository][0m countByUserId method is available[39m
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[33m[UserHistoryRepository][0m getByUserId method is available[39m
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[33m[UserHistoryRepository][0m getAll method is available[39m
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[33m[UserHistoryRepository][0m update method is available[39m
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[33m[UserHistoryRepository][0m delete method is available[39m
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[33m[UserHistoryRepository][0m mapRow method is available[39m
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[33m[UserRepository][0m create method is available[39m
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[33m[UserRepository][0m getById method is available[39m
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[33m[UserRepository][0m getByEmail method is available[39m
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[33m[UserRepository][0m getAll method is available[39m
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[33m[UserRepository][0m delete method is available[39m
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[33m[UserRepository][0m mapRow method is available[39m
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[33m[UserSearchHistoryRepository][0m create method is available[39m
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[33m[UserSearchHistoryRepository][0m getById method is available[39m
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[33m[UserSearchHistoryRepository][0m countByUserId method is available[39m
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[33m[UserSearchHistoryRepository][0m getByUserId method is available[39m
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[33m[UserSearchHistoryRepository][0m getAll method is available[39m
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[33m[UserSearchHistoryRepository][0m update method is available[39m
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[33m[UserSearchHistoryRepository][0m delete method is available[39m
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[33m[UserSearchHistoryRepository][0m clearUserHistory method is available[39m
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[33m[UserSearchHistoryRepository][0m mapRow method is available[39m
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[36m[InteractionRepository][0m getTrendingSongsCount method is available[39m
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[36m[InteractionRepository][0m getTrendingSongs method is available[39m
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[36m[InteractionRepository][0m getSongsByIds method is available[39m
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[32m[ArtistService][0m getArtists method is available[39m
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[32m[ArtistService][0m getArtistById method is available[39m
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[32m[ArtistService][0m getArtistSongs method is available[39m
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[35m[SongService][0m getSongs method is available[39m
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[35m[SongService][0m getSongById method is available[39m
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[34m[PlaylistService][0m getPlaylists method is available[39m
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[34m[PlaylistService][0m getPlaylistById method is available[39m
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[34m[PlaylistService][0m getPlaylistSongs method is available[39m
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[33m[UserService][0m createUser method is available[39m
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[33m[UserService][0m getUserById method is available[39m
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[33m[UserService][0m getAllUsers method is available[39m
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[33m[UserService][0m addFavourite method is available[39m
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[33m[UserService][0m removeFavourite method is available[39m
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[33m[UserService][0m getFavourites method is available[39m
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[33m[UserService][0m getHistory method is available[39m
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[33m[UserService][0m getSearchHistory method is available[39m
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[33m[UserService][0m saveSearchHistory method is available[39m
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[33m[UserService][0m clearSearchHistory method is available[39m
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[36m[InteractionService][0m recordListen method is available[39m
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[36m[InteractionService][0m getTrendingSongs method is available[39m
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[36m[InteractionService][0m getRecommendations method is available[39m
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[96m[SearchService][0m unifiedSearch method is available[39m
+stdout | tests/e2e/artist.api.test.ts
+◇ injected env (0) from .env // tip: ⌘ suppress logs { quiet: true }
+
+[2026-04-14 16:19:13] [32mINFO[39m: [36m[1m[37m[System][0m server started at port 4001[39m
+ ✓ tests/e2e/artist.api.test.ts (1 test) 24ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/repository/interaction.repository.test.ts > InteractionRepository > should record listen correctly
+TypeError: repo.recordListen is not a function. (In 'repo.recordListen("u1", "s1")', 'repo.recordListen' is undefined)
+ ❯ src/repository/interaction.repository.test.ts:46:35
+     44|     it("should record listen correctly", async () => {
+     45|         mockDb.mockResolvedValue([{ id: "1" }]);
+     46|         const result = await repo.recordListen("u1", "s1");
+       |                                   ^
+     47|         expect(result).toBeDefined();
+     48|         expect(mockDb).toHaveBeenCalled();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/5]⎯
+
+ FAIL  src/repository/song-processing-job.repository.test.ts > SongProcessingJobRepository > should update status correctly
+TypeError: repo.updateStatus is not a function. (In 'repo.updateStatus("1", "completed", "final-song-id")', 'repo.updateStatus' is undefined)
+ ❯ src/repository/song-processing-job.repository.test.ts:51:35
+     49|         mockDb.mockResolvedValue([mockJob]);
+     50|
+     51|         const result = await repo.updateStatus("1", "completed", "fina…
+       |                                   ^
+     52|
+     53|         expect(result.status).toBe("completed");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/5]⎯
+
+ FAIL  src/services/search.service.test.ts > SearchService > should perform unified search across multiple indexes
+TypeError: {} is not iterable
+ ❯ unifiedSearch src/services/search.service.ts:27:20
+     25|         const playlists: Record<string, any>[] = [];
+     26|
+     27|         for (const hit of hits) {
+       |                    ^
+     28|             if ("title" in hit && "artistName" in hit) {
+     29|                 songs.push(hit);
+ ❯ src/services/search.service.test.ts:26:38
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/5]⎯
+
+ FAIL  src/services/search.service.test.ts > SearchService > should return empty results if search fails or is empty
+TypeError: {} is not iterable
+ ❯ unifiedSearch src/services/search.service.ts:27:20
+     25|         const playlists: Record<string, any>[] = [];
+     26|
+     27|         for (const hit of hits) {
+       |                    ^
+     28|             if ("title" in hit && "artistName" in hit) {
+     29|                 songs.push(hit);
+ ❯ src/services/search.service.test.ts:36:38
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/5]⎯
+
+ FAIL  src/services/interaction.service.test.ts > InteractionService > should record listen with both history and analytics
+AssertionError: expected "vi.fn()" to be called at least once
+ ❯ src/services/interaction.service.test.ts:40:44
+     38|
+     39|         expect(mockHistRepo.create).toHaveBeenCalled();
+     40|         expect(mockInterRepo.recordListen).toHaveBeenCalled();
+       |                                            ^
+     41|     });
+     42|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/5]⎯
+
+
+ Test Files  4 failed | 13 passed (17)
+      Tests  5 failed | 42 passed (47)
+   Start at  21:49:12
+   Duration  901ms (transform 798ms, setup 356ms, import 2.19s, tests 160ms, environment 3ms)
+
+error: script "test" exited with code 1
