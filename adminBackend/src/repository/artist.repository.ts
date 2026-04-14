@@ -1,5 +1,5 @@
 import {  type Database } from "../infra";
-import type { Logger } from "../observablity";
+import { logMethods, type Logger } from "../observablity";
 import { type ArtistSchema } from "../schema/artist.schema";
 import type { Repository } from "../types/repository.type";
 import { NotFoundError } from "../errors";
@@ -11,7 +11,9 @@ export class ArtistRepository implements Repository<ArtistSchema, CreateArtistDa
     constructor(
         private readonly db: Database,
         private readonly logger: Logger
-    ) {}
+    ) {
+        logMethods(this,this.logger);
+    }
 
     async create(data: CreateArtistData): Promise<ArtistSchema> {
         const [artist] = await this.db`

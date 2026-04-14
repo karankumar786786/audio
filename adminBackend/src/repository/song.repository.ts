@@ -1,7 +1,7 @@
 import { type Database } from "../infra";
 import type { SongSchema } from "../schema/songs.schema";
 import type { Repository } from "../types/repository.type";
-import type { Logger } from "../observablity";
+import { logMethods, type Logger } from "../observablity";
 import { NotFoundError } from "../errors";
 
 type CreateSongData = Omit<SongSchema, "createdAt">;
@@ -12,7 +12,9 @@ export class SongRepository implements Repository<SongSchema, CreateSongData, Up
     constructor(
         private readonly db: Database,
         private readonly logger: Logger
-    ) {}
+    ) {
+        logMethods(this, this.logger);
+    }
 
     async create(data: CreateSongData): Promise<SongSchema> {
         const [song] = await this.db`

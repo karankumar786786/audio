@@ -18,8 +18,10 @@ export class ArtistService {
         logMethods(this, this.logger);
     }
     async createArtist(data: CreateArtistSchema): Promise<ArtistSchema> {
+        this.logger.debug({ data }, "createArtist starting");
         const id: string = this.signatureService.generateSignedId();
         const artist: ArtistSchema = await this.artistRepository.create({ id, ...data });
+        this.logger.info({ id }, "artist created in repository");
 
         // Index in Algolia for search
         try {
@@ -38,17 +40,20 @@ export class ArtistService {
     }
 
     async getArtists(params: PaginationParams): Promise<PaginatedResult<ArtistSchema>> {
+        this.logger.debug({ params }, "getArtists starting");
         const offset: number = (params.page - 1) * params.limit;
 
         const [data, total] = await Promise.all([
             this.artistRepository.getAll(params.limit, offset),
             this.artistRepository.count()
         ]);
+        this.logger.debug({ total }, "getArtists successfully fetched");
 
         return buildPaginatedResult<ArtistSchema>(data, total, params);
     }
 
     async getArtistById(id: string): Promise<ArtistSchema> {
+        this.logger.debug({ id }, "getArtistById starting");
         this.signatureService.verifyId(id);
         return await this.artistRepository.getById(id);
     }
@@ -75,6 +80,6 @@ export class ArtistService {
             this.songRepository.getByArtistName(artist.name, params.limit, offset),
             this.songRepository.countByArtistName(artist.name)
         ]);
-        return buildPaginatedResult<SongSchema>(songs as any as SongSchema[], total, params);
+        return buildPaginatedResult<SongSchema>(songs as SongSchema[], total, params);
     }
 }

@@ -1,6 +1,6 @@
 import { type Database } from "../infra";
 import { type SongProcessingJob } from "../schema/songProcessingJob.schema";
-import type { Logger } from "../observablity";
+import { logMethods, type Logger } from "../observablity";
 import { NotFoundError } from "../errors";
 
 type CreateJobData = Omit<SongProcessingJob, "transcodingAttempt" | "transcribingAttempt" | "status">;
@@ -10,7 +10,9 @@ export class SongProcessingJobRepository {
     constructor(
         private readonly db: Database,
         private readonly logger: Logger
-    ) {}
+    ) {
+        logMethods(this, this.logger);
+    }
 
     async create(data: CreateJobData): Promise<SongProcessingJob> {
         const [job] = await this.db`

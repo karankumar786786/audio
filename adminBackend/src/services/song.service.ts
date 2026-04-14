@@ -22,6 +22,7 @@ export class SongService {
         logMethods(this,this.logger);
     }
     async createSong(input: CreateSongInput): Promise<{ id: string, jobId: string, status: string }> {
+        this.logger.debug({ input }, "createSong starting");
         const jobId:string = this.signatureService.generateSignedId();
         const songId:string = this.signatureService.generateSignedId();
         this.logger.info(`[SERVICE] Initializing Processing Job ${jobId} for song: ${input.title}`);
@@ -53,11 +54,13 @@ export class SongService {
         };
     }
     async getSongs(params: PaginationParams): Promise<PaginatedResult<SongSchema>> {
+        this.logger.debug({ params }, "getSongs starting");
         const offset:number = (params.page - 1) * params.limit;
         const [data, total] = await Promise.all([
             this.songRepository.getAll(params.limit, offset),
             this.songRepository.count()
         ]);
+        this.logger.debug({ total }, "getSongs successfully fetched");
         return buildPaginatedResult<SongSchema>(data, total, params);
     }
 

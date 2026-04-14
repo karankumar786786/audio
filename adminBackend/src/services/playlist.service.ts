@@ -19,14 +19,16 @@ export class PlaylistService {
     }
 
     async createPlaylist(data: CreatePlaylistSchema): Promise<PlaylistSchema> {
+        this.logger.debug({ data }, "createPlaylist starting");
         const id:string = this.signatureService.generateSignedId();
         const playlist:PlaylistSchema = await this.playlistRepository.create({ id, ...data });
+        this.logger.info({ id }, "playlist created in repository");
         try {
             await this.searchService.save({ id, ...data } as any);
+            this.logger.debug({ id }, "playlist saved in search service");
         } catch (_) {
-            this.logger.error("error in saving search service");
-         }
-
+            this.logger.error({ id }, "error in saving search service");
+        }
         return playlist;
     }
     async getPlaylists(params: PaginationParams): Promise<PaginatedResult<PlaylistSchema>> {
@@ -58,9 +60,12 @@ export class PlaylistService {
         return playlist;
     }
     async addSongToPlaylist(data:PlaylistSongSchema): Promise<PlaylistSongSchema> {
+        this.logger.debug({ data }, "addSongToPlaylist starting");
         this.signatureService.verifyId(data.playlistId,"playlistId");
         this.signatureService.verifyId(data.songId,"songId");
-        return await this.playlistRepository.addSong(data);
+        const result = await this.playlistRepository.addSong(data);
+        this.logger.info({ playlistId: data.playlistId, songId: data.songId }, "song added to playlist");
+        return result;
     }
     async removeSongFromPlaylist(data:PlaylistSongSchema): Promise<PlaylistSongSchema> {
         this.signatureService.verifyId(data.playlistId,"playlistId");

@@ -1,4 +1,4 @@
-import type { Logger } from "../observablity";
+import { logMethods, type Logger } from "../observablity";
 import { type PlaylistSchema, type PlaylistSongSchema } from "../schema/playlist.schema";
 import { type SongSchema } from "../schema/songs.schema";
 import type { Repository } from "../types/repository.type";
@@ -14,7 +14,9 @@ export class PlaylistRepository implements Repository<PlaylistSchema, CreatePlay
         private readonly db: Database,
         private readonly logger: Logger,
         private readonly signatureService:SignatureService,
-    ) {}
+    ) {
+        logMethods(this,this.logger);
+    }
 
     async create(data: CreatePlaylistData): Promise<PlaylistSchema> {
         const [playlist] = await this.db`
