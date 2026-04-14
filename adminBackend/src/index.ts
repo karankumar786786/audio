@@ -8,6 +8,10 @@ import helmet from "helmet";
 import { masterRouter } from "./routes";
 import { logger } from "./observablity";
 import { traceMiddleware } from "./middlewares/trace.middleware";
+import swaggerUi from "swagger-ui-express";
+import { generateOpenApiDocument } from "./docs/openapi-registry";
+import "./docs/openapi-routes";
+
 
 
 const app = express();
@@ -20,6 +24,9 @@ app.use(express.json());
 app.use(helmet());
 app.use(express.urlencoded({ extended: true }));
 
+
+// Documentation
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(generateOpenApiDocument()));
 
 // Routes Implementation
 app.use("/api/v1", masterRouter);

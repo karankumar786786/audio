@@ -1,0 +1,969 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "version": "1.0.0",
+    "title": "Admin Backend API",
+    "description": "Comprehensive API documentation for the Music Admin Backend."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:4000/api/v1"
+    }
+  ],
+  "components": {
+    "schemas": {
+      "Artist": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier for the artist",
+            "example": "art_123"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Full name of the artist",
+            "example": "Gurun Randhawa"
+          },
+          "about": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Short biography of the artist",
+            "example": "Popular Punjabi singer and songwriter."
+          },
+          "dob": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Date of birth in YYYY-MM-DD format",
+            "example": "1991-08-30"
+          },
+          "coverImageKey": {
+            "type": "string",
+            "description": "Imagekit key for the cover image",
+            "example": "artists/cover/randhawa.jpg"
+          },
+          "bannerImageKey": {
+            "type": "string",
+            "description": "Imagekit key for the banner image",
+            "example": "artists/banner/randhawa_banner.jpg"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp of creation"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "about",
+          "dob",
+          "coverImageKey",
+          "bannerImageKey"
+        ]
+      },
+      "CreateArtist": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Full name of the artist",
+            "example": "Gurun Randhawa"
+          },
+          "about": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Short biography of the artist",
+            "example": "Popular Punjabi singer and songwriter."
+          },
+          "dob": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Date of birth in YYYY-MM-DD format",
+            "example": "1991-08-30"
+          },
+          "coverImageKey": {
+            "type": "string",
+            "description": "Imagekit key for the cover image",
+            "example": "artists/cover/randhawa.jpg"
+          },
+          "bannerImageKey": {
+            "type": "string",
+            "description": "Imagekit key for the banner image",
+            "example": "artists/banner/randhawa_banner.jpg"
+          }
+        },
+        "required": [
+          "name",
+          "about",
+          "dob",
+          "coverImageKey",
+          "bannerImageKey"
+        ]
+      },
+      "UpdateArtist": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier for the artist",
+            "example": "art_123"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Full name of the artist",
+            "example": "Gurun Randhawa"
+          },
+          "about": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Short biography of the artist",
+            "example": "Popular Punjabi singer and songwriter."
+          },
+          "dob": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Date of birth in YYYY-MM-DD format",
+            "example": "1991-08-30"
+          },
+          "coverImageKey": {
+            "type": "string",
+            "description": "Imagekit key for the cover image",
+            "example": "artists/cover/randhawa.jpg"
+          },
+          "bannerImageKey": {
+            "type": "string",
+            "description": "Imagekit key for the banner image",
+            "example": "artists/banner/randhawa_banner.jpg"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp of creation"
+          }
+        }
+      },
+      "Playlist": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier for the playlist",
+            "example": "ply_123"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Name of the playlist",
+            "example": "Top Hits 2024"
+          },
+          "coverImageKey": {
+            "type": "string",
+            "minLength": 1,
+            "description": "S3 key for the playlist cover",
+            "example": "playlists/cover/hits.jpg"
+          },
+          "bannerImageKey": {
+            "type": "string",
+            "minLength": 1,
+            "description": "S3 key for the playlist banner artist",
+            "example": "playlists/banner/hits_wide.jpg"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Creation timestamp"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Last update timestamp"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "coverImageKey",
+          "bannerImageKey"
+        ]
+      },
+      "PlaylistSong": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Relationship entry ID",
+            "example": "ps_789"
+          },
+          "playlistId": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Target playlist ID",
+            "example": "ply_123"
+          },
+          "songId": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Target song ID",
+            "example": "song_abc"
+          }
+        },
+        "required": [
+          "playlistId",
+          "songId"
+        ]
+      },
+      "CreatePlaylistRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Name of the new playlist",
+            "example": "Party Vibes"
+          },
+          "coverImageKey": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Initial cover art key",
+            "example": "temp/cover.jpg"
+          },
+          "bannerImageKey": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Initial banner art key",
+            "example": "temp/banner.jpg"
+          }
+        },
+        "required": [
+          "name",
+          "coverImageKey",
+          "bannerImageKey"
+        ]
+      },
+      "AddSongToPlaylistRequest": {
+        "type": "object",
+        "properties": {
+          "playlistId": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Target playlist ID",
+            "example": "ply_123"
+          },
+          "songId": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Target song ID",
+            "example": "song_abc"
+          }
+        },
+        "required": [
+          "playlistId",
+          "songId"
+        ]
+      },
+      "Song": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Song UUID",
+            "example": "song_abc123"
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Track title",
+            "example": "High Rated Gabru"
+          },
+          "artistName": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Primary artist name",
+            "example": "Guru Randhawa"
+          },
+          "duration": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": true,
+            "description": "Duration in seconds",
+            "example": 214
+          },
+          "songKey": {
+            "type": "string",
+            "minLength": 1,
+            "description": "S3 key for the transcoded audio",
+            "example": "songs/audio/high-rated-gabru.m4a"
+          },
+          "imageKey": {
+            "type": "string",
+            "minLength": 1,
+            "description": "S3 key for the artwork",
+            "example": "songs/images/gabru.jpg"
+          },
+          "language": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Detected/assigned language",
+            "example": "pa"
+          },
+          "jobId": {
+            "type": "string",
+            "description": "ID of the processing job that created this song",
+            "example": "job_789"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Creation timestamp"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "artistName",
+          "duration",
+          "songKey",
+          "imageKey",
+          "language",
+          "jobId"
+        ]
+      },
+      "CreateSongRequest": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Track title",
+            "example": "High Rated Gabru"
+          },
+          "artistName": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Name of the artist",
+            "example": "Guru Randhawa"
+          },
+          "tempSongKey": {
+            "type": "string",
+            "minLength": 1,
+            "description": "S3 key for the temporary uploaded file",
+            "example": "temp/audio_123.mp3"
+          },
+          "imageKey": {
+            "type": "string",
+            "minLength": 1,
+            "description": "S3 key for the track art",
+            "example": "songs/images/gabru.jpg"
+          }
+        },
+        "required": [
+          "title",
+          "artistName",
+          "tempSongKey",
+          "imageKey"
+        ]
+      },
+      "UpdateSongRequest": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Track title",
+            "example": "High Rated Gabru"
+          },
+          "artistName": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Name of the artist",
+            "example": "Guru Randhawa"
+          },
+          "tempSongKey": {
+            "type": "string",
+            "minLength": 1,
+            "description": "S3 key for the temporary uploaded file",
+            "example": "temp/audio_123.mp3"
+          },
+          "imageKey": {
+            "type": "string",
+            "minLength": 1,
+            "description": "S3 key for the track art",
+            "example": "songs/images/gabru.jpg"
+          }
+        }
+      }
+    },
+    "parameters": {}
+  },
+  "paths": {
+    "/artists": {
+      "get": {
+        "description": "Get paginated list of artists",
+        "summary": "List Artists",
+        "responses": {
+          "200": {
+            "description": "List of artists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/Artist"
+                          }
+                        }
+                      },
+                      "required": [
+                        "data"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "message",
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "description": "Create a new artist",
+        "summary": "Create Artist",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateArtist"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Artist created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Artist"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/artists/{id}": {
+      "get": {
+        "description": "Get artist details by ID",
+        "summary": "Get Artist",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Artist details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Artist"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Artist not found"
+          }
+        }
+      },
+      "put": {
+        "description": "Update artist details",
+        "summary": "Update Artist",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateArtist"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Artist updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Artist"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Artist not found"
+          }
+        }
+      },
+      "delete": {
+        "description": "Delete an artist",
+        "summary": "Delete Artist",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Artist deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Artist"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Artist not found"
+          }
+        }
+      }
+    },
+    "/artists/{id}/songs": {
+      "get": {
+        "description": "Get all songs by an artist",
+        "summary": "Get Artist Songs",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of artist songs",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Song"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/songs": {
+      "post": {
+        "description": "Initialize a new song processing job",
+        "summary": "Create Song",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSongRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Processing job created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "jobId": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "jobId",
+                    "status"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "description": "Get paginated list of songs",
+        "summary": "List Songs",
+        "responses": {
+          "200": {
+            "description": "List of songs",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Song"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/songs/{id}": {
+      "put": {
+        "description": "Update song details",
+        "summary": "Update Song",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSongRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Song updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Song"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Song not found"
+          }
+        }
+      },
+      "delete": {
+        "description": "Delete a song",
+        "summary": "Delete Song",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Song deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Song"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/playlists": {
+      "post": {
+        "description": "Create a new playlist",
+        "summary": "Create Playlist",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePlaylistRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Playlist created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Playlist"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "description": "Get all playlists",
+        "summary": "List Playlists",
+        "responses": {
+          "200": {
+            "description": "List of playlists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Playlist"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/playlists/{id}": {
+      "get": {
+        "description": "Get playlist details by ID",
+        "summary": "Get Playlist",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Playlist details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Playlist"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Playlist not found"
+          }
+        }
+      },
+      "delete": {
+        "description": "Delete a playlist",
+        "summary": "Delete Playlist",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Playlist deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Playlist"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/playlists/{id}/songs": {
+      "get": {
+        "description": "Get all songs in a playlist",
+        "summary": "Get Playlist Songs",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of playlist songs",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Song"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/playlists/songs": {
+      "post": {
+        "description": "Add a song to a playlist",
+        "summary": "Add Song to Playlist",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddSongToPlaylistRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Song added",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaylistSong"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "description": "Remove a song from a playlist",
+        "summary": "Remove Song from Playlist",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddSongToPlaylistRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Song removed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlaylistSong"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/misc/presigned-url/image": {
+      "get": {
+        "description": "Get a presigned upload URL for an image",
+        "summary": "Get Image Upload URL",
+        "responses": {
+          "200": {
+            "description": "Presigned URL",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "url": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "url"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/misc/presigned-url/song": {
+      "get": {
+        "description": "Get a presigned upload URL for a song file",
+        "summary": "Get Song Upload URL",
+        "responses": {
+          "200": {
+            "description": "Presigned URL",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "url": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "url"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
