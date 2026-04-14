@@ -1,7 +1,7 @@
 import { Router } from "express";
-import { getSongs, getSongById } from "../controllers/song.controller";
+import { songController } from "../infra";
 
 export const songRouter = Router();
 
-songRouter.get("/", getSongs);
-songRouter.get("/:id", getSongById);
+songRouter.get("/", songController.getSongs);
+songRouter.get("/:id", songController.getSongById);

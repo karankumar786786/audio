@@ -1,15 +1,20 @@
-import { db } from "../infra";
+import type { Database } from "../infra/db";
 import { type UserFavouriteSongSchema } from "../schema/userFavouriteSong.schema";
 import type { Repository } from "../type/repository.type";
-
-
+import { logMethods, type Logger } from "../observability";
 
 type UpdateFavouriteData = Partial<UserFavouriteSongSchema>;
 
 export class UserFavouriteSongRepository implements Repository<UserFavouriteSongSchema, UserFavouriteSongSchema, UpdateFavouriteData> {
+    constructor(
+        private readonly db: Database,
+        private readonly logger: Logger
+    ) {
+        logMethods(this, this.logger);
+    }
 
     async create(data: UserFavouriteSongSchema): Promise<UserFavouriteSongSchema> {
-        const [entry] = await db`
+        const [entry] = await this.db`
             INSERT INTO user_favourite_songs (id, user_id, song_id)
             VALUES (${data.id}, ${data.userId}, ${data.songId})
             ON CONFLICT (user_id, song_id) DO NOTHING
@@ -20,7 +25,7 @@ export class UserFavouriteSongRepository implements Repository<UserFavouriteSong
     }
 
     async getById(id: string): Promise<UserFavouriteSongSchema> {
-        const [entry] = await db`
+        const [entry] = await this.db`
             SELECT * FROM user_favourite_songs WHERE id = ${id}
         `;
         if (!entry) throw new Error(`Favourite entry with id ${id} not found`);
@@ -28,14 +33,14 @@ export class UserFavouriteSongRepository implements Repository<UserFavouriteSong
     }
 
     async countByUserId(userId: string): Promise<number> {
-        const [row] = await db`
+        const [row] = await this.db`
             SELECT count(*)::int as count FROM user_favourite_songs WHERE user_id = ${userId}
         `;
         return row?.count || 0;
     }
 
     async getByUserId(userId: string, limit?: number, offset?: number): Promise<any[]> {
-        const rows = await db`
+        const rows = await this.db`
             SELECT 
                 s.id,
                 s.title,
@@ -55,7 +60,7 @@ export class UserFavouriteSongRepository implements Repository<UserFavouriteSong
     }
 
     async getAll(): Promise<UserFavouriteSongSchema[]> {
-        const rows = await db`SELECT * FROM user_favourite_songs`;
+        const rows = await this.db`SELECT * FROM user_favourite_songs`;
         return rows.map((row) => this.mapRow(row));
     }
 
@@ -65,7 +70,7 @@ export class UserFavouriteSongRepository implements Repository<UserFavouriteSong
     }
 
     async delete(id: string): Promise<UserFavouriteSongSchema> {
-        const [entry] = await db`
+        const [entry] = await this.db`
             DELETE FROM user_favourite_songs WHERE id = ${id} RETURNING *
         `;
         if (!entry) throw new Error(`Favourite entry with id ${id} not found`);
@@ -73,10 +78,10 @@ export class UserFavouriteSongRepository implements Repository<UserFavouriteSong
     }
 
     async remove(userId: string, songId: string): Promise<UserFavouriteSongSchema> {
-        const [entry] = await db`
+        const [entry] = await this.db`
             DELETE FROM user_favourite_songs 
             WHERE user_id = ${userId} AND song_id = ${songId} 
-            RETURNING *
+             RETURNING *
         `;
         if (!entry) throw new Error("Favourite entry not found");
         return this.mapRow(entry);

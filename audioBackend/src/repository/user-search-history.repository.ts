@@ -1,15 +1,20 @@
-import { db } from "../infra";
+import type { Database } from "../infra/db";
 import { type UserSearchHistorySchema } from "../schema/userSearchHistory.schema";
 import type { Repository } from "../type/repository.type";
-import { randomUUIDv7 } from "bun";
-
+import { logMethods, type Logger } from "../observability";
 
 type UpdateSearchData = Partial<UserSearchHistorySchema>;
 
 export class UserSearchHistoryRepository implements Repository<UserSearchHistorySchema, UserSearchHistorySchema, UpdateSearchData> {
+    constructor(
+        private readonly db: Database,
+        private readonly logger: Logger
+    ) {
+        logMethods(this, this.logger);
+    }
 
     async create(data: UserSearchHistorySchema): Promise<UserSearchHistorySchema> {
-        const [entry] = await db`
+        const [entry] = await this.db`
             INSERT INTO user_search_history (id, user_id, searched_text)
             VALUES (${data.id}, ${data.userId}, ${data.searchedText})
             RETURNING *
@@ -19,7 +24,7 @@ export class UserSearchHistoryRepository implements Repository<UserSearchHistory
     }
 
     async getById(id: string): Promise<UserSearchHistorySchema> {
-        const [entry] = await db`
+        const [entry] = await this.db`
             SELECT * FROM user_search_history WHERE id = ${id}
         `;
         if (!entry) throw new Error(`Search history entry with id ${id} not found`);
@@ -27,14 +32,14 @@ export class UserSearchHistoryRepository implements Repository<UserSearchHistory
     }
 
     async countByUserId(userId: string): Promise<number> {
-        const [row] = await db`
+        const [row] = await this.db`
             SELECT count(*)::int as count FROM user_search_history WHERE user_id = ${userId}
         `;
         return row?.count || 0;
     }
 
     async getByUserId(userId: string, limit?: number, offset?: number): Promise<UserSearchHistorySchema[]> {
-        const rows = await db`
+        const rows = await this.db`
             SELECT * FROM user_search_history 
             WHERE user_id = ${userId} 
             ORDER BY id DESC -- UUIDv7 is sortable by time
@@ -44,7 +49,7 @@ export class UserSearchHistoryRepository implements Repository<UserSearchHistory
     }
 
     async getAll(): Promise<UserSearchHistorySchema[]> {
-        const rows = await db`SELECT * FROM user_search_history ORDER BY id DESC`;
+        const rows = await this.db`SELECT * FROM user_search_history ORDER BY id DESC`;
         return rows.map((row) => this.mapRow(row));
     }
 
@@ -54,7 +59,7 @@ export class UserSearchHistoryRepository implements Repository<UserSearchHistory
     }
 
     async delete(id: string): Promise<UserSearchHistorySchema> {
-        const [entry] = await db`
+        const [entry] = await this.db`
             DELETE FROM user_search_history WHERE id = ${id} RETURNING *
         `;
         if (!entry) throw new Error(`Search history entry with id ${id} not found`);
@@ -62,7 +67,7 @@ export class UserSearchHistoryRepository implements Repository<UserSearchHistory
     }
 
     async clearUserHistory(userId: string): Promise<void> {
-        await db`
+        await this.db`
             DELETE FROM user_search_history WHERE user_id = ${userId}
         `;
     }

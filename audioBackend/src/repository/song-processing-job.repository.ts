@@ -1,12 +1,20 @@
-import { db } from "../infra";
+import type { Database } from "../infra/db";
 import { type SongProcessingJob } from "../schema/songProcessingJob.schema";
+import { logMethods, type Logger } from "../observability";
 
 type CreateJobData = Omit<SongProcessingJob, "transcodingAttempt" | "transcribingAttempt" | "status">;
 type UpdateJobData = Partial<SongProcessingJob>;
 
 export class SongProcessingJobRepository {
+    constructor(
+        private readonly db: Database,
+        private readonly logger: Logger
+    ) {
+        logMethods(this, this.logger);
+    }
+
     async create(data: CreateJobData): Promise<SongProcessingJob> {
-        const [job] = await db`
+        const [job] = await this.db`
             INSERT INTO song_processing_job (
                 id, job_id,title, artist_name, duration, temp_song_key, song_key, image_key, 
                 language, sample_rate, loudness, dynamic_complexity, bpm, 
@@ -47,7 +55,7 @@ export class SongProcessingJobRepository {
     }
 
     async getById(id: string): Promise<SongProcessingJob> {
-        const [job] = await db`
+        const [job] = await this.db`
             SELECT * FROM song_processing_job WHERE id = ${id}
         `;
         if (!job) throw new Error(`Job with id ${id} not found`);
@@ -55,7 +63,7 @@ export class SongProcessingJobRepository {
     }
 
     async update(id: string, data: UpdateJobData): Promise<SongProcessingJob> {
-        const [job] = await db`
+        const [job] = await this.db`
             UPDATE song_processing_job
             SET
                 title                = COALESCE(${data.title ?? null}, title),
@@ -90,7 +98,7 @@ export class SongProcessingJobRepository {
     }
 
     async delete(id: string): Promise<SongProcessingJob> {
-        const [job] = await db`
+        const [job] = await this.db`
             DELETE FROM song_processing_job WHERE id = ${id} RETURNING *
         `;
         if (!job) throw new Error(`Job with id ${id} not found`);
@@ -98,12 +106,13 @@ export class SongProcessingJobRepository {
     }
 
     async getByStatus(status: string): Promise<SongProcessingJob[]> {
-        const jobs = await db`
+        const jobs = await this.db`
             SELECT * FROM song_processing_job WHERE status = ${status}
         `;
         return jobs.map((row) => this.mapRow(row));
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private mapRow(row: Record<string, any>): SongProcessingJob {
         return {
             id: row.id,

@@ -1,36 +1,34 @@
-import { type Request, type Response, type NextFunction } from "express";
-import { playlistService } from "../infra";
+import { type Request, type Response } from "express";
+import { type PlaylistService } from "../services/playlist.service";
 import { ApiResponse } from "../utils/ApiResponse";
 import { parsePagination } from "../type/pagination.type";
+import { asyncHandler } from "../utils/asyncHandler";
+import { logMethods, type Logger } from "../observability";
 
-export async function getPlaylistById(req: Request, res: Response, next: NextFunction) {
-    try {
+export class PlaylistController {
+    constructor(
+        private readonly playlistService: PlaylistService,
+        private readonly logger: Logger
+    ) {
+        logMethods(this, this.logger);
+    }
+
+    getPlaylistById = asyncHandler(async (req: Request, res: Response) => {
         const id = req.params.id as string;
-        const playlist = await playlistService.getPlaylistById(id);
+        const playlist = await this.playlistService.getPlaylistById(id);
         return res.status(200).json(new ApiResponse(200, "Playlist fetched", playlist));
-    } catch (error: any) {
-        next(error);
-    }
-}
+    });
 
-export async function getPlaylists(req: Request, res: Response, next: NextFunction) {
-    try {
+    getPlaylists = asyncHandler(async (req: Request, res: Response) => {
         const params = parsePagination(req.query);
-        const result = await playlistService.getPlaylists(params);
+        const result = await this.playlistService.getPlaylists(params);
         return res.status(200).json(new ApiResponse(200, "Playlists fetched", result));
-    } catch (error: any) {
-        next(error);
-    }
-}
+    });
 
-export async function getSongsOfPlaylist(req: Request, res: Response, next: NextFunction) {
-    try {
+    getSongsOfPlaylist = asyncHandler(async (req: Request, res: Response) => {
         const id = req.params.id as string;
         const params = parsePagination(req.query);
-        const result = await playlistService.getPlaylistSongs(id, params);
+        const result = await this.playlistService.getPlaylistSongs(id, params);
         return res.status(200).json(new ApiResponse(200, "Songs of playlist fetched", result));
-    } catch (error: any) {
-        next(error);
-    }
+    });
 }
-

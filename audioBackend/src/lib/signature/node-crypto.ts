@@ -26,18 +26,18 @@ export class NodeCryptoSignatureService implements SignatureService {
 
     verifyId(signedId: string, ref: string = "id"): void {
         if (!signedId || typeof signedId !== 'string') {
-            throw new BadRequestError(`Invalid ${ref} received`);
+            throw new ApiError(400, `Invalid ${ref} received`);
         }
 
         const parts = signedId.split('.');
         if (parts.length !== 2) {
-            throw new BadRequestError(`Invalid ${ref} received`);
+            throw new ApiError(400, `Invalid ${ref} received`);
         }
 
         const [uuid, providedSignature] = parts;
 
         if (!uuid || !providedSignature) {
-            throw new BadRequestError(`Invalid ${ref} received`);
+            throw new ApiError(400, `Invalid ${ref} received`);
         }
 
         const expectedSignature = crypto
@@ -52,11 +52,11 @@ export class NodeCryptoSignatureService implements SignatureService {
             );
 
             if (!isValid) {
-                throw new BadRequestError(`Invalid ${ref} signature`);
+                throw new ApiError(400, `Invalid ${ref} signature`);
             }
 
         } catch {
-            throw new BadRequestError(`Invalid ${ref} received`);
+            throw new ApiError(400, `Invalid ${ref} received`);
         }
     }
 }

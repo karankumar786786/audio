@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { search } from "../controllers/search.controller";
+import { searchController } from "../infra";
 
 export const searchRouter = Router();
 
-searchRouter.get("/", search);
+searchRouter.get("/", searchController.unifiedSearch);

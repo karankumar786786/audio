@@ -1,67 +1,68 @@
-import { type Request, type Response, type NextFunction } from "express";
-import { playlistService, signatureService } from "../infra";
+import { type Request, type Response } from "express";
+import { type UserPlaylistRepository } from "../repository/user-playlist.repository";
 import { ApiResponse } from "../utils/ApiResponse";
 import { parsePagination } from "../type/pagination.type";
+import { asyncHandler } from "../utils/asyncHandler";
+import { logMethods, type Logger } from "../observability";
+import { userPlaylistSchema } from "../schema/userPlaylist.schema";
 
-export async function createUserPlaylist(req: Request, res: Response, next: NextFunction) {
-    try {
-        const { name, userId } = req.body;
-        const id = signatureService.generateSignedId();
-        const playlist = await playlistService.createUserPlaylist({ id, name, userId });
-        return res.status(201).json(new ApiResponse(201, "User playlist created", playlist));
-    } catch (error: any) {
-        next(error);
+export class UserPlaylistController {
+    constructor(
+        private readonly userPlaylistRepository: UserPlaylistRepository,
+        private readonly logger: Logger
+    ) {
+        logMethods(this, this.logger);
     }
-}
 
-export async function getUserPlaylists(req: Request, res: Response, next: NextFunction) {
-    try {
+    createPlaylist = asyncHandler(async (req: Request, res: Response) => {
+        const validatedData = userPlaylistSchema.parse(req.body);
+        const playlist = await this.userPlaylistRepository.create(validatedData);
+        return res.status(201).json(new ApiResponse(201, "User playlist created", playlist));
+    });
+
+    getPlaylistById = asyncHandler(async (req: Request, res: Response) => {
+        const id = req.params.id as string;
+        const playlist = await this.userPlaylistRepository.getById(id);
+        return res.status(200).json(new ApiResponse(200, "User playlist fetched", playlist));
+    });
+
+    getUserPlaylists = asyncHandler(async (req: Request, res: Response) => {
         const userId = req.params.userId as string;
         const params = parsePagination(req.query);
-        const result = await playlistService.getUserPlaylists(userId, params);
-        return res.status(200).json(new ApiResponse(200, "User playlists fetched", result));
-    } catch (error: any) {
-        next(error);
-    }
-}
+        const offset = (params.page - 1) * params.limit;
+        const [data, total] = await Promise.all([
+            this.userPlaylistRepository.getByUserId(userId, params.limit, offset),
+            this.userPlaylistRepository.countByUserId(userId)
+        ]);
+        return res.status(200).json(new ApiResponse(200, "User playlists fetched", { data, total, ...params }));
+    });
 
-export async function deleteUserPlaylist(req: Request, res: Response, next: NextFunction) {
-    try {
-        const id = req.params.id as string;
-        const playlist = await playlistService.deleteUserPlaylist(id);
-        return res.status(200).json(new ApiResponse(200, "User playlist deleted", playlist));
-    } catch (error: any) {
-        next(error);
-    }
-}
+    addSongToPlaylist = asyncHandler(async (req: Request, res: Response) => {
+        const { playlistId, songId } = req.body;
+        const entry = await this.userPlaylistRepository.addSong(playlistId, songId);
+        return res.status(200).json(new ApiResponse(200, "Song added to playlist", entry));
+    });
 
-export async function addSongInUserPlaylist(req: Request, res: Response, next: NextFunction) {
-    try {
-        const { playlistId, songId, userId } = req.body;
-        const entry = await playlistService.addSongToUserPlaylist(playlistId, songId, userId);
-        return res.status(201).json(new ApiResponse(201, "Song added to user playlist", entry));
-    } catch (error: any) {
-        next(error);
-    }
-}
+    removeSongFromPlaylist = asyncHandler(async (req: Request, res: Response) => {
+        const { playlistId, songId } = req.body;
+        const entry = await this.userPlaylistRepository.removeSong(playlistId, songId);
+        return res.status(200).json(new ApiResponse(200, "Song removed from playlist", entry));
+    });
 
-export async function deleteSongInUserPlaylist(req: Request, res: Response, next: NextFunction) {
-    try {
-        const { playlistId, songId, userId } = req.body;
-        const entry = await playlistService.removeSongFromUserPlaylist(playlistId, songId, userId);
-        return res.status(200).json(new ApiResponse(200, "Song removed from user playlist", entry));
-    } catch (error: any) {
-        next(error);
-    }
-}
-
-export async function getUserPlaylistSongs(req: Request, res: Response, next: NextFunction) {
-    try {
+    getPlaylistSongs = asyncHandler(async (req: Request, res: Response) => {
         const id = req.params.id as string;
         const params = parsePagination(req.query);
-        const result = await playlistService.getUserPlaylistSongs(id, params);
-        return res.status(200).json(new ApiResponse(200, "Songs of user playlist fetched", result));
-    } catch (error: any) {
-        next(error);
-    }
+        const offset = (params.page - 1) * params.limit;
+        const [data, total] = await Promise.all([
+            this.userPlaylistRepository.getSongs(id, params.limit, offset),
+            this.userPlaylistRepository.countSongs(id)
+        ]);
+        return res.status(200).json(new ApiResponse(200, "Songs of user playlist fetched", { data, total, ...params }));
+    });
+
+    deletePlaylist = asyncHandler(async (req: Request, res: Response) => {
+        const id = req.params.id as string;
+        const playlist = await this.userPlaylistRepository.delete(id);
+        return res.status(200).json(new ApiResponse(200, "User playlist deleted", playlist));
+    });
 }

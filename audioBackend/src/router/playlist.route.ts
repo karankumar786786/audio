@@ -1,13 +1,8 @@
 import { Router } from "express";
-import {
-    getPlaylists,
-    getPlaylistById,
-    getSongsOfPlaylist,
-} from "../controllers/playlist.controller";
+import { playlistController } from "../infra";
 
 export const playlistRouter = Router();
 
-playlistRouter.get("/", getPlaylists);
-playlistRouter.get("/:id", getPlaylistById);
-playlistRouter.get("/:id/songs", getSongsOfPlaylist);
-
+playlistRouter.get("/", playlistController.getPlaylists);
+playlistRouter.get("/:id", playlistController.getPlaylistById);
+playlistRouter.get("/:id/songs", playlistController.getSongsOfPlaylist);

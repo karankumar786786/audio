@@ -7,8 +7,11 @@ import { userPlaylistRouter } from "./userPlaylist.route";
 import { artistRouter } from "./artist.route";
 import { searchRouter } from "./search.route";
 import { miscRouter } from "./misc.route";
+import { systemStatusController } from "../infra";
 
 export const masterRouter = Router();
+
+masterRouter.get("/status", systemStatusController.getStatus);
 
 masterRouter.use("/songs", songRouter);
 masterRouter.use("/users", userRouter);

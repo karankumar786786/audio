@@ -1,30 +1,31 @@
-import { type Request, type Response, type NextFunction } from "express";
-import { songService } from "../infra";
+import { type Request, type Response } from "express";
+import { type SongService } from "../services/song.service";
 import { ApiResponse } from "../utils/ApiResponse";
 import { parsePagination } from "../type/pagination.type";
+import { asyncHandler } from "../utils/asyncHandler";
+import { logMethods, type Logger } from "../observability";
 
 /**
  * Controller for song-related operations.
  * Delegates business logic to SongService.
  */
+export class SongController {
+    constructor(
+        private readonly songService: SongService,
+        private readonly logger: Logger
+    ) {
+        logMethods(this, this.logger);
+    }
 
-
-export async function getSongs(req: Request, res: Response, next: NextFunction) {
-    try {
+    getSongs = asyncHandler(async (req: Request, res: Response) => {
         const params = parsePagination(req.query);
-        const result = await songService.getSongs(params);
+        const result = await this.songService.getSongs(params);
         return res.status(200).json(new ApiResponse(200, "Songs fetched successfully", result));
-    } catch (error: any) {
-        next(error);
-    }
-}
+    });
 
-export async function getSongById(req: Request, res: Response, next: NextFunction) {
-    try {
+    getSongById = asyncHandler(async (req: Request, res: Response) => {
         const id = req.params.id as string;
-        const song = await songService.getSongById(id);
+        const song = await this.songService.getSongById(id);
         return res.status(200).json(new ApiResponse(200, "Song fetched successfully", song));
-    } catch (error: any) {
-        next(error);
-    }
+    });
 }

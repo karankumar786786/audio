@@ -1,89 +1,84 @@
-import { type Request, type Response, type NextFunction } from "express";
-import { signatureService, userService } from "../infra";
+import { type Request, type Response } from "express";
+import { type UserService } from "../services/user.service";
 import { ApiResponse } from "../utils/ApiResponse";
+import { asyncHandler } from "../utils/asyncHandler";
+import { logMethods, type Logger } from "../observability";
+import { userSchema } from "../schema/user.schema";
 import { parsePagination } from "../type/pagination.type";
 
-export async function createUser(req: Request, res: Response, next: NextFunction) {
-    try {
-        const { id, email } = req.body;
-        const user = await userService.createUser(id, email);
+export class UserController {
+    constructor(
+        private readonly userService: UserService,
+        private readonly logger: Logger
+    ) {
+        logMethods(this, this.logger);
+    }
+
+    createUser = asyncHandler(async (req: Request, res: Response) => {
+        const validatedData = userSchema.parse(req.body);
+        const user = await this.userService.createUser(validatedData.id, validatedData.email);
         return res.status(201).json(new ApiResponse(201, "User created successfully", user));
-    } catch (error: any) {
-        next(error);
-    }
-}
+    });
 
-export async function addSongInUserFavourites(req: Request, res: Response, next: NextFunction) {
-    try {
+    getUserById = asyncHandler(async (req: Request, res: Response) => {
+        const id = req.params.id as string;
+        const user = await this.userService.getUserById(id);
+        if (!user) {
+            return res.status(404).json(new ApiResponse(404, "User not found", null));
+        }
+        return res.status(200).json(new ApiResponse(200, "User fetched successfully", user));
+    });
+
+    getAllUsers = asyncHandler(async (_req: Request, res: Response) => {
+        const users = await this.userService.getAllUsers();
+        return res.status(200).json(new ApiResponse(200, "Users fetched successfully", users));
+    });
+
+    // Favourites
+    addSongInUserFavourites = asyncHandler(async (req: Request, res: Response) => {
         const { userId, songId } = req.body;
-        const id = signatureService.generateSignedId();
-        const entry = await userService.addFavourite(userId, songId, id);
+        const entry = await this.userService.addFavourite(userId, songId);
         return res.status(201).json(new ApiResponse(201, "Song added to favourites", entry));
-    } catch (error: any) {
-        next(error);
-    }
-}
+    });
 
-export async function deleteSongInUserFavourites(req: Request, res: Response, next: NextFunction) {
-    try {
+    deleteSongInUserFavourites = asyncHandler(async (req: Request, res: Response) => {
         const { userId, songId } = req.body;
-        const entry = await userService.removeFavourite(userId, songId);
+        const entry = await this.userService.removeFavourite(userId, songId);
         return res.status(200).json(new ApiResponse(200, "Song removed from favourites", entry));
-    } catch (error: any) {
-        next(error);
-    }
-}
+    });
 
-export async function getUserFavourites(req: Request, res: Response, next: NextFunction) {
-    try {
+    getUserFavourites = asyncHandler(async (req: Request, res: Response) => {
         const userId = req.params.userId as string;
         const params = parsePagination(req.query);
-        const result = await userService.getFavourites(userId, params);
-        return res.status(200).json(new ApiResponse(200, "User favourites fetched", result));
-    } catch (error: any) {
-        next(error);
-    }
-}
+        const result = await this.userService.getFavourites(userId, params.limit, (params.page - 1) * params.limit);
+        return res.status(200).json(new ApiResponse(200, "User favourites fetched", { data: result, ...params }));
+    });
 
-export async function getUserHistory(req: Request, res: Response, next: NextFunction) {
-    try {
+    // History
+    getUserHistory = asyncHandler(async (req: Request, res: Response) => {
         const userId = req.params.userId as string;
         const params = parsePagination(req.query);
-        const result = await userService.getHistory(userId, params);
-        return res.status(200).json(new ApiResponse(200, "User history fetched", result));
-    } catch (error: any) {
-        next(error);
-    }
-}
+        const result = await this.userService.getHistory(userId, params.limit, (params.page - 1) * params.limit);
+        return res.status(200).json(new ApiResponse(200, "User history fetched", { data: result, ...params }));
+    });
 
-export async function getUserSearchHistory(req: Request, res: Response, next: NextFunction) {
-    try {
+    // Search History
+    getUserSearchHistory = asyncHandler(async (req: Request, res: Response) => {
         const userId = req.params.userId as string;
         const params = parsePagination(req.query);
-        const result = await userService.getSearchHistory(userId, params);
-        return res.status(200).json(new ApiResponse(200, "User search history fetched", result));
-    } catch (error: any) {
-        next(error);
-    }
-}
+        const result = await this.userService.getSearchHistory(userId, params.limit, (params.page - 1) * params.limit);
+        return res.status(200).json(new ApiResponse(200, "User search history fetched", { data: result, ...params }));
+    });
 
-export async function saveUserSearchHistory(req: Request, res: Response, next: NextFunction) {
-    try {
+    saveUserSearchHistory = asyncHandler(async (req: Request, res: Response) => {
         const { userId, searchedText } = req.body;
-        const id = signatureService.generateSignedId();
-        const entry = await userService.saveSearchHistory(userId, searchedText, id);
+        const entry = await this.userService.saveSearchHistory(userId, searchedText);
         return res.status(201).json(new ApiResponse(201, "Search history saved", entry));
-    } catch (error: any) {
-        next(error);
-    }
-}
+    });
 
-export async function clearUserSearchHistory(req: Request, res: Response, next: NextFunction) {
-    try {
+    clearUserSearchHistory = asyncHandler(async (req: Request, res: Response) => {
         const userId = req.params.userId as string;
-        await userService.clearSearchHistory(userId);
-        return res.status(200).json(new ApiResponse(200, "Search history cleared"));
-    } catch (error: any) {
-        next(error);
-    }
+        await this.userService.clearSearchHistory(userId);
+        return res.status(200).json(new ApiResponse(200, "User search history cleared", null));
+    });
 }

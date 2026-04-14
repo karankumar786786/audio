@@ -1,15 +1,21 @@
-import { db } from "../infra";
+import type { Database } from "../infra/db";
 import { type UserHistorySchema } from "../schema/userHistory.schema";
 import type { Repository } from "../type/repository.type";
-import { randomUUIDv7 } from "bun";
+import { logMethods, type Logger } from "../observability";
 
 type CreateHistoryData = Omit<UserHistorySchema, "listenedAt">;
 type UpdateHistoryData = Partial<CreateHistoryData>;
 
 export class UserHistoryRepository implements Repository<UserHistorySchema, CreateHistoryData, UpdateHistoryData> {
+    constructor(
+        private readonly db: Database,
+        private readonly logger: Logger
+    ) {
+        logMethods(this, this.logger);
+    }
 
     async create(data: CreateHistoryData): Promise<UserHistorySchema> {
-        const [entry] = await db`
+        const [entry] = await this.db`
             INSERT INTO user_history (id, user_id, song_id, part)
             VALUES (
                 ${data.id},
@@ -24,7 +30,7 @@ export class UserHistoryRepository implements Repository<UserHistorySchema, Crea
     }
 
     async getById(id: string): Promise<UserHistorySchema> {
-        const [entry] = await db`
+        const [entry] = await this.db`
             SELECT * FROM user_history WHERE id = ${id}
         `;
         if (!entry) throw new Error(`User history entry with id ${id} not found`);
@@ -32,7 +38,7 @@ export class UserHistoryRepository implements Repository<UserHistorySchema, Crea
     }
 
     async countByUserId(userId: string): Promise<number> {
-        const [row] = await db`
+        const [row] = await this.db`
             SELECT count(*)::int as count FROM user_history WHERE user_id = ${userId}
         `;
         return row?.count || 0;
@@ -40,7 +46,7 @@ export class UserHistoryRepository implements Repository<UserHistorySchema, Crea
 
     /** Returns paginated listen history for a given user, newest first. */
     async getByUserId(userId: string, limit?: number, offset?: number): Promise<UserHistorySchema[]> {
-        const rows = await db`
+        const rows = await this.db`
             SELECT * FROM user_history 
             WHERE user_id = ${userId} 
             ORDER BY listened_at DESC
@@ -50,7 +56,7 @@ export class UserHistoryRepository implements Repository<UserHistorySchema, Crea
     }
 
     async getAll(): Promise<UserHistorySchema[]> {
-        const rows = await db`SELECT * FROM user_history ORDER BY listened_at DESC`;
+        const rows = await this.db`SELECT * FROM user_history ORDER BY listened_at DESC`;
         return rows.map((row) => this.mapRow(row));
     }
 
@@ -60,7 +66,7 @@ export class UserHistoryRepository implements Repository<UserHistorySchema, Crea
     }
 
     async delete(id: string): Promise<UserHistorySchema> {
-        const [entry] = await db`
+        const [entry] = await this.db`
             DELETE FROM user_history WHERE id = ${id} RETURNING *
         `;
         if (!entry) throw new Error(`User history entry with id ${id} not found`);

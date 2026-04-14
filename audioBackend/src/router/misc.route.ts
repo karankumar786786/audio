@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { getPreSignedUrlForImage } from "../controllers/misc.controller";
+import { miscController } from "../infra";
 
 export const miscRouter = Router();
 
-miscRouter.get("/presigned-url/image", getPreSignedUrlForImage);
+miscRouter.get("/presigned-url/image", miscController.getPreSignedUrlForImage);

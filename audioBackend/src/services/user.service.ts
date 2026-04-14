@@ -1,71 +1,65 @@
-import { 
-    userFavouriteSongRepository, 
-    userHistoryRepository, 
-    userRepository,
-    userSearchHistoryRepository,
-    recommendationService
-} from "../infra";
-import type { PaginationParams, PaginatedResult } from "../type/pagination.type";
-import { buildPaginatedResult } from "../type/pagination.type";
+import { type UserRepository } from "../repository/user.repository";
+import { type UserFavouriteSongRepository } from "../repository/user-favourite-song.repository";
+import { type UserHistoryRepository } from "../repository/user-history.repository";
+import { type UserSearchHistoryRepository } from "../repository/user-search-history.repository";
+import { type SignatureService } from "../lib/signature";
+import type { UserSchema } from "../schema/user.schema";
+import { logMethods, type Logger } from "../observability";
 
 export class UserService {
-    // ── Users ────────────────────────────────────────────────────────────────────
-
-    /** Upsert a user by Auth0 id. Safe to call on every login. */
-    async createUser(id: string, email: string) {
-        return await userRepository.create({ id, email });
+    constructor(
+        private readonly userRepository: UserRepository,
+        private readonly favouriteRepo: UserFavouriteSongRepository,
+        private readonly historyRepo: UserHistoryRepository,
+        private readonly searchHistoryRepo: UserSearchHistoryRepository,
+        private readonly signatureService: SignatureService,
+        private readonly logger: Logger
+    ) {
+        logMethods(this, this.logger);
     }
 
-    // ── Favourites ──────────────────────────────────────────────────────────────
+    async createUser(id: string, email: string): Promise<UserSchema> {
+        return await this.userRepository.create({ id, email });
+    }
 
-    async addFavourite(userId: string, songId: string, id: string) {
-        const entry = await userFavouriteSongRepository.create({ id, userId, songId });
-        try { await recommendationService.addFavorite(userId, songId); } catch (_) {}
-        return entry;
+    async getUserById(id: string): Promise<UserSchema | null> {
+        return await this.userRepository.getById(id);
+    }
+
+    async getAllUsers(): Promise<UserSchema[]> {
+        return await this.userRepository.getAll();
+    }
+
+    // Favourites logic
+    async addFavourite(userId: string, songId: string) {
+        const id = this.signatureService.generateSignedId();
+        return await this.favouriteRepo.create({ id, userId, songId });
     }
 
     async removeFavourite(userId: string, songId: string) {
-        const entry = await userFavouriteSongRepository.remove(userId, songId);
-        try { await recommendationService.removeFavorite(userId, songId); } catch (_) {}
-        return entry;
+        return await this.favouriteRepo.remove(userId, songId);
     }
 
-    async getFavourites(userId: string, params: PaginationParams): Promise<PaginatedResult<any>> {
-        const offset = (params.page - 1) * params.limit;
-        const [data, total] = await Promise.all([
-            userFavouriteSongRepository.getByUserId(userId, params.limit, offset),
-            userFavouriteSongRepository.countByUserId(userId)
-        ]);
-        return buildPaginatedResult(data, total, params);
+    async getFavourites(userId: string, limit?: number, offset?: number) {
+        return await this.favouriteRepo.getByUserId(userId, limit, offset);
     }
 
-    // ── History ─────────────────────────────────────────────────────────────────
-
-    async getHistory(userId: string, params: PaginationParams): Promise<PaginatedResult<any>> {
-        const offset = (params.page - 1) * params.limit;
-        const [data, total] = await Promise.all([
-            userHistoryRepository.getByUserId(userId, params.limit, offset),
-            userHistoryRepository.countByUserId(userId)
-        ]);
-        return buildPaginatedResult(data, total, params);
+    // History logic
+    async getHistory(userId: string, limit?: number, offset?: number) {
+        return await this.historyRepo.getByUserId(userId, limit, offset);
     }
 
-    // ── Search History ──────────────────────────────────────────────────────────
-
-    async getSearchHistory(userId: string, params: PaginationParams): Promise<PaginatedResult<any>> {
-        const offset = (params.page - 1) * params.limit;
-        const [data, total] = await Promise.all([
-            userSearchHistoryRepository.getByUserId(userId, params.limit, offset),
-            userSearchHistoryRepository.countByUserId(userId)
-        ]);
-        return buildPaginatedResult(data, total, params);
+    // Search History logic
+    async getSearchHistory(userId: string, limit?: number, offset?: number) {
+        return await this.searchHistoryRepo.getByUserId(userId, limit, offset);
     }
 
-    async saveSearchHistory(userId: string, searchedText: string, id: string) {
-        return await userSearchHistoryRepository.create({ id, userId, searchedText });
+    async saveSearchHistory(userId: string, text: string) {
+        const id = this.signatureService.generateSignedId();
+        return await this.searchHistoryRepo.create({ id, userId, searchedText: text });
     }
 
     async clearSearchHistory(userId: string) {
-        return await userSearchHistoryRepository.clearUserHistory(userId);
+        return await this.searchHistoryRepo.clearUserHistory(userId);
     }
 }

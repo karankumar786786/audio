@@ -1,6 +1,14 @@
-import { searchService as algoliaSearchService } from "../infra";
+import { type AlgoliaSearchService } from "../lib/search";
+import { logMethods, type Logger } from "../observability";
 
 export class SearchService {
+    constructor(
+        private readonly algoliaSearchService: AlgoliaSearchService,
+        private readonly logger: Logger
+    ) {
+        logMethods(this, this.logger);
+    }
+
     async unifiedSearch(query: string) {
         if (!query.trim()) {
             return {
@@ -10,7 +18,7 @@ export class SearchService {
             };
         }
 
-        const hits = await algoliaSearchService.search<Record<string, any>>(query);
+        const hits = await this.algoliaSearchService.search<Record<string, any>>(query);
 
         const songs: Record<string, any>[] = [];
         const artists: Record<string, any>[] = [];

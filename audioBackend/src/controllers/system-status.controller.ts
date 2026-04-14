@@ -1,6 +1,16 @@
-import { type Request, type Response, type NextFunction } from "express";
+import { type Request, type Response } from "express";
 import { ApiResponse } from "../utils/ApiResponse";
+import { asyncHandler } from "../utils/asyncHandler";
+import { logMethods, type Logger } from "../observability";
 
-export async function getStatus(req:Request,res:Response,next:NextFunction)  {
-    return res.json(new ApiResponse(200,"healthy"));
+export class SystemStatusController {
+    constructor(
+        private readonly logger: Logger
+    ) {
+        logMethods(this, this.logger);
+    }
+
+    getStatus = asyncHandler(async (_req: Request, res: Response) => {
+        return res.json(new ApiResponse(200, "healthy"));
+    });
 }

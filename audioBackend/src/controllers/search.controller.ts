@@ -1,14 +1,20 @@
-import { type Request, type Response, type NextFunction } from "express";
-import { internalSearchService } from "../infra";
+import { type Request, type Response } from "express";
+import { type SearchService } from "../services/search.service";
 import { ApiResponse } from "../utils/ApiResponse";
+import { asyncHandler } from "../utils/asyncHandler";
+import { logMethods, type Logger } from "../observability";
 
-// unified search across songs, artists, and playlists — delegated to service
-export async function search(req: Request, res: Response, next: NextFunction) {
-    try {
-        const query = req.query.q as string || "";
-        const results = await internalSearchService.unifiedSearch(query);
-        return res.status(200).json(new ApiResponse(200, "Search results", results));
-    } catch (error: any) {
-        next(error);
+export class SearchController {
+    constructor(
+        private readonly searchService: SearchService,
+        private readonly logger: Logger
+    ) {
+        logMethods(this, this.logger);
     }
+
+    unifiedSearch = asyncHandler(async (req: Request, res: Response) => {
+        const query = req.query.query as string || "";
+        const result = await this.searchService.unifiedSearch(query);
+        return res.status(200).json(new ApiResponse(200, "Search results fetched", result));
+    });
 }

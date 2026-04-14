@@ -1,14 +1,5 @@
 import { Router } from "express";
-import {
-    createUser,
-    addSongInUserFavourites,
-    deleteSongInUserFavourites,
-    getUserFavourites,
-    getUserHistory,
-    getUserSearchHistory,
-    saveUserSearchHistory,
-    clearUserSearchHistory,
-} from "../controllers/user.controller";
+import { userController } from "../infra";
 import { validate } from "../middlewares/validate.middleware";
 import { createUserSchema } from "../schema/user.schema";
 import { userFavouriteSongSchema } from "../schema/userFavouriteSong.schema";
@@ -20,17 +11,17 @@ const searchHistoryInput = userSearchHistorySchema.pick({ userId: true, searched
 export const userRouter = Router();
 
 // Create / upsert user (for testing & Auth0 post-login callback)
-userRouter.post("/", validate(createUserSchema), createUser);
+userRouter.post("/", validate(createUserSchema), userController.createUser);
 
 // Favourites
-userRouter.post("/favourites", validate(favouriteSongInput), addSongInUserFavourites);
-userRouter.delete("/favourites", validate(favouriteSongInput), deleteSongInUserFavourites);
-userRouter.get("/:userId/favourites", getUserFavourites);
+userRouter.post("/favourites", validate(favouriteSongInput), userController.addSongInUserFavourites);
+userRouter.delete("/favourites", validate(favouriteSongInput), userController.deleteSongInUserFavourites);
+userRouter.get("/:userId/favourites", userController.getUserFavourites);
 
 // Listen history
-userRouter.get("/:userId/history", getUserHistory);
+userRouter.get("/:userId/history", userController.getUserHistory);
 
 // Search history
-userRouter.get("/:userId/search-history", getUserSearchHistory);
-userRouter.post("/search-history", validate(searchHistoryInput), saveUserSearchHistory);
-userRouter.delete("/:userId/search-history", clearUserSearchHistory);
+userRouter.get("/:userId/search-history", userController.getUserSearchHistory);
+userRouter.post("/search-history", validate(searchHistoryInput), userController.saveUserSearchHistory);
+userRouter.delete("/:userId/search-history", userController.clearUserSearchHistory);

@@ -1,15 +1,22 @@
-import { db } from "../infra";
+import { randomUUIDv7 } from "bun";
+import type { Database } from "../infra/db";
 import { type PlaylistSchema, type PlaylistSongSchema } from "../schema/playlist.schema";
 import type { Repository } from "../type/repository.type";
-import { randomUUIDv7 } from "bun";
+import { logMethods, type Logger } from "../observability";
 
 type CreatePlaylistData = Omit<PlaylistSchema,  "createdAt" | "updatedAt">;
 type UpdatePlaylistData = Partial<CreatePlaylistData>;
 
 export class PlaylistRepository implements Repository<PlaylistSchema, CreatePlaylistData, UpdatePlaylistData> {
+    constructor(
+        private readonly db: Database,
+        private readonly logger: Logger
+    ) {
+        logMethods(this, this.logger);
+    }
 
     async create(data: CreatePlaylistData): Promise<PlaylistSchema> {
-        const [playlist] = await db`
+        const [playlist] = await this.db`
             INSERT INTO playlists (id, name, cover_image_key, banner_image_key)
             VALUES (${data.id}, ${data.name}, ${data.coverImageKey}, ${data.bannerImageKey})
             RETURNING *
@@ -20,7 +27,7 @@ export class PlaylistRepository implements Repository<PlaylistSchema, CreatePlay
     }
 
     async getById(id: string): Promise<PlaylistSchema> {
-        const [playlist] = await db`
+        const [playlist] = await this.db`
             SELECT * FROM playlists WHERE id = ${id}
         `;
         if (!playlist) throw new Error(`Playlist with id ${id} not found`);
@@ -28,12 +35,12 @@ export class PlaylistRepository implements Repository<PlaylistSchema, CreatePlay
     }
 
     async count(): Promise<number> {
-        const [row] = await db`SELECT count(*)::int as count FROM playlists`;
+        const [row] = await this.db`SELECT count(*)::int as count FROM playlists`;
         return row?.count || 0;
     }
 
     async getAll(limit?: number, offset?: number): Promise<PlaylistSchema[]> {
-        const rows = await db`
+        const rows = await this.db`
             SELECT * FROM playlists 
             ORDER BY created_at DESC
             LIMIT ${limit ?? null} OFFSET ${offset ?? null}
@@ -42,7 +49,7 @@ export class PlaylistRepository implements Repository<PlaylistSchema, CreatePlay
     }
 
     async update(id: string, data: UpdatePlaylistData): Promise<PlaylistSchema> {
-        const [playlist] = await db`
+        const [playlist] = await this.db`
             UPDATE playlists
             SET
                 name             = COALESCE(${data.name ?? null}, name),
@@ -58,7 +65,7 @@ export class PlaylistRepository implements Repository<PlaylistSchema, CreatePlay
     }
 
     async delete(id: string): Promise<PlaylistSchema> {
-        const [playlist] = await db`
+        const [playlist] = await this.db`
             DELETE FROM playlists WHERE id = ${id} RETURNING *
         `;
         if (!playlist) throw new Error(`Playlist with id ${id} not found`);
@@ -69,7 +76,7 @@ export class PlaylistRepository implements Repository<PlaylistSchema, CreatePlay
 
     async addSong(playlistId: string, songId: string): Promise<PlaylistSongSchema> {
         const id = randomUUIDv7();
-        const [entry] = await db`
+        const [entry] = await this.db`
             INSERT INTO playlist_songs (id, playlist_id, song_id)
             VALUES (${id}, ${playlistId}, ${songId})
             ON CONFLICT (playlist_id, song_id) DO NOTHING
@@ -80,7 +87,7 @@ export class PlaylistRepository implements Repository<PlaylistSchema, CreatePlay
     }
 
     async removeSong(playlistId: string, songId: string): Promise<PlaylistSongSchema> {
-        const [entry] = await db`
+        const [entry] = await this.db`
             DELETE FROM playlist_songs
             WHERE playlist_id = ${playlistId} AND song_id = ${songId}
             RETURNING *
@@ -90,7 +97,7 @@ export class PlaylistRepository implements Repository<PlaylistSchema, CreatePlay
     }
 
     async countSongs(playlistId: string): Promise<number> {
-        const [row] = await db`
+        const [row] = await this.db`
             SELECT count(*)::int as count FROM playlist_songs 
             WHERE playlist_id = ${playlistId}
         `;
@@ -98,7 +105,7 @@ export class PlaylistRepository implements Repository<PlaylistSchema, CreatePlay
     }
 
     async getSongs(playlistId: string, limit?: number, offset?: number): Promise<any[]> {
-        const rows = await db`
+        const rows = await this.db`
             SELECT 
                 s.id,
                 s.title,
@@ -140,4 +147,3 @@ export class PlaylistRepository implements Repository<PlaylistSchema, CreatePlay
         };
     }
 }
-

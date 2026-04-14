@@ -1,15 +1,21 @@
 import { randomUUIDv7 } from "bun";
-import { db } from "../infra";
+import type { Database } from "../infra/db";
 import { type UserPlaylistSchema, type UserPlaylistSongSchema } from "../schema/userPlaylist.schema";
 import type { Repository } from "../type/repository.type";
-
+import { logMethods, type Logger } from "../observability";
 
 type UpdatePlaylistData = Partial<UserPlaylistSchema>;
 
 export class UserPlaylistRepository implements Repository<UserPlaylistSchema, UserPlaylistSchema, UpdatePlaylistData> {
+    constructor(
+        private readonly db: Database,
+        private readonly logger: Logger
+    ) {
+        logMethods(this, this.logger);
+    }
 
     async create(data: UserPlaylistSchema): Promise<UserPlaylistSchema> {
-        const [playlist] = await db`
+        const [playlist] = await this.db`
             INSERT INTO user_playlists (id, name, user_id)
             VALUES (
                 ${data.id},
@@ -23,7 +29,7 @@ export class UserPlaylistRepository implements Repository<UserPlaylistSchema, Us
     }
 
     async getById(id: string): Promise<UserPlaylistSchema> {
-        const [playlist] = await db`
+        const [playlist] = await this.db`
             SELECT * FROM user_playlists WHERE id = ${id}
         `;
         if (!playlist) throw new Error(`User playlist with id ${id} not found`);
@@ -31,7 +37,7 @@ export class UserPlaylistRepository implements Repository<UserPlaylistSchema, Us
     }
 
     async countByUserId(userId: string): Promise<number> {
-        const [row] = await db`
+        const [row] = await this.db`
             SELECT count(*)::int as count FROM user_playlists WHERE user_id = ${userId}
         `;
         return row?.count || 0;
@@ -39,7 +45,7 @@ export class UserPlaylistRepository implements Repository<UserPlaylistSchema, Us
 
     /** Returns paginated playlists for a given user. */
     async getByUserId(userId: string, limit?: number, offset?: number): Promise<UserPlaylistSchema[]> {
-        const rows = await db`
+        const rows = await this.db`
             SELECT * FROM user_playlists 
             WHERE user_id = ${userId}
             LIMIT ${limit ?? null} OFFSET ${offset ?? null}
@@ -48,12 +54,12 @@ export class UserPlaylistRepository implements Repository<UserPlaylistSchema, Us
     }
 
     async getAll(): Promise<UserPlaylistSchema[]> {
-        const rows = await db`SELECT * FROM user_playlists`;
+        const rows = await this.db`SELECT * FROM user_playlists`;
         return rows.map((row) => this.mapRow(row));
     }
 
     async update(id: string, data: UpdatePlaylistData): Promise<UserPlaylistSchema> {
-        const [playlist] = await db`
+        const [playlist] = await this.db`
             UPDATE user_playlists
             SET
                 name    = COALESCE(${data.name ?? null}, name),
@@ -66,7 +72,7 @@ export class UserPlaylistRepository implements Repository<UserPlaylistSchema, Us
     }
 
     async delete(id: string): Promise<UserPlaylistSchema> {
-        const [playlist] = await db`
+        const [playlist] = await this.db`
             DELETE FROM user_playlists WHERE id = ${id} RETURNING *
         `;
         if (!playlist) throw new Error(`User playlist with id ${id} not found`);
@@ -77,7 +83,7 @@ export class UserPlaylistRepository implements Repository<UserPlaylistSchema, Us
 
     async addSong(playlistId: string, songId: string): Promise<UserPlaylistSongSchema> {
         const id = randomUUIDv7();
-        const [entry] = await db`
+        const [entry] = await this.db`
             INSERT INTO user_playlist_songs (id, playlist_id, song_id)
             VALUES (${id}, ${playlistId}, ${songId})
             ON CONFLICT (playlist_id, song_id) DO NOTHING
@@ -88,7 +94,7 @@ export class UserPlaylistRepository implements Repository<UserPlaylistSchema, Us
     }
 
     async removeSong(playlistId: string, songId: string): Promise<UserPlaylistSongSchema> {
-        const [entry] = await db`
+        const [entry] = await this.db`
             DELETE FROM user_playlist_songs
             WHERE playlist_id = ${playlistId} AND song_id = ${songId}
             RETURNING *
@@ -98,7 +104,7 @@ export class UserPlaylistRepository implements Repository<UserPlaylistSchema, Us
     }
 
     async countSongs(playlistId: string): Promise<number> {
-        const [row] = await db`
+        const [row] = await this.db`
             SELECT count(*)::int as count FROM user_playlist_songs 
             WHERE playlist_id = ${playlistId}
         `;
@@ -106,7 +112,7 @@ export class UserPlaylistRepository implements Repository<UserPlaylistSchema, Us
     }
 
     async getSongs(playlistId: string, limit?: number, offset?: number): Promise<any[]> {
-        const rows = await db`
+        const rows = await this.db`
             SELECT 
                 s.id,
                 s.title,

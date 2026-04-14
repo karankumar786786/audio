@@ -1,35 +1,34 @@
-import { type Request, type Response, type NextFunction } from "express";
-import { interactionService } from "../infra";
+import { type Request, type Response } from "express";
+import { type InteractionService } from "../services/interaction.service";
 import { ApiResponse } from "../utils/ApiResponse";
 import { parsePagination } from "../type/pagination.type";
+import { asyncHandler } from "../utils/asyncHandler";
+import { logMethods, type Logger } from "../observability";
 
-export async function addListen(req: Request, res: Response, next: NextFunction) {
-    try {
+export class InteractionController {
+    constructor(
+        private readonly interactionService: InteractionService,
+        private readonly logger: Logger
+    ) {
+        logMethods(this, this.logger);
+    }
+
+    recordListen = asyncHandler(async (req: Request, res: Response) => {
         const { userId, songId, part } = req.body;
-        const entry = await interactionService.recordListen(userId, songId, part);
-        return res.status(201).json(new ApiResponse(201, "Listen recorded", entry));
-    } catch (error: any) {
-        next(error);
-    }
-}
+        const entry = await this.interactionService.recordListen(userId, songId, part);
+        return res.status(200).json(new ApiResponse(200, "Listen recorded", entry));
+    });
 
-export async function getTrendingSongs(req: Request, res: Response, next: NextFunction) {
-    try {
+    getTrendingSongs = asyncHandler(async (req: Request, res: Response) => {
         const params = parsePagination(req.query);
-        const result = await interactionService.getTrendingSongs(params);
+        const result = await this.interactionService.getTrendingSongs(params);
         return res.status(200).json(new ApiResponse(200, "Trending songs fetched", result));
-    } catch (error: any) {
-        next(error);
-    }
-}
+    });
 
-export async function getRecommendedSongs(req: Request, res: Response, next: NextFunction) {
-    try {
+    getRecommendations = asyncHandler(async (req: Request, res: Response) => {
         const userId = req.params.userId as string;
-        const limit = parseInt(req.query.limit as string) || 20;
-        const recommendations = await interactionService.getRecommendations(userId, limit);
-        return res.status(200).json(new ApiResponse(200, "Recommendations fetched", recommendations));
-    } catch (error: any) {
-        next(error);
-    }
+        const limit = parseInt(req.query.limit as string) || 10;
+        const result = await this.interactionService.getRecommendations(userId, limit);
+        return res.status(200).json(new ApiResponse(200, "Recommendations fetched", result));
+    });
 }
