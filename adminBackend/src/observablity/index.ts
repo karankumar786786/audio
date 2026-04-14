@@ -1,15 +1,15 @@
-import { localLogger } from "./console";
-import { PinoLogger } from "./pino";
-
-
-export const logger = PinoLogger;
+import { AppLogger } from "./logger-wrapper";
 
 export interface Logger {
     info(message: any, ...args: any[]): void;
     warn(message: any, ...args: any[]): void;
     error(message: any, ...args: any[]): void;
     debug(message: any, ...args: any[]): void;
+    child(bindings: any): Logger;
 }
+
+export const logger: Logger = new AppLogger();
+
 
 export function logMethods(instance: any, logger: Logger) {
     const proto = Object.getPrototypeOf(instance);

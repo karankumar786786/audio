@@ -6,17 +6,20 @@ import { ApiError } from "./utils/ApiError";
 import helmet from "helmet";
 import { masterRouter } from "./routes";
 import { logger } from "./observablity";
+import { traceMiddleware } from "./middlewares/trace.middleware";
 
 config();
 
 const app = express();
 
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 4001;
 
+app.use(traceMiddleware);
 app.use(cors())
 app.use(express.json());
 app.use(helmet());
 app.use(express.urlencoded({ extended: true }));
+
 
 // Routes Implementation
 app.use("/api/v1", masterRouter);

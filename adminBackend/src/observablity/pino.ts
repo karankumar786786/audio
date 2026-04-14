@@ -52,3 +52,4 @@ const stream = pretty({
 export const PinoLogger = pino({
     level: process.env.LOG_LEVEL || "info",
 }, stream);
+
