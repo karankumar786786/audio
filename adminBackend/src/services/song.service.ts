@@ -9,30 +9,16 @@ import type { PaginationParams, PaginatedResult } from "../types/pagination.type
 import { buildPaginatedResult } from "../types/pagination.type";
 
 export class SongService {
-    songRepository:SongRepository;
-    songProcessingJobRepository:SongProcessingJobRepository;
-    signatureService:SignatureService;
-    searchService:SearchService;
-    recommendationService:RecommendationService;
-    logger:Logger;
-    inngest:Inngest;
+
     constructor(
-        songRepository:SongRepository,
-        songProcessingJobRepository:SongProcessingJobRepository,
-        singnatureService:SignatureService,
-        searchService:SearchService,
-        recommendationService:RecommendationService,
-        logger:Logger,
-        inngest:Inngest,
-    ) {
-        this.songRepository = songRepository;
-        this.songProcessingJobRepository = songProcessingJobRepository;
-        this.signatureService = singnatureService;
-        this.searchService = searchService;
-        this.recommendationService = recommendationService;
-        this.logger = logger;
-        this.inngest = inngest;
-    }
+        private readonly songRepository:SongRepository,
+        private readonly songProcessingJobRepository:SongProcessingJobRepository,
+        private readonly signatureService:SignatureService,
+        private readonly searchService:SearchService,
+        private readonly recommendationService:RecommendationService,
+        private readonly logger:Logger,
+        private readonly inngest:Inngest,
+    ) {}
     async createSong(input: CreateSongInput): Promise<{ id: string, jobId: string, status: string }> {
         const jobId:string = this.signatureService.generateSignedId();
         const songId:string = this.signatureService.generateSignedId();

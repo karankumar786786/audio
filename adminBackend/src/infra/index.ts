@@ -1,5 +1,5 @@
 import { config } from "dotenv";
-import { neon } from "@neondatabase/serverless";
+import { neon, type NeonQueryFunction } from "@neondatabase/serverless";
 import { Inngest } from "inngest";
 import ImageKit from "imagekit";
 import { 
@@ -18,7 +18,7 @@ import { SongService } from "../services/song.service";
 config();
 
 export const db = neon(`${process.env.DATABASE_URL}`);
-export type Database = ReturnType<typeof neon>;
+export type Database = NeonQueryFunction<false, false>;
 
 // Search Service
 const searchService = new AlgoliaSearchService(

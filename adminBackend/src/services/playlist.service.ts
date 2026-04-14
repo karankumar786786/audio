@@ -7,17 +7,13 @@ import type { PaginationParams, PaginatedResult } from "../types/pagination.type
 import { buildPaginatedResult } from "../types/pagination.type";
 
 export class PlaylistService {
-    playlistRepository:PlaylistRepository;
-    signatureService:SignatureService;
-    searchService:SearchService;
+
     constructor(
-        playlistRepository:PlaylistRepository,
-        singnatureService:SignatureService,
-        searchService:SearchService,
+        private readonly playlistRepository:PlaylistRepository,
+        private readonly signatureService:SignatureService,
+        private readonly searchService:SearchService,
     ) {
-        this.playlistRepository = playlistRepository;
-        this.signatureService = singnatureService;
-        this.searchService = searchService;
+
     }
 
     async createPlaylist(data: CreatePlaylistSchema): Promise<PlaylistSchema> {

@@ -7,22 +7,14 @@ import type { PaginationParams, PaginatedResult } from "../types/pagination.type
 import { buildPaginatedResult } from "../types/pagination.type";
 
 export class ArtistService {
-    artistRepository:ArtistRepository;
-    songRepository:SongRepository;
-    signatureService:SignatureService;
-    searchService:SearchService;
+    
     constructor(
-        artistRepository:ArtistRepository,
-        songRepository:SongRepository,
-        signatureService:SignatureService,
-        searchService:SearchService,
+        private readonly artistRepository:ArtistRepository,
+        private readonly songRepository:SongRepository,
+        private readonly signatureService:SignatureService,
+        private readonly searchService:SearchService,
 
-    ) {
-        this.artistRepository = artistRepository;
-        this.songRepository = songRepository;
-        this.signatureService = signatureService;
-        this.searchService = searchService;
-    }
+    ) {}
     async createArtist(data: CreateArtistSchema): Promise<ArtistSchema> {
         const id: string = this.signatureService.generateSignedId();
         const artist: ArtistSchema = await this.artistRepository.create({ id, ...data });
