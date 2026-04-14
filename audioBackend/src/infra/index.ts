@@ -49,25 +49,25 @@ export { db };
 
 // --- 1. Library Services ---
 
-const searchService = new AlgoliaSearchService(
+ const searchService = new AlgoliaSearchService(
     `${process.env.APP_ID}`,
     `${process.env.API_KEY}`,
     `${process.env.INDEX_NAME}`,
-    logger
+    logger.child({ service: "AlgoliaSearchService" })
 );
 
 const storageService = new S3StorageService(
     `${process.env.REGION}`,
     `${process.env.ACCESS_KEY_ID}`,
     `${process.env.SECRET_KEY}`,
-    logger
+    logger.child({ service: "S3StorageService" })
 );
 
 const recommendationService = new RecommbeeRecommendationService(
     `${process.env.RECOMBEE_DATABASE}`,
     `${process.env.RECOMBEE_DATABASE_PRIVATE_TOKEN}`,
     `${process.env.RECOMBEE_DATABASE_REGION}`,
-    logger
+    logger.child({ service: "RecommbeeService" })
 );
 
 const signatureService = new NodeCryptoSignatureService(
@@ -84,47 +84,47 @@ export const inngest = new Inngest({ id: "test-music" });
 
 // --- 2. Repositories (Wired with DI) ---
 
-const artistRepository = new ArtistRepository(db, logger);
-const songRepository = new SongRepository(db, logger);
-const songProcessingJobRepository = new SongProcessingJobRepository(db, logger);
-const playlistRepository = new PlaylistRepository(db, logger);
-const userPlaylistRepository = new UserPlaylistRepository(db, logger);
-const userFavouriteSongRepository = new UserFavouriteSongRepository(db, logger);
-const userHistoryRepository = new UserHistoryRepository(db, logger);
-const userRepository = new UserRepository(db, logger);
-const userSearchHistoryRepository = new UserSearchHistoryRepository(db, logger);
-const interactionRepository = new InteractionRepository(db, logger);
+const artistRepository = new ArtistRepository(db, logger.child({ service: "ArtistRepository" }));
+const songRepository = new SongRepository(db, logger.child({ service: "SongRepository" }));
+const songProcessingJobRepository = new SongProcessingJobRepository(db, logger.child({ service: "JobRepository" }));
+const playlistRepository = new PlaylistRepository(db, logger.child({ service: "PlaylistRepository" }));
+const userPlaylistRepository = new UserPlaylistRepository(db, logger.child({ service: "UserPlaylistRepository" }));
+const userFavouriteSongRepository = new UserFavouriteSongRepository(db, logger.child({ service: "UserFavouriteSongRepository" }));
+const userHistoryRepository = new UserHistoryRepository(db, logger.child({ service: "UserHistoryRepository" }));
+const userRepository = new UserRepository(db, logger.child({ service: "UserRepository" }));
+const userSearchHistoryRepository = new UserSearchHistoryRepository(db, logger.child({ service: "UserSearchHistoryRepository" }));
+const interactionRepository = new InteractionRepository(db, logger.child({ service: "InteractionRepository" }));
 
 // --- 3. Services (Wired with DI) ---
 
-export const artistService = new ArtistService(artistRepository, songRepository, logger);
-export const songService = new SongService(songRepository, logger);
-export const playlistService = new PlaylistService(playlistRepository, logger);
+export const artistService = new ArtistService(artistRepository, songRepository, logger.child({ service: "ArtistService" }));
+export const songService = new SongService(songRepository, logger.child({ service: "SongService" }));
+export const playlistService = new PlaylistService(playlistRepository, logger.child({ service: "PlaylistService" }));
 export const userService = new UserService(
     userRepository, 
     userFavouriteSongRepository, 
     userHistoryRepository, 
     userSearchHistoryRepository, 
     signatureService,
-    logger
+    logger.child({ service: "UserService" })
 );
 export const interactionService = new InteractionService(
     userHistoryRepository, 
     interactionRepository, 
     recommendationService, 
     signatureService, 
-    logger
+    logger.child({ service: "InteractionService" })
 );
-export const internalSearchService = new SearchService(searchService, logger);
+export const internalSearchService = new SearchService(searchService, logger.child({ service: "SearchService" }));
 
 // --- 4. Controllers (Wired with DI) ---
 
-export const artistController = new ArtistController(artistService, logger);
-export const songController = new SongController(songService, logger);
-export const playlistController = new PlaylistController(playlistService, logger);
-export const userController = new UserController(userService, logger);
-export const interactionController = new InteractionController(interactionService, logger);
-export const userPlaylistController = new UserPlaylistController(userPlaylistRepository, logger);
-export const searchController = new SearchController(internalSearchService, logger);
-export const miscController = new MiscController(signatureService, storageService, imagekitClient, logger);
-export const systemStatusController = new SystemStatusController(logger);
+export const artistController = new ArtistController(artistService, logger.child({ service: "ArtistController" }));
+export const songController = new SongController(songService, logger.child({ service: "SongController" }));
+export const playlistController = new PlaylistController(playlistService, logger.child({ service: "PlaylistController" }));
+export const userController = new UserController(userService, logger.child({ service: "UserController" }));
+export const interactionController = new InteractionController(interactionService, logger.child({ service: "InteractionController" }));
+export const userPlaylistController = new UserPlaylistController(userPlaylistRepository, logger.child({ service: "UserPlaylistController" }));
+export const searchController = new SearchController(internalSearchService, logger.child({ service: "SearchController" }));
+export const miscController = new MiscController(signatureService, storageService, imagekitClient, logger.child({ service: "MiscController" }));
+export const systemStatusController = new SystemStatusController(logger.child({ service: "SystemStatusController" }));
