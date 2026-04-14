@@ -2,10 +2,12 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import request from "supertest";
 import { app } from "../../src/index";
 import * as infra from "../../src/infra";
+import { ApiError } from "../../src/utils/ApiError";
+
 
 // Mock the services in infra to avoid hitting real DB/Algolia
-vi.mock("../../src/infra", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("../../src/infra")>();
+vi.mock("../../src/infra", async () => {
+  const actual = await vi.importActual<typeof import("../../src/infra")>("../../src/infra");
   return {
     ...actual,
     artistService: {
@@ -17,6 +19,7 @@ vi.mock("../../src/infra", async (importOriginal) => {
     },
   };
 });
+
 
 describe("Artist API E2E", () => {
   describe("GET /api/v1/artists", () => {
@@ -38,7 +41,8 @@ describe("Artist API E2E", () => {
 
   describe("GET /api/v1/artists/:id", () => {
     it("should return 404 if artist not found", async () => {
-      (infra.artistService.getArtistById as any).mockRejectedValue({ status: 404, message: "Not found" });
+      (infra.artistService.getArtistById as any).mockRejectedValue(new ApiError(404, "Not found"));
+
 
       const response = await request(app).get("/api/v1/artists/999");
 

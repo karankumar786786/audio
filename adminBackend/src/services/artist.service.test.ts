@@ -26,7 +26,8 @@ describe("ArtistService", () => {
         getByArtistId: vi.fn(),
     };
     mockSignatureService = {
-      generateSignature: vi.fn().mockReturnValue("test-sig"),
+      generateSignedId: vi.fn().mockReturnValue("test-sig"),
+      verifyId: vi.fn(),
     };
     mockSearchService = {
       save: vi.fn(),
@@ -46,6 +47,7 @@ describe("ArtistService", () => {
       mockSearchService as unknown as SearchService,
       mockLogger as unknown as Logger
     );
+
   });
 
   describe("getArtistById", () => {
@@ -69,14 +71,15 @@ describe("ArtistService", () => {
   describe("createArtist", () => {
     it("should create an artist and index in search", async () => {
         const input = { name: "New Artist", about: "Bio", dob: "1990-01-01" };
-        const createdArtist = { id: "2", ...input };
+        const createdArtist = { id: "test-sig", ...input };
         mockArtistRepo.create.mockResolvedValue(createdArtist);
 
         const result = await artistService.createArtist(input as any);
 
         expect(result).toEqual(createdArtist);
         expect(mockArtistRepo.create).toHaveBeenCalled();
-        expect(mockSearchService.save).toHaveBeenCalledWith("artists", expect.objectContaining({ id: "2" }));
+        expect(mockSearchService.save).toHaveBeenCalledWith(expect.objectContaining({ id: "test-sig" }));
     });
   });
+
 });

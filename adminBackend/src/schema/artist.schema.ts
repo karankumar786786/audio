@@ -1,12 +1,13 @@
 import { z } from "zod";
+
 import { registry } from "../docs/openapi-registry";
 
 export const artistSchema = z.object({
     id: z.string().openapi({ description: "Unique identifier for the artist", example: "art_123" }),
-    name: z.string({ error: "name is required" }).min(1, { message: "name is required" }).openapi({ description: "Full name of the artist", example: "Gurun Randhawa" }),
-    about: z.string({ error: "about is required" }).min(1, { message: "about is required" }).openapi({ description: "Short biography of the artist", example: "Popular Punjabi singer and songwriter." }),
+    name: z.string().min(1, { message: "name is required" }).openapi({ description: "Full name of the artist", example: "Gurun Randhawa" }),
+    about: z.string().min(1, { message: "about is required" }).openapi({ description: "Short biography of the artist", example: "Popular Punjabi singer and songwriter." }),
     // Accept YYYY-MM-DD or ISO datetime — coerced to ISO string before DB insert
-    dob: z.string({ error: "dob is required" }).min(1, { message: "dob is required" }).refine(
+    dob: z.string().min(1, { message: "dob is required" }).refine(
         (v) => !isNaN(new Date(v).getTime()),
         { message: "dob must be a valid date (e.g. 2004-09-25)" }
     ).openapi({ description: "Date of birth in YYYY-MM-DD format", example: "1991-08-30" }),

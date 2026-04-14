@@ -1,4 +1,4 @@
-import { type Database } from "../infra";
+import { type Database } from "../infra/db";
 import { type SongProcessingJob } from "../schema/songProcessingJob.schema";
 import { logMethods, type Logger } from "../observablity";
 import { NotFoundError } from "../errors";

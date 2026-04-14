@@ -1,4 +1,4 @@
-import {  type Database } from "../infra";
+import {  type Database } from "../infra/db";
 import { logMethods, type Logger } from "../observablity";
 import { type ArtistSchema } from "../schema/artist.schema";
 import type { Repository } from "../types/repository.type";

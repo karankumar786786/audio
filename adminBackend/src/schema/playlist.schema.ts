@@ -1,4 +1,5 @@
 import { z } from "zod";
+
 import { registry } from "../docs/openapi-registry";
 
 export const playlistSchema = z.object({
@@ -15,8 +16,8 @@ export type PlaylistSchema = z.infer<typeof playlistSchema>;
 // Schema for adding a song to a playlist
 export const playlistSongSchema = z.object({
     id: z.string().optional().openapi({ description: "Relationship entry ID", example: "ps_789" }),
-    playlistId: z.string({error:"valid playlistId is required"}).min(1, { message: "playlistId is required" }).openapi({ description: "Target playlist ID", example: "ply_123" }),
-    songId: z.string({error:"valid songId is required"}).min(1, { message: "songId is required" }).openapi({ description: "Target song ID", example: "song_abc" }),
+    playlistId: z.string().min(1, { message: "playlistId is required" }).openapi({ description: "Target playlist ID", example: "ply_123" }),
+    songId: z.string().min(1, { message: "songId is required" }).openapi({ description: "Target song ID", example: "song_abc" }),
 }).openapi("PlaylistSong");
 
 export type PlaylistSongSchema = z.infer<typeof playlistSongSchema>;
@@ -24,9 +25,9 @@ export type PlaylistSongSchema = z.infer<typeof playlistSongSchema>;
 export const createPlaylistInput = playlistSchema
     .omit({ id: true, createdAt: true, updatedAt: true })
     .extend({
-        name: z.string({ error: "name is required" }).min(1, { message: "name cannot be empty" }).openapi({ description: "Name of the new playlist", example: "Party Vibes" }),
-        coverImageKey: z.string({ error: "coverImageKey is required" }).min(1, { message: "coverImageKey cannot be empty" }).openapi({ description: "Initial cover art key", example: "temp/cover.jpg" }),
-        bannerImageKey: z.string({ error: "bannerImageKey is required" }).min(1, { message: "bannerImageKey cannot be empty" }).openapi({ description: "Initial banner art key", example: "temp/banner.jpg" }),
+        name: z.string().min(1, { message: "name cannot be empty" }).openapi({ description: "Name of the new playlist", example: "Party Vibes" }),
+        coverImageKey: z.string().min(1, { message: "coverImageKey cannot be empty" }).openapi({ description: "Initial cover art key", example: "temp/cover.jpg" }),
+        bannerImageKey: z.string().min(1, { message: "bannerImageKey cannot be empty" }).openapi({ description: "Initial banner art key", example: "temp/banner.jpg" }),
     }).openapi("CreatePlaylistRequest");
 
 export type CreatePlaylistSchema = z.infer<typeof createPlaylistInput>;

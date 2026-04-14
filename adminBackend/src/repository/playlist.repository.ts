@@ -4,7 +4,7 @@ import { type SongSchema } from "../schema/songs.schema";
 import type { Repository } from "../types/repository.type";
 import { NotFoundError, ConflictError } from "../errors";
 import type { SignatureService } from "../lib/signature";
-import type { Database } from "../infra";
+import type { Database } from "../infra/db";
 
 type CreatePlaylistData = Omit<PlaylistSchema, "createdAt" | "updatedAt">;
 type UpdatePlaylistData = Partial<CreatePlaylistData>;

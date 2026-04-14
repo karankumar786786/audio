@@ -3,6 +3,8 @@ import { vi, beforeAll, afterAll, afterEach } from "vitest";
 
 // Load test environment variables
 config({ path: ".env.test" });
+config(); // Fallback to .env if .env.test is missing or incomplete
+
 
 // Global Mocks
 vi.mock("../src/observablity", () => ({
