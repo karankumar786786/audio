@@ -5,7 +5,8 @@ import { errorHandler } from "./middlewares/errorHandler";
 import { ApiError } from "./utils/ApiError";
 import helmet from "helmet";
 import { masterRouter } from "./routes";
-import { logger } from "./infra";
+import { logger } from "./observablity";
+
 config();
 
 const app = express();

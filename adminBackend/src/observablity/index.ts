@@ -1,7 +1,8 @@
 import { localLogger } from "./console";
+import { PinoLogger } from "./pino";
 
 
-export const logger = localLogger;
+export const logger = PinoLogger;
 
 export interface Logger {
     info(message: any, ...args: any[]): void;
