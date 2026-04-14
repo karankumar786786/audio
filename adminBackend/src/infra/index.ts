@@ -1,5 +1,5 @@
 import { config } from "dotenv";
-import { neon, type NeonQueryFunction } from "@neondatabase/serverless";
+export type {Database} from "./db";
 import { Inngest } from "inngest";
 import ImageKit from "imagekit";
 import { 
@@ -17,17 +17,17 @@ import { PlaylistService } from "../services/playlist.service";
 import { SongService } from "../services/song.service";
 import { S3StorageService } from "../lib/storage";
 import { MiscService } from "../services/misc.service";
+import { db } from "./db";
 config();
 
-export const db = neon(`${process.env.DATABASE_URL}`);
-export type Database = NeonQueryFunction<false, false>;
+
 
 // Search Service
 const searchService = new AlgoliaSearchService(
     `${process.env.APP_ID}`,
     `${process.env.API_KEY}`,
     `${process.env.INDEX_NAME}`,
-    logger
+    logger.child({ service: "AlgoliaSearch" })
 );
 
 // Recommendation Service
@@ -35,11 +35,11 @@ const recommendationService = new RecommbeeRecommendationService(
     `${process.env.RECOMBEE_DATABASE}`,
     `${process.env.RECOMBEE_DATABASE_PRIVATE_TOKEN}`,
     `${process.env.RECOMBEE_DATABASE_REGION}`,
-    logger
+    logger.child({ service: "Recommbee" })
 );
 
 // Signature Service
-export const signatureService = new NodeCryptoSignatureService(
+const signatureService = new NodeCryptoSignatureService(
     `${process.env.SIGNATURE_SECRET}`
 );
 
@@ -47,8 +47,10 @@ export const storageService = new S3StorageService(
     process.env.REGION!,
     process.env.ACCESS_KEY_ID!,
     process.env.SECRET_KEY!,
-    logger
-)
+    logger.child({ service: "S3Storage" })
+);
+
+
 export const imagekitClient = new ImageKit(
     {
         publicKey:process.env.IMAGEKIT_PUBLIC_KEY!,
@@ -59,15 +61,15 @@ export const imagekitClient = new ImageKit(
 
 
 // Repositories
-export const artistRepository = new ArtistRepository(db, logger);
-export const playlistRepository = new PlaylistRepository(db, logger,signatureService);
-export const songRepository = new SongRepository(db, logger);
-export const songProcessingJobRepository = new SongProcessingJobRepository(db, logger);
+export const artistRepository = new ArtistRepository(db, logger.child({ service: "ArtistRepository" }));
+export const playlistRepository = new PlaylistRepository(db, logger.child({ service: "PlaylistRepository" }),signatureService);
+export const songRepository = new SongRepository(db, logger.child({ service: "SongRepository" }));
+export const songProcessingJobRepository = new SongProcessingJobRepository(db, logger.child({ service: "SongJobRepository" }));
 export const inngest = new Inngest({id:"test-music"});
 
 // Services
-export const artistService = new ArtistService(artistRepository,songRepository,signatureService,searchService,logger);
-export const playlistService = new PlaylistService(playlistRepository,signatureService,searchService,logger);
-export const songService = new SongService(songRepository,songProcessingJobRepository,signatureService,searchService,recommendationService,logger,inngest);
-export const miscService = new MiscService(logger,storageService,imagekitClient,signatureService);
+export const artistService = new ArtistService(artistRepository,songRepository,signatureService,searchService,logger.child({ service: "ArtistService" }));
+export const playlistService = new PlaylistService(playlistRepository,signatureService,searchService,logger.child({ service: "PlaylistService" }));
+export const songService = new SongService(songRepository,songProcessingJobRepository,signatureService,searchService,recommendationService,logger.child({ service: "SongService" }),inngest);
+export const miscService = new MiscService(logger.child({ service: "MiscService" }),storageService,imagekitClient,signatureService);
 

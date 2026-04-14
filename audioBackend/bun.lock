@@ -9,6 +9,7 @@
         "@aws-sdk/s3-request-presigner": "^3.1027.0",
         "@imagekit/nodejs": "^7.4.0",
         "@neondatabase/serverless": "^1.0.2",
+        "@types/pino-pretty": "^5.0.0",
         "algoliasearch": "^5.50.1",
         "assemblyai": "^4.29.0",
         "axios": "^1.14.0",
@@ -481,6 +482,8 @@
     "@types/pg": ["@types/pg@8.20.0", "", { "dependencies": { "@types/node": "*", "pg-protocol": "*", "pg-types": "^2.2.0" } }, "sha512-bEPFOaMAHTEP1EzpvHTbmwR8UsFyHSKsRisLIHVMXnpNefSbGA1bD6CVy+qKjGSqmZqNqBDV2azOBo8TgkcVow=="],
 
     "@types/pg-pool": ["@types/pg-pool@2.0.7", "", { "dependencies": { "@types/pg": "*" } }, "sha512-U4CwmGVQcbEuqpyju8/ptOKg6gEC+Tqsvj2xS9o1g71bUh8twxnC6ZL5rZKCsGN0iyH0CwgUyc9VR5owNQF9Ng=="],
+
+    "@types/pino-pretty": ["@types/pino-pretty@5.0.0", "", { "dependencies": { "pino-pretty": "*" } }, "sha512-N1uzqSzioqz8R3AkDbSJwcfDWeI3YMPNapSQQhnB2ISU4NYgUIcAh+hYT5ygqBM+klX4htpEhXMmoJv3J7GrdA=="],
 
     "@types/qs": ["@types/qs@6.15.0", "", {}, "sha512-JawvT8iBVWpzTrz3EGw9BTQFg3BQNmwERdKE22vlTxawwtbyUSlMppvZYKLZzB5zgACXdXxbD3m1bXaMqP/9ow=="],
 

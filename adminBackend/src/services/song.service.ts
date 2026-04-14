@@ -2,7 +2,7 @@ import type { Inngest } from "inngest";
 import type { RecommendationService } from "../lib/recommendation";
 import type { SearchService } from "../lib/search";
 import type { SignatureService } from "../lib/signature";
-import type { Logger } from "../observablity";
+import { logMethods, type Logger } from "../observablity";
 import type { SongProcessingJobRepository, SongRepository } from "../repository";
 import type { CreateSongInput, SongSchema, UpdateSongInput } from "../schema/songs.schema";
 import type { PaginationParams, PaginatedResult } from "../types/pagination.type";
@@ -18,7 +18,9 @@ export class SongService {
         private readonly recommendationService:RecommendationService,
         private readonly logger:Logger,
         private readonly inngest:Inngest,
-    ) {}
+    ) {
+        logMethods(this,this.logger);
+    }
     async createSong(input: CreateSongInput): Promise<{ id: string, jobId: string, status: string }> {
         const jobId:string = this.signatureService.generateSignedId();
         const songId:string = this.signatureService.generateSignedId();

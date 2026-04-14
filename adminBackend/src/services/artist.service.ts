@@ -1,6 +1,6 @@
 import type { SearchService } from "../lib/search";
 import type { SignatureService } from "../lib/signature";
-import type { Logger } from "../observablity";
+import { logMethods, type Logger } from "../observablity";
 import type { ArtistRepository, SongRepository } from "../repository";
 import type { ArtistSchema, CreateArtistSchema, UpdateArtistSchema } from "../schema/artist.schema";
 import type { SongSchema } from "../schema/songs.schema";
@@ -14,8 +14,9 @@ export class ArtistService {
         private readonly signatureService:SignatureService,
         private readonly searchService:SearchService,
         private readonly logger:Logger,
-
-    ) {}
+    ) {
+        logMethods(this, this.logger);
+    }
     async createArtist(data: CreateArtistSchema): Promise<ArtistSchema> {
         const id: string = this.signatureService.generateSignedId();
         const artist: ArtistSchema = await this.artistRepository.create({ id, ...data });

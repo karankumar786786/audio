@@ -32,6 +32,7 @@
     "@aws-sdk/s3-request-presigner": "^3.1027.0",
     "@imagekit/nodejs": "^7.4.0",
     "@neondatabase/serverless": "^1.0.2",
+    "@types/pino-pretty": "^5.0.0",
     "algoliasearch": "^5.50.1",
     "assemblyai": "^4.29.0",
     "axios": "^1.14.0",

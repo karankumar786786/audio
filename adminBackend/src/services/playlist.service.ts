@@ -1,6 +1,6 @@
 import type { SearchService } from "../lib/search";
 import type { SignatureService } from "../lib/signature";
-import type { Logger } from "../observablity";
+import { logMethods, type Logger } from "../observablity";
 import type { PlaylistRepository } from "../repository";
 import type { PlaylistSchema, PlaylistSongSchema, CreatePlaylistSchema } from "../schema/playlist.schema";
 import type { SongSchema } from "../schema/songs.schema";
@@ -15,7 +15,7 @@ export class PlaylistService {
         private readonly searchService:SearchService,
         private readonly logger:Logger,
     ) {
-
+        logMethods(this, this.logger);
     }
 
     async createPlaylist(data: CreatePlaylistSchema): Promise<PlaylistSchema> {
