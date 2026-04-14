@@ -110,6 +110,7 @@ export const userService = new UserService(
 export const interactionService = new InteractionService(
     userHistoryRepository, 
     interactionRepository, 
+    songRepository,
     recommendationService, 
     signatureService, 
     logger.child({ service: "InteractionService" })

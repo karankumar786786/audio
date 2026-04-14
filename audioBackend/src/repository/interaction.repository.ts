@@ -1,68 +1,46 @@
 import type { Database } from "../infra/db";
+import { songSchema, type SongSchema } from "../schema/songs.schema";
+import { BaseRepository } from "./base.repository";
 import { logMethods, type Logger } from "../observability";
 
-export class InteractionRepository {
+export class InteractionRepository extends BaseRepository<SongSchema, any, any> {
     constructor(
-        private readonly db: Database,
-        private readonly logger: Logger
+        db: Database,
+        logger: Logger
     ) {
+        // This repository primarily returns Songs (Trending), so we use songSchema
+        super(db, "user_histories", songSchema, logger);
         logMethods(this, this.logger);
     }
 
-    async getTrendingSongsCount(days: number = 7): Promise<number> {
-        const [countResult] = await this.db`
-            SELECT COUNT(DISTINCT song_id)::int as count 
-            FROM user_history 
-            WHERE listened_at >= NOW() - INTERVAL '1 day' * ${days}
-        `;
-        return countResult?.count || 0;
+    async create(): Promise<never> {
+        throw new Error("InteractionRepository does not support direct creation - use UserHistory instead");
     }
 
-    async getTrendingSongs(limit: number, offset: number, days: number = 7): Promise<any[]> {
-        const trending = await this.db`
+    async update(): Promise<never> {
+        throw new Error("Update not supported");
+    }
+
+    async getTrendingSongs(limit: number, offset: number): Promise<SongSchema[]> {
+        const rows = await this.db`
             SELECT 
-                s.id,
-                s.title,
-                s.artist_name AS "artistName",
-                s.duration,
-                s.song_key AS "songKey",
-                s.image_key AS "imageKey",
-                s.language,
-                COUNT(uh.id)::int AS "listenCount"
-            FROM user_history uh
-            JOIN songs s ON s.id = uh.song_id
-            WHERE uh.listened_at >= NOW() - INTERVAL '1 day' * ${days}
+                s.id, s.title, s.artist_name AS "artistName", s.duration,
+                s.song_key AS "songKey", s.image_key AS "imageKey",
+                s.language, s.job_id AS "jobId", s.created_at AS "createdAt",
+                COUNT(h.id) as listen_count
+            FROM user_histories h
+            JOIN songs s ON h.song_id = s.id
             GROUP BY s.id
-            ORDER BY "listenCount" DESC
+            ORDER BY listen_count DESC
             LIMIT ${limit} OFFSET ${offset}
         `;
-        return trending;
+        return rows.map((row) => this.mapRow(row));
     }
 
-    async getSongsByIds(songIds: string[]): Promise<any[]> {
-        if (songIds.length === 0) return [];
-        return await this.db`
-            SELECT 
-                id,
-                title,
-                artist_name AS "artistName",
-                duration,
-                song_key AS "songKey",
-                image_key AS "imageKey",
-                language,
-                job_id AS "jobId",
-                created_at AS "createdAt"
-            FROM songs
-            WHERE id = ANY(${songIds})
+    async countTrendingSongs(): Promise<number> {
+        const [row] = await this.db`
+            SELECT COUNT(DISTINCT song_id)::int as count FROM user_histories
         `;
-    }
-
-    async recordListen(userId: string, songId: string): Promise<any> {
-        const [interaction] = await this.db`
-            INSERT INTO user_history (user_id, song_id)
-            VALUES (${userId}, ${songId})
-            RETURNING *
-        `;
-        return interaction;
+        return row?.count || 0;
     }
 }

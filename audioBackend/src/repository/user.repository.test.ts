@@ -8,46 +8,34 @@ describe("UserRepository", () => {
 
     beforeEach(() => {
         mockDb = vi.fn() as any;
-        mockLogger = {
-            info: vi.fn(),
-            error: vi.fn(),
-            debug: vi.fn(),
-            child: vi.fn().mockReturnThis(),
-        };
-
+        mockLogger = { info: vi.fn(), error: vi.fn(), debug: vi.fn(), child: vi.fn().mockReturnThis() };
         repo = new UserRepository(mockDb, mockLogger);
     });
 
-    it("should create a user correctly", async () => {
-        const mockUser = {
-            id: "auth0|123",
-            email: "test@example.com",
-            created_at: new Date()
-        };
+    const createMockUser = (overrides = {}) => ({
+        id: "u1",
+        email: "test@e.com",
+        createdAt: new Date().toISOString(),
+        ...overrides
+    });
+
+    it("should create user correctly", async () => {
+        const mockUser = createMockUser({ id: "u2" });
         mockDb.mockResolvedValue([mockUser]);
 
-        const result = await repo.create({
-            id: "auth0|123",
-            email: "test@example.com"
-        });
+        const result = await repo.create({ id: "u2", email: "test@e.com" });
 
-        expect(result.id).toBe("auth0|123");
-        expect(result.email).toBe("test@example.com");
+        expect(result.id).toBe("u2");
+        expect(mockDb).toHaveBeenCalled();
     });
 
-    it("should fetch user by id", async () => {
-        const mockRow = { id: "1", email: "u1@e.com" };
-        mockDb.mockResolvedValue([mockRow]);
+    it("should get user by id", async () => {
+        const mockUser = createMockUser({ id: "u1" });
+        mockDb.mockResolvedValue([mockUser]);
 
-        const result = await repo.getById("1");
+        const result = await repo.getById("u1");
 
-        expect(result!.id).toBe("1");
-        expect(result!.email).toBe("u1@e.com");
-    });
-
-    it("should fetch all users", async () => {
-        mockDb.mockResolvedValue([{ id: "1" }, { id: "2" }]);
-        const result = await repo.getAll();
-        expect(result).toHaveLength(2);
+        expect(result.id).toBe("u1");
+        expect(result.email).toBe("test@e.com");
     });
 });

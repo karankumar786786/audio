@@ -1,62 +1,46 @@
 import type { Database } from "../infra/db";
-import type { UserSchema } from "../schema/user.schema";
+import { userSchema, type UserSchema } from "../schema/user.schema";
+import { BaseRepository } from "./base.repository";
 import { logMethods, type Logger } from "../observability";
 
 type CreateUserData = Pick<UserSchema, "id" | "email">;
+type UpdateUserData = Partial<CreateUserData>;
 
-export class UserRepository {
+export class UserRepository extends BaseRepository<UserSchema, CreateUserData, UpdateUserData> {
     constructor(
-        private readonly db: Database,
-        private readonly logger: Logger
+        db: Database,
+        logger: Logger
     ) {
+        super(db, "users", userSchema, logger);
         logMethods(this, this.logger);
     }
 
     async create(data: CreateUserData): Promise<UserSchema> {
-        const [row] = await this.db`
+        const [user] = await this.db`
             INSERT INTO users (id, email)
             VALUES (${data.id}, ${data.email})
-            ON CONFLICT (id) DO UPDATE
-                SET email = EXCLUDED.email
-            RETURNING *
+            ON CONFLICT (id) DO UPDATE SET email = EXCLUDED.email
+            RETURNING id, email, created_at AS "createdAt"
         `;
-        if (!row) throw new Error("Failed to create user");
-        return this.mapRow(row);
+        if (!user) throw new Error("Failed to create user");
+        return this.mapRow(user);
     }
 
-    async getById(id: string): Promise<UserSchema | null> {
-        const [row] = await this.db`
-            SELECT * FROM users WHERE id = ${id}
+    async update(id: string, data: UpdateUserData): Promise<UserSchema> {
+        const [user] = await this.db`
+            UPDATE users
+            SET email = COALESCE(${data.email ?? null}, email)
+            WHERE id = ${id}
+            RETURNING id, email, created_at AS "createdAt"
         `;
-        return row ? this.mapRow(row) : null;
-    }
-
-    async getByEmail(email: string): Promise<UserSchema | null> {
-        const [row] = await this.db`
-            SELECT * FROM users WHERE email = ${email}
-        `;
-        return row ? this.mapRow(row) : null;
+        if (!user) throw new Error(`User with id ${id} not found`);
+        return this.mapRow(user);
     }
 
     async getAll(): Promise<UserSchema[]> {
-        const rows = await this.db`SELECT * FROM users ORDER BY created_at DESC`;
-        return rows.map((row) => this.mapRow(row));
-    }
-
-    async delete(id: string): Promise<UserSchema> {
-        const [row] = await this.db`
-            DELETE FROM users WHERE id = ${id} RETURNING *
+        const rows = await this.db`
+            SELECT id, email, created_at AS "createdAt" FROM users ORDER BY created_at DESC
         `;
-        if (!row) throw new Error(`User with id ${id} not found`);
-        return this.mapRow(row);
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private mapRow(row: Record<string, any>): UserSchema {
-        return {
-            id: row.id as string,
-            email: row.email as string,
-            createdAt: (row.created_at as Date)?.toISOString(),
-        };
+        return rows.map((row) => this.mapRow(row));
     }
 }

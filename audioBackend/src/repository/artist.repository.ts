@@ -1,16 +1,17 @@
 import type { Database } from "../infra/db";
-import { type ArtistSchema } from "../schema/artist.schema";
-import type { Repository } from "../type/repository.type";
+import { artistSchema, type ArtistSchema } from "../schema/artist.schema";
+import { BaseRepository } from "./base.repository";
 import { logMethods, type Logger } from "../observability";
 
 type CreateArtistData = Omit<ArtistSchema, "createdAt">;
 type UpdateArtistData = Partial<CreateArtistData>;
 
-export class ArtistRepository implements Repository<ArtistSchema, CreateArtistData, UpdateArtistData> {
+export class ArtistRepository extends BaseRepository<ArtistSchema, CreateArtistData, UpdateArtistData> {
     constructor(
-        private readonly db: Database,
-        private readonly logger: Logger
+        db: Database,
+        logger: Logger
     ) {
+        super(db, "artists", artistSchema, logger);
         logMethods(this, this.logger);
     }
 
@@ -18,76 +19,50 @@ export class ArtistRepository implements Repository<ArtistSchema, CreateArtistDa
         const [artist] = await this.db`
             INSERT INTO artists (id, name, about, dob, cover_image_key, banner_image_key)
             VALUES (
-                ${data.id},
-                ${data.name},
-                ${data.about},
-                ${data.dob},
-                ${data.coverImageKey},
-                ${data.bannerImageKey}
+                ${data.id}, ${data.name}, ${data.about}, ${data.dob}, 
+                ${data.coverImageKey}, ${data.bannerImageKey}
             )
-            RETURNING *
+            RETURNING 
+                id, name, about, dob, 
+                cover_image_key AS "coverImageKey", 
+                banner_image_key AS "bannerImageKey", 
+                created_at AS "createdAt"
         `;
         if (!artist) throw new Error("Failed to create artist");
         return this.mapRow(artist);
-    }
-
-    async getById(id: string): Promise<ArtistSchema> {
-        const [artist] = await this.db`
-            SELECT * FROM artists WHERE id = ${id}
-        `;
-        if (!artist) throw new Error(`Artist with id ${id} not found`);
-        return this.mapRow(artist);
-    }
-
-    async count(): Promise<number> {
-        const [row] = await this.db`SELECT count(*)::int as count FROM artists`;
-        return row?.count || 0;
-    }
-
-    async getAll(limit?: number, offset?: number): Promise<ArtistSchema[]> {
-        const artists = await this.db`
-            SELECT * FROM artists 
-            ORDER BY created_at DESC
-            LIMIT ${limit ?? null} OFFSET ${offset ?? null}
-        `;
-        return artists.map((row) => this.mapRow(row));
     }
 
     async update(id: string, data: UpdateArtistData): Promise<ArtistSchema> {
         const [artist] = await this.db`
             UPDATE artists
             SET
-                name              = COALESCE(${data.name ?? null}, name),
-                about             = COALESCE(${data.about ?? null}, about),
-                dob               = COALESCE(${data.dob ?? null}, dob),
-                cover_image_key   = COALESCE(${data.coverImageKey ?? null}, cover_image_key),
-                banner_image_key  = COALESCE(${data.bannerImageKey ?? null}, banner_image_key)
+                name             = COALESCE(${data.name ?? null}, name),
+                about            = COALESCE(${data.about ?? null}, about),
+                dob              = COALESCE(${data.dob ?? null}, dob),
+                cover_image_key  = COALESCE(${data.coverImageKey ?? null}, cover_image_key),
+                banner_image_key = COALESCE(${data.bannerImageKey ?? null}, banner_image_key)
             WHERE id = ${id}
-            RETURNING *
+            RETURNING 
+                id, name, about, dob, 
+                cover_image_key AS "coverImageKey", 
+                banner_image_key AS "bannerImageKey", 
+                created_at AS "createdAt"
         `;
         if (!artist) throw new Error(`Artist with id ${id} not found`);
         return this.mapRow(artist);
     }
 
-    async delete(id: string): Promise<ArtistSchema> {
-        const [artist] = await this.db`
-            DELETE FROM artists WHERE id = ${id} RETURNING *
+    async getAll(limit?: number, offset?: number): Promise<ArtistSchema[]> {
+        const rows = await this.db`
+            SELECT 
+                id, name, about, dob, 
+                cover_image_key AS "coverImageKey", 
+                banner_image_key AS "bannerImageKey", 
+                created_at AS "createdAt"
+            FROM artists 
+            ORDER BY created_at DESC
+            LIMIT ${limit ?? null} OFFSET ${offset ?? null}
         `;
-        if (!artist) throw new Error(`Artist with id ${id} not found`);
-        return this.mapRow(artist);
-    }
-
-    // Maps DB snake_case row → camelCase ArtistSchema
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private mapRow(row: Record<string, unknown>): ArtistSchema {
-        return {
-            id: row.id as string,
-            name: row.name as string,
-            about: row.about as string,
-            dob: (row.dob as Date)?.toISOString(),
-            coverImageKey: row.cover_image_key as string,
-            bannerImageKey: row.banner_image_key as string,
-            createdAt: (row.created_at as Date)?.toISOString(),
-        };
+        return rows.map((row) => this.mapRow(row));
     }
 }

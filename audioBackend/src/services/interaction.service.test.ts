@@ -5,6 +5,7 @@ describe("InteractionService", () => {
     let service: InteractionService;
     let mockHistRepo: any;
     let mockInterRepo: any;
+    let mockSongRepo: any;
     let mockRecService: any;
     let mockSigService: any;
     let mockLogger: any;
@@ -13,10 +14,10 @@ describe("InteractionService", () => {
         mockHistRepo = { create: vi.fn() };
         mockInterRepo = { 
             getTrendingSongs: vi.fn(), 
-            getTrendingSongsCount: vi.fn(),
-            getSongsByIds: vi.fn(), 
+            countTrendingSongs: vi.fn(),
             recordListen: vi.fn() 
         };
+        mockSongRepo = { getByIds: vi.fn() };
         mockRecService = { recommendUser: vi.fn(), addListen: vi.fn() };
         mockSigService = { generateSignedId: vi.fn().mockReturnValue("signed-id") };
         mockLogger = { info: vi.fn(), error: vi.fn(), debug: vi.fn(), child: vi.fn().mockReturnThis() };
@@ -24,6 +25,7 @@ describe("InteractionService", () => {
         service = new InteractionService(
             mockHistRepo,
             mockInterRepo,
+            mockSongRepo,
             mockRecService,
             mockSigService,
             mockLogger
@@ -42,7 +44,7 @@ describe("InteractionService", () => {
 
     it("should fetch trending results paginated", async () => {
         mockInterRepo.getTrendingSongs.mockResolvedValue([{ id: "s1" }]);
-        mockInterRepo.getTrendingSongsCount.mockResolvedValue(1);
+        mockInterRepo.countTrendingSongs.mockResolvedValue(1);
         const result = await service.getTrendingSongs({ page: 1, limit: 10 });
         expect(result.data).toHaveLength(1);
         expect(result.pagination.total).toBe(1);
@@ -50,7 +52,7 @@ describe("InteractionService", () => {
 
     it("should fetch recommendations and map to full song objects", async () => {
         mockRecService.recommendUser.mockResolvedValue([{ id: "s1" }]);
-        mockInterRepo.getSongsByIds.mockResolvedValue([{ id: "s1", title: "T1" }]);
+        mockSongRepo.getByIds.mockResolvedValue([{ id: "s1", title: "T1" }]);
 
         const result = await service.getRecommendations("u1", 10);
 

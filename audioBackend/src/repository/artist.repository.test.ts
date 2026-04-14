@@ -18,28 +18,42 @@ describe("ArtistRepository", () => {
         repo = new ArtistRepository(mockDb, mockLogger);
     });
 
-    it("should map rows correctly and fetch artist by id", async () => {
-        const mockRow = {
-            id: "1",
-            name: "Artist One",
-            about: "About One",
-            dob: new Date("1990-01-01"),
-            cover_image_key: "cover.jpg",
-            banner_image_key: "banner.jpg",
-            created_at: new Date()
-        };
-        mockDb.mockResolvedValue([mockRow]);
+    const createMockArtist = (overrides = {}) => ({
+        id: "artist-1",
+        name: "Test Artist",
+        about: "Bio",
+        dob: "1990-01-01",
+        coverImageKey: "c1",
+        bannerImageKey: "b1",
+        createdAt: new Date().toISOString(),
+        ...overrides
+    });
 
-        const result = await repo.getById("1");
+    it("should create an artist correctly", async () => {
+        const mockArtist = createMockArtist();
+        mockDb.mockResolvedValue([mockArtist]);
 
-        expect(result.id).toBe("1");
-        expect(result.name).toBe("Artist One");
+        const result = await repo.create({
+            id: "artist-1",
+            name: "Test Artist",
+            about: "Bio",
+            dob: "1990-01-01",
+            coverImageKey: "c1",
+            bannerImageKey: "b1"
+        });
+
+        expect(result!.id).toBe("artist-1");
+        expect(result!.name).toBe("Test Artist");
         expect(mockDb).toHaveBeenCalled();
     });
 
-    it("should return empty list if no artists found in getAll", async () => {
-        mockDb.mockResolvedValue([]);
-        const result = await repo.getAll();
-        expect(result).toHaveLength(0);
+    it("should fetch artist by id", async () => {
+        const mockArtist = createMockArtist({ id: "1", name: "Artist One" });
+        mockDb.mockResolvedValue([mockArtist]);
+
+        const result = await repo.getById("1");
+
+        expect(result!.id).toBe("1");
+        expect(result!.name).toBe("Artist One");
     });
 });

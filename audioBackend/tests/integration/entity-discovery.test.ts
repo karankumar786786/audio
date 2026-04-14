@@ -25,10 +25,18 @@ describe("Entity Discovery Integration", () => {
 
     describe("Song Discovery", () => {
         it("should integrate Service and Repository to fetch paginated songs", async () => {
-            // Use mockResolvedValueOnce to match the execution order in service.getSongs: getAll then count
-            const mockRows = [{ id: "1", title: "S1", artist_name: "A1" }];
-            mockDb.mockImplementation((sql: any) => {
-                if (sql.join("").includes("count(*)")) return Promise.resolve([{ count: 1 }]);
+            const mockRows = [{ 
+                id: "1", title: "S1", artistName: "A1", duration: 180, 
+                songKey: "k1", imageKey: "i1", language: "en", jobId: "j1",
+                createdAt: new Date().toISOString() 
+            }];
+            
+            mockDb.mockImplementation((arg: any) => {
+                // Detect count query: 'arg' can be a string (manual SQL) or array (tagged template)
+                const sqlStr = Array.isArray(arg) ? arg.join("") : (typeof arg === 'string' ? arg : "");
+                const isCount = sqlStr.includes("count(*)");
+                
+                if (isCount) return Promise.resolve([{ count: 1 }]);
                 return Promise.resolve(mockRows);
             });
 
@@ -42,7 +50,11 @@ describe("Entity Discovery Integration", () => {
 
     describe("Playlist Discovery", () => {
         it("should integrate Service and Repository to fetch playlists", async () => {
-            const mockPlaylists = [{ id: "p1", name: "Top Charts", cover_image_key: "k1", banner_image_key: "b1" }];
+            const mockPlaylists = [{ 
+                id: "p1", name: "Top Charts", 
+                coverImageKey: "k1", bannerImageKey: "b1", 
+                createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() 
+            }];
             mockDb.mockResolvedValue(mockPlaylists);
 
             const result = await playlistService.getPlaylists({ page: 1, limit: 10 });

@@ -8,43 +8,37 @@ describe("InteractionRepository", () => {
 
     beforeEach(() => {
         mockDb = vi.fn() as any;
-        mockLogger = {
-            info: vi.fn(),
-            error: vi.fn(),
-            debug: vi.fn(),
-            child: vi.fn().mockReturnThis(),
-        };
-
+        mockLogger = { info: vi.fn(), error: vi.fn(), debug: vi.fn(), child: vi.fn().mockReturnThis() };
         repo = new InteractionRepository(mockDb, mockLogger);
     });
 
+    const createMockSong = (overrides = {}) => ({
+        id: "s1",
+        title: "Song 1",
+        artistName: "Artist 1",
+        duration: 200,
+        songKey: "k1",
+        imageKey: "i1",
+        language: "en",
+        jobId: "j1",
+        createdAt: new Date().toISOString(),
+        ...overrides
+    });
+
     it("should fetch trending songs correctly", async () => {
-        const mockSongs = [
-            { id: "s1", title: "T1", artist_name: "A1", listen_count: 100 },
-        ];
+        const mockSongs = [createMockSong()];
         mockDb.mockResolvedValue(mockSongs);
 
         const result = await repo.getTrendingSongs(10, 0);
 
         expect(result).toHaveLength(1);
-        expect(result[0]!.id).toBe("s1");
+        expect(result[0]!.title).toBe("Song 1");
         expect(mockDb).toHaveBeenCalled();
     });
 
-    it("should fetch songs by ids", async () => {
-        const mockRows = [{ id: "s1", title: "T1" }, { id: "s2", title: "T2" }];
-        mockDb.mockResolvedValue(mockRows);
-
-        const result = await repo.getSongsByIds(["s1", "s2"]);
-
-        expect(result).toHaveLength(2);
-        expect(result[0]!.id).toBe("s1");
-    });
-
-    it("should record listen correctly", async () => {
-        mockDb.mockResolvedValue([{ id: "1" }]);
-        const result = await repo.recordListen("u1", "s1");
-        expect(result).toBeDefined();
-        expect(mockDb).toHaveBeenCalled();
+    it("should count trending songs", async () => {
+        mockDb.mockResolvedValue([{ count: 5 }]);
+        const result = await repo.countTrendingSongs();
+        expect(result).toBe(5);
     });
 });

@@ -8,32 +8,36 @@ describe("UserHistoryRepository", () => {
 
     beforeEach(() => {
         mockDb = vi.fn() as any;
-        mockLogger = {
-            info: vi.fn(),
-            error: vi.fn(),
-            debug: vi.fn(),
-            child: vi.fn().mockReturnThis(),
-        };
-
+        mockLogger = { info: vi.fn(), error: vi.fn(), debug: vi.fn(), child: vi.fn().mockReturnThis() };
         repo = new UserHistoryRepository(mockDb, mockLogger);
     });
 
-    it("should create a history entry correctly", async () => {
-        const mockEntry = { id: "1", user_id: "u1", song_id: "s1", played_at: new Date() };
-        mockDb.mockResolvedValue([mockEntry]);
+    const createMockHistory = (overrides = {}) => ({
+        id: "h1",
+        userId: "u1",
+        songId: "s1",
+        part: 100,
+        listenedAt: new Date().toISOString(),
+        ...overrides
+    });
 
-        const result = await repo.create({ id: "1", userId: "u1", songId: "s1", part: 100 });
+    it("should record history correctly", async () => {
+        const mockHistory = createMockHistory();
+        mockDb.mockResolvedValue([mockHistory]);
 
-        expect(result!.userId).toBe("u1");
+        const result = await repo.create({ userId: "u1", songId: "s1", part: 100 });
+
+        expect(result.userId).toBe("u1");
         expect(mockDb).toHaveBeenCalled();
     });
 
     it("should fetch history by user id", async () => {
-        const mockRows = [{ id: "s1", title: "T1" }];
-        mockDb.mockResolvedValue(mockRows);
+        const mockHistory = createMockHistory();
+        mockDb.mockResolvedValue([mockHistory]);
 
         const result = await repo.getByUserId("u1", 10, 0);
 
         expect(result).toHaveLength(1);
+        expect(result[0]!.userId).toBe("u1");
     });
 });

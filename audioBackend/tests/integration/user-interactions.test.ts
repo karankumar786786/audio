@@ -30,7 +30,8 @@ describe("User Interactions Integration", () => {
     });
 
     it("should integrate Service and Repositories to manage user favourites", async () => {
-        const mockFav = { id: "1", user_id: "u1", song_id: "s1" };
+        // Use camelCase to match SQL aliases
+        const mockFav = { id: "1", userId: "u1", songId: "s1" };
         mockDb.mockResolvedValue([mockFav]);
 
         const result = await userService.addFavourite("u1", "s1");
@@ -40,7 +41,8 @@ describe("User Interactions Integration", () => {
     });
 
     it("should integrate Service and Repositories to fetch user history", async () => {
-        const mockRows = [{ id: "h1", user_id: "u1", song_id: "s1", played_at: new Date() }];
+        // Use camelCase to match SQL aliases
+        const mockRows = [{ id: "h1", userId: "u1", songId: "s1", part: 100, listenedAt: new Date().toISOString() }];
         mockDb.mockResolvedValue(mockRows);
 
         const result = await userService.getHistory("u1", 10, 0);

@@ -9,21 +9,21 @@ export const errorHandler = (
   res: Response,
   _next: NextFunction
 ): void => {
-  // ApiError — our own domain errors
+  // ZodError — schema validation mismatch in request OR database response
+  if (err instanceof ZodError) {
+    new ApiResponse(400, "Validation failed (Schema Mismatch)", { 
+        errors: err.errors.map(e => ({ path: e.path.join('.'), message: e.message })) 
+    }, false).send(res);
+    return;
+  }
+
+  // ApiError — our own domain errors (NotFoundError, BadRequestError, etc.)
   if (err instanceof ApiError) {
     new ApiResponse(err.statusCode, err.message, { errors: err.errors }, false).send(res);
     return;
   }
 
-  // ZodError — schema validation bubbled to handler directly
-  if (err instanceof ZodError) {
-    const message = err.issues.map((e) => e.message).join(", ");
-    new ApiResponse(400, message, { errors: err.issues }, false).send(res);
-    return;
-  }
-
   // Generic / unexpected errors
-  const message =
-    err instanceof Error ? err.message : "Internal Server Error";
+  const message = err instanceof Error ? err.message : "Internal Server Error";
   new ApiResponse(500, message, null, false).send(res);
 };

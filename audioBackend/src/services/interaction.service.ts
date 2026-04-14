@@ -1,5 +1,6 @@
 import { type UserHistoryRepository } from "../repository/user-history.repository";
 import { type InteractionRepository } from "../repository/interaction.repository";
+import { type SongRepository } from "../repository/song.repository";
 import { type RecommendationService } from "../lib/recommendation";
 import { type SignatureService } from "../lib/signature";
 import type { PaginationParams, PaginatedResult } from "../type/pagination.type";
@@ -10,6 +11,7 @@ export class InteractionService {
     constructor(
         private readonly userHistoryRepository: UserHistoryRepository,
         private readonly interactionRepository: InteractionRepository,
+        private readonly songRepository: SongRepository, // Injected songRepository
         private readonly recommendationService: RecommendationService,
         private readonly signatureService: SignatureService,
         private readonly logger: Logger
@@ -18,8 +20,8 @@ export class InteractionService {
     }
 
     async recordListen(userId: string, songId: string, part: number) {
-        const id = this.signatureService.generateSignedId();
-        const entry = await this.userHistoryRepository.create({ id, userId, songId, part: part ?? 100 });
+        // ID is now generated inside the repository using randomUUIDv7()
+        const entry = await this.userHistoryRepository.create({ userId, songId, part: part ?? 100 });
 
         // Sync listen portion with Recombee (part is 0-100, Recombee expects 0-1)
         const portion = Math.min(1, Math.max(0, (part ?? 100) / 100));
@@ -32,8 +34,8 @@ export class InteractionService {
         const offset = (params.page - 1) * params.limit;
         
         const [total, trending] = await Promise.all([
-            this.interactionRepository.getTrendingSongsCount(7),
-            this.interactionRepository.getTrendingSongs(params.limit, offset, 7)
+            this.interactionRepository.countTrendingSongs(),
+            this.interactionRepository.getTrendingSongs(params.limit, offset)
         ]);
         
         return buildPaginatedResult(trending, total, params);
@@ -45,7 +47,7 @@ export class InteractionService {
         
         if (songIds.length === 0) return buildPaginatedResult([], 0, { page: 1, limit });
 
-        const songs = await this.interactionRepository.getSongsByIds(songIds);
+        const songs = await this.songRepository.getByIds(songIds);
 
         // Re-order songs to match Recombee's ranking
         const songMap = new Map(songs.map(s => [s.id, s]));

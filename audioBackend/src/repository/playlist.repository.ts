@@ -1,17 +1,18 @@
 import { randomUUIDv7 } from "bun";
 import type { Database } from "../infra/db";
-import { type PlaylistSchema, type PlaylistSongSchema } from "../schema/playlist.schema";
-import type { Repository } from "../type/repository.type";
+import { playlistSchema, playlistSongSchema, type PlaylistSchema, type PlaylistSongSchema } from "../schema/playlist.schema";
+import { BaseRepository } from "./base.repository";
 import { logMethods, type Logger } from "../observability";
 
 type CreatePlaylistData = Omit<PlaylistSchema,  "createdAt" | "updatedAt">;
 type UpdatePlaylistData = Partial<CreatePlaylistData>;
 
-export class PlaylistRepository implements Repository<PlaylistSchema, CreatePlaylistData, UpdatePlaylistData> {
+export class PlaylistRepository extends BaseRepository<PlaylistSchema, CreatePlaylistData, UpdatePlaylistData> {
     constructor(
-        private readonly db: Database,
-        private readonly logger: Logger
+        db: Database,
+        logger: Logger
     ) {
+        super(db, "playlists", playlistSchema, logger);
         logMethods(this, this.logger);
     }
 
@@ -19,33 +20,16 @@ export class PlaylistRepository implements Repository<PlaylistSchema, CreatePlay
         const [playlist] = await this.db`
             INSERT INTO playlists (id, name, cover_image_key, banner_image_key)
             VALUES (${data.id}, ${data.name}, ${data.coverImageKey}, ${data.bannerImageKey})
-            RETURNING *
+            RETURNING 
+                id, name, 
+                cover_image_key AS "coverImageKey", 
+                banner_image_key AS "bannerImageKey", 
+                created_at AS "createdAt", 
+                updated_at AS "updatedAt"
         `;
 
         if (!playlist) throw new Error("Failed to create playlist");
         return this.mapRow(playlist);
-    }
-
-    async getById(id: string): Promise<PlaylistSchema> {
-        const [playlist] = await this.db`
-            SELECT * FROM playlists WHERE id = ${id}
-        `;
-        if (!playlist) throw new Error(`Playlist with id ${id} not found`);
-        return this.mapRow(playlist);
-    }
-
-    async count(): Promise<number> {
-        const [row] = await this.db`SELECT count(*)::int as count FROM playlists`;
-        return row?.count || 0;
-    }
-
-    async getAll(limit?: number, offset?: number): Promise<PlaylistSchema[]> {
-        const rows = await this.db`
-            SELECT * FROM playlists 
-            ORDER BY created_at DESC
-            LIMIT ${limit ?? null} OFFSET ${offset ?? null}
-        `;
-        return rows.map((row) => this.mapRow(row));
     }
 
     async update(id: string, data: UpdatePlaylistData): Promise<PlaylistSchema> {
@@ -57,19 +41,31 @@ export class PlaylistRepository implements Repository<PlaylistSchema, CreatePlay
                 banner_image_key = COALESCE(${data.bannerImageKey ?? null}, banner_image_key),
                 updated_at       = NOW()
             WHERE id = ${id}
-            RETURNING *
+            RETURNING 
+                id, name, 
+                cover_image_key AS "coverImageKey", 
+                banner_image_key AS "bannerImageKey", 
+                created_at AS "createdAt", 
+                updated_at AS "updatedAt"
         `;
 
         if (!playlist) throw new Error(`Playlist with id ${id} not found`);
         return this.mapRow(playlist);
     }
 
-    async delete(id: string): Promise<PlaylistSchema> {
-        const [playlist] = await this.db`
-            DELETE FROM playlists WHERE id = ${id} RETURNING *
+    async getAll(limit?: number, offset?: number): Promise<PlaylistSchema[]> {
+        const rows = await this.db`
+            SELECT 
+                id, name, 
+                cover_image_key AS "coverImageKey", 
+                banner_image_key AS "bannerImageKey", 
+                created_at AS "createdAt", 
+                updated_at AS "updatedAt"
+            FROM playlists 
+            ORDER BY created_at DESC
+            LIMIT ${limit ?? null} OFFSET ${offset ?? null}
         `;
-        if (!playlist) throw new Error(`Playlist with id ${id} not found`);
-        return this.mapRow(playlist);
+        return rows.map((row) => this.mapRow(row));
     }
 
     // ── Playlist ↔ Song join operations ────────────────────────────────────────
@@ -80,20 +76,20 @@ export class PlaylistRepository implements Repository<PlaylistSchema, CreatePlay
             INSERT INTO playlist_songs (id, playlist_id, song_id)
             VALUES (${id}, ${playlistId}, ${songId})
             ON CONFLICT (playlist_id, song_id) DO NOTHING
-            RETURNING *
+            RETURNING id, playlist_id AS "playlistId", song_id AS "songId"
         `;
         if (!entry) throw new Error("Song already exists in playlist or insert failed");
-        return this.mapSongRow(entry);
+        return playlistSongSchema.parse(entry);
     }
 
     async removeSong(playlistId: string, songId: string): Promise<PlaylistSongSchema> {
         const [entry] = await this.db`
             DELETE FROM playlist_songs
             WHERE playlist_id = ${playlistId} AND song_id = ${songId}
-            RETURNING *
+            RETURNING id, playlist_id AS "playlistId", song_id AS "songId"
         `;
         if (!entry) throw new Error(`Song ${songId} not found in playlist ${playlistId}`);
-        return this.mapSongRow(entry);
+        return playlistSongSchema.parse(entry);
     }
 
     async countSongs(playlistId: string): Promise<number> {
@@ -121,29 +117,7 @@ export class PlaylistRepository implements Repository<PlaylistSchema, CreatePlay
             WHERE sps.playlist_id = ${playlistId}
             LIMIT ${limit ?? null} OFFSET ${offset ?? null}
         `;
+        // Since this returns Songs, we should ideally use the songSchema here
         return rows;
-    }
-
-    // Maps DB snake_case row → camelCase PlaylistSchema
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private mapRow(row: Record<string, any>): PlaylistSchema {
-        return {
-            id: row.id as string,
-            name: row.name as string,
-            coverImageKey: row.cover_image_key as string,
-            bannerImageKey: row.banner_image_key as string,
-            createdAt: (row.created_at as Date)?.toISOString(),
-            updatedAt: (row.updated_at as Date)?.toISOString(),
-        };
-    }
-
-    // Maps DB snake_case row → camelCase PlaylistSongSchema
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private mapSongRow(row: Record<string, any>): PlaylistSongSchema {
-        return {
-            id: row.id as string,
-            playlistId: row.playlist_id as string,
-            songId: row.song_id as string,
-        };
     }
 }

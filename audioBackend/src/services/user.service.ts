@@ -5,6 +5,7 @@ import { type UserSearchHistoryRepository } from "../repository/user-search-hist
 import { type SignatureService } from "../lib/signature";
 import type { UserSchema } from "../schema/user.schema";
 import { logMethods, type Logger } from "../observability";
+import { NotFoundError } from "../errors";
 
 export class UserService {
     constructor(
@@ -22,7 +23,8 @@ export class UserService {
         return await this.userRepository.create({ id, email });
     }
 
-    async getUserById(id: string): Promise<UserSchema | null> {
+    async getUserById(id: string): Promise<UserSchema> {
+        // Repository now auto-throws NotFoundError
         return await this.userRepository.getById(id);
     }
 
@@ -32,34 +34,34 @@ export class UserService {
 
     // Favourites logic
     async addFavourite(userId: string, songId: string) {
-        const id = this.signatureService.generateSignedId();
-        return await this.favouriteRepo.create({ id, userId, songId });
+        // Repo handles ID generation internally using randomUUIDv7
+        return await this.favouriteRepo.create({ userId, songId });
     }
 
     async removeFavourite(userId: string, songId: string) {
-        return await this.favouriteRepo.remove(userId, songId);
+        return await this.favouriteRepo.deleteFavorite(userId, songId);
     }
 
-    async getFavourites(userId: string, limit?: number, offset?: number) {
+    async getFavourites(userId: string, limit: number = 20, offset: number = 0) {
         return await this.favouriteRepo.getByUserId(userId, limit, offset);
     }
 
     // History logic
-    async getHistory(userId: string, limit?: number, offset?: number) {
+    async getHistory(userId: string, limit: number = 20, offset: number = 0) {
         return await this.historyRepo.getByUserId(userId, limit, offset);
     }
 
     // Search History logic
-    async getSearchHistory(userId: string, limit?: number, offset?: number) {
+    async getSearchHistory(userId: string, limit: number = 20, offset: number = 0) {
         return await this.searchHistoryRepo.getByUserId(userId, limit, offset);
     }
 
     async saveSearchHistory(userId: string, text: string) {
-        const id = this.signatureService.generateSignedId();
-        return await this.searchHistoryRepo.create({ id, userId, searchedText: text });
+        // Repo handles ID generation internally
+        return await this.searchHistoryRepo.create({ userId, searchedText: text });
     }
 
     async clearSearchHistory(userId: string) {
-        return await this.searchHistoryRepo.clearUserHistory(userId);
+        return await this.searchHistoryRepo.clearByUserId(userId);
     }
 }

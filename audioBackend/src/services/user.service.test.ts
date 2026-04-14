@@ -12,9 +12,9 @@ describe("UserService", () => {
 
     beforeEach(() => {
         mockUserRepo = { create: vi.fn(), getById: vi.fn(), getAll: vi.fn() };
-        mockFavRepo = { create: vi.fn(), remove: vi.fn(), getByUserId: vi.fn() };
+        mockFavRepo = { create: vi.fn(), deleteFavorite: vi.fn(), getByUserId: vi.fn() };
         mockHistRepo = { create: vi.fn(), getByUserId: vi.fn() };
-        mockSearchHistRepo = { create: vi.fn(), getByUserId: vi.fn(), clearUserHistory: vi.fn() };
+        mockSearchHistRepo = { create: vi.fn(), getByUserId: vi.fn(), clearByUserId: vi.fn() };
         mockSigService = { generateSignedId: vi.fn().mockReturnValue("signed-id") };
         mockLogger = { info: vi.fn(), error: vi.fn(), debug: vi.fn(), child: vi.fn().mockReturnThis() };
 
@@ -34,18 +34,17 @@ describe("UserService", () => {
         expect(result.id).toBe("1");
     });
 
-    it("should add favourite with signed id", async () => {
-        mockFavRepo.create.mockResolvedValue({ id: "signed-id" });
+    it("should add favourite", async () => {
+        mockFavRepo.create.mockResolvedValue({ id: "1", userId: "u1", songId: "s1" });
         const result = await service.addFavourite("u1", "s1");
-        expect(result.id).toBe("signed-id");
-        expect(mockSigService.generateSignedId).toHaveBeenCalled();
+        expect(result.userId).toBe("u1");
+        // Signature service is no longer used for local IDs as they are generated in DB (UUIDv7)
     });
 
     it("should save search history", async () => {
-        mockSearchHistRepo.create.mockResolvedValue({ id: "signed-id" });
+        mockSearchHistRepo.create.mockResolvedValue({ id: "h1", userId: "u1", searchedText: "query" });
         await service.saveSearchHistory("u1", "query");
         expect(mockSearchHistRepo.create).toHaveBeenCalledWith({
-            id: "signed-id",
             userId: "u1",
             searchedText: "query"
         });

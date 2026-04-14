@@ -18,18 +18,21 @@ describe("SongRepository", () => {
         repo = new SongRepository(mockDb, mockLogger);
     });
 
+    const createMockSong = (overrides = {}) => ({
+        id: "song-1",
+        title: "Test Song",
+        artistName: "Test Artist",
+        duration: 180,
+        songKey: "songs/1.mp3",
+        imageKey: "images/1.jpg",
+        language: "en",
+        jobId: "job-1",
+        createdAt: new Date().toISOString(),
+        ...overrides
+    });
+
     it("should create a song correctly", async () => {
-        const mockSong = {
-            id: "song-1",
-            title: "Test Song",
-            artist_name: "Test Artist",
-            duration: 180,
-            song_key: "songs/1.mp3",
-            image_key: "images/1.jpg",
-            language: "en",
-            job_id: "job-1",
-            created_at: new Date()
-        };
+        const mockSong = createMockSong();
         mockDb.mockResolvedValue([mockSong]);
 
         const result = await repo.create({
@@ -49,7 +52,7 @@ describe("SongRepository", () => {
     });
 
     it("should fetch song by id", async () => {
-        const mockSong = { id: "1", title: "Song One", artist_name: "Artist" };
+        const mockSong = createMockSong({ id: "1", title: "Song One" });
         mockDb.mockResolvedValue([mockSong]);
 
         const result = await repo.getById("1");
@@ -60,8 +63,8 @@ describe("SongRepository", () => {
 
     it("should fetch songs by artist name", async () => {
         const mockSongs = [
-            { id: "1", title: "S1", artist_name: "A1" },
-            { id: "2", title: "S2", artist_name: "A1" }
+            createMockSong({ id: "1", title: "S1", artistName: "A1" }),
+            createMockSong({ id: "2", title: "S2", artistName: "A1" })
         ];
         mockDb.mockResolvedValue(mockSongs);
 

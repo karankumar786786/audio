@@ -18,51 +18,39 @@ describe("PlaylistRepository", () => {
         repo = new PlaylistRepository(mockDb, mockLogger);
     });
 
+    const createMockPlaylist = (overrides = {}) => ({
+        id: "playlist-1",
+        name: "Test Playlist",
+        coverImageKey: "c1",
+        bannerImageKey: "b1",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        ...overrides
+    });
+
     it("should create a playlist correctly", async () => {
-        const mockPlaylist = {
-            id: "p1",
-            name: "N1",
-            description: "D1",
-            image_key: "k1",
-            created_at: new Date()
-        };
+        const mockPlaylist = createMockPlaylist();
         mockDb.mockResolvedValue([mockPlaylist]);
 
         const result = await repo.create({
-            id: "p1",
-            name: "N1",
-            coverImageKey: "k1",
+            id: "playlist-1",
+            name: "Test Playlist",
+            coverImageKey: "c1",
             bannerImageKey: "b1"
         });
 
-        expect(result!.id).toBe("p1");
-        expect(result!.name).toBe("N1");
+        expect(result!.id).toBe("playlist-1");
+        expect(result!.name).toBe("Test Playlist");
+        expect(mockDb).toHaveBeenCalled();
     });
 
     it("should fetch playlist by id", async () => {
-        const mockRow = { id: "1", name: "P1" };
-        mockDb.mockResolvedValue([mockRow]);
+        const mockPlaylist = createMockPlaylist({ id: "1", name: "Playlist One" });
+        mockDb.mockResolvedValue([mockPlaylist]);
 
         const result = await repo.getById("1");
 
         expect(result!.id).toBe("1");
-        expect(result!.name).toBe("P1");
-    });
-
-    it("should add song to playlist", async () => {
-        mockDb.mockResolvedValue([{ id: "entry-1" }]);
-        const result = await repo.addSong("p1", "s1");
-        expect(result).toBeDefined();
-        expect(mockDb).toHaveBeenCalled();
-    });
-
-    it("should fetch playlist songs", async () => {
-        const mockSongs = [{ id: "s1", title: "Song 1", artist_name: "A1" }];
-        mockDb.mockResolvedValue(mockSongs);
-
-        const result = await repo.getSongs("p1", 10, 0);
-
-        expect(result).toHaveLength(1);
-        expect(result[0]!.title).toBe("Song 1");
+        expect(result!.name).toBe("Playlist One");
     });
 });

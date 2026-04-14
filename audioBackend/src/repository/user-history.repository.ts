@@ -1,87 +1,43 @@
+import { randomUUIDv7 } from "bun";
 import type { Database } from "../infra/db";
-import { type UserHistorySchema } from "../schema/userHistory.schema";
-import type { Repository } from "../type/repository.type";
+import { userHistorySchema, type UserHistorySchema } from "../schema/userHistory.schema";
+import { BaseRepository } from "./base.repository";
 import { logMethods, type Logger } from "../observability";
 
-type CreateHistoryData = Omit<UserHistorySchema, "listenedAt">;
-type UpdateHistoryData = Partial<CreateHistoryData>;
+type CreateHistoryData = Omit<UserHistorySchema, "id" | "listenedAt">;
 
-export class UserHistoryRepository implements Repository<UserHistorySchema, CreateHistoryData, UpdateHistoryData> {
+export class UserHistoryRepository extends BaseRepository<UserHistorySchema, CreateHistoryData, any> {
     constructor(
-        private readonly db: Database,
-        private readonly logger: Logger
+        db: Database,
+        logger: Logger
     ) {
+        super(db, "user_histories", userHistorySchema, logger);
         logMethods(this, this.logger);
     }
 
     async create(data: CreateHistoryData): Promise<UserHistorySchema> {
+        const id = randomUUIDv7();
         const [entry] = await this.db`
-            INSERT INTO user_history (id, user_id, song_id, part)
-            VALUES (
-                ${data.id},
-                ${data.userId},
-                ${data.songId},
-                ${data.part}
-            )
-            RETURNING *
+            INSERT INTO user_histories (id, user_id, song_id, part)
+            VALUES (${id}, ${data.userId}, ${data.songId}, ${data.part})
+            RETURNING id, user_id AS "userId", song_id AS "songId", part, listened_at AS "listenedAt"
         `;
-        if (!entry) throw new Error("Failed to create user history entry");
+        if (!entry) throw new Error("Failed to record history");
         return this.mapRow(entry);
     }
 
-    async getById(id: string): Promise<UserHistorySchema> {
-        const [entry] = await this.db`
-            SELECT * FROM user_history WHERE id = ${id}
-        `;
-        if (!entry) throw new Error(`User history entry with id ${id} not found`);
-        return this.mapRow(entry);
+    async update(): Promise<never> {
+        throw new Error("Update not supported for history");
     }
 
-    async countByUserId(userId: string): Promise<number> {
-        const [row] = await this.db`
-            SELECT count(*)::int as count FROM user_history WHERE user_id = ${userId}
-        `;
-        return row?.count || 0;
-    }
-
-    /** Returns paginated listen history for a given user, newest first. */
-    async getByUserId(userId: string, limit?: number, offset?: number): Promise<UserHistorySchema[]> {
+    async getByUserId(userId: string, limit: number, offset: number): Promise<UserHistorySchema[]> {
         const rows = await this.db`
-            SELECT * FROM user_history 
-            WHERE user_id = ${userId} 
+            SELECT id, user_id AS "userId", song_id AS "songId", part, listened_at AS "listenedAt"
+            FROM user_histories
+            WHERE user_id = ${userId}
             ORDER BY listened_at DESC
-            LIMIT ${limit ?? null} OFFSET ${offset ?? null}
+            LIMIT ${limit} OFFSET ${offset}
         `;
         return rows.map((row) => this.mapRow(row));
-    }
-
-    async getAll(): Promise<UserHistorySchema[]> {
-        const rows = await this.db`SELECT * FROM user_history ORDER BY listened_at DESC`;
-        return rows.map((row) => this.mapRow(row));
-    }
-
-    /** History entries are immutable — update is a no-op that returns the existing entry. */
-    async update(id: string, _data: UpdateHistoryData): Promise<UserHistorySchema> {
-        return this.getById(id);
-    }
-
-    async delete(id: string): Promise<UserHistorySchema> {
-        const [entry] = await this.db`
-            DELETE FROM user_history WHERE id = ${id} RETURNING *
-        `;
-        if (!entry) throw new Error(`User history entry with id ${id} not found`);
-        return this.mapRow(entry);
-    }
-
-    // Maps DB snake_case row → camelCase UserHistorySchema
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private mapRow(row: Record<string, any>): UserHistorySchema {
-        return {
-            id: row.id as string,
-            userId: row.user_id as string,
-            songId: row.song_id as string,
-            part: row.part as number,
-            listenedAt: (row.listened_at as Date)?.toISOString(),
-        };
     }
 }
