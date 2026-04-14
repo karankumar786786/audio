@@ -9,15 +9,15 @@ import { asyncHandler } from "../utils/asyncHandler";
 
 export const createPlaylist = asyncHandler(async (req: Request, res: Response) => {
     const data: CreatePlaylistSchema = req.body;
-    await playlistService.createPlaylist(data);
-    return res.status(201).json(new ApiResponse(201, "Playlist created"));
+    const playlist = await playlistService.createPlaylist(data);
+    return res.status(201).json(new ApiResponse(201, "Playlist created", playlist));
 })
 
 
 export const deletePlaylist = asyncHandler(async (req: Request, res: Response) => {
     const id: string = req.params.id as string;
-    await playlistService.deletePlaylist(id);
-    return res.status(200).json(new ApiResponse(200, "Playlist deleted"));
+    const playlist = await playlistService.deletePlaylist(id);
+    return res.status(200).json(new ApiResponse(200, "Playlist deleted", playlist));
 })
 
 
@@ -39,14 +39,14 @@ export const getPlaylists = asyncHandler(async (req: Request, res: Response) => 
 
 export const addSongInPlaylist = asyncHandler(async (req: Request, res: Response) => {
     const data: PlaylistSongSchema = req.body;
-    await playlistService.addSongToPlaylist(data);
-    return res.status(201).json(new ApiResponse(201, "Song added to playlist"));
+    const entry = await playlistService.addSongToPlaylist(data);
+    return res.status(201).json(new ApiResponse(201, "Song added to playlist", entry));
 })
 
 export const deleteSongInPlaylist = asyncHandler(async (req: Request, res: Response) => {
     const data: PlaylistSongSchema = req.body;
-    await playlistService.removeSongFromPlaylist(data);
-    return res.status(200).json(new ApiResponse(200, "Song removed from playlist"));
+    const entry = await playlistService.removeSongFromPlaylist(data);
+    return res.status(200).json(new ApiResponse(200, "Song removed from playlist", entry));
 })
 
 

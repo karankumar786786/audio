@@ -1,46 +1,30 @@
-import { type Request, type Response, type NextFunction } from "express";
+import { type Request, type Response } from "express";
 import { songService } from "../infra";
 import { ApiResponse } from "../utils/ApiResponse";
 import { parsePagination, type PaginatedResult, type PaginationParams } from "../types/pagination.type";
 import type { SongSchema } from "../schema/songs.schema";
+import { asyncHandler } from "../utils/asyncHandler";
 
+export const createSong = asyncHandler(async (req: Request, res: Response) => {
+    const result: { id: string, jobId: string, status: string } = await songService.createSong(req.body);
+    return res.status(202).json(new ApiResponse(202, "Song processing initiated", result));
+});
 
-export async function createSong(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-    try {
-        const result:{ id: string, jobId: string, status: string } = await songService.createSong(req.body);
-        return res.status(202).json(new ApiResponse(202, "Song processing initiated", result));
-    } catch (error: any) {
-        next(error);
-    }
-}
+export const updateSong = asyncHandler(async (req: Request, res: Response) => {
+    const id: string = req.params.id as string;
+    const song: SongSchema = await songService.updateSong(id, req.body);
+    return res.status(200).json(new ApiResponse(200, "Song updated", song));
+});
 
-export async function updateSong(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-    try {
-        const id:string = req.params.id as string;
-        const song:SongSchema = await songService.updateSong(id, req.body);
-        return res.status(200).json(new ApiResponse(200, "Song updated", song));
-    } catch (error: any) {
-        next(error);
-    }
-}
+export const deleteSong = asyncHandler(async (req: Request, res: Response) => {
+    const id: string = req.params.id as string;
+    const song: SongSchema = await songService.deleteSong(id);
+    return res.status(200).json(new ApiResponse(200, "Song deleted", song));
+});
 
-export async function deleteSong(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-    try {
-        const id:string = req.params.id as string;
-        const song:SongSchema = await songService.deleteSong(id);
-        return res.status(200).json(new ApiResponse(200, "Song deleted", song));
-    } catch (error: any) {
-        next(error);
-    }
-}
-
-export async function getSongs(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-    try {
-        const params:PaginationParams = parsePagination(req.query);
-        const result:PaginatedResult<SongSchema> = await songService.getSongs(params);
-        return res.status(200).json(new ApiResponse(200, "Songs fetched", result));
-    } catch (error: any) {
-        next(error);
-    }
-}
+export const getSongs = asyncHandler(async (req: Request, res: Response) => {
+    const params: PaginationParams = parsePagination(req.query);
+    const result: PaginatedResult<SongSchema> = await songService.getSongs(params);
+    return res.status(200).json(new ApiResponse(200, "Songs fetched", result));
+});
 

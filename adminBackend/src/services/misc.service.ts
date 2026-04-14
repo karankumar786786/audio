@@ -1,9 +1,7 @@
-import type { Logger } from "inngest";
+import type { Logger } from "../observablity";
 import type { StorageService } from "../lib/storage";
 import type ImageKit from "imagekit";
 import type { SignatureService } from "../lib/signature";
-import {config} from "dotenv";
-config();
 
 export class MiscService {
     /**
@@ -28,7 +26,7 @@ export class MiscService {
 
     async getPresignedUrlImage(): Promise<{ token: string, expire: number, signature: string, tempKey: string }> {
         const tempKey: string = this.signatureService.generateSignedId();
-        const authParams: { token: string, expire: number, signature: string, } = this.imageKitClient.getAuthenticationParameters();
+        const authParams = this.imageKitClient.getAuthenticationParameters();
         return {
             tempKey,
             ...authParams

@@ -14,7 +14,7 @@ export class SongRepository implements Repository<SongSchema, CreateSongData, Up
         private readonly logger: Logger
     ) {}
 
-    async create(data: CreateSongData): Promise<void> {
+    async create(data: CreateSongData): Promise<SongSchema> {
         const [song] = await this.db`
             INSERT INTO songs (id, title, artist_name, duration, song_key, image_key, language, job_id)
             VALUES (
@@ -27,10 +27,10 @@ export class SongRepository implements Repository<SongSchema, CreateSongData, Up
                 ${data.language},
                 ${data.jobId}
             )
-            RETURNING id
+            RETURNING *
         `;
         if (!song) throw new Error("Failed to create song");
-        return;
+        return this.mapRow(song);
     }
 
     async getById(id: string): Promise<SongSchema> {
@@ -55,7 +55,7 @@ export class SongRepository implements Repository<SongSchema, CreateSongData, Up
         return songs.map((row) => this.mapRow(row));
     }
 
-    async update(id: string, data: UpdateSongData): Promise<void> {
+    async update(id: string, data: UpdateSongData): Promise<SongSchema> {
         const [song] = await this.db`
             UPDATE songs
             SET
@@ -63,10 +63,10 @@ export class SongRepository implements Repository<SongSchema, CreateSongData, Up
                 artist_name = COALESCE(${data.artistName ?? null}, artist_name),
                 image_key   = COALESCE(${data.imageKey ?? null}, image_key)
             WHERE id = ${id}
-            RETURNING id
+            RETURNING *
         `;
         if (!song) throw new NotFoundError(`Song with id ${id} not found`);
-        return;
+        return this.mapRow(song);
     }
 
     async countByArtistName(artistName: string): Promise<number> {
@@ -84,13 +84,13 @@ export class SongRepository implements Repository<SongSchema, CreateSongData, Up
         return rows.map((row) => this.mapRow(row));
     }
 
-    async delete(id: string): Promise<void> {
+    async delete(id: string): Promise<SongSchema> {
         const [song] = await this.db`
-            DELETE FROM songs WHERE id = ${id} RETURNING id
+            DELETE FROM songs WHERE id = ${id} RETURNING *
         `;
 
         if (!song) throw new NotFoundError(`Song with id ${id} not found`);
-        return;
+        return this.mapRow(song);
     }
 
     // Maps DB snake_case row → camelCase SongSchema

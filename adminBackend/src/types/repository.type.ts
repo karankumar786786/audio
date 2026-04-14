@@ -8,8 +8,8 @@ export interface Repository<
     CreateInput = Omit<T, "id" | "createdAt">,
     UpdateInput = Partial<CreateInput>
 > {
-    create(data: CreateInput): Promise<void>;
+    create(data: CreateInput): Promise<T>;
     getById(id: string): Promise<T>;
-    update(id: string, data: UpdateInput): Promise<void>;
-    delete(id: string): Promise<void>;
+    update(id: string, data: UpdateInput): Promise<T>;
+    delete(id: string): Promise<T>;
 }

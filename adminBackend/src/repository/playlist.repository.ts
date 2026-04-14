@@ -16,14 +16,14 @@ export class PlaylistRepository implements Repository<PlaylistSchema, CreatePlay
         private readonly signatureService:SignatureService,
     ) {}
 
-    async create(data: CreatePlaylistData): Promise<void> {
+    async create(data: CreatePlaylistData): Promise<PlaylistSchema> {
         const [playlist] = await this.db`
             INSERT INTO playlists (id, name, cover_image_key, banner_image_key)
             VALUES (${data.id}, ${data.name}, ${data.coverImageKey}, ${data.bannerImageKey})
-            RETURNING id
+            RETURNING *
         `;
         if (!playlist) throw new Error("Failed to create playlist");
-        return;
+        return this.mapRow(playlist);
     }
 
     async getById(id: string): Promise<PlaylistSchema> {
@@ -48,7 +48,7 @@ export class PlaylistRepository implements Repository<PlaylistSchema, CreatePlay
         return rows.map((row) => this.mapRow(row));
     }
 
-    async update(id: string, data: UpdatePlaylistData): Promise<void> {
+    async update(id: string, data: UpdatePlaylistData): Promise<PlaylistSchema> {
         const [playlist] = await this.db`
             UPDATE playlists
             SET
@@ -57,42 +57,42 @@ export class PlaylistRepository implements Repository<PlaylistSchema, CreatePlay
                 banner_image_key = COALESCE(${data.bannerImageKey ?? null}, banner_image_key),
                 updated_at       = NOW()
             WHERE id = ${id}
-            RETURNING id
+            RETURNING *
         `;
         if (!playlist) throw new NotFoundError(`Playlist with id ${id} not found`);
-        return;
+        return this.mapRow(playlist);
     }
 
-    async delete(id: string): Promise<void> {
+    async delete(id: string): Promise<PlaylistSchema> {
         const [playlist] = await this.db`
-            DELETE FROM playlists WHERE id = ${id} RETURNING id
+            DELETE FROM playlists WHERE id = ${id} RETURNING *
         `;
         if (!playlist) throw new NotFoundError(`Playlist with id ${id} not found`);
-        return ;
+        return this.mapRow(playlist);
     }
 
     // ── Playlist ↔ Song join operations ────────────────────────────────────────
 
-    async addSong(data:PlaylistSongSchema): Promise<void> {
+    async addSong(data:PlaylistSongSchema): Promise<PlaylistSongSchema> {
         const id = this.signatureService.generateSignedId();
         const [entry] = await this.db`
             INSERT INTO playlist_songs (id, playlist_id, song_id)
             VALUES (${id}, ${data.playlistId}, ${data.songId})
             ON CONFLICT (playlist_id, song_id) DO NOTHING
-            RETURNING id
+            RETURNING *
         `;
         if (!entry) throw new Error("Song already exists in playlist or insert failed");
-        return;
+        return this.mapSongRow(entry);
     }
 
-    async removeSong(data:PlaylistSongSchema): Promise<void> {
+    async removeSong(data:PlaylistSongSchema): Promise<PlaylistSongSchema> {
         const [entry] = await this.db`
             DELETE FROM playlist_songs
             WHERE playlist_id = ${data.playlistId} AND song_id = ${data.songId}
-            RETURNING id
+            RETURNING *
         `;
         if (!entry) throw new NotFoundError(`Song ${data.songId} not found in playlist ${data.playlistId}`);
-        return;
+        return this.mapSongRow(entry);
     }
 
     async countSongs(playlistId: string): Promise<number> {
