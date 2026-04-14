@@ -1,6 +1,7 @@
 import type { Inngest } from "inngest";
 import type { RecommendationService } from "../lib/recommendation";
-import type { SearchService } from "../lib/search";
+import type { SearchRecord, SearchService } from "../lib/search";
+
 import type { SignatureService } from "../lib/signature";
 import { logMethods, type Logger } from "../observablity";
 import type { SongProcessingJobRepository, SongRepository } from "../repository";
@@ -71,7 +72,7 @@ export class SongService {
         const song:SongSchema = await this.songRepository.update(id, data);
         this.logger.info({ id }, "song updated in repository");
         try {
-            await this.searchService.save(song as any);
+            await this.searchService.save(song as SearchRecord);
             this.logger.info({ id }, "song updated in search index");
         } catch (err) {
             this.logger.error({ err, id }, "failed to update search index for song");

@@ -20,5 +20,5 @@ export interface StorageService {
 
     getPresignedUrl(bucket: string, key: string): Promise<string>;
 
-    getClient(): any;
+    getClient(): unknown;
 }

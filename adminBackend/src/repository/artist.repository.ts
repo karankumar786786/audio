@@ -87,9 +87,7 @@ export class ArtistRepository implements Repository<ArtistSchema, CreateArtistDa
         return this.mapRow(artist);
     }
 
-    // Maps DB snake_case row → camelCase ArtistSchema
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private mapRow(row: Record<string, any>): ArtistSchema {
+    private mapRow(row: Record<string, unknown>): ArtistSchema {
         return {
             id: row.id as string,
             name: row.name as string,

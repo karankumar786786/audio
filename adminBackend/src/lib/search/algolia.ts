@@ -1,14 +1,16 @@
 import { algoliasearch } from "algoliasearch";
 import type { SearchClient } from "algoliasearch";
 import type { SearchRecord, SearchService } from "./index.types";
+import type { Logger } from "../../observablity";
+
 
 export class AlgoliaSearchService implements SearchService<SearchRecord> {
 
     private readonly client: SearchClient;
     private readonly indexName: string;
-    private readonly logger: any;
+    private readonly logger: Logger;
 
-    constructor(appId: string, apiKey: string, indexName: string, logger: any) {
+    constructor(appId: string, apiKey: string, indexName: string, logger: Logger) {
         this.client = algoliasearch(appId, apiKey);
         this.indexName = indexName;
         this.logger = logger;

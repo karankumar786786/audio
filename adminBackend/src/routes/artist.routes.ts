@@ -6,7 +6,7 @@ import {
     getArtistById,
     getSongsOfArtist,
     updateArtist,
-} from "../controllers/artistContoller";
+} from "../controllers/artist.controller";
 import { validate } from "../middlewares/validate.middleware";
 import { artistSchema, createArtistSchema ,updateArtistSchema} from "../schema/artist.schema";
 

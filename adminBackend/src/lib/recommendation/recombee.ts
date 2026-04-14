@@ -1,5 +1,7 @@
 import * as recombee from "recombee-api-client";
 import type { RecommendationSchema, RecommendationService } from "./index.types";
+import type { Logger } from "../../observablity";
+
 
 const { ApiClient, requests } = recombee;
 
@@ -27,16 +29,16 @@ const SCHEMA_FIELDS: Record<
   language: "string",
 };
 
-export class RecommbeeRecommendationService implements RecommendationService<RecommendationSchema>{
+export class RecommbeeRecommendationService implements RecommendationService<RecommendationSchema> {
   private readonly client: InstanceType<typeof ApiClient>;
   private readonly DEFAULT_TIMEOUT = 10_000;
-  private readonly logger: any;
+  private readonly logger: Logger;
 
   constructor(
     databaseId: string,
     privateToken: string,
     region: string = "us-west",
-    logger: any
+    logger: Logger
   ) {
     this.client = new ApiClient(databaseId, privateToken, { region });
     this.logger = logger;
@@ -47,7 +49,7 @@ export class RecommbeeRecommendationService implements RecommendationService<Rec
   // ---------------------------------------------------------------------------
 
   private async send<T>(req: { timeout: number } & object): Promise<T> {
-    (req as { timeout: number }).timeout = this.DEFAULT_TIMEOUT;
+    req.timeout = this.DEFAULT_TIMEOUT;
     return (await this.client.send(req as any)) as T;
   }
 

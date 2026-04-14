@@ -4,29 +4,28 @@ import type { Logger } from "./index";
 import type { Logger as PinoLoggerType } from "pino";
 
 export class AppLogger implements Logger {
-    constructor(private readonly baseLogger: PinoLoggerType = PinoLogger as any) {}
-
-    private enrich(message: any) {
+    constructor(private readonly baseLogger: PinoLoggerType = PinoLogger as unknown as PinoLoggerType) {}
+    private enrich(message: unknown) {
         const traceId = getTraceId();
         if (typeof message === "object" && message !== null) {
-            return { traceId, ...message };
+            return { traceId, ...(message as object) };
         }
         return { traceId, msg: message };
     }
-    info(message: any, ...args: any[]) {
-        this.baseLogger.info(this.enrich(message), ...args);
+    info(message: unknown, ...args: any[]) {
+        this.baseLogger.info(this.enrich(message) as object, ...args);
     }
 
-    warn(message: any, ...args: any[]) {
-        this.baseLogger.warn(this.enrich(message), ...args);
+    warn(message: unknown, ...args: any[]) {
+        this.baseLogger.warn(this.enrich(message) as object, ...args);
     }
 
-    error(message: any, ...args: any[]) {
-        this.baseLogger.error(this.enrich(message), ...args);
+    error(message: unknown, ...args: any[]) {
+        this.baseLogger.error(this.enrich(message) as object, ...args);
     }
 
-    debug(message: any, ...args: any[]) {
-        this.baseLogger.debug(this.enrich(message), ...args);
+    debug(message: unknown, ...args: any[]) {
+        this.baseLogger.debug(this.enrich(message) as object, ...args);
     }
 
     child(bindings: any): Logger {

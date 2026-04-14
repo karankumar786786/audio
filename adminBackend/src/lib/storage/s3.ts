@@ -9,12 +9,14 @@ import {
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import type { StorageService } from "./index.types";
+import type { Logger } from "../../observablity";
+
 
 export class S3StorageService implements StorageService {
-    private readonly logger: any;
+    private readonly logger: Logger;
     private readonly client: S3Client;
 
-    constructor(region: string, accessKeyId: string, secretAccessKey: string, logger: any) {
+    constructor(region: string, accessKeyId: string, secretAccessKey: string, logger: Logger) {
         this.client = new S3Client({
             region,
             credentials: { accessKeyId, secretAccessKey },
@@ -44,9 +46,10 @@ export class S3StorageService implements StorageService {
                     CacheControl: "no-transform"
                 }));
                 return;
-            } catch (err: any) {
+            } catch (err: unknown) {
                 lastError = err;
-                this.logger.warn(err, `⚠️  Upload attempt ${i + 1} failed for ${key}: ${err.message}`);
+                const message = err instanceof Error ? err.message : String(err);
+                this.logger.warn(err, `⚠️  Upload attempt ${i + 1} failed for ${key}: ${message}`);
                 if (i < maxRetries - 1) {
                     await new Promise(r => setTimeout(r, 1000 * (i + 1))); // Exponential backoff
                 }

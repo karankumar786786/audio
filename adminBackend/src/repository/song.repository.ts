@@ -101,9 +101,7 @@ export class SongRepository implements Repository<SongSchema, CreateSongData, Up
         return this.mapRow(song);
     }
 
-    // Maps DB snake_case row → camelCase SongSchema
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private mapRow(row: Record<string, any>): SongSchema {
+    private mapRow(row: Record<string, unknown>): SongSchema {
         return {
             id: row.id as string,
             title: row.title as string,

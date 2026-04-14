@@ -32,5 +32,4 @@ export class MiscService {
             ...authParams
         }
     }
-
 }

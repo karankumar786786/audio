@@ -1,4 +1,5 @@
-import type { SearchService } from "../lib/search";
+import type { SearchRecord, SearchService } from "../lib/search";
+
 import type { SignatureService } from "../lib/signature";
 import { logMethods, type Logger } from "../observablity";
 import type { ArtistRepository, SongRepository } from "../repository";
@@ -22,8 +23,6 @@ export class ArtistService {
         const id: string = this.signatureService.generateSignedId();
         const artist: ArtistSchema = await this.artistRepository.create({ id, ...data });
         this.logger.info({ id }, "artist created in repository");
-
-        // Index in Algolia for search
         try {
             await this.searchService.save({
                 id,
@@ -32,7 +31,7 @@ export class ArtistService {
                 dob: data.dob,
                 coverImageKey: data.coverImageKey,
                 bannerImageKey: data.bannerImageKey
-            } as any);
+            });
         } catch (_) {
             this.logger.info("saving in searchService failed");
          }
@@ -42,7 +41,6 @@ export class ArtistService {
     async getArtists(params: PaginationParams): Promise<PaginatedResult<ArtistSchema>> {
         this.logger.debug({ params }, "getArtists starting");
         const offset: number = (params.page - 1) * params.limit;
-
         const [data, total] = await Promise.all([
             this.artistRepository.getAll(params.limit, offset),
             this.artistRepository.count()
@@ -63,14 +61,11 @@ export class ArtistService {
         this.signatureService.verifyId(id);
         const artist = await this.artistRepository.update(id, data);
         this.logger.info({ id }, "artist updated in repository");
-
-        // Best effort search update
         try {
-            await this.searchService.save(artist as any);
+            await this.searchService.save(artist as SearchRecord);
         } catch (err) {
             this.logger.error({ err, id }, "failed to update search index after artist update");
         }
-
         return artist;
     }
 
@@ -79,7 +74,6 @@ export class ArtistService {
         this.signatureService.verifyId(id);
         const artist: ArtistSchema = await this.artistRepository.delete(id);
         this.logger.info({ id }, "artist deleted from repository");
-        
         try { 
             await this.searchService.delete(id); 
             this.logger.info({ id }, "artist deleted from search index");

@@ -89,7 +89,7 @@ export class PlaylistRepository implements Repository<PlaylistSchema, CreatePlay
             RETURNING *
         `;
         if (entry.length === 0) throw new ConflictError("Song already exists in playlist");
-        return this.mapSongRow(entry);
+        return this.mapSongRow(entry[0] as Record<string, unknown>);
     }
 
     async removeSong(data:PlaylistSongSchema): Promise<PlaylistSongSchema> {
@@ -129,12 +129,10 @@ export class PlaylistRepository implements Repository<PlaylistSchema, CreatePlay
             WHERE sps.playlist_id = ${playlistId}
             LIMIT ${limit ?? null} OFFSET ${offset ?? null}
         `;
-        return rows as any as SongSchema[];
+        return rows as unknown as SongSchema[];
     }
 
-    // Maps DB snake_case row → camelCase PlaylistSchema
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private mapRow(row: Record<string, any>): PlaylistSchema {
+    private mapRow(row: Record<string, unknown>): PlaylistSchema {
         return {
             id: row.id as string,
             name: row.name as string,
@@ -145,9 +143,7 @@ export class PlaylistRepository implements Repository<PlaylistSchema, CreatePlay
         };
     }
 
-    // Maps DB snake_case row → camelCase PlaylistSongSchema
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private mapSongRow(row: Record<string, any>): PlaylistSongSchema {
+    private mapSongRow(row: Record<string, unknown>): PlaylistSongSchema {
         return {
             id: row.id as string,
             playlistId: row.playlist_id as string,

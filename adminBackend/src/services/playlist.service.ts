@@ -1,4 +1,5 @@
-import type { SearchService } from "../lib/search";
+import type { SearchRecord, SearchService } from "../lib/search";
+
 import type { SignatureService } from "../lib/signature";
 import { logMethods, type Logger } from "../observablity";
 import type { PlaylistRepository } from "../repository";
@@ -24,7 +25,7 @@ export class PlaylistService {
         const playlist:PlaylistSchema = await this.playlistRepository.create({ id, ...data });
         this.logger.info({ id }, "playlist created in repository");
         try {
-            await this.searchService.save({ id, ...data } as any);
+            await this.searchService.save({ id, ...data } as SearchRecord);
             this.logger.debug({ id }, "playlist saved in search service");
         } catch (_) {
             this.logger.error({ id }, "error in saving search service");

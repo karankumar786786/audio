@@ -7,7 +7,7 @@ import {
     getPlaylists,
     getPlaylistById,
     getSongsOfPlaylist,
-} from "../controllers/playlistController";
+} from "../controllers/playlist.controller";
 import { validate } from "../middlewares/validate.middleware";
 import { createPlaylistInput, playlistSongInput } from "../schema/playlist.schema";
 
