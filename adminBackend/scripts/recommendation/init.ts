@@ -1,7 +1,7 @@
 import { config } from "dotenv";
 config();
 
-import { recommendationService } from "../../src/infra";
+import { recommendationService } from "../../../audioBackend/src/infra";
 
 (async () => {
     try {

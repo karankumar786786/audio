@@ -1,4 +1,5 @@
 import { neon, type NeonQueryFunction } from "@neondatabase/serverless";
 
-export const db = neon(`${process.env.DATABASE_URL}`);
+const connectionString = process.env.DATABASE_URL_TEST || process.env.DATABASE_URL;
+export const db = neon(`${connectionString}`);
 export type Database = NeonQueryFunction<false, false>;

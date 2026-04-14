@@ -1,7 +1,7 @@
 import { config } from "dotenv";
 config();
 
-import { recommendationService } from "../../src/infra";
+import { recommendationService } from "../../../audioBackend/src/infra";
 import { sleepSync } from "bun";
 
 (async () => {
@@ -20,7 +20,7 @@ import { sleepSync } from "bun";
         console.log("⏳ Waiting for database erasure to complete (this can take several minutes)...");
         let attempts = 0;
         const maxAttempts = 60; // Increased to 60 attempts (5 minutes total)
-        
+
         while (attempts < maxAttempts) {
             try {
                 // Try to set up schema. If it fails with 422, it means erasure is still going.
@@ -39,7 +39,7 @@ import { sleepSync } from "bun";
                 }
             }
         }
-        
+
         if (attempts >= maxAttempts) {
             throw new Error("\n❌ Timed out waiting for Recombee database erasure (exceeded 5 minutes). Please try running the script again in a moment.");
         }

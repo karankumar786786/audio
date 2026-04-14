@@ -14,7 +14,7 @@ import "./docs/openapi-routes";
 
 
 
-const app = express();
+export const app = express();
 
 const PORT = process.env.PORT || 4001;
 
@@ -39,6 +39,9 @@ app.use((req, res, next) => {
 // Global Error Handler
 app.use(errorHandler);
 
-app.listen(Number(PORT),async ()=>{
-    logger.info(`Admin Backend server started at port ${PORT}`);
-})
+if (process.env.NODE_ENV !== "test") {
+    app.listen(Number(PORT), async () => {
+        logger.info(`Admin Backend server started at port ${PORT}`);
+    });
+}
+

@@ -1,9 +1,14 @@
+import { z } from "zod";
 import { OpenAPIRegistry, OpenApiGeneratorV3 } from "@asteasolutions/zod-to-openapi";
 import { extendZodWithOpenApi } from "@asteasolutions/zod-to-openapi";
-import { z } from "zod";
 
 // Initialize Zod with OpenAPI support
-extendZodWithOpenApi(z);
+if (typeof z !== 'undefined') {
+  extendZodWithOpenApi(z);
+} else {
+  console.error("CRITICAL: Zod import failed in openapi-registry.ts");
+}
+
 
 export const registry = new OpenAPIRegistry();
 

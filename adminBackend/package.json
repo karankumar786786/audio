@@ -4,14 +4,36 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "bun --watch src/index.ts"
+    "dev": "bun --watch src/index.ts",
+    "inngest": "npx inngest-cli@latest dev",
+    "db:init": "bun run scripts/db/init.ts",
+    "db:clean": "bun run scripts/db/clean.ts",
+    "db:deep-clean": "bun run scripts/db/deep-clean.ts",
+    "recommendation:init": "bun run scripts/recommendation/init.ts",
+    "recommendation:clean": "bun run scripts/recommendation/clean.ts",
+    "recommendation:deep-clean": "bun run scripts/recommendation/deep-clean.ts",
+    "search:init": "bun run scripts/search/init.ts",
+    "search:clean": "bun run scripts/search/clean.ts",
+    "search:deep-clean": "bun run scripts/search/deep-clean.ts",
+    "init:all": "bun db:init && bun recommendation:init && bun search:init",
+    "clean:all": "bun db:clean && bun recommendation:clean && bun search:clean",
+    "deep-clean:all": "bun db:deep-clean && bun recommendation:deep-clean && bun search:deep-clean",
+    "test": "vitest",
+    "test:unit": "vitest run src/services",
+    "test:integration": "vitest run src/repository",
+    "test:e2e": "vitest run tests/e2e"
   },
   "devDependencies": {
     "@types/bun": "latest",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/pino-pretty": "^5.0.0",
-    "@types/swagger-ui-express": "^4.1.8"
+    "@types/supertest": "^7.2.0",
+    "@types/swagger-ui-express": "^4.1.8",
+    "@vitest/coverage-v8": "^4.1.4",
+    "msw": "^2.13.3",
+    "supertest": "^7.2.2",
+    "vitest": "^4.1.4"
   },
   "peerDependencies": {
     "typescript": "^5"

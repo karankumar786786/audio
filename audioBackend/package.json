@@ -4,20 +4,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "bun --watch src/index.ts",
-    "inngest": "npx inngest-cli@latest dev",
-    "db:init": "bun run scripts/db/init.ts",
-    "db:clean": "bun run scripts/db/clean.ts",
-    "db:deep-clean": "bun run scripts/db/deep-clean.ts",
-    "recommendation:init": "bun run scripts/recommendation/init.ts",
-    "recommendation:clean": "bun run scripts/recommendation/clean.ts",
-    "recommendation:deep-clean": "bun run scripts/recommendation/deep-clean.ts",
-    "search:init": "bun run scripts/search/init.ts",
-    "search:clean": "bun run scripts/search/clean.ts",
-    "search:deep-clean": "bun run scripts/search/deep-clean.ts",
-    "init:all": "bun db:init && bun recommendation:init && bun search:init",
-    "clean:all": "bun db:clean && bun recommendation:clean && bun search:clean",
-    "deep-clean:all": "bun db:deep-clean && bun recommendation:deep-clean && bun search:deep-clean"
+    "dev": "bun --watch src/index.ts"
   },
   "devDependencies": {
     "@types/bun": "latest",
