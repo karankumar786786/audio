@@ -7,7 +7,7 @@ import {imagekitClient} from "../infra";
  * Controller for miscellaneous operations like generating pre-signed URLs.
  */
 
-export async function getPreSignedUrlForSongs(req: Request, res: Response, next: NextFunction) {
+export async function getPreSignedUrlForSongs(req: Request, res: Response, next: NextFunction) :Promise<Response | void>{
     try {
         const tempKey = signatureService.generateSignedId();
         const url = await storageService.getPresignedUrl(process.env.TEMP_BUCKET_NAME!, tempKey);
@@ -17,7 +17,7 @@ export async function getPreSignedUrlForSongs(req: Request, res: Response, next:
     }
 }
 
-export async function getPreSignedUrlForImage(req: Request, res: Response, next: NextFunction) {
+export async function getPreSignedUrlForImage(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
     try {
         const tempKey = signatureService.generateSignedId();
         const authParams = imagekitClient.getAuthenticationParameters();

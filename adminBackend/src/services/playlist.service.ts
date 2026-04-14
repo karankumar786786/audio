@@ -3,14 +3,15 @@ import {
     signatureService,
     searchService,
 } from "../infra";
+import type { CreatePlaylistSchema } from "../schema/playlist.schema";
 import type { PaginationParams, PaginatedResult } from "../types/pagination.type";
 import { buildPaginatedResult } from "../types/pagination.type";
 
 export class PlaylistService {
     // ── Playlists ───────────────────────────────────────────────────────────────
 
-    async createPlaylist(data: any) {
-        const id = signatureService.generateSignedId();
+    async createPlaylist(data: CreatePlaylistSchema) {
+        const id:string = signatureService.generateSignedId();
         const playlist = await playlistRepository.create({ id, ...data });
 
         try {

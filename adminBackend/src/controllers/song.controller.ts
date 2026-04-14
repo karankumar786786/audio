@@ -3,7 +3,7 @@ import { signatureService, songService } from "../infra";
 import { ApiResponse } from "../utils/ApiResponse";
 import { parsePagination } from "../types/pagination.type";
 
-export async function createSong(req: Request, res: Response, next: NextFunction) {
+export async function createSong(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
     try {
         const result = await songService.createSong(req.body);
         return res.status(202).json(new ApiResponse(202, "Song processing initiated", result));
@@ -12,7 +12,7 @@ export async function createSong(req: Request, res: Response, next: NextFunction
     }
 }
 
-export async function updateSong(req: Request, res: Response, next: NextFunction) {
+export async function updateSong(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
     try {
         const id = req.params.id as string;
         signatureService.verifyId(id,"songId");
@@ -23,7 +23,7 @@ export async function updateSong(req: Request, res: Response, next: NextFunction
     }
 }
 
-export async function deleteSong(req: Request, res: Response, next: NextFunction) {
+export async function deleteSong(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
     try {
         const id = req.params.id as string;
         signatureService.verifyId(id,"songId");
@@ -34,7 +34,7 @@ export async function deleteSong(req: Request, res: Response, next: NextFunction
     }
 }
 
-export async function getSongs(req: Request, res: Response, next: NextFunction) {
+export async function getSongs(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
     try {
         const params = parsePagination(req.query);
         const result = await songService.getSongs(params);

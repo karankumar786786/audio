@@ -8,13 +8,13 @@ import {
     updateArtist,
 } from "../controllers/artistContoller";
 import { validate } from "../middlewares/validate.middleware";
-import { artistSchema, createArtistInput } from "../schema/artist.schema";
+import { artistSchema, createArtistSchema } from "../schema/artist.schema";
 
 
 
 export const artistRouter = Router();
 
-artistRouter.post("/", validate(createArtistInput), createArtist);
+artistRouter.post("/", validate(createArtistSchema), createArtist);
 artistRouter.get("/", getArtists);
 artistRouter.get("/:id", getArtistById);
 artistRouter.get("/:id/songs", getSongsOfArtist);

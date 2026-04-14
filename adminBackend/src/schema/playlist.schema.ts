@@ -28,5 +28,6 @@ export const createPlaylistInput = playlistSchema
         bannerImageKey: z.string({ error: "bannerImageKey is required" }).min(1, { message: "bannerImageKey cannot be empty" }),
     });
 
+export type CreatePlaylistSchema = z.infer<typeof createPlaylistInput>;
 
 export const playlistSongInput = playlistSongSchema.omit({ id: true });

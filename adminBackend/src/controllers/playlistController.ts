@@ -3,7 +3,7 @@ import { signatureService, playlistService } from "../infra";
 import { ApiResponse } from "../utils/ApiResponse";
 import { parsePagination } from "../types/pagination.type";
 
-export async function createPlaylist(req: Request, res: Response, next: NextFunction) {
+export async function createPlaylist(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
     try {
         const playlist = await playlistService.createPlaylist(req.body);
         return res.status(201).json(new ApiResponse(201, "Playlist created", playlist));
@@ -12,7 +12,7 @@ export async function createPlaylist(req: Request, res: Response, next: NextFunc
     }
 }
 
-export async function deletePlaylist(req: Request, res: Response, next: NextFunction) {
+export async function deletePlaylist(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
     try {
         const id = req.params.id as string;
         signatureService.verifyId(id,"playlistId");
@@ -23,7 +23,7 @@ export async function deletePlaylist(req: Request, res: Response, next: NextFunc
     }
 }
 
-export async function getPlaylistById(req: Request, res: Response, next: NextFunction) {
+export async function getPlaylistById(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
     try {
         const id = req.params.id as string;
         signatureService.verifyId(id);
@@ -34,7 +34,7 @@ export async function getPlaylistById(req: Request, res: Response, next: NextFun
     }
 }
 
-export async function getPlaylists(req: Request, res: Response, next: NextFunction) {
+export async function getPlaylists(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
     try {
         const params = parsePagination(req.query);
         const result = await playlistService.getPlaylists(params);
@@ -44,7 +44,7 @@ export async function getPlaylists(req: Request, res: Response, next: NextFuncti
     }
 }
 
-export async function addSongInPlaylist(req: Request, res: Response, next: NextFunction) {
+export async function addSongInPlaylist(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
     try {
         const { playlistId, songId } = req.body;
         signatureService.verifyId(playlistId)
@@ -56,7 +56,7 @@ export async function addSongInPlaylist(req: Request, res: Response, next: NextF
     }
 }
 
-export async function deleteSongInPlaylist(req: Request, res: Response, next: NextFunction) {
+export async function deleteSongInPlaylist(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
     try {
         const { playlistId, songId } = req.body;
         if (!signatureService.verifyId(playlistId) || !signatureService.verifyId(songId)) {
@@ -69,7 +69,7 @@ export async function deleteSongInPlaylist(req: Request, res: Response, next: Ne
     }
 }
 
-export async function getSongsOfPlaylist(req: Request, res: Response, next: NextFunction) {
+export async function getSongsOfPlaylist(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
     try {
         const id = req.params.id as string;
         const params = parsePagination(req.query);

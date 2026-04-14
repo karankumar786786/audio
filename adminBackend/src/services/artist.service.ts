@@ -4,7 +4,7 @@ import {
     searchService,
     db
 } from "../infra";
-import type { ArtistSchema } from "../schema/artist.schema";
+import type { ArtistSchema, CreateArtistSchema } from "../schema/artist.schema";
 import type { PaginationParams, PaginatedResult } from "../types/pagination.type";
 import { buildPaginatedResult } from "../types/pagination.type";
 
@@ -12,7 +12,7 @@ export class ArtistService {
     constructor() {
         
     }
-    async createArtist(data: any) {
+    async createArtist(data: CreateArtistSchema) :Promise<ArtistSchema>{
         const id = signatureService.generateSignedId();
         const artist = await artistRepository.create({ id, ...data });
 

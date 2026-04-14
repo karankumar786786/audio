@@ -22,4 +22,6 @@ export function coerceDob(dob: string): string {
     return new Date(dob).toISOString();
 }
 
-export const createArtistInput = artistSchema.omit({ id: true, createdAt: true });
+export const createArtistSchema = artistSchema.omit({ id: true, createdAt: true });
+
+export type CreateArtistSchema = z.infer<typeof createArtistSchema>
