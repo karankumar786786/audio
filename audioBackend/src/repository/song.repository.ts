@@ -79,6 +79,27 @@ export class SongRepository implements Repository<SongSchema, CreateSongData, Up
         return this.mapRow(song);
     }
 
+    async getByArtistName(name: string, limit: number, offset: number): Promise<SongSchema[]> {
+        const songs = await this.db`
+            SELECT 
+                id, title, artist_name, duration,
+                song_key, image_key,
+                language, job_id, created_at
+            FROM songs
+            WHERE artist_name = ${name}
+            ORDER BY created_at DESC
+            LIMIT ${limit} OFFSET ${offset}
+        `;
+        return songs.map((row) => this.mapRow(row));
+    }
+
+    async countByArtistName(name: string): Promise<number> {
+        const [row] = await this.db`
+            SELECT count(*)::int as count FROM songs WHERE artist_name = ${name}
+        `;
+        return row?.count || 0;
+    }
+
     // Maps DB snake_case row → camelCase SongSchema
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private mapRow(row: Record<string, any>): SongSchema {

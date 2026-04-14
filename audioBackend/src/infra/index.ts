@@ -49,28 +49,28 @@ export { db };
 
 // --- 1. Library Services ---
 
-export const searchService = new AlgoliaSearchService(
+const searchService = new AlgoliaSearchService(
     `${process.env.APP_ID}`,
     `${process.env.API_KEY}`,
     `${process.env.INDEX_NAME}`,
     logger
 );
 
-export const storageService = new S3StorageService(
+const storageService = new S3StorageService(
     `${process.env.REGION}`,
     `${process.env.ACCESS_KEY_ID}`,
     `${process.env.SECRET_KEY}`,
     logger
 );
 
-export const recommendationService = new RecommbeeRecommendationService(
+const recommendationService = new RecommbeeRecommendationService(
     `${process.env.RECOMBEE_DATABASE}`,
     `${process.env.RECOMBEE_DATABASE_PRIVATE_TOKEN}`,
     `${process.env.RECOMBEE_DATABASE_REGION}`,
     logger
 );
 
-export const signatureService = new NodeCryptoSignatureService(
+const signatureService = new NodeCryptoSignatureService(
     `${process.env.SIGNATURE_SECRET}`
 );
 
@@ -84,20 +84,20 @@ export const inngest = new Inngest({ id: "test-music" });
 
 // --- 2. Repositories (Wired with DI) ---
 
-export const artistRepository = new ArtistRepository(db, logger);
-export const songRepository = new SongRepository(db, logger);
-export const songProcessingJobRepository = new SongProcessingJobRepository(db, logger);
-export const playlistRepository = new PlaylistRepository(db, logger);
-export const userPlaylistRepository = new UserPlaylistRepository(db, logger);
-export const userFavouriteSongRepository = new UserFavouriteSongRepository(db, logger);
-export const userHistoryRepository = new UserHistoryRepository(db, logger);
-export const userRepository = new UserRepository(db, logger);
-export const userSearchHistoryRepository = new UserSearchHistoryRepository(db, logger);
-export const interactionRepository = new InteractionRepository(db, logger);
+const artistRepository = new ArtistRepository(db, logger);
+const songRepository = new SongRepository(db, logger);
+const songProcessingJobRepository = new SongProcessingJobRepository(db, logger);
+const playlistRepository = new PlaylistRepository(db, logger);
+const userPlaylistRepository = new UserPlaylistRepository(db, logger);
+const userFavouriteSongRepository = new UserFavouriteSongRepository(db, logger);
+const userHistoryRepository = new UserHistoryRepository(db, logger);
+const userRepository = new UserRepository(db, logger);
+const userSearchHistoryRepository = new UserSearchHistoryRepository(db, logger);
+const interactionRepository = new InteractionRepository(db, logger);
 
 // --- 3. Services (Wired with DI) ---
 
-export const artistService = new ArtistService(artistRepository, db, logger);
+export const artistService = new ArtistService(artistRepository, songRepository, logger);
 export const songService = new SongService(songRepository, logger);
 export const playlistService = new PlaylistService(playlistRepository, logger);
 export const userService = new UserService(
