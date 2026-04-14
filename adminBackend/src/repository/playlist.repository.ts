@@ -66,11 +66,11 @@ export class PlaylistRepository implements Repository<PlaylistSchema, CreatePlay
 
     // ── Playlist ↔ Song join operations ────────────────────────────────────────
 
-    async addSong(playlistId: string, songId: string): Promise<PlaylistSongSchema> {
+    async addSong(data:PlaylistSongSchema): Promise<PlaylistSongSchema> {
         const id = randomUUIDv7();
         const [entry] = await db`
             INSERT INTO playlist_songs (id, playlist_id, song_id)
-            VALUES (${id}, ${playlistId}, ${songId})
+            VALUES (${id}, ${data.playlistId}, ${data.songId})
             ON CONFLICT (playlist_id, song_id) DO NOTHING
             RETURNING *
         `;
@@ -78,13 +78,13 @@ export class PlaylistRepository implements Repository<PlaylistSchema, CreatePlay
         return this.mapSongRow(entry);
     }
 
-    async removeSong(playlistId: string, songId: string): Promise<PlaylistSongSchema> {
+    async removeSong(data:PlaylistSongSchema): Promise<PlaylistSongSchema> {
         const [entry] = await db`
             DELETE FROM playlist_songs
-            WHERE playlist_id = ${playlistId} AND song_id = ${songId}
+            WHERE playlist_id = ${data.playlistId} AND song_id = ${data.songId}
             RETURNING *
         `;
-        if (!entry) throw new Error(`Song ${songId} not found in playlist ${playlistId}`);
+        if (!entry) throw new Error(`Song ${data.songId} not found in playlist ${data.playlistId}`);
         return this.mapSongRow(entry);
     }
 

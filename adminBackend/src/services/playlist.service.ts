@@ -44,11 +44,11 @@ export class PlaylistService {
         try { await searchService.delete(id); } catch (_) { }
         return playlist;
     }
-    async addSongToPlaylist(playlistId: string, songId: string): Promise<PlaylistSongSchema> {
-        return await playlistRepository.addSong(playlistId, songId);
+    async addSongToPlaylist(data:PlaylistSongSchema): Promise<PlaylistSongSchema> {
+        return await playlistRepository.addSong(data);
     }
-    async removeSongFromPlaylist(playlistId: string, songId: string): Promise<PlaylistSongSchema> {
-        return await playlistRepository.removeSong(playlistId, songId);
+    async removeSongFromPlaylist(data:PlaylistSongSchema): Promise<PlaylistSongSchema> {
+        return await playlistRepository.removeSong(data);
     }
 }
 
