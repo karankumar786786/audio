@@ -17,9 +17,9 @@ export class ArtistService {
         private readonly logger:Logger,
 
     ) {}
-    async createArtist(data: CreateArtistSchema): Promise<ArtistSchema> {
+    async createArtist(data: CreateArtistSchema): Promise<void> {
         const id: string = this.signatureService.generateSignedId();
-        const artist: ArtistSchema = await this.artistRepository.create({ id, ...data });
+        await this.artistRepository.create({ id, ...data });
 
         // Index in Algolia for search
         try {
@@ -34,8 +34,7 @@ export class ArtistService {
         } catch (_) {
             this.logger.info("saving in searchService failed");
          }
-
-        return artist;
+        return;
     }
 
     async getArtists(params: PaginationParams): Promise<PaginatedResult<ArtistSchema>> {
@@ -52,18 +51,19 @@ export class ArtistService {
         return await this.artistRepository.getById(id);
     }
 
-    async updateArtist(id: string, data: UpdateArtistSchema): Promise<ArtistSchema> {
+    async updateArtist(id: string, data: UpdateArtistSchema): Promise<void> {
         this.signatureService.verifyId(id);
-        return await this.artistRepository.update(id, data);
+        await this.artistRepository.update(id, data);
+        return;
     }
 
-    async deleteArtist(id: string): Promise<ArtistSchema> {
+    async deleteArtist(id: string): Promise<void> {
         this.signatureService.verifyId(id);
-        const artist: ArtistSchema = await this.artistRepository.delete(id);
+        await this.artistRepository.delete(id);
         try { await this.searchService.delete(id); } catch (_) { 
             this.logger.error("error from deleting search service");
         }
-        return artist;
+        return;
     }
 
     async getArtistSongs(id: string, params: PaginationParams): Promise<PaginatedResult<SongSchema>> {

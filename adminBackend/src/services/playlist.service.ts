@@ -18,16 +18,16 @@ export class PlaylistService {
 
     }
 
-    async createPlaylist(data: CreatePlaylistSchema): Promise<PlaylistSchema> {
+    async createPlaylist(data: CreatePlaylistSchema): Promise<void> {
         const id:string = this.signatureService.generateSignedId();
-        const playlist:PlaylistSchema = await this.playlistRepository.create({ id, ...data });
+        await this.playlistRepository.create({ id, ...data });
         try {
             await this.searchService.save({ id, ...data } as any);
         } catch (_) {
             this.logger.error("error in saving search service");
          }
 
-        return playlist;
+        return;
     }
     async getPlaylists(params: PaginationParams): Promise<PaginatedResult<PlaylistSchema>> {
         const offset:number = (params.page - 1) * params.limit;
@@ -49,23 +49,25 @@ export class PlaylistService {
         ]);
         return buildPaginatedResult<SongSchema>(data, total, params);
     }
-    async deletePlaylist(id: string): Promise<PlaylistSchema> {
+    async deletePlaylist(id: string): Promise<void> {
         this.signatureService.verifyId(id,"playlistId");
-        const playlist = await this.playlistRepository.delete(id);
+        this.playlistRepository.delete(id);
         try { await this.searchService.delete(id); } catch (_) { 
             this.logger.error("error in deleting from search service");
         }
-        return playlist;
+        return;
     }
-    async addSongToPlaylist(data:PlaylistSongSchema): Promise<PlaylistSongSchema> {
+    async addSongToPlaylist(data:PlaylistSongSchema): Promise<void> {
         this.signatureService.verifyId(data.playlistId,"playlistId");
         this.signatureService.verifyId(data.songId,"songId");
-        return await this.playlistRepository.addSong(data);
+        await this.playlistRepository.addSong(data);
+        return;
     }
-    async removeSongFromPlaylist(data:PlaylistSongSchema): Promise<PlaylistSongSchema> {
+    async removeSongFromPlaylist(data:PlaylistSongSchema): Promise<void> {
         this.signatureService.verifyId(data.playlistId,"playlistId");
         this.signatureService.verifyId(data.songId,"songId");
-        return await this.playlistRepository.removeSong(data);
+        await this.playlistRepository.removeSong(data);
+        return;
     }
 }
 

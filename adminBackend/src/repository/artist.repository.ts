@@ -13,7 +13,7 @@ export class ArtistRepository implements Repository<ArtistSchema, CreateArtistDa
         private readonly logger: Logger
     ) {}
 
-    async create(data: CreateArtistData): Promise<ArtistSchema> {
+    async create(data: CreateArtistData): Promise<void> {
         const [artist] = await this.db`
             INSERT INTO artists (id, name, about, dob, cover_image_key, banner_image_key)
             VALUES (
@@ -24,13 +24,12 @@ export class ArtistRepository implements Repository<ArtistSchema, CreateArtistDa
                 ${data.coverImageKey},
                 ${data.bannerImageKey}
             )
-            RETURNING *
+            RETURNING id
         `;
         if (!artist) {
             this.logger.error("failed to create artist");
             throw new Error("Failed to create artist")
         };
-        return this.mapRow(artist);
     }
 
     async getById(id: string): Promise<ArtistSchema> {
@@ -55,7 +54,7 @@ export class ArtistRepository implements Repository<ArtistSchema, CreateArtistDa
         return artists.map((row) => this.mapRow(row));
     }
 
-    async update(id: string, data: UpdateArtistData): Promise<ArtistSchema> {
+    async update(id: string, data: UpdateArtistData): Promise<void> {
         const [artist] = await this.db`
             UPDATE artists
             SET
@@ -65,18 +64,16 @@ export class ArtistRepository implements Repository<ArtistSchema, CreateArtistDa
                 cover_image_key   = COALESCE(${data.coverImageKey ?? null}, cover_image_key),
                 banner_image_key  = COALESCE(${data.bannerImageKey ?? null}, banner_image_key)
             WHERE id = ${id}
-            RETURNING *
+            RETURNING id
         `;
         if (!artist) throw new NotFoundError(`Artist with id ${id} not found`);
-        return this.mapRow(artist);
     }
 
-    async delete(id: string): Promise<ArtistSchema> {
+    async delete(id: string): Promise<void> {
         const [artist] = await this.db`
-            DELETE FROM artists WHERE id = ${id} RETURNING *
+            DELETE FROM artists WHERE id = ${id} RETURNING id
         `;
         if (!artist) throw new NotFoundError(`Artist with id ${id} not found`);
-        return this.mapRow(artist);
     }
 
     // Maps DB snake_case row → camelCase ArtistSchema

@@ -2,6 +2,8 @@ import type { Logger } from "inngest";
 import type { StorageService } from "../lib/storage";
 import type ImageKit from "imagekit";
 import type { SignatureService } from "../lib/signature";
+import {config} from "dotenv";
+config();
 
 export class MiscService {
     /**

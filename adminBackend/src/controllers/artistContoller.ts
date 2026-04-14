@@ -10,14 +10,14 @@ import { asyncHandler } from "../utils/asyncHandler";
 export const createArtist = asyncHandler(async (req: Request, res: Response) => {
     // Coerce dob to ISO datetime so Postgres TIMESTAMPTZ is happy
     const data: CreateArtistSchema = { ...req.body, dob: coerceDob(req.body.dob) };
-    const artist: ArtistSchema = await artistService.createArtist(data);
-    return res.status(201).json(new ApiResponse(201, "Artist created", artist));
+    await artistService.createArtist(data);
+    return res.status(201).json(new ApiResponse(201, "Artist created"));
 });
 
 export const deleteArtist = asyncHandler(async (req: Request, res: Response) => {
     const id = req.params.id as string;
-    const artist: ArtistSchema = await artistService.deleteArtist(id);
-    return res.status(200).json(new ApiResponse(200, "Artist deleted", artist));
+    await artistService.deleteArtist(id);
+    return res.status(200).json(new ApiResponse(200, "Artist deleted"));
 });
 
 export const getArtists = asyncHandler(async (req: Request, res: Response) => {
@@ -41,6 +41,6 @@ export const getSongsOfArtist = asyncHandler(async (req: Request, res: Response)
 
 export const updateArtist = asyncHandler(async (req: Request, res: Response) => {
     const id: string = req.params.id as string;
-    const artist: ArtistSchema = await artistService.updateArtist(id, req.body);
-    return res.status(200).json(new ApiResponse(200, "Artist updated", artist));
+    await artistService.updateArtist(id, req.body);
+    return res.status(200).json(new ApiResponse(200, "Artist updated"));
 });
