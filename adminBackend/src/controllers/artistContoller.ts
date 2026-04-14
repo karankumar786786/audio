@@ -11,36 +11,36 @@ export const createArtist = asyncHandler(async (req: Request, res: Response) => 
     // Coerce dob to ISO datetime so Postgres TIMESTAMPTZ is happy
     const data: CreateArtistSchema = { ...req.body, dob: coerceDob(req.body.dob) };
     const artist: ArtistSchema = await artistService.createArtist(data);
-    return res.status(201).json(new ApiResponse(201, "Artist created", artist));
+    return new ApiResponse(201, "Artist created", artist).send(res);
 });
 
 export const deleteArtist = asyncHandler(async (req: Request, res: Response) => {
     const id = req.params.id as string;
     const artist = await artistService.deleteArtist(id);
-    return res.status(200).json(new ApiResponse(200, "Artist deleted", artist));
+    return new ApiResponse(200, "Artist deleted", artist).send(res);
 });
 
 export const getArtists = asyncHandler(async (req: Request, res: Response) => {
     const params: PaginationParams = parsePagination(req.query);
     const result: PaginatedResult<ArtistSchema> = await artistService.getArtists(params);
-    return res.status(200).json(new ApiResponse(200, "Artists fetched", result));
+    return new ApiResponse(200, "Artists fetched", result).send(res);
 });
 
 export const getArtistById = asyncHandler(async (req: Request, res: Response) => {
     const id: string = req.params.id as string;
     const artist: ArtistSchema = await artistService.getArtistById(id);
-    return res.status(200).json(new ApiResponse(200, "Artist fetched", artist));
+    return new ApiResponse(200, "Artist fetched", artist).send(res);
 });
 
 export const getSongsOfArtist = asyncHandler(async (req: Request, res: Response) => {
     const id: string = req.params.id as string;
     const params: PaginationParams = parsePagination(req.query);
     const result: PaginatedResult<SongSchema> = await artistService.getArtistSongs(id, params);
-    return res.status(200).json(new ApiResponse(200, "Songs of artist fetched", result));
+    return new ApiResponse(200, "Songs of artist fetched", result).send(res);
 });
 
 export const updateArtist = asyncHandler(async (req: Request, res: Response) => {
     const id: string = req.params.id as string;
     const artist = await artistService.updateArtist(id, req.body);
-    return res.status(200).json(new ApiResponse(200, "Artist updated", artist));
+    return new ApiResponse(200, "Artist updated", artist).send(res);
 });

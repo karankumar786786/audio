@@ -7,24 +7,24 @@ import { asyncHandler } from "../utils/asyncHandler";
 
 export const createSong = asyncHandler(async (req: Request, res: Response) => {
     const result: { id: string, jobId: string, status: string } = await songService.createSong(req.body);
-    return res.status(202).json(new ApiResponse(202, "Song processing initiated", result));
+    return new ApiResponse(202, "Song processing initiated", result).send(res);
 });
 
 export const updateSong = asyncHandler(async (req: Request, res: Response) => {
     const id: string = req.params.id as string;
     const song: SongSchema = await songService.updateSong(id, req.body);
-    return res.status(200).json(new ApiResponse(200, "Song updated", song));
+    return new ApiResponse(200, "Song updated", song).send(res);
 });
 
 export const deleteSong = asyncHandler(async (req: Request, res: Response) => {
     const id: string = req.params.id as string;
     const song: SongSchema = await songService.deleteSong(id);
-    return res.status(200).json(new ApiResponse(200, "Song deleted", song));
+    return new ApiResponse(200, "Song deleted", song).send(res);
 });
 
 export const getSongs = asyncHandler(async (req: Request, res: Response) => {
     const params: PaginationParams = parsePagination(req.query);
     const result: PaginatedResult<SongSchema> = await songService.getSongs(params);
-    return res.status(200).json(new ApiResponse(200, "Songs fetched", result));
+    return new ApiResponse(200, "Songs fetched", result).send(res);
 });
 

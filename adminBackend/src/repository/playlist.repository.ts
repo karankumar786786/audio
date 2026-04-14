@@ -2,7 +2,7 @@ import type { Logger } from "../observablity";
 import { type PlaylistSchema, type PlaylistSongSchema } from "../schema/playlist.schema";
 import { type SongSchema } from "../schema/songs.schema";
 import type { Repository } from "../types/repository.type";
-import { NotFoundError } from "../errors";
+import { NotFoundError, ConflictError } from "../errors";
 import type { SignatureService } from "../lib/signature";
 import type { Database } from "../infra";
 
@@ -74,14 +74,14 @@ export class PlaylistRepository implements Repository<PlaylistSchema, CreatePlay
     // ── Playlist ↔ Song join operations ────────────────────────────────────────
 
     async addSong(data:PlaylistSongSchema): Promise<PlaylistSongSchema> {
-        const id = this.signatureService.generateSignedId();
-        const [entry] = await this.db`
+        const id:string = this.signatureService.generateSignedId();
+        const entry = await this.db`
             INSERT INTO playlist_songs (id, playlist_id, song_id)
             VALUES (${id}, ${data.playlistId}, ${data.songId})
             ON CONFLICT (playlist_id, song_id) DO NOTHING
             RETURNING *
         `;
-        if (!entry) throw new Error("Song already exists in playlist or insert failed");
+        if (entry.length === 0) throw new ConflictError("Song already exists in playlist");
         return this.mapSongRow(entry);
     }
 
