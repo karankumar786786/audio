@@ -2,41 +2,34 @@ import { config } from "dotenv";
 import { neon } from "@neondatabase/serverless";
 import { Inngest } from "inngest";
 import ImageKit from "imagekit";
-config();
-
-import { AlgoliaService } from "../lib/search";
-import { S3Service } from "../lib/storage";
+import { 
+    ArtistRepository,
+    PlaylistRepository,
+    SongRepository,
+    SongProcessingJobRepository,
+} from "../repository";
+import { AlgoliaSearchService } from "../lib/search";
 import { RecommbeeRecommendationService } from "../lib/recommendation";
-import { SignatureService } from "../lib/signature";
-import { logger } from "../observablity/logger";
+import { NodeCryptoSignatureService } from "../lib/signature";
+import { logger } from "../observablity";
 import { ArtistService } from "../services/artist.service";
 import { PlaylistService } from "../services/playlist.service";
 import { SongService } from "../services/song.service";
+config();
 
-// Logger export
-export { logger };
-
-// Database export
 export const db = neon(`${process.env.DATABASE_URL}`);
+export type Database = ReturnType<typeof neon>;
 
 // Search Service
-export const searchService = new AlgoliaService(
+const searchService = new AlgoliaSearchService(
     `${process.env.APP_ID}`,
     `${process.env.API_KEY}`,
     `${process.env.INDEX_NAME}`,
     logger
 );
 
-// Storage Service
-export const storageService = new S3Service(
-    `${process.env.REGION}`,
-    `${process.env.ACCESS_KEY_ID}`,
-    `${process.env.SECRET_KEY}`,
-    logger
-);
-
 // Recommendation Service
-export const recommendationService = new RecommbeeRecommendationService(
+const recommendationService = new RecommbeeRecommendationService(
     `${process.env.RECOMBEE_DATABASE}`,
     `${process.env.RECOMBEE_DATABASE_PRIVATE_TOKEN}`,
     `${process.env.RECOMBEE_DATABASE_REGION}`,
@@ -44,29 +37,24 @@ export const recommendationService = new RecommbeeRecommendationService(
 );
 
 // Signature Service
-export const signatureService = new SignatureService(
+export const signatureService = new NodeCryptoSignatureService(
     `${process.env.SIGNATURE_SECRET}`
 );
 
-import { 
-    ArtistRepository,
-    PlaylistRepository,
-    SongRepository,
-    SongProcessingJobRepository,
-} from "../repository";
+
 
 // Repositories
-export const artistRepository = new ArtistRepository();
-export const playlistRepository = new PlaylistRepository();
-export const songRepository = new SongRepository();
-export const songProcessingJobRepository = new SongProcessingJobRepository();
+export const artistRepository = new ArtistRepository(db, logger);
+export const playlistRepository = new PlaylistRepository(db, logger);
+export const songRepository = new SongRepository(db, logger);
+export const songProcessingJobRepository = new SongProcessingJobRepository(db, logger);
+export const inngest = new Inngest({id:"test-music"});
 
 // Services
 export const artistService = new ArtistService(artistRepository,songRepository,signatureService,searchService);
-export const playlistService = new PlaylistService();
-export const songService = new SongService();
+export const playlistService = new PlaylistService(playlistRepository,signatureService,searchService);
+export const songService = new SongService(songRepository,songProcessingJobRepository,signatureService,searchService,recommendationService,logger,inngest);
 
-export const inngest = new Inngest({id:"test-music"})
 
 export const imagekitClient = new ImageKit(
     {

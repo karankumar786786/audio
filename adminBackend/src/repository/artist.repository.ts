@@ -1,4 +1,5 @@
-import { db } from "../infra";
+import {  type Database } from "../infra";
+import type { Logger } from "../observablity";
 import { type ArtistSchema } from "../schema/artist.schema";
 import type { Repository } from "../types/repository.type";
 
@@ -6,9 +7,13 @@ type CreateArtistData = Omit<ArtistSchema, "createdAt">;
 type UpdateArtistData = Partial<CreateArtistData>;
 
 export class ArtistRepository implements Repository<ArtistSchema, CreateArtistData, UpdateArtistData> {
+    constructor(
+        private readonly db: Database,
+        private readonly logger: Logger
+    ) {}
 
     async create(data: CreateArtistData): Promise<ArtistSchema> {
-        const [artist] = await db`
+        const [artist] = await this.db`
             INSERT INTO artists (id, name, about, dob, cover_image_key, banner_image_key)
             VALUES (
                 ${data.id},
@@ -25,7 +30,7 @@ export class ArtistRepository implements Repository<ArtistSchema, CreateArtistDa
     }
 
     async getById(id: string): Promise<ArtistSchema> {
-        const [artist] = await db`
+        const [artist] = await this.db`
             SELECT * FROM artists WHERE id = ${id}
         `;
         if (!artist) throw new Error(`Artist with id ${id} not found`);
@@ -33,12 +38,12 @@ export class ArtistRepository implements Repository<ArtistSchema, CreateArtistDa
     }
 
     async count(): Promise<number> {
-        const [row] = await db`SELECT count(*)::int as count FROM artists`;
+        const [row] = await this.db`SELECT count(*)::int as count FROM artists`;
         return row?.count || 0;
     }
 
     async getAll(limit?: number, offset?: number): Promise<ArtistSchema[]> {
-        const artists = await db`
+        const artists = await this.db`
             SELECT * FROM artists 
             ORDER BY created_at DESC
             LIMIT ${limit ?? null} OFFSET ${offset ?? null}
@@ -47,7 +52,7 @@ export class ArtistRepository implements Repository<ArtistSchema, CreateArtistDa
     }
 
     async update(id: string, data: UpdateArtistData): Promise<ArtistSchema> {
-        const [artist] = await db`
+        const [artist] = await this.db`
             UPDATE artists
             SET
                 name              = COALESCE(${data.name ?? null}, name),
@@ -63,7 +68,7 @@ export class ArtistRepository implements Repository<ArtistSchema, CreateArtistDa
     }
 
     async delete(id: string): Promise<ArtistSchema> {
-        const [artist] = await db`
+        const [artist] = await this.db`
             DELETE FROM artists WHERE id = ${id} RETURNING *
         `;
         if (!artist) throw new Error(`Artist with id ${id} not found`);

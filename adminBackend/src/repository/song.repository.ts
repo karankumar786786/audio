@@ -1,15 +1,20 @@
-import { db } from "../infra";
+import { type Database } from "../infra";
 import type { SongSchema } from "../schema/songs.schema";
 import type { Repository } from "../types/repository.type";
+import type { Logger } from "../observablity";
 
 type CreateSongData = Omit<SongSchema, "createdAt">;
 type partial = Partial<CreateSongData>;
 type UpdateSongData = Omit<partial, "songKey" | 'language' | 'jobId' | 'duration'>;
 
 export class SongRepository implements Repository<SongSchema, CreateSongData, UpdateSongData> {
+    constructor(
+        private readonly db: Database,
+        private readonly logger: Logger
+    ) {}
 
     async create(data: CreateSongData): Promise<SongSchema> {
-        const [song] = await db`
+        const [song] = await this.db`
             INSERT INTO songs (id, title, artist_name, duration, song_key, image_key, language, job_id)
             VALUES (
                 ${data.id},
@@ -28,7 +33,7 @@ export class SongRepository implements Repository<SongSchema, CreateSongData, Up
     }
 
     async getById(id: string): Promise<SongSchema> {
-        const [song] = await db`
+        const [song] = await this.db`
             SELECT * FROM songs WHERE id = ${id}
         `;
         if (!song) throw new Error(`Song with id ${id} not found`);
@@ -36,12 +41,12 @@ export class SongRepository implements Repository<SongSchema, CreateSongData, Up
     }
 
     async count(): Promise<number> {
-        const [row] = await db`SELECT count(*)::int as count FROM songs`;
+        const [row] = await this.db`SELECT count(*)::int as count FROM songs`;
         return row?.count || 0;
     }
 
     async getAll(limit?: number, offset?: number): Promise<SongSchema[]> {
-        const songs = await db`
+        const songs = await this.db`
             SELECT * FROM songs 
             ORDER BY created_at DESC
             LIMIT ${limit ?? null} OFFSET ${offset ?? null}
@@ -50,7 +55,7 @@ export class SongRepository implements Repository<SongSchema, CreateSongData, Up
     }
 
     async update(id: string, data: UpdateSongData): Promise<SongSchema> {
-        const [song] = await db`
+        const [song] = await this.db`
             UPDATE songs
             SET
                 title       = COALESCE(${data.title ?? null}, title),
@@ -64,12 +69,12 @@ export class SongRepository implements Repository<SongSchema, CreateSongData, Up
     }
 
     async countByArtistName(artistName: string): Promise<number> {
-        const [row] = await db`SELECT count(*)::int as count FROM songs WHERE artist_name = ${artistName}`;
+        const [row] = await this.db`SELECT count(*)::int as count FROM songs WHERE artist_name = ${artistName}`;
         return row?.count || 0;
     }
 
     async getByArtistName(artistName: string, limit?: number, offset?: number): Promise<SongSchema[]> {
-        const rows = await db`
+        const rows = await this.db`
             SELECT * FROM songs 
             WHERE artist_name = ${artistName}
             ORDER BY created_at DESC
@@ -79,7 +84,7 @@ export class SongRepository implements Repository<SongSchema, CreateSongData, Up
     }
 
     async delete(id: string): Promise<SongSchema> {
-        const [song] = await db`
+        const [song] = await this.db`
             DELETE FROM songs WHERE id = ${id} RETURNING *
         `;
 

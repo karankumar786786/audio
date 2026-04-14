@@ -1,5 +1,4 @@
-
-import type { AlgoliaService } from "../lib/search";
+import type { SearchService } from "../lib/search";
 import type { SignatureService } from "../lib/signature";
 import type { ArtistRepository, SongRepository } from "../repository";
 import type { ArtistSchema, CreateArtistSchema, UpdateArtistSchema } from "../schema/artist.schema";
@@ -11,12 +10,12 @@ export class ArtistService {
     artistRepository:ArtistRepository;
     songRepository:SongRepository;
     signatureService:SignatureService;
-    searchService:AlgoliaService
+    searchService:SearchService;
     constructor(
         artistRepository:ArtistRepository,
         songRepository:SongRepository,
         signatureService:SignatureService,
-        searchService:AlgoliaService,
+        searchService:SearchService,
 
     ) {
         this.artistRepository = artistRepository;

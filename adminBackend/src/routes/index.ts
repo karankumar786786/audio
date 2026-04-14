@@ -1,8 +1,8 @@
 import { Router } from "express";
-import { artistRouter } from "./artist.route";
-import { playlistRoutes } from "./playlist.route";
-import { miscRouter } from "./misc.route";
-import { songRouter } from "./song.route";
+import { artistRouter } from "./artist.routes";
+import { playlistRoutes } from "./playlist.routes";
+import { miscRouter } from "./misc.routes";
+import { songRouter } from "./song.routes";
 
 export const masterRouter = Router();
 
