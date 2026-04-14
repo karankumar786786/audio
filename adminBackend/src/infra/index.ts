@@ -15,6 +15,8 @@ import { logger } from "../observablity";
 import { ArtistService } from "../services/artist.service";
 import { PlaylistService } from "../services/playlist.service";
 import { SongService } from "../services/song.service";
+import { S3StorageService } from "../lib/storage";
+import { MiscService } from "../services/misc.service";
 config();
 
 export const db = neon(`${process.env.DATABASE_URL}`);
@@ -41,6 +43,19 @@ export const signatureService = new NodeCryptoSignatureService(
     `${process.env.SIGNATURE_SECRET}`
 );
 
+export const storageService = new S3StorageService(
+    process.env.REGION!,
+    process.env.ACCESS_KEY_ID!,
+    process.env.SECRET_KEY!,
+    logger
+)
+export const imagekitClient = new ImageKit(
+    {
+        publicKey:process.env.IMAGEKIT_PUBLIC_KEY!,
+        privateKey: process.env.IMAGEKIT_PRIVATE_KEY!,
+        urlEndpoint: process.env.IMAGEKIT_URL_ENDPOINT!
+    }
+)
 
 
 // Repositories
@@ -51,15 +66,8 @@ export const songProcessingJobRepository = new SongProcessingJobRepository(db, l
 export const inngest = new Inngest({id:"test-music"});
 
 // Services
-export const artistService = new ArtistService(artistRepository,songRepository,signatureService,searchService);
-export const playlistService = new PlaylistService(playlistRepository,signatureService,searchService);
+export const artistService = new ArtistService(artistRepository,songRepository,signatureService,searchService,logger);
+export const playlistService = new PlaylistService(playlistRepository,signatureService,searchService,logger);
 export const songService = new SongService(songRepository,songProcessingJobRepository,signatureService,searchService,recommendationService,logger,inngest);
+export const miscService = new MiscService(logger,storageService,imagekitClient,signatureService);
 
-
-export const imagekitClient = new ImageKit(
-    {
-        publicKey:process.env.IMAGEKIT_PUBLIC_KEY!,
-        privateKey: process.env.IMAGEKIT_PRIVATE_KEY!,
-        urlEndpoint: process.env.IMAGEKIT_URL_ENDPOINT!
-    }
-)

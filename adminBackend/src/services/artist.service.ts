@@ -1,5 +1,6 @@
 import type { SearchService } from "../lib/search";
 import type { SignatureService } from "../lib/signature";
+import type { Logger } from "../observablity";
 import type { ArtistRepository, SongRepository } from "../repository";
 import type { ArtistSchema, CreateArtistSchema, UpdateArtistSchema } from "../schema/artist.schema";
 import type { SongSchema } from "../schema/songs.schema";
@@ -13,6 +14,7 @@ export class ArtistService {
         private readonly songRepository:SongRepository,
         private readonly signatureService:SignatureService,
         private readonly searchService:SearchService,
+        private readonly logger:Logger,
 
     ) {}
     async createArtist(data: CreateArtistSchema): Promise<ArtistSchema> {
@@ -29,7 +31,9 @@ export class ArtistService {
                 coverImageKey: data.coverImageKey,
                 bannerImageKey: data.bannerImageKey
             } as any);
-        } catch (_) { }
+        } catch (_) {
+            this.logger.info("saving in searchService failed");
+         }
 
         return artist;
     }
@@ -44,21 +48,27 @@ export class ArtistService {
     }
 
     async getArtistById(id: string): Promise<ArtistSchema> {
+        this.signatureService.verifyId(id);
         return await this.artistRepository.getById(id);
     }
 
     async updateArtist(id: string, data: UpdateArtistSchema): Promise<ArtistSchema> {
+        this.signatureService.verifyId(id);
         return await this.artistRepository.update(id, data);
     }
 
     async deleteArtist(id: string): Promise<ArtistSchema> {
+        this.signatureService.verifyId(id);
         const artist: ArtistSchema = await this.artistRepository.delete(id);
-        try { await this.searchService.delete(id); } catch (_) { }
+        try { await this.searchService.delete(id); } catch (_) { 
+            this.logger.error("error from deleting search service");
+        }
         return artist;
     }
 
-    async getArtistSongs(artistId: string, params: PaginationParams): Promise<PaginatedResult<SongSchema>> {
-        const artist: ArtistSchema = await this.artistRepository.getById(artistId);
+    async getArtistSongs(id: string, params: PaginationParams): Promise<PaginatedResult<SongSchema>> {
+        this.signatureService.verifyId(id);
+        const artist: ArtistSchema = await this.artistRepository.getById(id);
         const offset: number = (params.page - 1) * params.limit;
         const [songs, total] = await Promise.all([
             this.songRepository.getByArtistName(artist.name, params.limit, offset),

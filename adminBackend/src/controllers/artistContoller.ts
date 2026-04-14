@@ -1,5 +1,5 @@
 import { type Request, type Response, type NextFunction } from "express";
-import { artistService, signatureService } from "../infra";
+import { artistService } from "../infra";
 import { ApiResponse } from "../utils/ApiResponse";
 import { parsePagination, type PaginatedResult, type PaginationParams } from "../types/pagination.type";
 import { coerceDob } from "../schema/artist.schema";
@@ -16,7 +16,6 @@ export const createArtist = asyncHandler(async (req: Request, res: Response) => 
 
 export const deleteArtist = asyncHandler(async (req: Request, res: Response) => {
     const id = req.params.id as string;
-    signatureService.verifyId(id, "artistId");
     const artist: ArtistSchema = await artistService.deleteArtist(id);
     return res.status(200).json(new ApiResponse(200, "Artist deleted", artist));
 });
@@ -29,14 +28,12 @@ export const getArtists = asyncHandler(async (req: Request, res: Response) => {
 
 export const getArtistById = asyncHandler(async (req: Request, res: Response) => {
     const id: string = req.params.id as string;
-    signatureService.verifyId(id, "artistId");
     const artist: ArtistSchema = await artistService.getArtistById(id);
     return res.status(200).json(new ApiResponse(200, "Artist fetched", artist));
 });
 
 export const getSongsOfArtist = asyncHandler(async (req: Request, res: Response) => {
     const id: string = req.params.id as string;
-    signatureService.verifyId(id, "artistId");
     const params: PaginationParams = parsePagination(req.query);
     const result: PaginatedResult<SongSchema> = await artistService.getArtistSongs(id, params);
     return res.status(200).json(new ApiResponse(200, "Songs of artist fetched", result));
@@ -44,7 +41,6 @@ export const getSongsOfArtist = asyncHandler(async (req: Request, res: Response)
 
 export const updateArtist = asyncHandler(async (req: Request, res: Response) => {
     const id: string = req.params.id as string;
-    signatureService.verifyId(id, "artistId");
     const artist: ArtistSchema = await artistService.updateArtist(id, req.body);
     return res.status(200).json(new ApiResponse(200, "Artist updated", artist));
 });

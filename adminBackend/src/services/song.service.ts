@@ -61,6 +61,7 @@ export class SongService {
 
     async updateSong(id: string, data: UpdateSongInput): Promise<SongSchema> {
         // Best effort update in search index if title/artist changes
+        this.signatureService.verifyId(id,"songId");
         const song:SongSchema = await this.songRepository.update(id, data);
         try {
             await this.searchService.save(song as any);
@@ -70,6 +71,7 @@ export class SongService {
         return song;
     }
     async deleteSong(id: string): Promise<SongSchema> {
+        this.signatureService.verifyId(id,"songId");
         const song:SongSchema = await this.songRepository.delete(id);
         try { await this.searchService.delete(id); } catch (err) {
             this.logger.error(`[SERVICE] Failed to delete song ${id} from search index:`, err);

@@ -1,5 +1,6 @@
 import type { SearchService } from "../lib/search";
 import type { SignatureService } from "../lib/signature";
+import type { Logger } from "../observablity";
 import type { PlaylistRepository } from "../repository";
 import type { PlaylistSchema, PlaylistSongSchema, CreatePlaylistSchema } from "../schema/playlist.schema";
 import type { SongSchema } from "../schema/songs.schema";
@@ -12,6 +13,7 @@ export class PlaylistService {
         private readonly playlistRepository:PlaylistRepository,
         private readonly signatureService:SignatureService,
         private readonly searchService:SearchService,
+        private readonly logger:Logger,
     ) {
 
     }
@@ -21,7 +23,9 @@ export class PlaylistService {
         const playlist:PlaylistSchema = await this.playlistRepository.create({ id, ...data });
         try {
             await this.searchService.save({ id, ...data } as any);
-        } catch (_) { }
+        } catch (_) {
+            this.logger.error("error in saving search service");
+         }
 
         return playlist;
     }
@@ -34,6 +38,7 @@ export class PlaylistService {
         return buildPaginatedResult<PlaylistSchema>(data, total, params);
     }
     async getPlaylistById(id: string): Promise<PlaylistSchema> {
+        this.signatureService.verifyId(id,"playlistId");
         return await this.playlistRepository.getById(id);
     }
     async getPlaylistSongs(playlistId: string, params: PaginationParams): Promise<PaginatedResult<SongSchema>> {
@@ -45,14 +50,21 @@ export class PlaylistService {
         return buildPaginatedResult<SongSchema>(data, total, params);
     }
     async deletePlaylist(id: string): Promise<PlaylistSchema> {
+        this.signatureService.verifyId(id,"playlistId");
         const playlist = await this.playlistRepository.delete(id);
-        try { await this.searchService.delete(id); } catch (_) { }
+        try { await this.searchService.delete(id); } catch (_) { 
+            this.logger.error("error in deleting from search service");
+        }
         return playlist;
     }
     async addSongToPlaylist(data:PlaylistSongSchema): Promise<PlaylistSongSchema> {
+        this.signatureService.verifyId(data.playlistId,"playlistId");
+        this.signatureService.verifyId(data.songId,"songId");
         return await this.playlistRepository.addSong(data);
     }
     async removeSongFromPlaylist(data:PlaylistSongSchema): Promise<PlaylistSongSchema> {
+        this.signatureService.verifyId(data.playlistId,"playlistId");
+        this.signatureService.verifyId(data.songId,"songId");
         return await this.playlistRepository.removeSong(data);
     }
 }
