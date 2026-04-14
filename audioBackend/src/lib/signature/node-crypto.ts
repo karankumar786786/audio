@@ -1,6 +1,6 @@
 import * as crypto from 'crypto';
 import type { SignatureService } from './index.types';
-import { BadRequestError } from '../../errors';
+import { ApiError } from '../../utils/ApiError';
 
 export class NodeCryptoSignatureService implements SignatureService {
     private static readonly ALGORITHM = 'sha256';

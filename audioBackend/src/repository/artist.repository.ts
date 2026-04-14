@@ -1,6 +1,7 @@
 import type { Database } from "../infra/db";
 import { type ArtistSchema } from "../schema/artist.schema";
 import type { Repository } from "../type/repository.type";
+import { db } from "../infra";
 import { logMethods, type Logger } from "../observability";
 
 type CreateArtistData = Omit<ArtistSchema, "createdAt">;

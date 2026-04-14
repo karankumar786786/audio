@@ -14,9 +14,9 @@ export type PlaylistSchema = z.infer<typeof playlistSchema>;
 // Schema for adding a song to a playlist
 export const playlistSongSchema = z.object({
     id: z.string().optional(),
-    playlistId: z.string({error:"valid playlistId is required"}).min(1, { message: "playlistId is required" }),
-    songId: z.string({error:"valid songId is required"}).min(1, { message: "songId is required" }),
-},{error:"object is required with fields id(optional),playlistId,songId"});
+    playlistId: z.string().min(1, { message: "playlistId is required" }),
+    songId: z.string().min(1, { message: "songId is required" }),
+});
 
 export type PlaylistSongSchema = z.infer<typeof playlistSongSchema>;
 
