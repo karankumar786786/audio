@@ -6,21 +6,24 @@ import { ApiError } from "./utils/ApiError";
 import helmet from "helmet";
 import { masterRouter } from "./router";
 import { logger } from "./infra";
-import { inngest } from "./infra";
+import { swaggerRouter } from "./docs/openapi-routes";
 config();
 
-const app = express();
+export const app = express();
 
 const PORT = process.env.PORT || 3000;
 
-
-app.use(cors())
+app.use(cors());
 app.use(express.json());
 app.use(helmet());
 app.use(express.urlencoded({ extended: true }));
 
+// Swagger Documentation
+app.use("/api-docs", swaggerRouter);
+
 // Routes Implementation
 app.use("/api/v1", masterRouter);
+
 
 // Not Found Route (should be AFTER all actual routes and BEFORE error handler)
 app.use((req, res, next) => {

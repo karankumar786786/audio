@@ -6,7 +6,7 @@ import {
     deleteSongInUserPlaylist,
     getUserPlaylists,
     getUserPlaylistSongs,
-} from "../controlers/userPlaylist.controller";
+} from "../controllers/user-playlist.controller";
 import { validate } from "../middlewares/validate.middleware";
 import { userPlaylistSchema, userPlaylistSongSchema } from "../schema/userPlaylist.schema";
 import { z } from "zod";

@@ -1,10 +1,9 @@
-export {ArtistRepository} from "./artist.repository";
-export {SongRepository} from "./song.repository";
-export {SongProcessingJobRepository} from "./songProcessingJob.repository";
-export {PlaylistRepository} from "./playlist.repository";
-export {UserFavouriteSongRepository} from "./userFavourite_song.repository";
-export {UserHistoryRepository} from "./userHistory.repository";
-export {UserPlaylistRepository} from "./userPlaylist.repository";
-export {UserRepository} from "./user.repository";
-export {UserSearchHistoryRepository} from "./userSearchHistory.repository";
-
+export { ArtistRepository } from "./artist.repository";
+export { SongRepository } from "./song.repository";
+export { SongProcessingJobRepository } from "./song-processing-job.repository";
+export { PlaylistRepository } from "./playlist.repository";
+export { UserFavouriteSongRepository } from "./user-favourite-song.repository";
+export { UserHistoryRepository } from "./user-history.repository";
+export { UserPlaylistRepository } from "./user-playlist.repository";
+export { UserRepository } from "./user.repository";
+export { UserSearchHistoryRepository } from "./user-search-history.repository";

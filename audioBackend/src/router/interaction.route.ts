@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { addListen, getTrendingSongs, getRecommendedSongs } from "../controlers/interaction.controller";
+import { addListen, getTrendingSongs, getRecommendedSongs } from "../controllers/interaction.controller";
 import { validate } from "../middlewares/validate.middleware";
 import { userHistorySchema } from "../schema/userHistory.schema";
 

@@ -3,7 +3,7 @@ import {
     getPlaylists,
     getPlaylistById,
     getSongsOfPlaylist,
-} from "../controlers/playlistController";
+} from "../controllers/playlist.controller";
 
 export const playlistRouter = Router();
 

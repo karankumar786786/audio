@@ -8,7 +8,7 @@ import {
     getUserSearchHistory,
     saveUserSearchHistory,
     clearUserSearchHistory,
-} from "../controlers/user.controller";
+} from "../controllers/user.controller";
 import { validate } from "../middlewares/validate.middleware";
 import { createUserSchema } from "../schema/user.schema";
 import { userFavouriteSongSchema } from "../schema/userFavouriteSong.schema";

@@ -1,12 +1,8 @@
 import { Router } from "express";
-import {
-    getArtists,
-    getArtistById,
-    getSongsOfArtist,
-} from "../controlers/artistContoller";
+import { artistController } from "../infra";
 
 export const artistRouter = Router();
 
-artistRouter.get("/", getArtists);
-artistRouter.get("/:id", getArtistById);
-artistRouter.get("/:id/songs", getSongsOfArtist);
+artistRouter.get("/", artistController.getArtists);
+artistRouter.get("/:id", artistController.getArtistById);
+artistRouter.get("/:id/songs", artistController.getSongsOfArtist);
