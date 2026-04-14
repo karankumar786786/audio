@@ -9,11 +9,10 @@ import type { PaginationParams, PaginatedResult } from "../types/pagination.type
 import { buildPaginatedResult } from "../types/pagination.type";
 
 export class PlaylistService {
-    // ── Playlists ───────────────────────────────────────────────────────────────
 
     async createPlaylist(data: CreatePlaylistSchema): Promise<PlaylistSchema> {
         const id:string = signatureService.generateSignedId();
-        const playlist = await playlistRepository.create({ id, ...data });
+        const playlist:PlaylistSchema = await playlistRepository.create({ id, ...data });
         try {
             await searchService.save({ id, ...data } as any);
         } catch (_) { }
@@ -21,12 +20,12 @@ export class PlaylistService {
         return playlist;
     }
     async getPlaylists(params: PaginationParams): Promise<PaginatedResult<PlaylistSchema>> {
-        const offset = (params.page - 1) * params.limit;
+        const offset:number = (params.page - 1) * params.limit;
         const [data, total] = await Promise.all([
             playlistRepository.getAll(params.limit, offset),
             playlistRepository.count()
         ]);
-        return buildPaginatedResult(data, total, params);
+        return buildPaginatedResult<PlaylistSchema>(data, total, params);
     }
     async getPlaylistById(id: string): Promise<PlaylistSchema> {
         return await playlistRepository.getById(id);
@@ -37,7 +36,7 @@ export class PlaylistService {
             playlistRepository.getSongs(playlistId, params.limit, offset),
             playlistRepository.countSongs(playlistId)
         ]);
-        return buildPaginatedResult(data, total, params);
+        return buildPaginatedResult<SongSchema>(data, total, params);
     }
     async deletePlaylist(id: string): Promise<PlaylistSchema> {
         const playlist = await playlistRepository.delete(id);

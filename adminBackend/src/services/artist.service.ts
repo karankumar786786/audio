@@ -1,25 +1,36 @@
-import {
-    artistRepository,
-    signatureService,
-    searchService,
-    db
-} from "../infra";
+
+import type { AlgoliaService } from "../lib/search";
+import type { SignatureService } from "../lib/signature";
+import type { ArtistRepository, SongRepository } from "../repository";
 import type { ArtistSchema, CreateArtistSchema, UpdateArtistSchema } from "../schema/artist.schema";
 import type { SongSchema } from "../schema/songs.schema";
 import type { PaginationParams, PaginatedResult } from "../types/pagination.type";
 import { buildPaginatedResult } from "../types/pagination.type";
 
 export class ArtistService {
-    constructor() {
-        
+    artistRepository:ArtistRepository;
+    songRepository:SongRepository;
+    signatureService:SignatureService;
+    searchService:AlgoliaService
+    constructor(
+        artistRepository:ArtistRepository,
+        songRepository:SongRepository,
+        signatureService:SignatureService,
+        searchService:AlgoliaService,
+
+    ) {
+        this.artistRepository = artistRepository;
+        this.songRepository = songRepository;
+        this.signatureService = signatureService;
+        this.searchService = searchService;
     }
-    async createArtist(data: CreateArtistSchema) :Promise<ArtistSchema>{
-        const id = signatureService.generateSignedId();
-        const artist = await artistRepository.create({ id, ...data });
+    async createArtist(data: CreateArtistSchema): Promise<ArtistSchema> {
+        const id: string = this.signatureService.generateSignedId();
+        const artist: ArtistSchema = await this.artistRepository.create({ id, ...data });
 
         // Index in Algolia for search
         try {
-            await searchService.save({
+            await this.searchService.save({
                 id,
                 name: data.name,
                 about: data.about,
@@ -33,48 +44,35 @@ export class ArtistService {
     }
 
     async getArtists(params: PaginationParams): Promise<PaginatedResult<ArtistSchema>> {
-        const offset = (params.page - 1) * params.limit;
+        const offset: number = (params.page - 1) * params.limit;
         const [data, total] = await Promise.all([
-            artistRepository.getAll(params.limit, offset),
-            artistRepository.count()
+            this.artistRepository.getAll(params.limit, offset),
+            this.artistRepository.count()
         ]);
-
-        return buildPaginatedResult(data, total, params);
+        return buildPaginatedResult<ArtistSchema>(data, total, params);
     }
 
     async getArtistById(id: string): Promise<ArtistSchema> {
-        return await artistRepository.getById(id);
+        return await this.artistRepository.getById(id);
     }
 
     async updateArtist(id: string, data: UpdateArtistSchema): Promise<ArtistSchema> {
-        return await artistRepository.update(id, data);
+        return await this.artistRepository.update(id, data);
     }
 
     async deleteArtist(id: string): Promise<ArtistSchema> {
-        const artist = await artistRepository.delete(id);
-        try { await searchService.delete(id); } catch (_) { }
+        const artist: ArtistSchema = await this.artistRepository.delete(id);
+        try { await this.searchService.delete(id); } catch (_) { }
         return artist;
     }
 
     async getArtistSongs(artistId: string, params: PaginationParams): Promise<PaginatedResult<SongSchema>> {
-        const artist = await artistRepository.getById(artistId);
-        const offset = (params.page - 1) * params.limit;
-
-        // Count songs by artist name (since repo doesn't have direct countByArtist)
-        const [countResult] = await db`SELECT count(*)::int as count FROM songs WHERE artist_name = ${artist.name}`;
-        const total = countResult?.count || 0;
-
-        const songs = await db`
-            SELECT 
-                id, title, artist_name AS "artistName", duration,
-                song_key AS "songKey", image_key AS "imageKey",
-                language, job_id AS "jobId", created_at AS "createdAt"
-            FROM songs
-            WHERE artist_name = ${artist.name}
-            ORDER BY created_at DESC
-            LIMIT ${params.limit} OFFSET ${offset}
-        `;
-
-        return buildPaginatedResult(songs as any as SongSchema[], total, params);
+        const artist: ArtistSchema = await this.artistRepository.getById(artistId);
+        const offset: number = (params.page - 1) * params.limit;
+        const [songs, total] = await Promise.all([
+            this.songRepository.getByArtistName(artist.name, params.limit, offset),
+            this.songRepository.countByArtistName(artist.name)
+        ]);
+        return buildPaginatedResult<SongSchema>(songs, total, params);
     }
 }

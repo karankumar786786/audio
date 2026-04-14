@@ -6,8 +6,8 @@ config();
 
 import { AlgoliaService } from "../lib/search";
 import { S3Service } from "../lib/storage";
-import { RecommendationServiceImpl } from "../lib/recommendation";
-import { SignatureUtility } from "../lib/signature";
+import { RecommbeeRecommendationService } from "../lib/recommendation";
+import { SignatureService } from "../lib/signature";
 import { logger } from "../observablity/logger";
 import { ArtistService } from "../services/artist.service";
 import { PlaylistService } from "../services/playlist.service";
@@ -36,7 +36,7 @@ export const storageService = new S3Service(
 );
 
 // Recommendation Service
-export const recommendationService = new RecommendationServiceImpl(
+export const recommendationService = new RecommbeeRecommendationService(
     `${process.env.RECOMBEE_DATABASE}`,
     `${process.env.RECOMBEE_DATABASE_PRIVATE_TOKEN}`,
     `${process.env.RECOMBEE_DATABASE_REGION}`,
@@ -44,7 +44,7 @@ export const recommendationService = new RecommendationServiceImpl(
 );
 
 // Signature Service
-export const signatureService = new SignatureUtility(
+export const signatureService = new SignatureService(
     `${process.env.SIGNATURE_SECRET}`
 );
 
@@ -62,7 +62,7 @@ export const songRepository = new SongRepository();
 export const songProcessingJobRepository = new SongProcessingJobRepository();
 
 // Services
-export const artistService = new ArtistService();
+export const artistService = new ArtistService(artistRepository,songRepository,signatureService,searchService);
 export const playlistService = new PlaylistService();
 export const songService = new SongService();
 

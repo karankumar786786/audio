@@ -1,6 +1,6 @@
 import * as crypto from 'crypto';
 
-export class SignatureUtility {
+export class SignatureService {
     private static readonly ALGORITHM = 'sha256';
     private readonly SECRET: string;
 
@@ -15,7 +15,7 @@ export class SignatureUtility {
         const uuid = crypto.randomUUID().replace(/-/g, "");
 
         const signature = crypto
-            .createHmac(SignatureUtility.ALGORITHM, this.SECRET)
+            .createHmac(SignatureService.ALGORITHM, this.SECRET)
             .update(uuid)
             .digest('hex');
 
@@ -39,7 +39,7 @@ export class SignatureUtility {
         }
 
         const expectedSignature = crypto
-            .createHmac(SignatureUtility.ALGORITHM, this.SECRET)
+            .createHmac(SignatureService.ALGORITHM, this.SECRET)
             .update(uuid)
             .digest('hex');
 
