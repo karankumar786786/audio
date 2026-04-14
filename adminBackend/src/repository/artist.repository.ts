@@ -1,6 +1,6 @@
 import {  type Database } from "../infra/db";
 import { logMethods, type Logger } from "../observablity";
-import { type ArtistSchema } from "../schema/artist.schema";
+import { type ArtistSchema } from "../schema";
 import type { Repository } from "../types/repository.type";
 import { NotFoundError } from "../errors";
 

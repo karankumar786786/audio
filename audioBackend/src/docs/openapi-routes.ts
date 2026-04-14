@@ -1,5 +1,6 @@
 import { OpenApiGeneratorV3 } from "@asteasolutions/zod-to-openapi";
 import { registry } from "./openapi-registry";
+import "./openapi-paths";
 import { Router } from "express";
 import swaggerUi from "swagger-ui-express";
 

@@ -6,7 +6,7 @@ import {
     getSongs, 
 } from "../controllers/song.controller";
 import { validate } from "../middlewares/validate.middleware";
-import { CreateSongSchema, updateSongSchema } from "../schema/songs.schema";
+import { CreateSongSchema, updateSongSchema } from "../schema";
 
 export const songRouter = Router();
 

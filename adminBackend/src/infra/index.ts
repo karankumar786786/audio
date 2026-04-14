@@ -1,23 +1,26 @@
 import { config } from "dotenv";
 config();
-export type {Database} from "./db";
+export type { Database } from "./db";
 import { Inngest } from "inngest";
 import ImageKit from "imagekit";
-import { 
+import {
     ArtistRepository,
     PlaylistRepository,
     SongRepository,
     SongProcessingJobRepository,
 } from "../repository";
-import { AlgoliaSearchService } from "../lib/search";
-import { RecommbeeRecommendationService } from "../lib/recommendation";
-import { NodeCryptoSignatureService } from "../lib/signature";
+import {
+    AlgoliaSearchService,
+    RecommbeeRecommendationService,
+    NodeCryptoSignatureService
+} from "../lib";
 import { logger } from "../observablity";
-import { ArtistService } from "../services/artist.service";
-import { PlaylistService } from "../services/playlist.service";
-import { SongService } from "../services/song.service";
-import { S3StorageService } from "../lib/storage";
-import { MiscService } from "../services/misc.service";
+import {
+    PlaylistService,
+    MiscService, SongService,
+    ArtistService
+} from "../services";
+import { S3StorageService } from "../lib";
 import { db } from "./db";
 
 
@@ -54,7 +57,7 @@ const storageService = new S3StorageService(
 
 export const imagekitClient = new ImageKit(
     {
-        publicKey:process.env.IMAGEKIT_PUBLIC_KEY!,
+        publicKey: process.env.IMAGEKIT_PUBLIC_KEY!,
         privateKey: process.env.IMAGEKIT_PRIVATE_KEY!,
         urlEndpoint: process.env.IMAGEKIT_URL_ENDPOINT!
     }
@@ -63,14 +66,14 @@ export const imagekitClient = new ImageKit(
 
 // Repositories
 const artistRepository = new ArtistRepository(db, logger.child({ service: "ArtistRepository" }));
-const playlistRepository = new PlaylistRepository(db, logger.child({ service: "PlaylistRepository" }),signatureService);
+const playlistRepository = new PlaylistRepository(db, logger.child({ service: "PlaylistRepository" }), signatureService);
 const songRepository = new SongRepository(db, logger.child({ service: "SongRepository" }));
 const songProcessingJobRepository = new SongProcessingJobRepository(db, logger.child({ service: "SongJobRepository" }));
-const inngest = new Inngest({id:"test-music"});
+const inngest = new Inngest({ id: "test-music" });
 
 // Services
-export const artistService = new ArtistService(artistRepository,songRepository,signatureService,searchService,logger.child({ service: "ArtistService" }));
-export const playlistService = new PlaylistService(playlistRepository,signatureService,searchService,logger.child({ service: "PlaylistService" }));
-export const songService = new SongService(songRepository,songProcessingJobRepository,signatureService,searchService,recommendationService,logger.child({ service: "SongService" }),inngest);
-export const miscService = new MiscService(logger.child({ service: "MiscService" }),storageService,imagekitClient,signatureService);
+export const artistService = new ArtistService(artistRepository, songRepository, signatureService, searchService, logger.child({ service: "ArtistService" }));
+export const playlistService = new PlaylistService(playlistRepository, signatureService, searchService, logger.child({ service: "PlaylistService" }));
+export const songService = new SongService(songRepository, songProcessingJobRepository, signatureService, searchService, recommendationService, logger.child({ service: "SongService" }), inngest);
+export const miscService = new MiscService(logger.child({ service: "MiscService" }), storageService, imagekitClient, signatureService);
 

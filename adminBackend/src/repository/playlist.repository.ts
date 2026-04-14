@@ -1,13 +1,12 @@
 import { logMethods, type Logger } from "../observablity";
-import { type PlaylistSchema, type PlaylistSongSchema } from "../schema/playlist.schema";
-import { type SongSchema } from "../schema/songs.schema";
+import { type CreatePlaylistData, type PlaylistSchema, type PlaylistSongSchema, type UpdatePlaylistData } from "../schema";
+import { type SongSchema } from "../schema";
 import type { Repository } from "../types/repository.type";
 import { NotFoundError, ConflictError } from "../errors";
-import type { SignatureService } from "../lib/signature";
+import type { SignatureService } from "../lib";
 import type { Database } from "../infra/db";
 
-type CreatePlaylistData = Omit<PlaylistSchema, "createdAt" | "updatedAt">;
-type UpdatePlaylistData = Partial<CreatePlaylistData>;
+
 
 export class PlaylistRepository implements Repository<PlaylistSchema, CreatePlaylistData, UpdatePlaylistData> {
     constructor(

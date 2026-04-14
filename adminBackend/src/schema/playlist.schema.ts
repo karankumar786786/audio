@@ -33,6 +33,8 @@ export const createPlaylistInput = playlistSchema
 export type CreatePlaylistSchema = z.infer<typeof createPlaylistInput>;
 
 export const playlistSongInput = playlistSongSchema.omit({ id: true }).openapi("AddSongToPlaylistRequest");
+export type CreatePlaylistData = Omit<PlaylistSchema, "createdAt" | "updatedAt">;
+export type UpdatePlaylistData = Partial<CreatePlaylistData>;
 
 // Register definitions
 registry.register("Playlist", playlistSchema);

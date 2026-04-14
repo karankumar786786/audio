@@ -9,7 +9,7 @@ import {
     getSongsOfPlaylist,
 } from "../controllers/playlist.controller";
 import { validate } from "../middlewares/validate.middleware";
-import { createPlaylistInput, playlistSongInput } from "../schema/playlist.schema";
+import { createPlaylistInput, playlistSongInput } from "../schema";
 
 export const playlistRoutes = Router();
 

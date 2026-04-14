@@ -1,5 +1,5 @@
-import { type Database } from "../infra/db";
-import type { SongSchema } from "../schema/songs.schema";
+import { type Database } from "../infra";
+import type { SongSchema } from "../schema";
 import type { Repository } from "../types/repository.type";
 import { logMethods, type Logger } from "../observablity";
 import { NotFoundError } from "../errors";

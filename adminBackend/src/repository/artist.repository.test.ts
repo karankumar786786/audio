@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { ArtistRepository } from "./artist.repository";
-import { type Logger } from "../observablity";
 
 describe("ArtistRepository", () => {
     let repo: ArtistRepository;
