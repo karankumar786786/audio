@@ -1,4 +1,5 @@
 import { config } from "dotenv";
+config();
 export type {Database} from "./db";
 import { Inngest } from "inngest";
 import ImageKit from "imagekit";
@@ -18,7 +19,7 @@ import { SongService } from "../services/song.service";
 import { S3StorageService } from "../lib/storage";
 import { MiscService } from "../services/misc.service";
 import { db } from "./db";
-config();
+
 
 
 
@@ -43,7 +44,7 @@ const signatureService = new NodeCryptoSignatureService(
     `${process.env.SIGNATURE_SECRET}`
 );
 
-export const storageService = new S3StorageService(
+const storageService = new S3StorageService(
     process.env.REGION!,
     process.env.ACCESS_KEY_ID!,
     process.env.SECRET_KEY!,
@@ -61,11 +62,11 @@ export const imagekitClient = new ImageKit(
 
 
 // Repositories
-export const artistRepository = new ArtistRepository(db, logger.child({ service: "ArtistRepository" }));
-export const playlistRepository = new PlaylistRepository(db, logger.child({ service: "PlaylistRepository" }),signatureService);
-export const songRepository = new SongRepository(db, logger.child({ service: "SongRepository" }));
-export const songProcessingJobRepository = new SongProcessingJobRepository(db, logger.child({ service: "SongJobRepository" }));
-export const inngest = new Inngest({id:"test-music"});
+const artistRepository = new ArtistRepository(db, logger.child({ service: "ArtistRepository" }));
+const playlistRepository = new PlaylistRepository(db, logger.child({ service: "PlaylistRepository" }),signatureService);
+const songRepository = new SongRepository(db, logger.child({ service: "SongRepository" }));
+const songProcessingJobRepository = new SongProcessingJobRepository(db, logger.child({ service: "SongJobRepository" }));
+const inngest = new Inngest({id:"test-music"});
 
 // Services
 export const artistService = new ArtistService(artistRepository,songRepository,signatureService,searchService,logger.child({ service: "ArtistService" }));

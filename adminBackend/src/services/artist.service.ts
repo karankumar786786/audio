@@ -59,20 +59,38 @@ export class ArtistService {
     }
 
     async updateArtist(id: string, data: UpdateArtistSchema): Promise<ArtistSchema> {
+        this.logger.debug({ id, data }, "updateArtist starting");
         this.signatureService.verifyId(id);
-        return await this.artistRepository.update(id, data);
+        const artist = await this.artistRepository.update(id, data);
+        this.logger.info({ id }, "artist updated in repository");
+
+        // Best effort search update
+        try {
+            await this.searchService.save(artist as any);
+        } catch (err) {
+            this.logger.error({ err, id }, "failed to update search index after artist update");
+        }
+
+        return artist;
     }
 
     async deleteArtist(id: string): Promise<ArtistSchema> {
+        this.logger.debug({ id }, "deleteArtist starting");
         this.signatureService.verifyId(id);
         const artist: ArtistSchema = await this.artistRepository.delete(id);
-        try { await this.searchService.delete(id); } catch (_) { 
-            this.logger.error("error from deleting search service");
+        this.logger.info({ id }, "artist deleted from repository");
+        
+        try { 
+            await this.searchService.delete(id); 
+            this.logger.info({ id }, "artist deleted from search index");
+        } catch (err) { 
+            this.logger.error({ err, id }, "failed to delete artist from search service");
         }
         return artist;
     }
 
     async getArtistSongs(artistId: string, params: PaginationParams): Promise<PaginatedResult<SongSchema>> {
+        this.logger.debug({ artistId, params }, "getArtistSongs starting");
         this.signatureService.verifyId(artistId);
         const artist: ArtistSchema = await this.artistRepository.getById(artistId);
         const offset: number = (params.page - 1) * params.limit;
@@ -80,6 +98,7 @@ export class ArtistService {
             this.songRepository.getByArtistName(artist.name, params.limit, offset),
             this.songRepository.countByArtistName(artist.name)
         ]);
+        this.logger.debug({ artistId, total }, "getArtistSongs successfully fetched");
         return buildPaginatedResult<SongSchema>(songs as SongSchema[], total, params);
     }
 }

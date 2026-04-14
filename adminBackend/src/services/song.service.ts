@@ -25,7 +25,7 @@ export class SongService {
         this.logger.debug({ input }, "createSong starting");
         const jobId:string = this.signatureService.generateSignedId();
         const songId:string = this.signatureService.generateSignedId();
-        this.logger.info(`[SERVICE] Initializing Processing Job ${jobId} for song: ${input.title}`);
+        this.logger.info({ jobId, title: input.title }, "initializing processing job for song");
         await this.songProcessingJobRepository.create({
             id: songId,
             jobId: jobId,
@@ -46,7 +46,7 @@ export class SongService {
                 jobId,
             }
         });
-        this.logger.info(`[SERVICE] Dispatched Inngest event for Job ${jobId}`);
+        this.logger.info({ jobId }, "dispatched inngest event for processing job");
         return {
             id: songId,
             jobId: jobId,
@@ -65,24 +65,35 @@ export class SongService {
     }
 
     async updateSong(id: string, data: UpdateSongInput): Promise<SongSchema> {
+        this.logger.debug({ id, data }, "updateSong starting");
         // Best effort update in search index if title/artist changes
         this.signatureService.verifyId(id,"songId");
         const song:SongSchema = await this.songRepository.update(id, data);
+        this.logger.info({ id }, "song updated in repository");
         try {
             await this.searchService.save(song as any);
+            this.logger.info({ id }, "song updated in search index");
         } catch (err) {
-            this.logger.error(`[SERVICE] Failed to update search index for song ${id}:`, err);
+            this.logger.error({ err, id }, "failed to update search index for song");
         }
         return song;
     }
     async deleteSong(id: string): Promise<SongSchema> {
+        this.logger.debug({ id }, "deleteSong starting");
         this.signatureService.verifyId(id,"songId");
         const song:SongSchema = await this.songRepository.delete(id);
-        try { await this.searchService.delete(id); } catch (err) {
-            this.logger.error(`[SERVICE] Failed to delete song ${id} from search index:`, err);
+        this.logger.info({ id }, "song deleted from repository");
+        try { 
+            await this.searchService.delete(id); 
+            this.logger.info({ id }, "song deleted from search index");
+        } catch (err) {
+            this.logger.error({ err, id }, "failed to delete song from search index");
         }
-        try { await this.recommendationService.delete(id); } catch (err) {
-            this.logger.error(`[SERVICE] Failed to delete song ${id} from recommendation engine:`, err);
+        try { 
+            await this.recommendationService.delete(id); 
+            this.logger.info({ id }, "song deleted from recommendation engine");
+        } catch (err) {
+            this.logger.error({ err, id }, "failed to delete song from recommendation engine");
         }
         return song;
     }

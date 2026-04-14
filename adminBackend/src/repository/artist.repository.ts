@@ -16,6 +16,7 @@ export class ArtistRepository implements Repository<ArtistSchema, CreateArtistDa
     }
 
     async create(data: CreateArtistData): Promise<ArtistSchema> {
+        this.logger.debug({ data }, "create starting");
         const [artist] = await this.db`
             INSERT INTO artists (id, name, about, dob, cover_image_key, banner_image_key)
             VALUES (
@@ -36,6 +37,7 @@ export class ArtistRepository implements Repository<ArtistSchema, CreateArtistDa
     }
 
     async getById(id: string): Promise<ArtistSchema> {
+        this.logger.debug({ id }, "getById starting");
         const [artist] = await this.db`
             SELECT * FROM artists WHERE id = ${id}
         `;
@@ -44,11 +46,13 @@ export class ArtistRepository implements Repository<ArtistSchema, CreateArtistDa
     }
 
     async count(): Promise<number> {
+        this.logger.debug("count starting");
         const [row] = await this.db`SELECT count(*)::int as count FROM artists`;
         return row?.count || 0;
     }
 
     async getAll(limit?: number, offset?: number): Promise<ArtistSchema[]> {
+        this.logger.debug({ limit, offset }, "getAll starting");
         const artists = await this.db`
             SELECT * FROM artists 
             ORDER BY created_at DESC
@@ -58,6 +62,7 @@ export class ArtistRepository implements Repository<ArtistSchema, CreateArtistDa
     }
 
     async update(id: string, data: UpdateArtistData): Promise<ArtistSchema> {
+        this.logger.debug({ id, data }, "update starting");
         const [artist] = await this.db`
             UPDATE artists
             SET
@@ -74,6 +79,7 @@ export class ArtistRepository implements Repository<ArtistSchema, CreateArtistDa
     }
 
     async delete(id: string): Promise<ArtistSchema> {
+        this.logger.debug({ id }, "delete starting");
         const [artist] = await this.db`
             DELETE FROM artists WHERE id = ${id} RETURNING *
         `;

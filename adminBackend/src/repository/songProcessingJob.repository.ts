@@ -15,6 +15,7 @@ export class SongProcessingJobRepository {
     }
 
     async create(data: CreateJobData): Promise<SongProcessingJob> {
+        this.logger.debug({ data }, "create starting");
         const [job] = await this.db`
             INSERT INTO song_processing_job (
                 id, job_id,title, artist_name, duration, temp_song_key, song_key, image_key, 
@@ -56,6 +57,7 @@ export class SongProcessingJobRepository {
     }
 
     async getById(id: string): Promise<SongProcessingJob> {
+        this.logger.debug({ id }, "getById starting");
         const [job] = await this.db`
             SELECT * FROM song_processing_job WHERE id = ${id}
         `;
@@ -64,6 +66,7 @@ export class SongProcessingJobRepository {
     }
 
     async update(id: string, data: UpdateJobData): Promise<SongProcessingJob> {
+        this.logger.debug({ id, data }, "update starting");
         const [job] = await this.db`
             UPDATE song_processing_job
             SET
@@ -99,6 +102,7 @@ export class SongProcessingJobRepository {
     }
 
     async delete(id: string): Promise<SongProcessingJob> {
+        this.logger.debug({ id }, "delete starting");
         const [job] = await this.db`
             DELETE FROM song_processing_job WHERE id = ${id} RETURNING *
         `;
@@ -107,6 +111,7 @@ export class SongProcessingJobRepository {
     }
 
     async getByStatus(status: string): Promise<SongProcessingJob[]> {
+        this.logger.debug({ status }, "getByStatus starting");
         const jobs = await this.db`
             SELECT * FROM song_processing_job WHERE status = ${status}
         `;

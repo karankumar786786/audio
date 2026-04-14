@@ -45,7 +45,8 @@ const stream = pretty({
         else if (service.includes("Misc")) color = COLORS.MiscService;
 
         const label = `${COLORS.Bright}${color}[${service}]${COLORS.Reset}`;
-        return `${label} ${log[messageKey]}`;
+        const trace = log.traceId ? ` ${COLORS.Infra}(${log.traceId})${COLORS.Reset}` : "";
+        return `${label}${trace} ${log[messageKey]}`;
     },
 });
 

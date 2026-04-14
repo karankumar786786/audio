@@ -19,6 +19,7 @@ export class PlaylistRepository implements Repository<PlaylistSchema, CreatePlay
     }
 
     async create(data: CreatePlaylistData): Promise<PlaylistSchema> {
+        this.logger.debug({ data }, "create starting");
         const [playlist] = await this.db`
             INSERT INTO playlists (id, name, cover_image_key, banner_image_key)
             VALUES (${data.id}, ${data.name}, ${data.coverImageKey}, ${data.bannerImageKey})
@@ -29,6 +30,7 @@ export class PlaylistRepository implements Repository<PlaylistSchema, CreatePlay
     }
 
     async getById(id: string): Promise<PlaylistSchema> {
+        this.logger.debug({ id }, "getById starting");
         const [playlist] = await this.db`
             SELECT * FROM playlists WHERE id = ${id}
         `;
@@ -42,6 +44,7 @@ export class PlaylistRepository implements Repository<PlaylistSchema, CreatePlay
     }
 
     async getAll(limit?: number, offset?: number): Promise<PlaylistSchema[]> {
+        this.logger.debug({ limit, offset }, "getAll starting");
         const rows = await this.db`
             SELECT * FROM playlists 
             ORDER BY created_at DESC
@@ -51,6 +54,7 @@ export class PlaylistRepository implements Repository<PlaylistSchema, CreatePlay
     }
 
     async update(id: string, data: UpdatePlaylistData): Promise<PlaylistSchema> {
+        this.logger.debug({ id, data }, "update starting");
         const [playlist] = await this.db`
             UPDATE playlists
             SET
@@ -76,6 +80,7 @@ export class PlaylistRepository implements Repository<PlaylistSchema, CreatePlay
     // ── Playlist ↔ Song join operations ────────────────────────────────────────
 
     async addSong(data:PlaylistSongSchema): Promise<PlaylistSongSchema> {
+        this.logger.debug({ data }, "addSong starting");
         const id:string = this.signatureService.generateSignedId();
         const entry = await this.db`
             INSERT INTO playlist_songs (id, playlist_id, song_id)
@@ -88,6 +93,7 @@ export class PlaylistRepository implements Repository<PlaylistSchema, CreatePlay
     }
 
     async removeSong(data:PlaylistSongSchema): Promise<PlaylistSongSchema> {
+        this.logger.debug({ data }, "removeSong starting");
         const [entry] = await this.db`
             DELETE FROM playlist_songs
             WHERE playlist_id = ${data.playlistId} AND song_id = ${data.songId}
@@ -106,6 +112,7 @@ export class PlaylistRepository implements Repository<PlaylistSchema, CreatePlay
     }
 
     async getSongs(playlistId: string, limit?: number, offset?: number): Promise<SongSchema[]> {
+        this.logger.debug({ playlistId, limit, offset }, "getSongs starting");
         const rows = await this.db`
             SELECT 
                 s.id,

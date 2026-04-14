@@ -1,6 +1,7 @@
+import { config } from "dotenv";
+config();
 import express from "express";
 import cors from "cors";
-import { config } from "dotenv";
 import { errorHandler } from "./middlewares/errorHandler";
 import { ApiError } from "./utils/ApiError";
 import helmet from "helmet";
@@ -8,7 +9,6 @@ import { masterRouter } from "./routes";
 import { logger } from "./observablity";
 import { traceMiddleware } from "./middlewares/trace.middleware";
 
-config();
 
 const app = express();
 

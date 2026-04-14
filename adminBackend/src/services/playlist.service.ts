@@ -32,30 +32,41 @@ export class PlaylistService {
         return playlist;
     }
     async getPlaylists(params: PaginationParams): Promise<PaginatedResult<PlaylistSchema>> {
+        this.logger.debug({ params }, "getPlaylists starting");
         const offset:number = (params.page - 1) * params.limit;
         const [data, total] = await Promise.all([
             this.playlistRepository.getAll(params.limit, offset),
             this.playlistRepository.count()
         ]);
+        this.logger.debug({ total }, "getPlaylists successfully fetched");
         return buildPaginatedResult<PlaylistSchema>(data, total, params);
     }
     async getPlaylistById(id: string): Promise<PlaylistSchema> {
+        this.logger.debug({ id }, "getPlaylistById starting");
         this.signatureService.verifyId(id,"playlistId");
         return await this.playlistRepository.getById(id);
     }
     async getPlaylistSongs(playlistId: string, params: PaginationParams): Promise<PaginatedResult<SongSchema>> {
+        this.logger.debug({ playlistId, params }, "getPlaylistSongs starting");
         const offset:number = (params.page - 1) * params.limit;
         const [data, total] = await Promise.all([
             this.playlistRepository.getSongs(playlistId, params.limit, offset),
             this.playlistRepository.countSongs(playlistId)
         ]);
+        this.logger.debug({ playlistId, total }, "getPlaylistSongs successfully fetched");
         return buildPaginatedResult<SongSchema>(data, total, params);
     }
     async deletePlaylist(id: string): Promise<PlaylistSchema> {
+        this.logger.debug({ id }, "deletePlaylist starting");
         this.signatureService.verifyId(id,"playlistId");
         const playlist = await this.playlistRepository.delete(id);
-        try { await this.searchService.delete(id); } catch (_) { 
-            this.logger.error("error in deleting from search service");
+        this.logger.info({ id }, "playlist deleted from repository");
+        
+        try { 
+            await this.searchService.delete(id); 
+            this.logger.info({ id }, "playlist deleted from search index");
+        } catch (err) { 
+            this.logger.error({ err, id }, "failed to delete playlist from search service");
         }
         return playlist;
     }
@@ -68,8 +79,11 @@ export class PlaylistService {
         return result;
     }
     async removeSongFromPlaylist(data:PlaylistSongSchema): Promise<PlaylistSongSchema> {
+        this.logger.debug({ data }, "removeSongFromPlaylist starting");
         this.signatureService.verifyId(data.playlistId,"playlistId");
         this.signatureService.verifyId(data.songId,"songId");
-        return await this.playlistRepository.removeSong(data);
+        const result = await this.playlistRepository.removeSong(data);
+        this.logger.info({ playlistId: data.playlistId, songId: data.songId }, "song removed from playlist");
+        return result;
     }
 }

@@ -17,6 +17,7 @@ export class SongRepository implements Repository<SongSchema, CreateSongData, Up
     }
 
     async create(data: CreateSongData): Promise<SongSchema> {
+        this.logger.debug({ data }, "create starting");
         const [song] = await this.db`
             INSERT INTO songs (id, title, artist_name, duration, song_key, image_key, language, job_id)
             VALUES (
@@ -36,6 +37,7 @@ export class SongRepository implements Repository<SongSchema, CreateSongData, Up
     }
 
     async getById(id: string): Promise<SongSchema> {
+        this.logger.debug({ id }, "getById starting");
         const [song] = await this.db`
             SELECT * FROM songs WHERE id = ${id}
         `;
@@ -49,6 +51,7 @@ export class SongRepository implements Repository<SongSchema, CreateSongData, Up
     }
 
     async getAll(limit?: number, offset?: number): Promise<SongSchema[]> {
+        this.logger.debug({ limit, offset }, "getAll starting");
         const songs = await this.db`
             SELECT * FROM songs 
             ORDER BY created_at DESC
@@ -58,6 +61,7 @@ export class SongRepository implements Repository<SongSchema, CreateSongData, Up
     }
 
     async update(id: string, data: UpdateSongData): Promise<SongSchema> {
+        this.logger.debug({ id, data }, "update starting");
         const [song] = await this.db`
             UPDATE songs
             SET
@@ -77,6 +81,7 @@ export class SongRepository implements Repository<SongSchema, CreateSongData, Up
     }
 
     async getByArtistName(artistName: string, limit?: number, offset?: number): Promise<SongSchema[]> {
+        this.logger.debug({ artistName, limit, offset }, "getByArtistName starting");
         const rows = await this.db`
             SELECT * FROM songs 
             WHERE artist_name = ${artistName}
@@ -87,6 +92,7 @@ export class SongRepository implements Repository<SongSchema, CreateSongData, Up
     }
 
     async delete(id: string): Promise<SongSchema> {
+        this.logger.debug({ id }, "delete starting");
         const [song] = await this.db`
             DELETE FROM songs WHERE id = ${id} RETURNING *
         `;
