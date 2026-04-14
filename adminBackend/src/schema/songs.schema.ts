@@ -20,7 +20,7 @@ export const songSchema = z.object({
   jobId: z.string(),
   createdAt: z.string().datetime().optional(),
 });
-
 export type SongSchema = z.infer<typeof songSchema>;
 
 export const updateSongSchema = CreateSongSchema.partial();
+export type UpdateSongInput = z.infer<typeof updateSongSchema>;

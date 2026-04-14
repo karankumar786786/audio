@@ -8,7 +8,7 @@ import {
     updateArtist,
 } from "../controllers/artistContoller";
 import { validate } from "../middlewares/validate.middleware";
-import { artistSchema, createArtistSchema } from "../schema/artist.schema";
+import { artistSchema, createArtistSchema ,updateArtistSchema} from "../schema/artist.schema";
 
 
 
@@ -18,5 +18,5 @@ artistRouter.post("/", validate(createArtistSchema), createArtist);
 artistRouter.get("/", getArtists);
 artistRouter.get("/:id", getArtistById);
 artistRouter.get("/:id/songs", getSongsOfArtist);
-artistRouter.put("/:id", validate(artistSchema.partial()), updateArtist);
+artistRouter.put("/:id", validate(updateArtistSchema), updateArtist);
 artistRouter.delete("/:id", deleteArtist);

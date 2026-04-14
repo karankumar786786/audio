@@ -2,47 +2,40 @@ import * as crypto from 'crypto';
 
 export class SignatureUtility {
     private static readonly ALGORITHM = 'sha256';
-    private  readonly SECRET:string = 'fallback-secret-for-dev-only-change-in-prod';
+    private readonly SECRET: string;
 
-    /**
-     *
-     */
-    constructor(secret:string) {
+    constructor(secret: string) {
+        if (!secret) {
+            throw new Error("Secret is required");
+        }
         this.SECRET = secret;
     }
 
-    /**
-     * Generates a secure Signed ID in the format `uuid.signature`.
-     * This makes the ID self-verifying.
-     */
     generateSignedId(): string {
         const uuid = crypto.randomUUID().replace(/-/g, "");
+
         const signature = crypto
             .createHmac(SignatureUtility.ALGORITHM, this.SECRET)
             .update(uuid)
             .digest('hex');
+
         return `${uuid}.${signature}`;
     }
 
-    /**
-     * Verifies if a provided Signed ID is valid.
-     * Expects format: `uuid.signature`
-     */
-    verifyId(signedId: string,ref:string = "id") {
+    verifyId(signedId: string, ref: string = "id"): void {
         if (!signedId || typeof signedId !== 'string') {
-            throw new Error(`invalid ${ref} recived`);
-        };
+            throw new Error(`Invalid ${ref} received`);
+        }
 
         const parts = signedId.split('.');
         if (parts.length !== 2) {
-            throw new Error(`invalid ${ref} recived`);
+            throw new Error(`Invalid ${ref} received`);
         }
 
-        const uuid = parts[0];
-        const providedSignature = parts[1];
+        const [uuid, providedSignature] = parts;
 
         if (!uuid || !providedSignature) {
-            throw new Error(`invalid ${ref} recived`);
+            throw new Error(`Invalid ${ref} received`);
         }
 
         const expectedSignature = crypto
@@ -51,12 +44,17 @@ export class SignatureUtility {
             .digest('hex');
 
         try {
-            return crypto.timingSafeEqual(
+            const isValid = crypto.timingSafeEqual(
                 Buffer.from(providedSignature, 'hex'),
                 Buffer.from(expectedSignature, 'hex')
             );
-        } catch (e) {
-            throw new Error(`invalid ${ref} recived`);
+
+            if (!isValid) {
+                throw new Error(`Invalid ${ref} signature`);
+            }
+
+        } catch {
+            throw new Error(`Invalid ${ref} received`);
         }
     }
 }

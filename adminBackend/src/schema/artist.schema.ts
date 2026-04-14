@@ -25,3 +25,7 @@ export function coerceDob(dob: string): string {
 export const createArtistSchema = artistSchema.omit({ id: true, createdAt: true });
 
 export type CreateArtistSchema = z.infer<typeof createArtistSchema>
+
+export const updateArtistSchema = artistSchema.partial();
+
+export type UpdateArtistSchema = z.infer<typeof updateArtistSchema>;

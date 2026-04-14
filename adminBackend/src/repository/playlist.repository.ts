@@ -1,5 +1,6 @@
 import { db } from "../infra";
 import { type PlaylistSchema, type PlaylistSongSchema } from "../schema/playlist.schema";
+import { type SongSchema } from "../schema/songs.schema";
 import type { Repository } from "../types/repository.type";
 import { randomUUIDv7 } from "bun";
 
@@ -95,7 +96,7 @@ export class PlaylistRepository implements Repository<PlaylistSchema, CreatePlay
         return row?.count || 0;
     }
 
-    async getSongs(playlistId: string, limit?: number, offset?: number): Promise<any[]> {
+    async getSongs(playlistId: string, limit?: number, offset?: number): Promise<SongSchema[]> {
         const rows = await db`
             SELECT 
                 s.id,
@@ -112,7 +113,7 @@ export class PlaylistRepository implements Repository<PlaylistSchema, CreatePlay
             WHERE sps.playlist_id = ${playlistId}
             LIMIT ${limit ?? null} OFFSET ${offset ?? null}
         `;
-        return rows;
+        return rows as any as SongSchema[];
     }
 
     // Maps DB snake_case row → camelCase PlaylistSchema

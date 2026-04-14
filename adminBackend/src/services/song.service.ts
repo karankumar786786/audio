@@ -7,12 +7,12 @@ import {
     searchService,
     recommendationService
 } from "../infra";
-import type { CreateSongInput, SongSchema } from "../schema/songs.schema";
+import type { CreateSongInput, SongSchema, UpdateSongInput } from "../schema/songs.schema";
 import type { PaginationParams, PaginatedResult } from "../types/pagination.type";
 import { buildPaginatedResult } from "../types/pagination.type";
 
 export class SongService {
-    async createSong(input: CreateSongInput) {
+    async createSong(input: CreateSongInput): Promise<{ id: string, jobId: string, status: string }> {
         const jobId = signatureService.generateSignedId();
         const songId = signatureService.generateSignedId();
 
@@ -59,7 +59,7 @@ export class SongService {
         return buildPaginatedResult(data, total, params);
     }
 
-    async updateSong(id: string, data: any): Promise<SongSchema> {
+    async updateSong(id: string, data: UpdateSongInput): Promise<SongSchema> {
         // Best effort update in search index if title/artist changes
         const song = await songRepository.update(id, data);
 

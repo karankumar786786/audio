@@ -4,7 +4,8 @@ import {
     searchService,
     db
 } from "../infra";
-import type { ArtistSchema, CreateArtistSchema } from "../schema/artist.schema";
+import type { ArtistSchema, CreateArtistSchema, UpdateArtistSchema } from "../schema/artist.schema";
+import type { SongSchema } from "../schema/songs.schema";
 import type { PaginationParams, PaginatedResult } from "../types/pagination.type";
 import { buildPaginatedResult } from "../types/pagination.type";
 
@@ -45,7 +46,7 @@ export class ArtistService {
         return await artistRepository.getById(id);
     }
 
-    async updateArtist(id: string, data: any): Promise<ArtistSchema> {
+    async updateArtist(id: string, data: UpdateArtistSchema): Promise<ArtistSchema> {
         return await artistRepository.update(id, data);
     }
 
@@ -55,7 +56,7 @@ export class ArtistService {
         return artist;
     }
 
-    async getArtistSongs(artistId: string, params: PaginationParams): Promise<PaginatedResult<any>> {
+    async getArtistSongs(artistId: string, params: PaginationParams): Promise<PaginatedResult<SongSchema>> {
         const artist = await artistRepository.getById(artistId);
         const offset = (params.page - 1) * params.limit;
 
@@ -74,6 +75,6 @@ export class ArtistService {
             LIMIT ${params.limit} OFFSET ${offset}
         `;
 
-        return buildPaginatedResult(songs, total, params);
+        return buildPaginatedResult(songs as any as SongSchema[], total, params);
     }
 }
