@@ -66,7 +66,7 @@ export const imagekitClient = new ImageKit(
 
 // Repositories
 const artistRepository = new ArtistRepository(db, logger.child({ service: "ArtistRepository" }));
-const playlistRepository = new PlaylistRepository(db, logger.child({ service: "PlaylistRepository" }), signatureService);
+const playlistRepository = new PlaylistRepository(db, logger.child({ service: "PlaylistRepository" }));
 const songRepository = new SongRepository(db, logger.child({ service: "SongRepository" }));
 const songProcessingJobRepository = new SongProcessingJobRepository(db, logger.child({ service: "SongJobRepository" }));
 const inngest = new Inngest({ id: "test-music" });

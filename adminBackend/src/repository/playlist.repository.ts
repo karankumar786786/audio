@@ -1,59 +1,38 @@
-import { logMethods, type Logger } from "../observablity";
-import { type CreatePlaylistData, type PlaylistSchema, type PlaylistSongSchema, type UpdatePlaylistData } from "../schema";
-import { type SongSchema } from "../schema";
-import type { Repository } from "../types/repository.type";
-import { NotFoundError, ConflictError } from "../errors";
-import type { SignatureService } from "../lib";
+import { randomUUIDv7 } from "bun";
 import type { Database } from "../infra/db";
+import { playlistSchema, playlistSongSchema, type PlaylistSchema, type PlaylistSongSchema } from "../schema/playlist.schema";
+import { BaseRepository } from "./base.repository";
+import { logMethods, type Logger } from "../observablity";
 
+type CreatePlaylistData = Omit<PlaylistSchema,  "createdAt" | "updatedAt">;
+type UpdatePlaylistData = Partial<CreatePlaylistData>;
 
-
-export class PlaylistRepository implements Repository<PlaylistSchema, CreatePlaylistData, UpdatePlaylistData> {
+export class PlaylistRepository extends BaseRepository<PlaylistSchema, CreatePlaylistData, UpdatePlaylistData> {
     constructor(
-        private readonly db: Database,
-        private readonly logger: Logger,
-        private readonly signatureService:SignatureService,
+        db: Database,
+        logger: Logger
     ) {
-        logMethods(this,this.logger);
+        super(db, "playlists", playlistSchema, logger);
+        logMethods(this, this.logger);
     }
 
     async create(data: CreatePlaylistData): Promise<PlaylistSchema> {
-        this.logger.debug({ data }, "create starting");
         const [playlist] = await this.db`
             INSERT INTO playlists (id, name, cover_image_key, banner_image_key)
             VALUES (${data.id}, ${data.name}, ${data.coverImageKey}, ${data.bannerImageKey})
-            RETURNING *
+            RETURNING 
+                id, name, 
+                cover_image_key AS "coverImageKey", 
+                banner_image_key AS "bannerImageKey", 
+                created_at AS "createdAt", 
+                updated_at AS "updatedAt"
         `;
+
         if (!playlist) throw new Error("Failed to create playlist");
         return this.mapRow(playlist);
     }
 
-    async getById(id: string): Promise<PlaylistSchema> {
-        this.logger.debug({ id }, "getById starting");
-        const [playlist] = await this.db`
-            SELECT * FROM playlists WHERE id = ${id}
-        `;
-        if (!playlist) throw new NotFoundError(`Playlist with id ${id} not found`);
-        return this.mapRow(playlist);
-    }
-
-    async count(): Promise<number> {
-        const [row] = await this.db`SELECT count(*)::int as count FROM playlists`;
-        return row?.count || 0;
-    }
-
-    async getAll(limit?: number, offset?: number): Promise<PlaylistSchema[]> {
-        this.logger.debug({ limit, offset }, "getAll starting");
-        const rows = await this.db`
-            SELECT * FROM playlists 
-            ORDER BY created_at DESC
-            LIMIT ${limit ?? null} OFFSET ${offset ?? null}
-        `;
-        return rows.map((row) => this.mapRow(row));
-    }
-
     async update(id: string, data: UpdatePlaylistData): Promise<PlaylistSchema> {
-        this.logger.debug({ id, data }, "update starting");
         const [playlist] = await this.db`
             UPDATE playlists
             SET
@@ -62,44 +41,55 @@ export class PlaylistRepository implements Repository<PlaylistSchema, CreatePlay
                 banner_image_key = COALESCE(${data.bannerImageKey ?? null}, banner_image_key),
                 updated_at       = NOW()
             WHERE id = ${id}
-            RETURNING *
+            RETURNING 
+                id, name, 
+                cover_image_key AS "coverImageKey", 
+                banner_image_key AS "bannerImageKey", 
+                created_at AS "createdAt", 
+                updated_at AS "updatedAt"
         `;
-        if (!playlist) throw new NotFoundError(`Playlist with id ${id} not found`);
+
+        if (!playlist) throw new Error(`Playlist with id ${id} not found`);
         return this.mapRow(playlist);
     }
 
-    async delete(id: string): Promise<PlaylistSchema> {
-        const [playlist] = await this.db`
-            DELETE FROM playlists WHERE id = ${id} RETURNING *
+    async getAll(limit?: number, offset?: number): Promise<PlaylistSchema[]> {
+        const rows = await this.db`
+            SELECT 
+                id, name, 
+                cover_image_key AS "coverImageKey", 
+                banner_image_key AS "bannerImageKey", 
+                created_at AS "createdAt", 
+                updated_at AS "updatedAt"
+            FROM playlists 
+            ORDER BY created_at DESC
+            LIMIT ${limit ?? null} OFFSET ${offset ?? null}
         `;
-        if (!playlist) throw new NotFoundError(`Playlist with id ${id} not found`);
-        return this.mapRow(playlist);
+        return rows.map((row) => this.mapRow(row));
     }
 
     // ── Playlist ↔ Song join operations ────────────────────────────────────────
 
-    async addSong(data:PlaylistSongSchema): Promise<PlaylistSongSchema> {
-        this.logger.debug({ data }, "addSong starting");
-        const id:string = this.signatureService.generateSignedId();
-        const entry = await this.db`
+    async addSong(data: PlaylistSongSchema): Promise<PlaylistSongSchema> {
+        const id = randomUUIDv7();
+        const [entry] = await this.db`
             INSERT INTO playlist_songs (id, playlist_id, song_id)
             VALUES (${id}, ${data.playlistId}, ${data.songId})
             ON CONFLICT (playlist_id, song_id) DO NOTHING
-            RETURNING *
+            RETURNING id, playlist_id AS "playlistId", song_id AS "songId"
         `;
-        if (entry.length === 0) throw new ConflictError("Song already exists in playlist");
-        return this.mapSongRow(entry[0] as Record<string, unknown>);
+        if (!entry) throw new Error("Song already exists in playlist or insert failed");
+        return playlistSongSchema.parse(entry);
     }
 
-    async removeSong(data:PlaylistSongSchema): Promise<PlaylistSongSchema> {
-        this.logger.debug({ data }, "removeSong starting");
+    async removeSong(data: PlaylistSongSchema): Promise<PlaylistSongSchema> {
         const [entry] = await this.db`
             DELETE FROM playlist_songs
             WHERE playlist_id = ${data.playlistId} AND song_id = ${data.songId}
-            RETURNING *
+            RETURNING id, playlist_id AS "playlistId", song_id AS "songId"
         `;
-        if (!entry) throw new NotFoundError(`Song ${data.songId} not found in playlist ${data.playlistId}`);
-        return this.mapSongRow(entry);
+        if (!entry) throw new Error(`Song ${data.songId} not found in playlist ${data.playlistId}`);
+        return playlistSongSchema.parse(entry);
     }
 
     async countSongs(playlistId: string): Promise<number> {
@@ -110,8 +100,7 @@ export class PlaylistRepository implements Repository<PlaylistSchema, CreatePlay
         return row?.count || 0;
     }
 
-    async getSongs(playlistId: string, limit?: number, offset?: number): Promise<SongSchema[]> {
-        this.logger.debug({ playlistId, limit, offset }, "getSongs starting");
+    async getSongs(playlistId: string, limit?: number, offset?: number): Promise<any[]> {
         const rows = await this.db`
             SELECT 
                 s.id,
@@ -128,26 +117,6 @@ export class PlaylistRepository implements Repository<PlaylistSchema, CreatePlay
             WHERE sps.playlist_id = ${playlistId}
             LIMIT ${limit ?? null} OFFSET ${offset ?? null}
         `;
-        return rows as unknown as SongSchema[];
-    }
-
-    private mapRow(row: Record<string, unknown>): PlaylistSchema {
-        return {
-            id: row.id as string,
-            name: row.name as string,
-            coverImageKey: row.cover_image_key as string,
-            bannerImageKey: row.banner_image_key as string,
-            createdAt: (row.created_at as Date)?.toISOString(),
-            updatedAt: (row.updated_at as Date)?.toISOString(),
-        };
-    }
-
-    private mapSongRow(row: Record<string, unknown>): PlaylistSongSchema {
-        return {
-            id: row.id as string,
-            playlistId: row.playlist_id as string,
-            songId: row.song_id as string,
-        };
+        return rows;
     }
 }
-

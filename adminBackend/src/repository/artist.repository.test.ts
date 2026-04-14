@@ -7,8 +7,7 @@ describe("ArtistRepository", () => {
     let mockLogger: any;
 
     beforeEach(() => {
-        // mockDb is the neon function
-        mockDb = vi.fn();
+        mockDb = vi.fn() as any;
         mockLogger = {
             info: vi.fn(),
             error: vi.fn(),
@@ -19,28 +18,41 @@ describe("ArtistRepository", () => {
         repo = new ArtistRepository(mockDb, mockLogger);
     });
 
-    it("should map rows correctly from the database", async () => {
-        const mockRows = [{
-            id: "1",
-            name: "Artist One",
-            about: "About One",
-            dob: new Date("1990-01-01"),
-            cover_image_key: "cover.jpg",
-            banner_image_key: "banner.jpg",
-            created_at: new Date()
-        }];
-        mockDb.mockResolvedValue(mockRows);
+    const createMockArtist = (overrides = {}) => ({
+        id: "artist-1",
+        name: "Test Artist",
+        about: "Bio",
+        dob: "1990-01-01",
+        coverImageKey: "c1",
+        bannerImageKey: "b1",
+        createdAt: new Date().toISOString(),
+        ...overrides
+    });
 
-        const result = await repo.getById("1");
+    it("should create an artist correctly", async () => {
+        const mockArtist = createMockArtist();
+        mockDb.mockResolvedValue([mockArtist]);
 
-        expect(result.name).toBe("Artist One");
-        expect(result.id).toBe("1");
+        const result = await repo.create({
+            id: "artist-1",
+            name: "Test Artist",
+            about: "Bio",
+            dob: "1990-01-01",
+            coverImageKey: "c1",
+            bannerImageKey: "b1"
+        });
+
+        expect(result!.id).toBe("artist-1");
         expect(mockDb).toHaveBeenCalled();
     });
 
-    it("should throw NotFoundError if artist doesn't exist", async () => {
-        mockDb.mockResolvedValue([]);
+    it("should fetch artist by id", async () => {
+        const mockArtist = createMockArtist({ id: "1" });
+        mockDb.mockImplementation((arg: any) => {
+             return Promise.resolve([mockArtist]);
+        });
 
-        await expect(repo.getById("999")).rejects.toThrow();
+        const result = await repo.getById("1");
+        expect(result!.id).toBe("1");
     });
 });

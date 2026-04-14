@@ -49,28 +49,28 @@ export { db };
 
 // --- 1. Library Services ---
 
- const searchService = new AlgoliaSearchService(
+ export const searchService = new AlgoliaSearchService(
     `${process.env.APP_ID}`,
     `${process.env.API_KEY}`,
     `${process.env.INDEX_NAME}`,
     logger.child({ service: "AlgoliaSearchService" })
 );
 
-const storageService = new S3StorageService(
+export const storageService = new S3StorageService(
     `${process.env.REGION}`,
     `${process.env.ACCESS_KEY_ID}`,
     `${process.env.SECRET_KEY}`,
     logger.child({ service: "S3StorageService" })
 );
 
-const recommendationService = new RecommbeeRecommendationService(
+export const recommendationService = new RecommbeeRecommendationService(
     `${process.env.RECOMBEE_DATABASE}`,
     `${process.env.RECOMBEE_DATABASE_PRIVATE_TOKEN}`,
     `${process.env.RECOMBEE_DATABASE_REGION}`,
     logger.child({ service: "RecommbeeService" })
 );
 
-const signatureService = new NodeCryptoSignatureService(
+export const signatureService = new NodeCryptoSignatureService(
     `${process.env.SIGNATURE_SECRET}`
 );
 

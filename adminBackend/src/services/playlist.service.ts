@@ -1,5 +1,4 @@
 import type { SearchRecord, SearchService } from "../lib/search";
-
 import type { SignatureService } from "../lib/signature";
 import { logMethods, type Logger } from "../observablity";
 import type { PlaylistRepository } from "../repository";
@@ -32,6 +31,7 @@ export class PlaylistService {
         }
         return playlist;
     }
+
     async getPlaylists(params: PaginationParams): Promise<PaginatedResult<PlaylistSchema>> {
         this.logger.debug({ params }, "getPlaylists starting");
         const offset:number = (params.page - 1) * params.limit;
@@ -42,21 +42,26 @@ export class PlaylistService {
         this.logger.debug({ total }, "getPlaylists successfully fetched");
         return buildPaginatedResult<PlaylistSchema>(data, total, params);
     }
+
     async getPlaylistById(id: string): Promise<PlaylistSchema> {
         this.logger.debug({ id }, "getPlaylistById starting");
         this.signatureService.verifyId(id,"playlistId");
+        // Repository now auto-throws NotFoundError
         return await this.playlistRepository.getById(id);
     }
+
     async getPlaylistSongs(playlistId: string, params: PaginationParams): Promise<PaginatedResult<SongSchema>> {
         this.logger.debug({ playlistId, params }, "getPlaylistSongs starting");
+        this.signatureService.verifyId(playlistId,"playlistId");
         const offset:number = (params.page - 1) * params.limit;
         const [data, total] = await Promise.all([
             this.playlistRepository.getSongs(playlistId, params.limit, offset),
             this.playlistRepository.countSongs(playlistId)
         ]);
         this.logger.debug({ playlistId, total }, "getPlaylistSongs successfully fetched");
-        return buildPaginatedResult<SongSchema>(data, total, params);
+        return buildPaginatedResult<SongSchema>(data as SongSchema[], total, params);
     }
+
     async deletePlaylist(id: string): Promise<PlaylistSchema> {
         this.logger.debug({ id }, "deletePlaylist starting");
         this.signatureService.verifyId(id,"playlistId");
@@ -71,18 +76,22 @@ export class PlaylistService {
         }
         return playlist;
     }
+
     async addSongToPlaylist(data:PlaylistSongSchema): Promise<PlaylistSongSchema> {
         this.logger.debug({ data }, "addSongToPlaylist starting");
         this.signatureService.verifyId(data.playlistId,"playlistId");
         this.signatureService.verifyId(data.songId,"songId");
+        // Repository signature corrected to take the schema object
         const result = await this.playlistRepository.addSong(data);
         this.logger.info({ playlistId: data.playlistId, songId: data.songId }, "song added to playlist");
         return result;
     }
+
     async removeSongFromPlaylist(data:PlaylistSongSchema): Promise<PlaylistSongSchema> {
         this.logger.debug({ data }, "removeSongFromPlaylist starting");
         this.signatureService.verifyId(data.playlistId,"playlistId");
         this.signatureService.verifyId(data.songId,"songId");
+        // Repository signature corrected to take the schema object
         const result = await this.playlistRepository.removeSong(data);
         this.logger.info({ playlistId: data.playlistId, songId: data.songId }, "song removed from playlist");
         return result;

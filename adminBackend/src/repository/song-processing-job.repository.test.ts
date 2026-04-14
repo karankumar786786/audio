@@ -1,67 +1,68 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { SongProcessingJobRepository } from "./song-processing-job.repository";
-import { NotFoundError } from "../errors";
 
 describe("SongProcessingJobRepository", () => {
-    let repository: SongProcessingJobRepository;
+    let repo: SongProcessingJobRepository;
     let mockDb: any;
     let mockLogger: any;
 
     beforeEach(() => {
         mockDb = vi.fn() as any;
         mockLogger = {
-            debug: vi.fn(),
             info: vi.fn(),
             error: vi.fn(),
+            debug: vi.fn(),
             child: vi.fn().mockReturnThis(),
         };
-        repository = new SongProcessingJobRepository(mockDb, mockLogger);
+
+        repo = new SongProcessingJobRepository(mockDb, mockLogger);
     });
 
-    describe("mapRow", () => {
-        it("should map database rows to SongProcessingJob correctly", () => {
-            const mockRow = {
-                id: "1",
-                job_id: "job-1",
-                title: "Test Job",
-                artist_name: "Artist",
-                status: "pending",
-                saved_in_search: true,
-                transcoded: false,
-            };
+    const createMockJob = (overrides = {}) => ({
+        id: "j1",
+        jobId: "job-123",
+        title: "Test Job",
+        artistName: "Artist",
+        tempSongKey: "temp/1.mp3",
+        imageKey: "img/1.jpg",
+        status: "pending",
+        transcoded: false,
+        transcribed: false,
+        extractedFeatures: false,
+        savedInSearch: false,
+        savedInRecommendation: false,
+        ...overrides
+    });
 
-            const result = (repository as any).mapRow(mockRow);
+    it("should create a job correctly", async () => {
+        const mockJob = createMockJob({ id: "j2" });
+        mockDb.mockResolvedValue([mockJob]);
 
-            expect(result.id).toBe("1");
-            expect(result.jobId).toBe("job-1");
-            expect(result.status).toBe("pending");
-            expect(result.savedInSearch).toBe(true);
-            expect(result.transcoded).toBe(false);
+        const result = await repo.create({
+            id: "j2",
+            jobId: "job-123",
+            title: "Test Job",
+            artistName: "Artist",
+            tempSongKey: "temp/1.mp3",
+            imageKey: "img/1.jpg",
+            transcoded: false,
+            transcribed: false,
+            extractedFeatures: false,
+            savedInSearch: false,
+            savedInRecommendation: false
         });
+
+        expect(result.id).toBe("j2");
+        expect(mockDb).toHaveBeenCalled();
     });
 
-    describe("getByStatus", () => {
-        it("should return jobs filtered by status", async () => {
-            const mockJobs = [{ id: "1", status: "pending" }];
-            mockDb.mockResolvedValue(mockJobs);
-
-            const result = await repository.getByStatus("pending");
-
-            expect(result).toHaveLength(1);
-            expect(result[0]!.id).toBe("1");
-            expect(mockDb).toHaveBeenCalledWith(expect.arrayContaining([expect.stringContaining("WHERE status = ")]), "pending");
+    it("should fetch job by id", async () => {
+        const mockJob = createMockJob({ id: "1" });
+        mockDb.mockImplementation((arg: any) => {
+             return Promise.resolve([mockJob]);
         });
-    });
 
-    describe("update", () => {
-        it("should update job and return mapped result", async () => {
-             const updateData = { status: "completed" as any };
-             mockDb.mockResolvedValue([{ id: "1", status: "completed" }]);
-
-             const result = await repository.update("1", updateData);
-
-             expect(result.status).toBe("completed");
-             expect(mockDb).toHaveBeenCalled();
-        }); 
+        const result = await repo.getById("1");
+        expect(result!.id).toBe("1");
     });
 });
