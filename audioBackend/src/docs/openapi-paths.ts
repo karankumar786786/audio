@@ -179,7 +179,7 @@ registry.registerPath({
 
 registry.registerPath({
   method: "get",
-  path: "/search/unified",
+  path: "/search",
   summary: "Unified search across songs, artists, and playlists",
   tags: ["Search"],
   parameters: [

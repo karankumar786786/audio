@@ -9,6 +9,10 @@ vi.mock("../../src/infra", async () => {
         userController: {
             createUser: vi.fn(),
             getUserById: vi.fn(),
+            addSongInUserFavourites: vi.fn(),
+            deleteSongInUserFavourites: vi.fn(),
+            getUserFavourites: vi.fn(),
+            getUserHistory: vi.fn(),
             getUserSearchHistory: vi.fn(),
             saveUserSearchHistory: vi.fn(),
             clearUserSearchHistory: vi.fn(),

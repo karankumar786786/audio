@@ -29,7 +29,7 @@ describe("Search API E2E", () => {
             });
 
             const response = await request(app)
-                .get("/api/v1/search/unified")
+                .get("/api/v1/search")
                 .query({ query: "test" });
 
             expect(response.status).toBe(200);
@@ -42,7 +42,7 @@ describe("Search API E2E", () => {
                 res.status(200).json({ success: true, message: "Search results", data: emptyResult });
             });
 
-            const response = await request(app).get("/api/v1/search/unified");
+            const response = await request(app).get("/api/v1/search");
 
             expect(response.status).toBe(200);
             expect(response.body.data.songs).toHaveLength(0);

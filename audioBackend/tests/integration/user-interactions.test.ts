@@ -46,6 +46,6 @@ describe("User Interactions Integration", () => {
         const result = await userService.getHistory("u1", 10, 0);
 
         expect(result).toHaveLength(1);
-        expect(result[0].userId).toBe("u1");
+        expect(result[0]!.userId).toBe("u1");
     });
 });

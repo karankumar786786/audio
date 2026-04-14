@@ -12,6 +12,7 @@ export const userRouter = Router();
 
 // Create / upsert user (for testing & Auth0 post-login callback)
 userRouter.post("/", validate(createUserSchema), userController.createUser);
+userRouter.get("/:id", userController.getUserById);
 
 // Favourites
 userRouter.post("/favourites", validate(favouriteSongInput), userController.addSongInUserFavourites);

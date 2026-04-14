@@ -7,9 +7,9 @@ vi.mock("../../src/infra", async () => {
     return {
         ...actual,
         playlistController: {
-            getSystemPlaylists: vi.fn(),
+            getPlaylists: vi.fn(),
             getPlaylistById: vi.fn(),
-            getSongs: vi.fn(),
+            getSongsOfPlaylist: vi.fn(),
         },
     };
 });
@@ -18,15 +18,15 @@ import { app } from "../../src/index";
 import * as infra from "../../src/infra";
 
 describe("Playlist API E2E", () => {
-    describe("GET /api/v1/playlists/system", () => {
-        it("should return 200 and list of system playlists", async () => {
-            const mockResult = [{ id: "p1", name: "Trending" }];
+    describe("GET /api/v1/playlists", () => {
+        it("should return 200 and list of playlists", async () => {
+            const mockResult = { data: [{ id: "p1", name: "Trending" }] };
             
-            (infra.playlistController.getSystemPlaylists as any).mockImplementation((req: any, res: any) => {
+            (infra.playlistController.getPlaylists as any).mockImplementation((req: any, res: any) => {
                 res.status(200).json({ success: true, message: "Playlists fetched", data: mockResult });
             });
 
-            const response = await request(app).get("/api/v1/playlists/system");
+            const response = await request(app).get("/api/v1/playlists");
 
             expect(response.status).toBe(200);
             expect(response.body.data).toEqual(mockResult);
@@ -50,9 +50,9 @@ describe("Playlist API E2E", () => {
 
     describe("GET /api/v1/playlists/:id/songs", () => {
         it("should return 200 and list of songs in playlist", async () => {
-            const mockSongs = [{ id: "s1", title: "Song 1" }];
+            const mockSongs = { data: [{ id: "s1", title: "Song 1" }] };
             
-            (infra.playlistController.getSongs as any).mockImplementation((req: any, res: any) => {
+            (infra.playlistController.getSongsOfPlaylist as any).mockImplementation((req: any, res: any) => {
                 res.status(200).json({ success: true, message: "Songs fetched", data: mockSongs });
             });
 
