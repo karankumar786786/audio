@@ -1,6 +1,7 @@
 import { type Database } from "../infra";
 import { type SongProcessingJob } from "../schema/songProcessingJob.schema";
 import type { Logger } from "../observablity";
+import { NotFoundError } from "../errors";
 
 type CreateJobData = Omit<SongProcessingJob, "transcodingAttempt" | "transcribingAttempt" | "status">;
 type UpdateJobData = Partial<SongProcessingJob>;
@@ -56,7 +57,7 @@ export class SongProcessingJobRepository {
         const [job] = await this.db`
             SELECT * FROM song_processing_job WHERE id = ${id}
         `;
-        if (!job) throw new Error(`Job with id ${id} not found`);
+        if (!job) throw new NotFoundError(`Job with id ${id} not found`);
         return this.mapRow(job);
     }
 
@@ -91,7 +92,7 @@ export class SongProcessingJobRepository {
             WHERE id = ${id}
             RETURNING *
         `;
-        if (!job) throw new Error(`Job with id ${id} not found`);
+        if (!job) throw new NotFoundError(`Job with id ${id} not found`);
         return this.mapRow(job);
     }
 
@@ -99,7 +100,7 @@ export class SongProcessingJobRepository {
         const [job] = await this.db`
             DELETE FROM song_processing_job WHERE id = ${id} RETURNING *
         `;
-        if (!job) throw new Error(`Job with id ${id} not found`);
+        if (!job) throw new NotFoundError(`Job with id ${id} not found`);
         return this.mapRow(job);
     }
 

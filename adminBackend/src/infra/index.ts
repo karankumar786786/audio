@@ -45,7 +45,7 @@ export const signatureService = new NodeCryptoSignatureService(
 
 // Repositories
 export const artistRepository = new ArtistRepository(db, logger);
-export const playlistRepository = new PlaylistRepository(db, logger);
+export const playlistRepository = new PlaylistRepository(db, logger,signatureService);
 export const songRepository = new SongRepository(db, logger);
 export const songProcessingJobRepository = new SongProcessingJobRepository(db, logger);
 export const inngest = new Inngest({id:"test-music"});

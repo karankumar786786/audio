@@ -2,6 +2,7 @@ import {  type Database } from "../infra";
 import type { Logger } from "../observablity";
 import { type ArtistSchema } from "../schema/artist.schema";
 import type { Repository } from "../types/repository.type";
+import { NotFoundError } from "../errors";
 
 type CreateArtistData = Omit<ArtistSchema, "createdAt">;
 type UpdateArtistData = Partial<CreateArtistData>;
@@ -25,7 +26,10 @@ export class ArtistRepository implements Repository<ArtistSchema, CreateArtistDa
             )
             RETURNING *
         `;
-        if (!artist) throw new Error("Failed to create artist");
+        if (!artist) {
+            this.logger.error("failed to create artist");
+            throw new Error("Failed to create artist")
+        };
         return this.mapRow(artist);
     }
 
@@ -33,7 +37,7 @@ export class ArtistRepository implements Repository<ArtistSchema, CreateArtistDa
         const [artist] = await this.db`
             SELECT * FROM artists WHERE id = ${id}
         `;
-        if (!artist) throw new Error(`Artist with id ${id} not found`);
+        if (!artist) throw new NotFoundError(`Artist with id ${id} not found`);
         return this.mapRow(artist);
     }
 
@@ -63,7 +67,7 @@ export class ArtistRepository implements Repository<ArtistSchema, CreateArtistDa
             WHERE id = ${id}
             RETURNING *
         `;
-        if (!artist) throw new Error(`Artist with id ${id} not found`);
+        if (!artist) throw new NotFoundError(`Artist with id ${id} not found`);
         return this.mapRow(artist);
     }
 
@@ -71,7 +75,7 @@ export class ArtistRepository implements Repository<ArtistSchema, CreateArtistDa
         const [artist] = await this.db`
             DELETE FROM artists WHERE id = ${id} RETURNING *
         `;
-        if (!artist) throw new Error(`Artist with id ${id} not found`);
+        if (!artist) throw new NotFoundError(`Artist with id ${id} not found`);
         return this.mapRow(artist);
     }
 

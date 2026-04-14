@@ -1,5 +1,6 @@
 import * as crypto from 'crypto';
 import type { SignatureService } from './index.types';
+import { BadRequestError } from '../../errors';
 
 export class NodeCryptoSignatureService implements SignatureService {
     private static readonly ALGORITHM = 'sha256';
@@ -7,7 +8,7 @@ export class NodeCryptoSignatureService implements SignatureService {
 
     constructor(secret: string) {
         if (!secret) {
-            throw new Error("Secret is required");
+            throw new Error("Secret is required"); // Internal config error, generic Error is fine or use a custom InternalError
         }
         this.SECRET = secret;
     }
@@ -25,18 +26,18 @@ export class NodeCryptoSignatureService implements SignatureService {
 
     verifyId(signedId: string, ref: string = "id"): void {
         if (!signedId || typeof signedId !== 'string') {
-            throw new Error(`Invalid ${ref} received`);
+            throw new BadRequestError(`Invalid ${ref} received`);
         }
 
         const parts = signedId.split('.');
         if (parts.length !== 2) {
-            throw new Error(`Invalid ${ref} received`);
+            throw new BadRequestError(`Invalid ${ref} received`);
         }
 
         const [uuid, providedSignature] = parts;
 
         if (!uuid || !providedSignature) {
-            throw new Error(`Invalid ${ref} received`);
+            throw new BadRequestError(`Invalid ${ref} received`);
         }
 
         const expectedSignature = crypto
@@ -51,11 +52,11 @@ export class NodeCryptoSignatureService implements SignatureService {
             );
 
             if (!isValid) {
-                throw new Error(`Invalid ${ref} signature`);
+                throw new BadRequestError(`Invalid ${ref} signature`);
             }
 
         } catch {
-            throw new Error(`Invalid ${ref} received`);
+            throw new BadRequestError(`Invalid ${ref} received`);
         }
     }
 }

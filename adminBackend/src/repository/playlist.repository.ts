@@ -1,9 +1,10 @@
-import { type Database } from "../infra";
 import type { Logger } from "../observablity";
 import { type PlaylistSchema, type PlaylistSongSchema } from "../schema/playlist.schema";
 import { type SongSchema } from "../schema/songs.schema";
 import type { Repository } from "../types/repository.type";
-import { randomUUIDv7 } from "bun";
+import { NotFoundError } from "../errors";
+import type { SignatureService } from "../lib/signature";
+import type { Database } from "../infra";
 
 type CreatePlaylistData = Omit<PlaylistSchema, "createdAt" | "updatedAt">;
 type UpdatePlaylistData = Partial<CreatePlaylistData>;
@@ -11,7 +12,8 @@ type UpdatePlaylistData = Partial<CreatePlaylistData>;
 export class PlaylistRepository implements Repository<PlaylistSchema, CreatePlaylistData, UpdatePlaylistData> {
     constructor(
         private readonly db: Database,
-        private readonly logger: Logger
+        private readonly logger: Logger,
+        private readonly signatureService:SignatureService,
     ) {}
 
     async create(data: CreatePlaylistData): Promise<PlaylistSchema> {
@@ -28,7 +30,7 @@ export class PlaylistRepository implements Repository<PlaylistSchema, CreatePlay
         const [playlist] = await this.db`
             SELECT * FROM playlists WHERE id = ${id}
         `;
-        if (!playlist) throw new Error(`Playlist with id ${id} not found`);
+        if (!playlist) throw new NotFoundError(`Playlist with id ${id} not found`);
         return this.mapRow(playlist);
     }
 
@@ -57,7 +59,7 @@ export class PlaylistRepository implements Repository<PlaylistSchema, CreatePlay
             WHERE id = ${id}
             RETURNING *
         `;
-        if (!playlist) throw new Error(`Playlist with id ${id} not found`);
+        if (!playlist) throw new NotFoundError(`Playlist with id ${id} not found`);
         return this.mapRow(playlist);
     }
 
@@ -65,14 +67,14 @@ export class PlaylistRepository implements Repository<PlaylistSchema, CreatePlay
         const [playlist] = await this.db`
             DELETE FROM playlists WHERE id = ${id} RETURNING *
         `;
-        if (!playlist) throw new Error(`Playlist with id ${id} not found`);
+        if (!playlist) throw new NotFoundError(`Playlist with id ${id} not found`);
         return this.mapRow(playlist);
     }
 
     // ── Playlist ↔ Song join operations ────────────────────────────────────────
 
     async addSong(data:PlaylistSongSchema): Promise<PlaylistSongSchema> {
-        const id = randomUUIDv7();
+        const id = this.signatureService.generateSignedId();
         const [entry] = await this.db`
             INSERT INTO playlist_songs (id, playlist_id, song_id)
             VALUES (${id}, ${data.playlistId}, ${data.songId})
@@ -89,7 +91,7 @@ export class PlaylistRepository implements Repository<PlaylistSchema, CreatePlay
             WHERE playlist_id = ${data.playlistId} AND song_id = ${data.songId}
             RETURNING *
         `;
-        if (!entry) throw new Error(`Song ${data.songId} not found in playlist ${data.playlistId}`);
+        if (!entry) throw new NotFoundError(`Song ${data.songId} not found in playlist ${data.playlistId}`);
         return this.mapSongRow(entry);
     }
 

@@ -5,69 +5,46 @@ import { parsePagination, type PaginatedResult, type PaginationParams } from "..
 import { coerceDob } from "../schema/artist.schema";
 import type {ArtistSchema, CreateArtistSchema} from "../schema/artist.schema";
 import type { SongSchema } from "../schema/songs.schema";
+import { asyncHandler } from "../utils/asyncHandler";
 
-export async function createArtist(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-    try {
-        // Coerce dob to ISO datetime so Postgres TIMESTAMPTZ is happy
-        const data:CreateArtistSchema = { ...req.body, dob: coerceDob(req.body.dob) };
-        const artist:ArtistSchema = await artistService.createArtist(data);
-        return res.status(201).json(new ApiResponse(201, "Artist created", artist));
-    } catch (error: any) {
-        next(error);
-    }
-}
+export const createArtist = asyncHandler(async (req: Request, res: Response) => {
+    // Coerce dob to ISO datetime so Postgres TIMESTAMPTZ is happy
+    const data: CreateArtistSchema = { ...req.body, dob: coerceDob(req.body.dob) };
+    const artist: ArtistSchema = await artistService.createArtist(data);
+    return res.status(201).json(new ApiResponse(201, "Artist created", artist));
+});
 
-export async function deleteArtist(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-    try {
-        const id = req.params.id as string;
-        signatureService.verifyId(id,"artistId");
-        const artist:ArtistSchema = await artistService.deleteArtist(id);
-        return res.status(200).json(new ApiResponse(200, "Artist deleted", artist));
-    } catch (error: any) {
-        next(error);
-    }
-}
+export const deleteArtist = asyncHandler(async (req: Request, res: Response) => {
+    const id = req.params.id as string;
+    signatureService.verifyId(id, "artistId");
+    const artist: ArtistSchema = await artistService.deleteArtist(id);
+    return res.status(200).json(new ApiResponse(200, "Artist deleted", artist));
+});
 
-export async function getArtists(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-    try {
-        const params:PaginationParams = parsePagination(req.query);
-        const result:PaginatedResult<ArtistSchema> = await artistService.getArtists(params);
-        return res.status(200).json(new ApiResponse(200, "Artists fetched", result));
-    } catch (error: any) {
-        next(error);
-    }
-}
+export const getArtists = asyncHandler(async (req: Request, res: Response) => {
+    const params: PaginationParams = parsePagination(req.query);
+    const result: PaginatedResult<ArtistSchema> = await artistService.getArtists(params);
+    return res.status(200).json(new ApiResponse(200, "Artists fetched", result));
+});
 
-export async function getArtistById(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-    try {
-        const id:string = req.params.id as string;
-        signatureService.verifyId(id,"artistId");
-        const artist:ArtistSchema = await artistService.getArtistById(id);
-        return res.status(200).json(new ApiResponse(200, "Artist fetched", artist));
-    } catch (error: any) {
-        next(error);
-    }
-}
+export const getArtistById = asyncHandler(async (req: Request, res: Response) => {
+    const id: string = req.params.id as string;
+    signatureService.verifyId(id, "artistId");
+    const artist: ArtistSchema = await artistService.getArtistById(id);
+    return res.status(200).json(new ApiResponse(200, "Artist fetched", artist));
+});
 
-export async function getSongsOfArtist(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-    try {
-        const id:string = req.params.id as string;
-        signatureService.verifyId(id,"artistId");
-        const params:PaginationParams = parsePagination(req.query);
-        const result:PaginatedResult<SongSchema> = await artistService.getArtistSongs(id, params);
-        return res.status(200).json(new ApiResponse(200, "Songs of artist fetched", result));
-    } catch (error: any) {
-        next(error);
-    }
-}
+export const getSongsOfArtist = asyncHandler(async (req: Request, res: Response) => {
+    const id: string = req.params.id as string;
+    signatureService.verifyId(id, "artistId");
+    const params: PaginationParams = parsePagination(req.query);
+    const result: PaginatedResult<SongSchema> = await artistService.getArtistSongs(id, params);
+    return res.status(200).json(new ApiResponse(200, "Songs of artist fetched", result));
+});
 
-export async function updateArtist(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-    try {
-        const id:string = req.params.id as string;
-        signatureService.verifyId(id,"artistId");
-        const artist:ArtistSchema = await artistService.updateArtist(id, req.body);
-        return res.status(200).json(new ApiResponse(200, "Artist updated", artist));
-    } catch (error: any) {
-        next(error);
-    }
-}
+export const updateArtist = asyncHandler(async (req: Request, res: Response) => {
+    const id: string = req.params.id as string;
+    signatureService.verifyId(id, "artistId");
+    const artist: ArtistSchema = await artistService.updateArtist(id, req.body);
+    return res.status(200).json(new ApiResponse(200, "Artist updated", artist));
+});

@@ -2,6 +2,7 @@ import { type Database } from "../infra";
 import type { SongSchema } from "../schema/songs.schema";
 import type { Repository } from "../types/repository.type";
 import type { Logger } from "../observablity";
+import { NotFoundError } from "../errors";
 
 type CreateSongData = Omit<SongSchema, "createdAt">;
 type partial = Partial<CreateSongData>;
@@ -36,7 +37,7 @@ export class SongRepository implements Repository<SongSchema, CreateSongData, Up
         const [song] = await this.db`
             SELECT * FROM songs WHERE id = ${id}
         `;
-        if (!song) throw new Error(`Song with id ${id} not found`);
+        if (!song) throw new NotFoundError(`Song with id ${id} not found`);
         return this.mapRow(song);
     }
 
@@ -64,7 +65,7 @@ export class SongRepository implements Repository<SongSchema, CreateSongData, Up
             WHERE id = ${id}
             RETURNING *
         `;
-        if (!song) throw new Error(`Song with id ${id} not found`);
+        if (!song) throw new NotFoundError(`Song with id ${id} not found`);
         return this.mapRow(song);
     }
 
@@ -88,7 +89,7 @@ export class SongRepository implements Repository<SongSchema, CreateSongData, Up
             DELETE FROM songs WHERE id = ${id} RETURNING *
         `;
 
-        if (!song) throw new Error(`Song with id ${id} not found`);
+        if (!song) throw new NotFoundError(`Song with id ${id} not found`);
         return this.mapRow(song);
     }
 
