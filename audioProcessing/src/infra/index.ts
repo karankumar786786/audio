@@ -1,20 +1,22 @@
 import { config } from "dotenv";
-import { neon } from "@neondatabase/serverless";
+import { neon, type NeonQueryFunction } from "@neondatabase/serverless";
 import {Inngest} from "inngest";
 config();
+
+export type Database = NeonQueryFunction<false, false>;
 
 import { AlgoliaService } from "../lib/search";
 import { S3Service } from "../lib/storage";
 import { AudioTranscoder } from "../lib/transcode";
 import { RecommendationServiceImpl } from "../lib/recommendation";
 import { TranscriptionService } from "../lib/transcribeAudio";
-import { logger } from "../observablity/logger";
+import { logger } from "../observablity";
 
 // Logger export
 export { logger };
 
 // Database export
-export const db = neon(`${process.env.DATABASE_URL}`);
+export const db: Database = neon(`${process.env.DATABASE_URL}`) as any;
 
 // Search Service
 export const searchService = new AlgoliaService(
@@ -62,7 +64,21 @@ import {
 } from "../repository";
 
 // Repositories
-export const songRepository = new SongRepository();
-export const songProcessingJobRepository = new SongProcessingJobRepository();
+export const songRepository = new SongRepository(db, logger);
+export const songProcessingJobRepository = new SongProcessingJobRepository(db, logger);
+
+import { AudioProcessingService } from "../services";
+
+// Main Service
+export const audioProcessingService = new AudioProcessingService(
+    songRepository,
+    songProcessingJobRepository,
+    transcodingService,
+    transcriptionService,
+    searchService,
+    recommendationService,
+    storageService,
+    logger
+);
 
 export const inngest = new Inngest({id:"test-music"})

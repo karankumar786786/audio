@@ -1,90 +1,59 @@
-import { db } from "../infra";
-import type { SongSchema } from "../schema/songs.schema";
-import type { Repository } from "../type/repository.type";
+import { type Database } from "../infra";
+import { songSchema, type SongSchema } from "../schema/songs.schema";
+import { BaseRepository } from "./base.repository";
+import { type Logger } from "../observablity";
 
-type CreateSongData = Omit<SongSchema, "createdAt">;
-type partial = Partial<CreateSongData>;
-type UpdateSongData = Omit<partial,"songKey" | 'language' | 'jobId' | 'duration'>;
+export type CreateSongData = Omit<SongSchema, "createdAt">;
+export type UpdateSongData = Partial<Omit<CreateSongData, "songKey" | "language" | "jobId" | "duration">>;
 
-export class SongRepository implements Repository<SongSchema, CreateSongData, UpdateSongData> {
+export class SongRepository extends BaseRepository<SongSchema, CreateSongData, UpdateSongData> {
+    constructor(db: Database, logger: Logger) {
+        super(db, "songs", songSchema, logger);
+    }
 
     async create(data: CreateSongData): Promise<SongSchema> {
-        const [song] = await db`
-            INSERT INTO songs (id, title, artist_name, duration, song_key, image_key, language, job_id)
-            VALUES (
-                ${data.id},
-                ${data.title},
-                ${data.artistName},
-                ${data.duration},
-                ${data.songKey},
-                ${data.imageKey},
-                ${data.language},
-                ${data.jobId}
-            )
-            RETURNING *
-        `;
-        if (!song) throw new Error("Failed to create song");
-        return this.mapRow(song);
-    }
-
-    async getById(id: string): Promise<SongSchema> {
-        const [song] = await db`
-            SELECT * FROM songs WHERE id = ${id}
-        `;
-        if (!song) throw new Error(`Song with id ${id} not found`);
-        return this.mapRow(song);
-    }
-
-    async count(): Promise<number> {
-        const [row] = await db`SELECT count(*)::int as count FROM songs`;
-        return row?.count || 0;
-    }
-
-    async getAll(limit?: number, offset?: number): Promise<SongSchema[]> {
-        const songs = await db`
-            SELECT * FROM songs 
-            ORDER BY created_at DESC
-            LIMIT ${limit ?? null} OFFSET ${offset ?? null}
-        `;
-        return songs.map((row) => this.mapRow(row));
+        const rows = await (this.db as any)(
+            `INSERT INTO songs (id, title, artist_name, duration, song_key, image_key, language, job_id)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+             RETURNING *`,
+            [
+                data.id,
+                data.title,
+                data.artistName,
+                data.duration,
+                data.songKey,
+                data.imageKey,
+                data.language,
+                data.jobId
+            ]
+        );
+        const row = rows[0];
+        if (!row) throw new Error("Failed to create song");
+        return this.mapRow(row);
     }
 
     async update(id: string, data: UpdateSongData): Promise<SongSchema> {
-        const [song] = await db`
-            UPDATE songs
-            SET
-                title       = COALESCE(${data.title ?? null}, title),
-                artist_name = COALESCE(${data.artistName ?? null}, artist_name),
-                image_key   = COALESCE(${data.imageKey ?? null}, image_key)
-            WHERE id = ${id}
-            RETURNING *
-        `;
-        if (!song) throw new Error(`Song with id ${id} not found`);
-        return this.mapRow(song);
+        const rows = await (this.db as any)(
+            `UPDATE songs
+             SET
+                title       = COALESCE($1, title),
+                artist_name = COALESCE($2, artist_name),
+                image_key   = COALESCE($3, image_key)
+             WHERE id = $4
+             RETURNING *`,
+            [
+                data.title ?? null,
+                data.artistName ?? null,
+                data.imageKey ?? null,
+                id
+            ]
+        );
+        const row = rows[0];
+        if (!row) throw new Error(`Song with id ${id} not found`);
+        return this.mapRow(row);
     }
 
-    async delete(id: string): Promise<SongSchema> {
-        const [song] = await db`
-            DELETE FROM songs WHERE id = ${id} RETURNING *
-        `;
-        
-        if (!song) throw new Error(`Song with id ${id} not found`);
-        return this.mapRow(song);
-    }
-
-    // Maps DB snake_case row → camelCase SongSchema
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private mapRow(row: Record<string, any>): SongSchema {
-        return {
-            id: row.id as string,
-            title: row.title as string,
-            artistName: row.artist_name as string,
-            duration: row.duration as number,
-            songKey: row.song_key as string,
-            imageKey: row.image_key as string,
-            language: row.language as string,
-            jobId: row.job_id as string,
-            createdAt: (row.created_at as Date)?.toISOString(),
-        };
+    async getAll(limit?: number, offset?: number): Promise<SongSchema[]> {
+        return this.getAllInternal(limit, offset);
     }
 }

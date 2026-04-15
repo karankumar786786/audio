@@ -1,42 +1,17 @@
-import * as path from "node:path";
-import * as fs from "node:fs";
-import { inngest, transcodingService, songProcessingJobRepository, logger, storageService } from "../infra";
-
-const TEMP_BUCKET = process.env.TEMP_BUCKET_NAME || "videotranscodetemp";
+import { inngest, audioProcessingService } from "../infra";
 
 export const transcodeSong = inngest.createFunction(
     { id: "transcode-song", triggers: { event: "audio/song.transcode" } as any },
-    async ({ event, step }: any) => {
+    async ({ event, step, logger }: any) => {
         const { songId, jobId } = event.data;
-        const job = await step.run("fetch-job", async () => {
-            return await songProcessingJobRepository.getById(songId);
-        });
-        const baseTmpDir = path.join(process.cwd(), "tmp");
-        if (!fs.existsSync(baseTmpDir)) {
-            fs.mkdirSync(baseTmpDir, { recursive: true });
-        }
-        const localDownloadPath = path.join(baseTmpDir, `${path.basename(songId)}`);
-        const timestamp = Date.now();
-        const outputDir = path.join(baseTmpDir, `t_${songId}`);
+        
         try {
-            await step.run("download-from-s3", async () => {
-                logger.info(`[TRANSCODE] Downloading raw audio for job ${jobId}`);
-                await storageService.downloadObject(TEMP_BUCKET, job.tempSongKey, localDownloadPath);
-                await songProcessingJobRepository.update(songId, { status: "processing" });
+            // Orchestrate the transcoding process via the service
+            const { audioName } = await step.run("transcode-process", async () => {
+                return await audioProcessingService.transcode(songId, jobId, logger);
             });
 
-            // Step 2: Transcode
-            const audioName = await step.run("transcode-audio", async () => {
-                logger.info(`[TRANSCODE] Starting transcoding for job ${jobId}`);
-                await transcodingService.transcode(localDownloadPath, outputDir);
-                const name = path.basename(outputDir);
-                await songProcessingJobRepository.update(songId, { 
-                    transcodingAttempt: 1,
-                    transcodingId: name,
-                    transcoded: true
-                });
-                return name;
-            });
+            // Trigger the next step in the pipeline
             await step.sendEvent("trigger-transcription", {
                 name: "audio/song.transcribe",
                 data: {
@@ -45,15 +20,12 @@ export const transcodeSong = inngest.createFunction(
                     audioName
                 }
             });
+
             return { status: "success", audioName };
         } catch (error: any) {
             logger.error(`[TRANSCODE] Job ${jobId} failed:`, error);
-            await songProcessingJobRepository.update(songId, { status: "failed" });
+            await audioProcessingService.updateJobStatus(songId, "failed");
             throw error;
-        } finally {
-            // Cleanup local files
-            if (fs.existsSync(localDownloadPath)) fs.unlinkSync(localDownloadPath);
-            if (fs.existsSync(outputDir)) fs.rmSync(outputDir, { recursive: true, force: true });
         }
     }
 );

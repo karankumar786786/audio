@@ -1,5 +1,5 @@
 import { transcodeSong } from "./transcode.function";
-import { transcribeSong } from "./trancribe.function";
+import { transcribeSong } from "./transcribe.function";
 import { processExtractedFeatures } from "./extractFeatures.function";
 import { finalizeSong } from "./createSongInTable.function";
 import { indexRecombee } from "./saveInRecombee.function";
