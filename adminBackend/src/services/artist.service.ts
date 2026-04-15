@@ -89,6 +89,6 @@ export class ArtistService {
             this.songRepository.countByArtistName(artist.name)
         ]);
         this.logger.debug({ artistId, total }, "getArtistSongs successfully fetched");
-        return buildPaginatedResult<SongSchema>(data as SongSchema[], total, params);
+        return buildPaginatedResult<SongSchema>(data, total, params);
     }
 }

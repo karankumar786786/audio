@@ -58,7 +58,7 @@ export class PlaylistService {
             this.playlistRepository.countSongs(playlistId)
         ]);
         this.logger.debug({ playlistId, total }, "getPlaylistSongs successfully fetched");
-        return buildPaginatedResult<SongSchema>(data as SongSchema[], total, params);
+        return buildPaginatedResult<SongSchema>(data, total, params);
     }
 
     async deletePlaylist(id: string): Promise<PlaylistSchema> {

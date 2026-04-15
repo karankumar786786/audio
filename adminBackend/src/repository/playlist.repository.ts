@@ -3,6 +3,7 @@ import type { Database } from "../infra/db";
 import { playlistSchema, playlistSongSchema, type PlaylistSchema, type PlaylistSongSchema } from "../schema/playlist.schema";
 import { BaseRepository } from "./base.repository";
 import { logMethods, type Logger } from "../observablity";
+import { songSchema, type SongSchema } from "../schema";
 
 type CreatePlaylistData = Omit<PlaylistSchema,  "createdAt" | "updatedAt">;
 type UpdatePlaylistData = Partial<CreatePlaylistData>;
@@ -100,7 +101,7 @@ export class PlaylistRepository extends BaseRepository<PlaylistSchema, CreatePla
         return row?.count || 0;
     }
 
-    async getSongs(playlistId: string, limit?: number, offset?: number): Promise<any[]> {
+    async getSongs(playlistId: string, limit?: number, offset?: number): Promise<SongSchema[]> {
         const rows = await this.db`
             SELECT 
                 s.id,
@@ -117,6 +118,6 @@ export class PlaylistRepository extends BaseRepository<PlaylistSchema, CreatePla
             WHERE sps.playlist_id = ${playlistId}
             LIMIT ${limit ?? null} OFFSET ${offset ?? null}
         `;
-        return rows;
+        return rows.map((row) => songSchema.parse(row));
     }
 }
