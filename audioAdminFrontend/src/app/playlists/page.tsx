@@ -26,7 +26,7 @@ export default function PlaylistsPage() {
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/playlists`);
       const data = await res.json();
-      if (data.success) setPlaylists(data.data.items || []);
+      if (data.success) setPlaylists(data.data.data || []);
     } catch (err) {
       console.error(err);
     } finally {
@@ -48,7 +48,7 @@ export default function PlaylistsPage() {
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/songs?limit=100`);
       const data = await res.json();
-      if (data.success) setAvailableSongs(data.data.items || []);
+      if (data.success) setAvailableSongs(data.data.data || []);
     } catch (err) {
       console.error(err);
     }

@@ -8,6 +8,7 @@ interface Song {
   artistName: string;
   duration: number;
   language: string;
+  imageKey: string;
   createdAt: string;
 }
 
@@ -122,12 +123,17 @@ export default function SongsPage() {
       imageFormData.append("expire", imageUrlData.data.expire.toString());
       imageFormData.append("token", imageUrlData.data.token);
       imageFormData.append("folder", "/songs/images");
-      imageFormData.append("fileName", formData.imageFile.name);
+      const extension = formData.imageFile.name.split('.').pop();
+      const fileNameWithExt = `${imageUrlData.data.tempKey}.${extension}`;
 
-      await fetch("https://upload.imagekit.io/api/v1/files/upload", {
+      imageFormData.append("fileName", fileNameWithExt);
+
+      const ikRes = await fetch("https://upload.imagekit.io/api/v1/files/upload", {
         method: "POST",
         body: imageFormData,
       });
+      const ikData = await ikRes.json();
+      if (!ikRes.ok) throw new Error(ikData.message || "ImageKit upload failed");
 
       // 3. Finalize in Backend
       const finalizeRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/songs`, {
@@ -137,7 +143,7 @@ export default function SongsPage() {
           title: formData.title,
           artistName: formData.artistName,
           tempSongKey: songUrlData.data.key,
-          imageKey: imageUrlData.data.tempKey,
+          imageKey: ikData.filePath,
         }),
       });
 
@@ -214,10 +220,18 @@ export default function SongsPage() {
                 <tr key={song.id} className="group hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition-colors">
                   <td className="px-8 py-5">
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 shadow-lg shadow-indigo-500/10 flex items-center justify-center text-white shrink-0">
-                        <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                          <path d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM9 14l5-4-5-4v8z" />
-                        </svg>
+                      <div className="w-12 h-12 rounded-xl bg-zinc-200 dark:bg-zinc-800 shadow-lg shadow-indigo-500/10 flex items-center justify-center text-white shrink-0 overflow-hidden">
+                        {song.imageKey ? (
+                          <img 
+                            src={`https://ik.imagekit.io/zaa6pbi9f${song.imageKey}`} 
+                            alt={song.title}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <svg className="w-6 h-6 text-zinc-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM9 14l5-4-5-4v8z" />
+                          </svg>
+                        )}
                       </div>
                       <div className="flex flex-col">
                         <span className="font-bold text-zinc-900 dark:text-white truncate max-w-[200px]">{song.title}</span>
@@ -230,7 +244,12 @@ export default function SongsPage() {
                     <span className="px-3 py-1 rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 text-xs font-bold">{song.language}</span>
                   </td>
                   <td className="px-8 py-5 text-zinc-500 font-mono">
-                    {Math.floor(song.duration / 60)}:{(song.duration % 60).toString().padStart(2, '0')}
+                    {(() => {
+                      const durationInSeconds = Math.floor(song.duration / 1000);
+                      const mins = Math.floor(durationInSeconds / 60);
+                      const secs = durationInSeconds % 60;
+                      return `${mins}:${secs.toString().padStart(2, '0')}`;
+                    })()}
                   </td>
                   <td className="px-8 py-5 text-right">
                     <button 

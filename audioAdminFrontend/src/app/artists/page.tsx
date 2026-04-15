@@ -29,7 +29,7 @@ export default function ArtistsPage() {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/artists`);
       const result = await response.json();
       if (result.success) {
-        setArtists(result.data.items || []);
+        setArtists(result.data.data || []);
       }
     } catch (err) {
       console.error("Failed to fetch artists", err);
@@ -60,6 +60,10 @@ export default function ArtistsPage() {
     try {
       // 1. Get ImageKit Signature
       const sigRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/misc/presigned-url/image`);
+      if (!sigRes.ok) {
+          const errData = await sigRes.json();
+          throw new Error(errData.message || "Failed to get upload signature");
+      }
       const sigData = await sigRes.json();
 
       // 2. Upload to ImageKit
@@ -69,7 +73,11 @@ export default function ArtistsPage() {
       imageFormData.append("signature", sigData.data.signature);
       imageFormData.append("expire", sigData.data.expire.toString());
       imageFormData.append("token", sigData.data.token);
-      imageFormData.append("fileName", formData.coverImage.name);
+      
+      const extension = formData.coverImage.name.split('.').pop();
+      const fileNameWithExt = `${sigData.data.tempKey}.${extension}`;
+
+      imageFormData.append("fileName", fileNameWithExt);
       imageFormData.append("folder", "/artists");
 
       const uploadRes = await fetch("https://upload.imagekit.io/api/v1/files/upload", {
@@ -77,6 +85,7 @@ export default function ArtistsPage() {
         body: imageFormData,
       });
       const uploadData = await uploadRes.json();
+      if (!uploadRes.ok) throw new Error(uploadData.message || "ImageKit upload failed");
 
       // 3. Create Artist in Backend
       const createRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/artists`, {
@@ -87,17 +96,20 @@ export default function ArtistsPage() {
           about: formData.about,
           dob: formData.dob,
           coverImageKey: uploadData.filePath,
-          bannerImageKey: uploadData.filePath, // For now use same
+          bannerImageKey: uploadData.filePath,
         }),
       });
 
-      if (createRes.ok) {
-        setIsModalOpen(false);
-        setFormData({ name: "", about: "", dob: "", coverImage: null });
-        fetchArtists();
+      const createData = await createRes.json();
+      if (!createRes.ok) {
+          throw new Error(createData.message || "Backend failed to create artist");
       }
-    } catch (err) {
-      alert("Failed to create artist");
+
+      setIsModalOpen(false);
+      setFormData({ name: "", about: "", dob: "", coverImage: null });
+      fetchArtists();
+    } catch (err: any) {
+      alert(err.message || "An unexpected error occurred");
     } finally {
       setUploading(false);
     }
@@ -131,7 +143,7 @@ export default function ArtistsPage() {
             <div key={artist.id} className="group relative bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200 dark:border-zinc-800 overflow-hidden shadow-sm hover:shadow-xl transition-all">
               <div className="aspect-[4/5] bg-zinc-100 dark:bg-zinc-800 relative">
                 {artist.coverImageKey ? (
-                  <img src={`https://ik.imagekit.io/zaa6pbi9f/${artist.coverImageKey}`} alt={artist.name} className="w-full h-full object-cover" />
+                  <img src={`https://ik.imagekit.io/zaa6pbi9f${artist.coverImageKey}`} alt={artist.name} className="w-full h-full object-cover" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-zinc-500 italic">No Image</div>
                 )}

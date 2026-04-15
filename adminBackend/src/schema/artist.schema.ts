@@ -7,7 +7,7 @@ export const artistSchema = z.object({
     name: z.string().min(1, { message: "name is required" }).openapi({ description: "Full name of the artist", example: "Gurun Randhawa" }),
     about: z.string().min(1, { message: "about is required" }).openapi({ description: "Short biography of the artist", example: "Popular Punjabi singer and songwriter." }),
     // Accept YYYY-MM-DD or ISO datetime — coerced to ISO string before DB insert
-    dob: z.string().min(1, { message: "dob is required" }).refine(
+    dob: z.coerce.string().refine(
         (v) => !isNaN(new Date(v).getTime()),
         { message: "dob must be a valid date (e.g. 2004-09-25)" }
     ).openapi({ description: "Date of birth in YYYY-MM-DD format", example: "1991-08-30" }),
