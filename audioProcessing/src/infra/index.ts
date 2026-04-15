@@ -58,14 +58,17 @@ export const recommendationService = new RecommendationServiceImpl(
     logger
 );
 
+import { SignatureUtility } from "../lib/signature";
+export const signatureService = new SignatureUtility(`${process.env.SIGNATURE_SECRET}`);
+
 import { 
     SongRepository, 
     SongProcessingJobRepository,
 } from "../repository";
 
 // Repositories
-export const songRepository = new SongRepository(db, logger);
-export const songProcessingJobRepository = new SongProcessingJobRepository(db, logger);
+export const songRepository = new SongRepository(db, logger, signatureService);
+export const songProcessingJobRepository = new SongProcessingJobRepository(db, logger, signatureService);
 
 import { AudioProcessingService } from "../services";
 
@@ -78,6 +81,7 @@ export const audioProcessingService = new AudioProcessingService(
     searchService,
     recommendationService,
     storageService,
+    signatureService,
     logger
 );
 

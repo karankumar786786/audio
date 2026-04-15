@@ -3,6 +3,7 @@ import type { Repository } from "../types/repository.type";
 import { type Logger } from "../observablity";
 import { type ZodType } from "zod";
 import { NotFoundError } from "../errors";
+import { type SignatureUtility } from "../lib/signature";
 
 /**
  * Abstract Base Repository providing generic CRUD operations with Zod validation.
@@ -21,7 +22,8 @@ export abstract class BaseRepository<
         protected readonly db: Database,
         protected readonly tableName: string,
         protected readonly schema: ZodType<T, any, any>,
-        protected readonly logger: Logger
+        protected readonly logger: Logger,
+        protected readonly signatureUtility: SignatureUtility
     ) {}
 
     /**
@@ -38,6 +40,9 @@ export abstract class BaseRepository<
     }
 
     async getById(id: string): Promise<T> {
+        if (!this.signatureUtility.verifyId(id)) {
+            throw new Error(`Invalid or tampered ID: ${id}`);
+        }
         // Neon driver (NeonQueryFunction) expects tagged template literals or array of params.
         const rows = await (this.db as any)(`SELECT * FROM ${this.tableName} WHERE id = $1`, [id]);
         const row = rows[0];
@@ -55,6 +60,9 @@ export abstract class BaseRepository<
     }
 
     async delete(id: string): Promise<T> {
+        if (!this.signatureUtility.verifyId(id)) {
+            throw new Error(`Invalid or tampered ID: ${id}`);
+        }
         const rows = await (this.db as any)(`DELETE FROM ${this.tableName} WHERE id = $1 RETURNING *`, [id]);
         const row = rows[0];
 

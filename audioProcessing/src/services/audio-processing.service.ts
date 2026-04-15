@@ -3,6 +3,7 @@ import { type SongProcessingJobRepository, type SongRepository } from "../reposi
 import { type Database } from "../infra";
 import { NotFoundError } from "../errors";
 import { type SongProcessingJob } from "../schema/songProcessingJob.schema";
+import { type SignatureUtility } from "../lib/signature";
 import * as path from "node:path";
 import * as fs from "node:fs";
 
@@ -15,19 +16,23 @@ export class AudioProcessingService {
         private readonly searchService: any, // AlgoliaService
         private readonly recommendationService: any, // RecommendationServiceImpl
         private readonly storageService: any, // S3Service
+        private readonly signatureUtility: SignatureUtility,
         private readonly logger: Logger
     ) {}
 
     async getJob(id: string): Promise<SongProcessingJob> {
+        this.signatureUtility.verifyId(id);
         return this.jobRepository.getById(id);
     }
 
     async updateJobStatus(id: string, status: string): Promise<SongProcessingJob> {
+        this.signatureUtility.verifyId(id);
         this.logger.info({ id, status }, "Updating job status");
         return this.jobRepository.update(id, { status: status as any });
     }
 
     async transcode(songId: string, jobId: string, stepLogger: Logger): Promise<{ audioName: string }> {
+        this.signatureUtility.verifyId(songId);
         const job = await this.jobRepository.getById(songId);
         const tempBucket = process.env.TEMP_BUCKET_NAME || "videotranscodetemp";
         
@@ -43,7 +48,6 @@ export class AudioProcessingService {
         try {
             stepLogger.info({ jobId, songId }, "Downloading raw audio for transcoding");
             await this.storageService.downloadObject(tempBucket, job.tempSongKey, localDownloadPath);
-
             stepLogger.info({ jobId, songId }, "Starting transcoding process");
             await this.transcodingService.transcode(localDownloadPath, outputDir);
 
@@ -53,7 +57,6 @@ export class AudioProcessingService {
                 transcoded: true,
                 status: "processing"
             });
-
             return { audioName };
         } finally {
             if (fs.existsSync(localDownloadPath)) fs.unlinkSync(localDownloadPath);
@@ -62,6 +65,7 @@ export class AudioProcessingService {
     }
 
     async transcribe(songId: string, jobId: string, audioName: string, stepLogger: Logger): Promise<{ language: string }> {
+        this.signatureUtility.verifyId(songId);
         const job = await this.jobRepository.getById(songId);
         const tempBucket = process.env.TEMP_BUCKET_NAME || "videotranscodetemp";
         const prodBucket = process.env.PRODUCTION_BUCKET_NAME || "videotranscodeprod";
@@ -103,6 +107,7 @@ export class AudioProcessingService {
     }
 
     async saveToSearch(songId: string, stepLogger: Logger): Promise<void> {
+        this.signatureUtility.verifyId(songId);
         const job = await this.jobRepository.getById(songId);
         
         const searchRecord = {
@@ -122,6 +127,7 @@ export class AudioProcessingService {
     }
 
     async finalize(songId: string, stepLogger: Logger): Promise<void> {
+        this.signatureUtility.verifyId(songId);
         const job = await this.jobRepository.getById(songId);
         const tempBucket = process.env.TEMP_BUCKET_NAME || "videotranscodetemp";
 
@@ -150,6 +156,7 @@ export class AudioProcessingService {
     }
 
     async saveToRecommendation(songId: string, stepLogger: Logger): Promise<void> {
+        this.signatureUtility.verifyId(songId);
         const job = await this.jobRepository.getById(songId);
         
         stepLogger.info({ songId }, "Saving to Recombee");
@@ -169,6 +176,7 @@ export class AudioProcessingService {
     }
 
     async extractFeatures(songId: string, features: any, stepLogger: Logger): Promise<void> {
+        this.signatureUtility.verifyId(songId);
         stepLogger.info({ songId }, "Updating job with extracted features");
         await this.jobRepository.update(songId, {
             ...features,

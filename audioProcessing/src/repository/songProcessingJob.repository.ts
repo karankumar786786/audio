@@ -2,16 +2,30 @@ import { type Database } from "../infra";
 import { SongProcessingJobSchema, type SongProcessingJob } from "../schema/songProcessingJob.schema";
 import { BaseRepository } from "./base.repository";
 import { type Logger } from "../observablity";
+import { type SignatureUtility } from "../lib/signature";
 
 export type CreateJobData = Omit<SongProcessingJob, "transcodingAttempt" | "transcribingAttempt" | "status">;
 export type UpdateJobData = Partial<SongProcessingJob>;
 
+const SELECT_FIELDS = `
+    id, job_id AS "jobId", title, artist_name AS "artistName", duration,
+    temp_song_key AS "tempSongKey", song_key AS "songKey", image_key AS "imageKey",
+    language, sample_rate AS "sampleRate", loudness, dynamic_complexity AS "dynamicComplexity",
+    bpm, spectral_centroid AS "spectralCentroid", spectral_flux AS "spectralFlux",
+    zero_crossing_rate AS "zeroCrossingRate", transcoding_id AS "transcodingId",
+    transcoding_attempt AS "transcodingAttempt", transcribing_id AS "transcribingId",
+    transcribing_attempt AS "transcribingAttempt", transcoded, transcribed,
+    extracted_features AS "extractedFeatures", saved_in_search AS "savedInSearch",
+    saved_in_recommendation AS "savedInRecommendation", status
+`;
+
 export class SongProcessingJobRepository extends BaseRepository<SongProcessingJob, CreateJobData, UpdateJobData> {
-    constructor(db: Database, logger: Logger) {
-        super(db, "song_processing_job", SongProcessingJobSchema, logger);
+    constructor(db: Database, logger: Logger, signatureUtility: SignatureUtility) {
+        super(db, "song_processing_job", SongProcessingJobSchema, logger, signatureUtility);
     }
 
     async create(data: CreateJobData): Promise<SongProcessingJob> {
+        const id = data.id || this.signatureUtility.generateSignedId();
         const rows = await (this.db as any)(
             `INSERT INTO song_processing_job (
                 id, job_id, title, artist_name, duration, temp_song_key, song_key, image_key, 
@@ -22,9 +36,9 @@ export class SongProcessingJobRepository extends BaseRepository<SongProcessingJo
                 transcoding_id, transcribing_id, status
             )
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, 'pending')
-            RETURNING *`,
+            RETURNING ${SELECT_FIELDS}`,
             [
-                data.id,
+                id,
                 data.jobId,
                 data.title,
                 data.artistName,
@@ -55,6 +69,9 @@ export class SongProcessingJobRepository extends BaseRepository<SongProcessingJo
     }
 
     async update(id: string, data: UpdateJobData): Promise<SongProcessingJob> {
+        if (!this.signatureUtility.verifyId(id)) {
+            throw new Error(`Invalid or tampered ID: ${id}`);
+        }
         const rows = await (this.db as any)(
             `UPDATE song_processing_job
              SET
@@ -83,7 +100,7 @@ export class SongProcessingJobRepository extends BaseRepository<SongProcessingJo
                 transcribing_attempt = COALESCE($23, transcribing_attempt),
                 status               = COALESCE($24, status)
              WHERE id = $25
-             RETURNING *`,
+             RETURNING ${SELECT_FIELDS}`,
             [
                 data.title ?? null,
                 data.artistName ?? null,
@@ -119,7 +136,7 @@ export class SongProcessingJobRepository extends BaseRepository<SongProcessingJo
 
     async getByStatus(status: string): Promise<SongProcessingJob[]> {
         const rows = await (this.db as any)(
-            `SELECT * FROM song_processing_job WHERE status = $1`,
+            `SELECT ${SELECT_FIELDS} FROM song_processing_job WHERE status = $1`,
             [status]
         );
         return rows.map((row: any) => this.mapRow(row));
