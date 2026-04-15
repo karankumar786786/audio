@@ -14,9 +14,17 @@ export class SongRepository extends BaseRepository<SongSchema, CreateSongData, U
 
     async create(data: CreateSongData): Promise<SongSchema> {
         const id = data.id || this.signatureUtility.generateSignedId();
-        const rows = await (this.db as any)(
+        const rows = await (this.db as any).query(
             `INSERT INTO songs (id, title, artist_name, duration, song_key, image_key, language, job_id)
              VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+             ON CONFLICT (id) DO UPDATE SET
+                title = EXCLUDED.title,
+                artist_name = EXCLUDED.artist_name,
+                duration = EXCLUDED.duration,
+                song_key = EXCLUDED.song_key,
+                image_key = EXCLUDED.image_key,
+                language = EXCLUDED.language,
+                job_id = EXCLUDED.job_id
              RETURNING id, title, artist_name AS "artistName", duration, song_key AS "songKey", image_key AS "imageKey", language, job_id AS "jobId", created_at AS "createdAt"`,
             [
                 id,
@@ -38,7 +46,7 @@ export class SongRepository extends BaseRepository<SongSchema, CreateSongData, U
         if (!this.signatureUtility.verifyId(id)) {
             throw new Error(`Invalid or tampered ID: ${id}`);
         }
-        const rows = await (this.db as any)(
+        const rows = await (this.db as any).query(
             `UPDATE songs
              SET
                 title       = COALESCE($1, title),

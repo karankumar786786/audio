@@ -18,13 +18,16 @@ export default function SongsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   
   // Form State
+  const [uploadMode, setUploadMode] = useState<"file" | "youtube">("file");
   const [formData, setFormData] = useState({
     title: "",
     artistName: "",
     songFile: null as File | null,
     imageFile: null as File | null,
+    ytUrl: "",
   });
   const [uploading, setUploading] = useState(false);
+  const [fetchingYt, setFetchingYt] = useState(false);
 
   const fetchSongs = async () => {
     try {
@@ -60,10 +63,36 @@ export default function SongsPage() {
 
   const handleUpload = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.songFile || !formData.imageFile) return alert("Please select both audio and image files");
+    if (uploadMode === "file" && (!formData.songFile || !formData.imageFile)) {
+      return alert("Please select both audio and image files");
+    }
+    if (uploadMode === "youtube" && !formData.ytUrl) {
+      return alert("Please enter a YouTube URL");
+    }
 
     setUploading(true);
     try {
+      if (uploadMode === "youtube") {
+        const finalizeRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/songs/youtube`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            title: formData.title,
+            artistName: formData.artistName,
+            ytUrl: formData.ytUrl,
+          }),
+        });
+
+        const finalData = await finalizeRes.json();
+        if (finalData.success) {
+          setIsModalOpen(false);
+          setFormData({ title: "", artistName: "", songFile: null, imageFile: null, ytUrl: "" });
+          fetchSongs();
+        } else {
+          throw new Error(finalData.message);
+        }
+        return;
+      }
       // 1. Get Pre-signed URLs
       const [songUrlRes, imageUrlRes] = await Promise.all([
         fetch(`${process.env.NEXT_PUBLIC_API_URL}/misc/presigned-url/song`),
@@ -74,6 +103,8 @@ export default function SongsPage() {
       const imageUrlData = await imageUrlRes.json();
 
       if (!songUrlData.success || !imageUrlData.success) throw new Error("Failed to get upload URLs");
+
+      if (!formData.songFile || !formData.imageFile) throw new Error("Missing files");
 
       // 2. Upload Files
       // S3 Upload for Song
@@ -113,7 +144,7 @@ export default function SongsPage() {
       const finalData = await finalizeRes.json();
       if (finalData.success) {
         setIsModalOpen(false);
-        setFormData({ title: "", artistName: "", songFile: null, imageFile: null });
+        setFormData({ title: "", artistName: "", songFile: null, imageFile: null, ytUrl: "" });
         fetchSongs();
       } else {
         throw new Error(finalData.message);
@@ -122,6 +153,24 @@ export default function SongsPage() {
       alert("Upload failed: " + err.message);
     } finally {
       setUploading(false);
+    }
+  };
+
+  const fetchYtInfo = async () => {
+    if (!formData.ytUrl) return;
+    setFetchingYt(true);
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/misc/yt-info?url=${encodeURIComponent(formData.ytUrl)}`);
+      const data = await res.json();
+      if (data.success && data.data?.title) {
+        setFormData({ ...formData, title: data.data.title });
+      } else {
+        alert("Could not fetch YouTube info");
+      }
+    } catch {
+      alert("Error fetching YouTube info");
+    } finally {
+      setFetchingYt(false);
     }
   };
 
@@ -214,7 +263,49 @@ export default function SongsPage() {
             </div>
             
             <form onSubmit={handleUpload} className="p-8 space-y-6">
+              {/* Tabs */}
+              <div className="flex gap-4 p-1 bg-zinc-100 dark:bg-zinc-800 rounded-2xl">
+                <button
+                  type="button"
+                  className={`flex-1 py-3 text-sm font-bold rounded-xl transition-all ${uploadMode === 'file' ? 'bg-white dark:bg-zinc-700 text-indigo-600 shadow-sm' : 'text-zinc-500'}`}
+                  onClick={() => setUploadMode('file')}
+                >
+                  Direct Upload
+                </button>
+                <button
+                  type="button"
+                  className={`flex-1 py-3 text-sm font-bold rounded-xl transition-all ${uploadMode === 'youtube' ? 'bg-white dark:bg-zinc-700 text-red-600 shadow-sm' : 'text-zinc-500'}`}
+                  onClick={() => setUploadMode('youtube')}
+                >
+                  Import from YouTube
+                </button>
+              </div>
+
               <div className="space-y-4">
+                {uploadMode === "youtube" && (
+                  <div className="bg-red-50 dark:bg-red-900/10 p-4 rounded-2xl border border-red-100 dark:border-red-900/20">
+                    <label className="block text-sm font-bold text-red-700 dark:text-red-300 mb-2 uppercase tracking-wider">YouTube URL</label>
+                    <div className="flex gap-2">
+                      <input 
+                        type="url" 
+                        value={formData.ytUrl}
+                        onChange={e => setFormData({...formData, ytUrl: e.target.value})}
+                        placeholder="https://youtube.com/..."
+                        className="flex-1 bg-white dark:bg-zinc-800 border-none rounded-xl p-3 focus:ring-2 focus:ring-red-500 transition-all text-sm"
+                        required={uploadMode === "youtube"}
+                      />
+                      <button 
+                        type="button"
+                        onClick={fetchYtInfo}
+                        disabled={fetchingYt || !formData.ytUrl}
+                        className="bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white px-4 rounded-xl text-sm font-bold transition-all"
+                      >
+                        {fetchingYt ? "Fetching..." : "Get Info"}
+                      </button>
+                    </div>
+                  </div>
+                )}
+
                 <div>
                   <label className="block text-sm font-bold text-zinc-700 dark:text-zinc-300 mb-2 uppercase tracking-wider">Song Title</label>
                   <input 
@@ -237,28 +328,31 @@ export default function SongsPage() {
                     className="w-full bg-zinc-50 dark:bg-zinc-800 border-none rounded-2xl p-4 focus:ring-2 focus:ring-indigo-500 transition-all"
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-bold text-zinc-700 dark:text-zinc-300 mb-2 uppercase tracking-wider">Audio File</label>
-                    <input 
-                      required 
-                      type="file" 
-                      accept="audio/*"
-                      onChange={e => setFormData({...formData, songFile: e.target.files?.[0] || null})}
-                      className="w-full text-xs text-zinc-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-600 hover:file:bg-indigo-100"
-                    />
+
+                {uploadMode === "file" && (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-bold text-zinc-700 dark:text-zinc-300 mb-2 uppercase tracking-wider">Audio File</label>
+                      <input 
+                        required={uploadMode === "file"} 
+                        type="file" 
+                        accept="audio/*"
+                        onChange={e => setFormData({...formData, songFile: e.target.files?.[0] || null})}
+                        className="w-full text-xs text-zinc-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-600 hover:file:bg-indigo-100"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-bold text-zinc-700 dark:text-zinc-300 mb-2 uppercase tracking-wider">Cover Image</label>
+                      <input 
+                        required={uploadMode === "file"} 
+                        type="file" 
+                        accept="image/*"
+                        onChange={e => setFormData({...formData, imageFile: e.target.files?.[0] || null})}
+                        className="w-full text-xs text-zinc-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-purple-50 file:text-purple-600 hover:file:bg-purple-100"
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <label className="block text-sm font-bold text-zinc-700 dark:text-zinc-300 mb-2 uppercase tracking-wider">Cover Image</label>
-                    <input 
-                      required 
-                      type="file" 
-                      accept="image/*"
-                      onChange={e => setFormData({...formData, imageFile: e.target.files?.[0] || null})}
-                      className="w-full text-xs text-zinc-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-purple-50 file:text-purple-600 hover:file:bg-purple-100"
-                    />
-                  </div>
-                </div>
+                )}
               </div>
 
               <button 

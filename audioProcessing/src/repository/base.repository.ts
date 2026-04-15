@@ -5,6 +5,8 @@ import { type ZodType } from "zod";
 import { NotFoundError } from "../errors";
 import { type SignatureUtility } from "../lib/signature";
 
+import { toCamelCase } from "../lib/mapper";
+
 /**
  * Abstract Base Repository providing generic CRUD operations with Zod validation.
  * 
@@ -32,9 +34,11 @@ export abstract class BaseRepository<
      */
     protected mapRow(row: Record<string, any>): T {
         try {
-            return this.schema.parse(row);
+            // Automatically convert database snake_case to camelCase
+            const camelCaseRow = toCamelCase<Record<string, any>>(row);
+            return this.schema.parse(camelCaseRow);
         } catch (error: any) {
-            this.logger.error({ error: error.errors, row, tableName: this.tableName }, `[${this.tableName}] Zod validation failed for database row`);
+            this.logger.error({ error: error.errors, row: toCamelCase<Record<string, any>>(row), tableName: this.tableName }, `[${this.tableName}] Zod validation failed for database row`);
             throw error;
         }
     }
@@ -44,17 +48,18 @@ export abstract class BaseRepository<
             throw new Error(`Invalid or tampered ID: ${id}`);
         }
         // Neon driver (NeonQueryFunction) expects tagged template literals or array of params.
-        const rows = await (this.db as any)(`SELECT * FROM ${this.tableName} WHERE id = $1`, [id]);
+        const rows = await (this.db as any).query(`SELECT * FROM ${this.tableName} WHERE id = $1`, [id]);
         const row = rows[0];
 
         if (!row) {
-            throw new NotFoundError(`${this.tableName.slice(0, -1)} with id ${id} not found`);
+            const entityName = this.tableName.endsWith('s') ? this.tableName.slice(0, -1) : this.tableName;
+            throw new NotFoundError(`${entityName} with id ${id} not found`);
         }
         return this.mapRow(row);
     }
 
     async count(): Promise<number> {
-        const rows = await (this.db as any)(`SELECT count(*)::int as count FROM ${this.tableName}`);
+        const rows = await (this.db as any).query(`SELECT count(*)::int as count FROM ${this.tableName}`);
         const row = rows[0];
         return row?.count || 0;
     }
@@ -63,11 +68,12 @@ export abstract class BaseRepository<
         if (!this.signatureUtility.verifyId(id)) {
             throw new Error(`Invalid or tampered ID: ${id}`);
         }
-        const rows = await (this.db as any)(`DELETE FROM ${this.tableName} WHERE id = $1 RETURNING *`, [id]);
+        const rows = await (this.db as any).query(`DELETE FROM ${this.tableName} WHERE id = $1 RETURNING *`, [id]);
         const row = rows[0];
 
         if (!row) {
-            throw new NotFoundError(`${this.tableName.slice(0, -1)} with id ${id} not found`);
+            const entityName = this.tableName.endsWith('s') ? this.tableName.slice(0, -1) : this.tableName;
+            throw new NotFoundError(`${entityName} with id ${id} not found`);
         }
         return this.mapRow(row);
     }
@@ -83,7 +89,7 @@ export abstract class BaseRepository<
      */
     protected async getAllInternal(limit?: number, offset?: number, orderBy: string = "created_at"): Promise<T[]> {
         const sql = `SELECT * FROM ${this.tableName} ORDER BY ${orderBy} DESC LIMIT $1 OFFSET $2`;
-        const rows = await (this.db as any)(sql, [limit ?? null, offset ?? null]);
+        const rows = await (this.db as any).query(sql, [limit ?? null, offset ?? null]);
         return rows.map((r: any) => this.mapRow(r));
     }
 }

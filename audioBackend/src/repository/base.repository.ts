@@ -4,6 +4,8 @@ import { type Logger } from "../observability";
 import { type ZodType } from "zod";
 import { NotFoundError } from "../errors";
 
+import { toCamelCase } from "../lib/mapper";
+
 /**
  * Abstract Base Repository providing generic CRUD operations with Zod validation.
  * 
@@ -30,9 +32,11 @@ export abstract class BaseRepository<
      */
     protected mapRow(row: Record<string, any>): T {
         try {
-            return this.schema.parse(row);
+            // Automatically convert database snake_case to camelCase
+            const camelCaseRow = toCamelCase<Record<string, any>>(row);
+            return this.schema.parse(camelCaseRow);
         } catch (error: any) {
-            this.logger.error({ error: error.errors, row, tableName: this.tableName }, `[${this.tableName}] Zod validation failed for database row`);
+            this.logger.error({ error: error.errors, row: toCamelCase<Record<string, any>>(row), tableName: this.tableName }, `[${this.tableName}] Zod validation failed for database row`);
             throw error;
         }
     }
@@ -44,7 +48,8 @@ export abstract class BaseRepository<
         const row = rows[0];
 
         if (!row) {
-            throw new NotFoundError(`${this.tableName.slice(0, -1)} with id ${id} not found`);
+            const entityName = this.tableName.endsWith('s') ? this.tableName.slice(0, -1) : this.tableName;
+            throw new NotFoundError(`${entityName} with id ${id} not found`);
         }
         return this.mapRow(row);
     }
@@ -60,7 +65,8 @@ export abstract class BaseRepository<
         const row = rows[0];
 
         if (!row) {
-            throw new NotFoundError(`${this.tableName.slice(0, -1)} with id ${id} not found`);
+            const entityName = this.tableName.endsWith('s') ? this.tableName.slice(0, -1) : this.tableName;
+            throw new NotFoundError(`${entityName} with id ${id} not found`);
         }
         return this.mapRow(row);
     }

@@ -1,7 +1,5 @@
 import { type Logger } from "../observablity";
 import { type SongProcessingJobRepository, type SongRepository } from "../repository";
-import { type Database } from "../infra";
-import { NotFoundError } from "../errors";
 import { type SongProcessingJob } from "../schema/songProcessingJob.schema";
 import { type SignatureUtility } from "../lib/signature";
 import * as path from "node:path";
@@ -160,13 +158,20 @@ export class AudioProcessingService {
         const job = await this.jobRepository.getById(songId);
         
         stepLogger.info({ songId }, "Saving to Recombee");
-        await this.recommendationService.saveSongToRecombee({
+        await this.recommendationService.create({
             id: job.id,
             title: job.title,
             artistName: job.artistName,
             duration: job.duration || 0,
-            language: job.language || "unknown",
+            songKey: job.songKey || "",
+            imageKey: job.imageKey,
+            loudness: job.loudness || 0,
+            dynamicComplexity: job.dynamicComplexity || 0,
             bpm: job.bpm || 0,
+            spectralCentroid: job.spectralCentroid || 0,
+            spectralFlux: job.spectralFlux || 0,
+            zeroCrossingRate: job.zeroCrossingRate || 0,
+            language: job.language || "unknown",
         });
 
         await this.jobRepository.update(songId, { 

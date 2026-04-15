@@ -11,13 +11,13 @@ export class SongProcessingJobRepository extends BaseRepository<SongProcessingJo
         db: Database,
         logger: Logger
     ) {
-        super(db, "song_processing_jobs", SongProcessingJobSchema, logger);
+        super(db, "song_processing_job", SongProcessingJobSchema, logger);
         logMethods(this, this.logger);
     }
 
     async create(data: CreateJobData): Promise<SongProcessingJob> {
         const [job] = await this.db`
-            INSERT INTO song_processing_jobs (
+            INSERT INTO song_processing_job (
                 id, job_id, title, artist_name, temp_song_key, image_key,
                 transcoded, transcribed, extracted_features, saved_in_search, saved_in_recommendation
             )
@@ -45,7 +45,7 @@ export class SongProcessingJobRepository extends BaseRepository<SongProcessingJo
 
     async update(id: string, data: UpdateJobData): Promise<SongProcessingJob> {
         const [job] = await this.db`
-            UPDATE song_processing_jobs
+            UPDATE song_processing_job
             SET
                 status = COALESCE(${data.status ?? null}, status),
                 transcoding_id = COALESCE(${data.transcodingId ?? null}, transcoding_id),

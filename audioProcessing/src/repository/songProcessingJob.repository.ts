@@ -26,7 +26,7 @@ export class SongProcessingJobRepository extends BaseRepository<SongProcessingJo
 
     async create(data: CreateJobData): Promise<SongProcessingJob> {
         const id = data.id || this.signatureUtility.generateSignedId();
-        const rows = await (this.db as any)(
+        const rows = await (this.db as any).query(
             `INSERT INTO song_processing_job (
                 id, job_id, title, artist_name, duration, temp_song_key, song_key, image_key, 
                 language, sample_rate, loudness, dynamic_complexity, bpm, 
@@ -72,7 +72,7 @@ export class SongProcessingJobRepository extends BaseRepository<SongProcessingJo
         if (!this.signatureUtility.verifyId(id)) {
             throw new Error(`Invalid or tampered ID: ${id}`);
         }
-        const rows = await (this.db as any)(
+        const rows = await (this.db as any).query(
             `UPDATE song_processing_job
              SET
                 title                = COALESCE($1, title),
@@ -135,7 +135,7 @@ export class SongProcessingJobRepository extends BaseRepository<SongProcessingJo
     }
 
     async getByStatus(status: string): Promise<SongProcessingJob[]> {
-        const rows = await (this.db as any)(
+        const rows = await (this.db as any).query(
             `SELECT ${SELECT_FIELDS} FROM song_processing_job WHERE status = $1`,
             [status]
         );
