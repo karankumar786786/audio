@@ -85,12 +85,17 @@ export class PlaylistRepository extends BaseRepository<PlaylistSchema, CreatePla
     }
 
     async removeSong(data: PlaylistSongSchema): Promise<PlaylistSongSchema> {
+        this.logger.debug({ data }, "removeSong starting");
         const [entry] = await this.db`
             DELETE FROM playlist_songs
             WHERE playlist_id = ${data.playlistId} AND song_id = ${data.songId}
             RETURNING id, playlist_id AS "playlistId", song_id AS "songId"
         `;
-        if (!entry) throw new Error(`Song ${data.songId} not found in playlist ${data.playlistId}`);
+        if (!entry) {
+            this.logger.warn({ data }, "removeSong failed - entry not found");
+            throw new Error(`Song ${data.songId} not found in playlist ${data.playlistId}`);
+        }
+        this.logger.debug({ entry }, "removeSong completed");
         return playlistSongSchema.parse(entry);
     }
 
