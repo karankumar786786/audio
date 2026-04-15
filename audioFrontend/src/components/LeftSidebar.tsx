@@ -76,21 +76,6 @@ export function LeftSidebar() {
         </div>
       </div>
 
-      {/* Upgrade Call-to-action */}
-      <div className="mt-auto p-6">
-        <motion.div 
-          whileHover={{ scale: 1.02 }}
-          className="bg-gradient-to-br from-indigo-600 to-purple-700 rounded-3xl p-5 text-white overflow-hidden relative group cursor-pointer shadow-2xl"
-        >
-          <div className="relative z-10">
-            <h4 className="font-black text-sm mb-1 uppercase italic">AudioSync Pro</h4>
-            <p className="text-[10px] text-indigo-100 mb-4 font-medium opacity-80 leading-relaxed">Unlock high-fidelity streaming and offline mode.</p>
-            <button className="w-full py-2 bg-white text-indigo-700 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-50 transition-colors shadow-lg">Upgrade Now</button>
-          </div>
-          {/* Decorative glow */}
-          <div className="absolute top-0 right-0 -mr-4 -mt-4 w-24 h-24 bg-white/10 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-1000" />
-        </motion.div>
-      </div>
     </aside>
   );
 }

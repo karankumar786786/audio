@@ -65,7 +65,7 @@ export const playerActions = {
     // Record view/listen
     const { systemUser } = playerStore.state;
     if (systemUser?.sub) {
-      musicApi.recordListen(systemUser.sub, song.id).catch(console.error);
+      musicApi.interactions.recordListen(systemUser.sub, song.id).catch(console.error);
     }
   },
 

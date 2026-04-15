@@ -12,12 +12,12 @@ export default function PlaylistPage() {
 
   const { data: playlistResponse, isLoading: isPlaylistLoading } = useQuery({
     queryKey: ["playlist", id],
-    queryFn: () => musicApi.getPlaylist(id as string),
+    queryFn: () => musicApi.playlists.getById(id as string),
   });
 
   const { data: songsResponse, isLoading: isSongsLoading } = useQuery({
     queryKey: ["playlist-songs", id],
-    queryFn: () => musicApi.getPlaylistSongs(id as string),
+    queryFn: () => musicApi.playlists.getSongs(id as string),
   });
 
   if (isPlaylistLoading || isSongsLoading) {

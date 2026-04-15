@@ -12,12 +12,12 @@ export default function ArtistPage() {
 
   const { data: artistResponse, isLoading: isArtistLoading } = useQuery({
     queryKey: ["artist", id],
-    queryFn: () => musicApi.getArtist(id as string),
+    queryFn: () => musicApi.artists.getById(id as string),
   });
 
   const { data: songsResponse, isLoading: isSongsLoading } = useQuery({
     queryKey: ["artist-songs", id],
-    queryFn: () => musicApi.getArtistSongs(id as string),
+    queryFn: () => musicApi.artists.getSongs(id as string),
   });
 
   if (isArtistLoading || isSongsLoading) {

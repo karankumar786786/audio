@@ -4,4 +4,4 @@ import { secure } from "../middlewares/authenticate.middleware";
 
 export const searchRouter = Router();
 
-searchRouter.get("/", secure,searchController.unifiedSearch);
+searchRouter.get("/", searchController.unifiedSearch);

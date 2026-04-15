@@ -22,22 +22,22 @@ userRouter.post("/register", userController.handleUser);
 userRouter.get("/:id", secure,userController.getUserById);
 
 // Favourites
-userRouter.post("/favourites", secure,validate(favouriteSongInput), userController.addSongInUserFavourites);
-userRouter.delete("/favourites", secure,validate(favouriteSongInput), userController.deleteSongInUserFavourites);
-userRouter.get("/:userId/favourites", secure,userController.getUserFavourites);
+userRouter.post("/favourites",validate(favouriteSongInput), userController.addSongInUserFavourites);
+userRouter.delete("/favourites", validate(favouriteSongInput), userController.deleteSongInUserFavourites);
+userRouter.get("/:userId/favourites",userController.getUserFavourites);
 
 // Listen history
-userRouter.get("/:userId/history", secure,userController.getUserHistory);
+userRouter.get("/:userId/history", userController.getUserHistory);
 
 // Search history
-userRouter.get("/:userId/search-history", secure,userController.getUserSearchHistory);
-userRouter.post("/search-history", secure,validate(searchHistoryInput), userController.saveUserSearchHistory);
-userRouter.delete("/:userId/search-history",secure, userController.clearUserSearchHistory);
+userRouter.get("/:userId/search-history", userController.getUserSearchHistory);
+userRouter.post("/search-history", validate(searchHistoryInput), userController.saveUserSearchHistory);
+userRouter.delete("/:userId/search-history", userController.clearUserSearchHistory);
 
 // Playlists
-userRouter.post("/playlists", secure,validate(createPlaylistInput), userController.createUserPlaylist);
-userRouter.get("/:userId/playlists", secure,userController.getUserPlaylists);
-userRouter.post("/playlists/songs", secure,validate(playlistSongInput), userController.addSongToUserPlaylist);
-userRouter.delete("/playlists/songs", secure,validate(playlistSongInput), userController.removeSongFromUserPlaylist);
-userRouter.get("/playlists/:id/songs", secure,userController.getUserPlaylistSongs);
-userRouter.delete("/playlists/:id", secure,userController.deleteUserPlaylist);
+userRouter.post("/playlists",validate(createPlaylistInput), userController.createUserPlaylist);
+userRouter.get("/:userId/playlists",userController.getUserPlaylists);
+userRouter.post("/playlists/songs", validate(playlistSongInput), userController.addSongToUserPlaylist);
+userRouter.delete("/playlists/songs", validate(playlistSongInput), userController.removeSongFromUserPlaylist);
+userRouter.get("/playlists/:id/songs", userController.getUserPlaylistSongs);
+userRouter.delete("/playlists/:id",userController.deleteUserPlaylist);

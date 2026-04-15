@@ -47,55 +47,65 @@ export function ShakaMusicPlayer() {
     playerActions.setQualityTracks(unique);
   }, []);
 
-  // Initialize Shaka
+  // Initialize & Load Shaka
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
 
     shaka.polyfill.installAll();
     if (!shaka.Player.isBrowserSupported()) {
-      console.warn("Shaka not supported");
+      console.warn("[Shaka] Not supported, falling back to native src");
+      if (currentSong) {
+          audio.src = currentSong.streamUrl;
+          audio.load();
+      }
       return;
     }
 
     const player = new shaka.Player();
     playerRef.current = player;
 
-    player.addEventListener("error", (e: any) => console.error("Shaka error:", e.detail));
+    player.configure({
+      streaming: {
+        retryParameters: { maxAttempts: 4, baseDelay: 1000, backoffFactor: 2, fuzzFactor: 0.5, timeout: 30000 },
+      },
+      manifest: {
+        retryParameters: { maxAttempts: 4, baseDelay: 1000, backoffFactor: 2, fuzzFactor: 0.5, timeout: 30000 },
+      },
+    });
+
+    player.addEventListener("error", (e: any) => console.error("[Shaka] Error event:", e.detail));
     player.addEventListener("trackschanged", syncTracks);
+
+    let isMounted = true;
 
     const init = async () => {
       try {
         await player.attach(audio);
+        if (!isMounted) return;
+        console.log("[Shaka] Player attached.");
+
+        if (currentSong?.streamUrl) {
+          setIsLoading(true);
+          await player.load(currentSong.streamUrl);
+          if (!isMounted) return;
+          console.log("[Shaka] Content loaded:", currentSong.title);
+          setIsLoading(false);
+          if (isPlaying) audio.play().catch(console.error);
+        }
       } catch (e) {
-        console.error("Shaka attach failed", e);
+        console.error("[Shaka] Initialization/Load failed:", e);
+        setIsLoading(false);
       }
     };
+    
     init();
 
     return () => {
+      isMounted = false;
       player.destroy();
     };
-  }, [syncTracks]);
-
-  // Load Song & Manifest
-  useEffect(() => {
-    const player = playerRef.current;
-    if (!player || !currentSong) return;
-
-    const loadContent = async () => {
-      try {
-        setIsLoading(true);
-        await player.load(currentSong.streamUrl);
-        setIsLoading(false);
-        if (isPlaying) audioRef.current?.play();
-      } catch (e) {
-        console.error("Shaka load failed", e);
-        setIsLoading(false);
-      }
-    };
-    loadContent();
-  }, [currentSong?.id]);
+  }, [currentSong?.id, syncTracks]);
 
   // Load Lyrics (VTT/JSON)
   useEffect(() => {
@@ -226,7 +236,7 @@ export function ShakaMusicPlayer() {
         <div className="absolute inset-0 bg-black/60" />
       </div>
 
-      <audio ref={audioRef} className="hidden" />
+      <audio ref={audioRef} className="hidden" crossOrigin="anonymous" />
 
       {/* Album Art Section - 30% */}
       <div className="flex-none p-8 pt-12 text-center relative z-10">

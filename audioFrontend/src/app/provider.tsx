@@ -22,7 +22,9 @@ function Provider({ children }: { children: React.ReactNode }) {
       authorizationParams={{
         redirect_uri: typeof window !== "undefined" ? window.location.origin + "/callback" : "",
         scope: "openid profile email",
+        audience: `https://${process.env.NEXT_PUBLIC_AUTH0_DOMAIN}/userinfo`,
       }}
+      cacheLocation="localstorage"
     >
       <QueryClientProvider client={queryClient}>
         {children}

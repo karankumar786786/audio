@@ -1,13 +1,17 @@
 "use client";
 
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { musicApi, type Song } from "../../lib/api";
 import { SongCard } from "../../components/SongCard";
 import { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
-import { Sparkles, TrendingUp, Clock, Compass } from "lucide-react";
+import { Sparkles, TrendingUp, Clock, Compass, Zap } from "lucide-react";
+import { useStore } from "@tanstack/react-store";
+import { playerStore } from "../../store/player.store";
 
 export default function HomePage() {
+  const systemUser = useStore(playerStore, (s) => s.systemUser);
+
   const {
     data,
     fetchNextPage,
@@ -16,10 +20,16 @@ export default function HomePage() {
     status,
   } = useInfiniteQuery({
     queryKey: ["discover-songs"],
-    queryFn: ({ pageParam }) => musicApi.getFeed(pageParam as number, 15),
+    queryFn: ({ pageParam }) => musicApi.songs.getFeed(pageParam as number, 15),
     initialPageParam: 1,
     getNextPageParam: (lastPage) => 
       lastPage.data.pagination.hasNext ? lastPage.data.pagination.page + 1 : undefined,
+  });
+
+  const { data: recommendations, isLoading: isRecLoading } = useQuery({
+    queryKey: ["recommendations", systemUser?.sub],
+    queryFn: () => musicApi.interactions.getRecommendations(systemUser!.sub),
+    enabled: !!systemUser?.sub,
   });
 
   // Infinite scroll observer
@@ -70,12 +80,30 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Abstract visuals */}
           <div className="absolute top-0 right-0 -mr-40 -mt-40 w-[800px] h-[800px] bg-indigo-500/20 rounded-full blur-[120px] animate-pulse" />
           <div className="absolute -bottom-20 -right-20 w-96 h-96 bg-purple-500/20 rounded-full blur-[100px]" />
           <Compass className="absolute top-20 right-20 text-white/5 w-80 h-80 -rotate-12 pointer-events-none" />
         </div>
       </motion.section>
+
+      {/* Recommended Section (Conditional) */}
+      {systemUser && recommendations?.data && recommendations.data.length > 0 && (
+         <section className="mb-20">
+            <div className="flex items-center gap-6 mb-12 px-2">
+              <h2 className="text-3xl font-black italic tracking-tighter uppercase text-white flex items-center gap-3">
+                <Zap className="text-indigo-500 fill-indigo-500" size={28} />
+                Recommended Frequency
+              </h2>
+              <div className="h-px flex-1 bg-gradient-to-r from-indigo-500/50 to-transparent" />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-10">
+              {recommendations.data.slice(0, 5).map((song: Song) => (
+                <SongCard key={`rec-${song.id}`} song={song} />
+              ))}
+            </div>
+         </section>
+      )}
 
       {/* Discovery Feed */}
       <section>
@@ -97,13 +125,13 @@ export default function HomePage() {
             ))}
           </div>
         ) : status === "error" ? (
-          <div className="p-32 text-center text-zinc-500 border-2 border-dashed border-zinc-900 rounded-[4rem] font-bold italic tracking-tight">
+          <div className="p-32 text-center text-zinc-500 border-2 border-dashed border-zinc-900 rounded-[4rem] font-bold italic tracking-tight uppercase">
             COMMUNICATION ERROR: SYSTEM SYNC FAILED
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-10">
             {data?.pages.map((page, i) => (
-              page.data.data.map((song, songIdx) => (
+              page.data.data.map((song: Song, songIdx: number) => (
                 <SongCard 
                   key={`${song.id}-${i}-${songIdx}`} 
                   song={song} 

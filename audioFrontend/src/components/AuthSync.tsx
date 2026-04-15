@@ -17,30 +17,38 @@ export function AuthSync() {
   const syncRef = useRef(false);
 
   useEffect(() => {
-    if (isLoading) return;
-
-    const syncSession = async () => {
+    const sync = async () => {
       if (isAuthenticated && !systemToken && !syncRef.current) {
         syncRef.current = true;
         try {
-          // 1. Get Auth0 Access Token
-          const token = await getAccessTokenSilently();
+          console.log("[AuthSync] Initiating system handshake...");
+          const token = await getAccessTokenSilently({
+            authorizationParams: {
+              audience: `https://${process.env.NEXT_PUBLIC_AUTH0_DOMAIN}/userinfo`,
+              scope: "openid profile email",
+            }
+          });
           
           // 2. Exchange for System JWT
-          const response = await musicApi.register(token);
+          const response = await musicApi.users.register(token);
           
           if (response.success) {
+            console.log("[AuthSync] System synchronization successful.");
             playerActions.setSystemSession(response.data.token, response.data.payload);
-            toast.success("Frequency Synchronized", {
-              description: "Established secure connection with AudioSync Core."
+            toast.success("Frequency Synchronized", { 
+              description: "Secure bridge established with audio-sync core." 
             });
+          } else {
+            console.error("[AuthSync] Registration failed:", response.message);
+            toast.error("Sync Error", { description: response.message });
           }
-        } catch (err) {
-          console.error("Auth Synchronization Failed:", err);
-          syncRef.current = false;
-          toast.error("Bridge Error", {
-            description: "Failed to establish secure frequency. Some features may be restricted."
+        } catch (err: any) {
+          console.error("[AuthSync] Critical handshake failure:", err);
+          toast.error("System Desync", { 
+            description: err.message || "Failed to establish secure frequency bridge." 
           });
+        } finally {
+          syncRef.current = false;
         }
       } else if (!isAuthenticated && systemToken) {
         // Clear session on logout
@@ -49,7 +57,7 @@ export function AuthSync() {
       }
     };
 
-    syncSession();
+    sync();
   }, [isAuthenticated, systemToken, getAccessTokenSilently, isLoading]);
 
   return null;

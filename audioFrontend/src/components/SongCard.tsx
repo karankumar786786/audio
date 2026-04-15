@@ -5,6 +5,8 @@ import { playerActions, playerStore } from "../store/player.store";
 import { mapToPlayerSong } from "../lib/player-utils";
 import { useStore } from "@tanstack/react-store";
 import { toast } from "sonner";
+import { useState } from "react";
+import { PlaylistPickerModal } from "./PlaylistPickerModal";
 
 interface SongCardProps {
   song: Song;
@@ -13,6 +15,7 @@ interface SongCardProps {
 
 export function SongCard({ song, priority }: SongCardProps) {
   const systemUser = useStore(playerStore, (s) => s.systemUser);
+  const [isPlaylistModalOpen, setIsPlaylistModalOpen] = useState(false);
 
   const handlePlay = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -27,7 +30,7 @@ export function SongCard({ song, priority }: SongCardProps) {
     }
 
     try {
-      await musicApi.addFavourite(systemUser.sub, song.id);
+      await musicApi.users.addFavourite(systemUser.sub, song.id);
       toast.success("Memory Captured", { description: `"${song.title}" added to your collection.` });
     } catch (err) {
       toast.error("Sync Error", { description: "Failed to persist frequency to library." });
@@ -75,10 +78,20 @@ export function SongCard({ song, priority }: SongCardProps) {
           >
             <Heart size={14} />
           </button>
-          <button className="w-8 h-8 rounded-xl bg-black/60 backdrop-blur-xl border border-white/10 flex items-center justify-center text-zinc-400 hover:text-white transition-all shadow-2xl">
+          <button 
+            onClick={() => setIsPlaylistModalOpen(true)}
+            className="w-8 h-8 rounded-xl bg-black/60 backdrop-blur-xl border border-white/10 flex items-center justify-center text-zinc-400 hover:text-white transition-all shadow-2xl"
+          >
             <Plus size={14} />
           </button>
       </div>
+
+      <PlaylistPickerModal 
+        isOpen={isPlaylistModalOpen}
+        onClose={() => setIsPlaylistModalOpen(false)}
+        songId={song.id}
+        songTitle={song.title}
+      />
     </motion.div>
   );
 }

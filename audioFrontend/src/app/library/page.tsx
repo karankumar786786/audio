@@ -1,0 +1,242 @@
+"use client";
+
+import { useQuery } from "@tanstack/react-query";
+import { musicApi, type Song, type Playlist } from "../../lib/api";
+import { SongCard } from "../../components/SongCard";
+import { useStore } from "@tanstack/react-store";
+import { playerStore } from "../../store/player.store";
+import { motion, AnimatePresence } from "framer-motion";
+import { useState } from "react";
+import { Heart, Clock, ListMusic, Plus, Music, Library as LibraryIcon, Search, Trash2 } from "lucide-react";
+import { toast } from "sonner";
+
+type Tab = "favourites" | "history" | "playlists";
+
+export default function LibraryPage() {
+  const systemUser = useStore(playerStore, (s) => s.systemUser);
+  const [activeTab, setActiveTab] = useState<Tab>("favourites");
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [newPlaylistName, setNewPlaylistName] = useState("");
+
+  const { data: favourites, isLoading: isFavLoading } = useQuery({
+    queryKey: ["library-favourites", systemUser?.sub],
+    queryFn: () => musicApi.users.getFavourites(systemUser!.sub),
+    enabled: !!systemUser?.sub && activeTab === "favourites",
+  });
+
+  const { data: history, isLoading: isHistLoading } = useQuery({
+    queryKey: ["library-history", systemUser?.sub],
+    queryFn: () => musicApi.users.getHistory(systemUser!.sub),
+    enabled: !!systemUser?.sub && activeTab === "history",
+  });
+
+  const { data: userPlaylists, isLoading: isPlaylistsLoading, refetch: refetchPlaylists } = useQuery({
+    queryKey: ["library-playlists", systemUser?.sub],
+    queryFn: () => musicApi.users.getPlaylists(systemUser!.sub),
+    enabled: !!systemUser?.sub && activeTab === "playlists",
+  });
+
+  const handleCreatePlaylist = async () => {
+    if (!newPlaylistName.trim() || !systemUser?.sub) return;
+    try {
+      await musicApi.users.createPlaylist(systemUser.sub, newPlaylistName);
+      toast.success("Frequency Allocated", { description: `Playlist "${newPlaylistName}" created successfully.` });
+      setNewPlaylistName("");
+      setIsCreateModalOpen(false);
+      refetchPlaylists();
+    } catch (err) {
+      toast.error("Allocation Error", { description: "Failed to create frequency buffer." });
+    }
+  };
+
+  const handleDeletePlaylist = async (playlistId: string) => {
+    try {
+      await musicApi.users.deletePlaylist(playlistId);
+      toast.success("Memory Purged", { description: "User playlist deleted." });
+      refetchPlaylists();
+    } catch (err) {
+      toast.error("Defragmentation Failed", { description: "Failed to remove playlist memory." });
+    }
+  };
+
+  if (!systemUser) {
+    return (
+      <div className="h-[calc(100vh-200px)] flex flex-col items-center justify-center p-10 text-center">
+        <div className="w-32 h-32 bg-zinc-900 rounded-[3rem] flex items-center justify-center mb-10 border border-white/5 shadow-2xl">
+          <LibraryIcon className="text-zinc-700" size={48} />
+        </div>
+        <h1 className="text-4xl font-black text-white italic tracking-tighter uppercase mb-4">Frequency Required</h1>
+        <p className="text-zinc-500 max-w-sm font-medium italic">Establishing a secure connection is mandatory to access your personal frequency vault.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="px-10 pb-20 pt-10">
+      {/* Library Header */}
+      <div className="flex items-center justify-between mb-20 px-4">
+        <div className="space-y-4">
+          <div className="flex items-center gap-3">
+             <div className="p-3 bg-indigo-500 rounded-2xl shadow-xl shadow-indigo-500/20">
+                <LibraryIcon size={24} className="text-white" />
+             </div>
+             <span className="text-xs font-black uppercase tracking-[0.2em] text-indigo-400 italic">User Repository</span>
+          </div>
+          <h1 className="text-6xl font-black text-white italic tracking-tighter uppercase leading-none">Your Library</h1>
+        </div>
+
+        {activeTab === "playlists" && (
+           <motion.button 
+             whileHover={{ scale: 1.05 }}
+             whileTap={{ scale: 0.95 }}
+             onClick={() => setIsCreateModalOpen(true)}
+             className="px-8 py-4 bg-white text-black rounded-2xl font-black text-xs uppercase tracking-widest flex items-center gap-2 shadow-2xl"
+           >
+              <Plus size={16} />
+              New Buffer
+           </motion.button>
+        )}
+      </div>
+
+      {/* Tabs */}
+      <div className="flex items-center gap-12 mb-16 border-b border-white/5 px-6">
+        {[
+          { id: "favourites", label: "Favourites", icon: Heart },
+          { id: "history", label: "History", icon: Clock },
+          { id: "playlists", label: "Playlists", icon: ListMusic },
+        ].map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id as Tab)}
+            className={`flex items-center gap-2 pb-6 text-xs font-black uppercase tracking-widest transition-all relative ${
+              activeTab === tab.id ? "text-white" : "text-zinc-600 hover:text-zinc-400"
+            }`}
+          >
+            <tab.icon size={14} className={activeTab === tab.id ? "text-indigo-500" : ""} />
+            {tab.label}
+            {activeTab === tab.id && (
+              <motion.div 
+                layoutId="activeTab" 
+                className="absolute bottom-0 left-0 right-0 h-1 bg-indigo-500 rounded-full" 
+              />
+            )}
+          </button>
+        ))}
+      </div>
+
+      {/* Content */}
+      <div className="min-h-[400px]">
+        {activeTab === "favourites" && (
+          <div>
+             {isFavLoading ? (
+               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-10">
+                 {[1,2,3,4,5].map(i => <div key={i} className="aspect-square bg-zinc-900/40 rounded-[3rem] animate-pulse" />)}
+               </div>
+             ) : favourites?.data?.data.length === 0 ? (
+               <div className="py-32 text-center text-zinc-600 font-bold italic border-2 border-dashed border-zinc-900 rounded-[3rem]">No captured frequencies in your repository.</div>
+             ) : (
+               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-10">
+                 {favourites?.data?.data.map((song: Song) => (
+                   <SongCard key={song.id} song={song} />
+                 ))}
+               </div>
+             )}
+          </div>
+        )}
+
+        {activeTab === "history" && (
+          <div>
+            {isHistLoading ? (
+               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-10">
+                 {[1,2,3,4,5].map(i => <div key={i} className="aspect-square bg-zinc-900/40 rounded-[3rem] animate-pulse" />)}
+               </div>
+             ) : history?.data?.data.length === 0 ? (
+               <div className="py-32 text-center text-zinc-600 font-bold italic border-2 border-dashed border-zinc-900 rounded-[3rem]">No playback logs found.</div>
+             ) : (
+               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-10">
+                 {history?.data?.data.map((song: Song) => (
+                   <SongCard key={song.id} song={song} />
+                 ))}
+               </div>
+             )}
+          </div>
+        )}
+
+        {activeTab === "playlists" && (
+          <div>
+            {isPlaylistsLoading ? (
+               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-10">
+                 {[1,2,3,4,5].map(i => <div key={i} className="aspect-square bg-zinc-900/40 rounded-[3rem] animate-pulse" />)}
+               </div>
+             ) : userPlaylists?.data?.data.length === 0 ? (
+               <div className="py-32 text-center text-zinc-600 font-bold italic border-2 border-dashed border-zinc-900 rounded-[3rem]">No custom frequency buffers initialized.</div>
+             ) : (
+               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-10">
+                 {userPlaylists?.data?.data.map((playlist: Playlist) => (
+                   <motion.div 
+                     key={playlist.id} 
+                     whileHover={{ y: -4 }}
+                     className="bg-zinc-900/40 hover:bg-zinc-900/60 border border-white/5 p-8 rounded-[3rem] group relative cursor-pointer"
+                   >
+                     <div className="w-full aspect-square bg-zinc-800 rounded-[2.5rem] mb-6 flex items-center justify-center shadow-2xl relative overflow-hidden ring-1 ring-white/5">
+                        <ListMusic className="text-zinc-700 group-hover:text-indigo-500 transition-colors" size={64} />
+                        <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-all transition-pt">
+                           <button 
+                             onClick={(e) => { e.stopPropagation(); handleDeletePlaylist(playlist.id); }}
+                             className="p-3 bg-red-500/10 text-red-500 rounded-2xl hover:bg-red-500 hover:text-white transition-all backdrop-blur-md"
+                           >
+                              <Trash2 size={16} />
+                           </button>
+                        </div>
+                     </div>
+                     <h3 className="text-lg font-black text-white italic tracking-tighter uppercase truncate px-2">{playlist.name}</h3>
+                     <p className="text-[10px] font-black text-zinc-500 mt-1 uppercase tracking-widest px-2 italic">User Frequency Buffer</p>
+                   </motion.div>
+                 ))}
+               </div>
+             )}
+          </div>
+        )}
+      </div>
+
+      {/* Create Modal */}
+      <AnimatePresence>
+        {isCreateModalOpen && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 backdrop-blur-3xl bg-black/40">
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="w-full max-w-md bg-zinc-950 border border-white/10 p-10 rounded-[3rem] shadow-[0_0_100px_rgba(0,0,0,0.8)]"
+            >
+              <h2 className="text-2xl font-black text-white italic uppercase tracking-tighter mb-8">Initialize Buffer</h2>
+              <input 
+                autoFocus
+                type="text" 
+                placeholder="Frequency Buffer Name..."
+                value={newPlaylistName}
+                onChange={(e) => setNewPlaylistName(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleCreatePlaylist()}
+                className="w-full bg-zinc-900 border border-white/10 p-5 rounded-2xl text-white font-bold italic tracking-tight mb-8 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+              />
+              <div className="flex gap-4">
+                <button 
+                  onClick={() => setIsCreateModalOpen(false)}
+                  className="flex-1 py-4 bg-zinc-900 text-zinc-400 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-zinc-800 transition-all"
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={handleCreatePlaylist}
+                  className="flex-1 py-4 bg-indigo-500 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-indigo-500/20 hover:bg-indigo-400 transition-all"
+                >
+                  Initialize
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}

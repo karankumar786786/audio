@@ -66,6 +66,11 @@ export class SongRepository extends BaseRepository<SongSchema, CreateSongData, U
         return rows.map((row) => this.mapRow(row));
     }
 
+    override async count(): Promise<number> {
+        const [row] = await this.db`SELECT count(*)::int as count FROM songs`;
+        return row?.count || 0;
+    }
+
     async getByArtistName(name: string, limit: number, offset: number): Promise<SongSchema[]> {
         const normalizedName = `%${name.replace(/\.|\s/g, "")}%`;
         const rows = await this.db`

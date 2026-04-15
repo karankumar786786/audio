@@ -73,6 +73,11 @@ export class PlaylistRepository extends BaseRepository<PlaylistSchema, CreatePla
         return rows.map((row) => this.mapRow(row));
     }
 
+    override async count(): Promise<number> {
+        const [row] = await this.db`SELECT count(*)::int as count FROM playlists`;
+        return row?.count || 0;
+    }
+
     // ── Playlist ↔ Song join operations ────────────────────────────────────────
 
     async addSong(playlistId: string, songId: string): Promise<PlaylistSongSchema> {

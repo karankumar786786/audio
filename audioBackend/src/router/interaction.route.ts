@@ -8,6 +8,6 @@ const addListenInput = userHistorySchema.pick({ userId: true, songId: true, part
 
 export const interactionRouter = Router();
 
-interactionRouter.post("/listen", secure,validate(addListenInput), interactionController.recordListen);
-interactionRouter.get("/trending",secure, interactionController.getTrendingSongs);
+interactionRouter.post("/listen",validate(addListenInput), interactionController.recordListen);
+interactionRouter.get("/trending", interactionController.getTrendingSongs);
 interactionRouter.get("/recommendations/:userId", secure,interactionController.getRecommendations);

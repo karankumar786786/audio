@@ -69,4 +69,9 @@ export class ArtistRepository extends BaseRepository<ArtistSchema, CreateArtistD
         `;
         return rows.map((row) => this.mapRow(row));
     }
+
+    override async count(): Promise<number> {
+        const [row] = await this.db`SELECT count(*)::int as count FROM artists`;
+        return row?.count || 0;
+    }
 }
