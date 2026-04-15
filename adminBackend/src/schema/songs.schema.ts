@@ -20,7 +20,7 @@ export const songSchema = z.object({
   imageKey: z.string().min(1, { message: "imageKey is required" }).openapi({ description: "S3 key for the artwork", example: "songs/images/gabru.jpg" }),
   language: z.string().min(1, { message: "language is required" }).openapi({ description: "Detected/assigned language", example: "pa" }),
   jobId: z.string().openapi({ description: "ID of the processing job that created this song", example: "job_789" }),
-  createdAt: z.string().datetime().optional().openapi({ description: "Creation timestamp" }),
+  createdAt: z.coerce.string().optional().openapi({ description: "Creation timestamp" }),
 }).openapi("Song");
 export type SongSchema = z.infer<typeof songSchema>;
 

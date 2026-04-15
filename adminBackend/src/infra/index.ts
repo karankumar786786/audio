@@ -12,7 +12,7 @@ import {
 import {
     AlgoliaSearchService,
     RecommbeeRecommendationService,
-    NodeCryptoSignatureService
+    NodeCryptoSignatureService,
 } from "../lib";
 import { logger } from "../observablity";
 import {

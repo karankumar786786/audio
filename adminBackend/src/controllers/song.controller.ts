@@ -22,6 +22,12 @@ export const deleteSong = asyncHandler(async (req: Request, res: Response) => {
     return new ApiResponse<SongSchema>(200, "Song deleted", song).send(res);
 });
 
+export const getJobStatus = asyncHandler(async (req: Request, res: Response) => {
+    const id: string = req.params.id as string;
+    const job = await songService.getJobStatus(id);
+    return new ApiResponse(200, "Job status fetched", job).send(res);
+});
+
 export const getSongs = asyncHandler(async (req: Request, res: Response) => {
     const params: PaginationParams = parsePagination(req.query);
     const result: PaginatedResult<SongSchema> = await songService.getSongs(params);

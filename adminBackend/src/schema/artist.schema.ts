@@ -14,7 +14,7 @@ export const artistSchema = z.object({
     // Optional for testing — defaults to empty string
     coverImageKey: z.string().openapi({ description: "Imagekit key for the cover image", example: "artists/cover/randhawa.jpg" }),
     bannerImageKey: z.string().openapi({ description: "Imagekit key for the banner image", example: "artists/banner/randhawa_banner.jpg" }),
-    createdAt: z.string().datetime().optional().openapi({ description: "Timestamp of creation" }),
+    createdAt: z.coerce.string().optional().openapi({ description: "Timestamp of creation" }),
 }).openapi("Artist");
 
 export type ArtistSchema = z.infer<typeof artistSchema>;

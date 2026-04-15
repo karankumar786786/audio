@@ -98,4 +98,10 @@ export class SongService {
         }
         return song;
     }
+
+    async getJobStatus(id: string): Promise<any> {
+        this.logger.debug({ id }, "getJobStatus starting");
+        this.signatureService.verifyId(id, "songId");
+        return await this.songProcessingJobRepository.getById(id);
+    }
 }

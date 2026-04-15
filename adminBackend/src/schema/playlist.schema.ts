@@ -7,8 +7,8 @@ export const playlistSchema = z.object({
     name: z.string().min(1, { message: "name is required" }).openapi({ description: "Name of the playlist", example: "Top Hits 2024" }),
     coverImageKey: z.string().min(1, { message: "coverImageKey is required" }).openapi({ description: "S3 key for the playlist cover", example: "playlists/cover/hits.jpg" }),
     bannerImageKey: z.string().min(1, { message: "bannerImageKey is required" }).openapi({ description: "S3 key for the playlist banner artist", example: "playlists/banner/hits_wide.jpg" }),
-    createdAt: z.string().datetime().optional().openapi({ description: "Creation timestamp" }),
-    updatedAt: z.string().datetime().optional().openapi({ description: "Last update timestamp" }),
+    createdAt: z.coerce.string().optional().openapi({ description: "Creation timestamp" }),
+    updatedAt: z.coerce.string().optional().openapi({ description: "Last update timestamp" }),
 }).openapi("Playlist");
 
 export type PlaylistSchema = z.infer<typeof playlistSchema>;
