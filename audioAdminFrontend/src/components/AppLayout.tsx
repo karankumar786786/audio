@@ -1,6 +1,7 @@
 "use client";
 
 import { Sidebar } from "./Sidebar";
+import { GlobalSearch } from "./GlobalSearch";
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -8,8 +9,11 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       <Sidebar />
       <div className="flex-1 ml-64 flex flex-col">
         <header className="h-16 border-b border-zinc-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md sticky top-0 z-40 px-8 flex items-center justify-between">
-          <div className="text-sm font-medium text-zinc-500">
-            Welcome back, <span className="text-zinc-900 dark:text-white">Admin</span>
+          <div className="flex items-center gap-6 flex-1 max-w-xl">
+            <div className="text-sm font-medium text-zinc-500 whitespace-nowrap">
+              Welcome back, <span className="text-zinc-900 dark:text-white">Admin</span>
+            </div>
+            <GlobalSearch />
           </div>
           <div className="flex items-center gap-4">
             <button className="p-2 text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors">

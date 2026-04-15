@@ -54,7 +54,11 @@ export abstract class BaseRepository<
         return this.mapRow(row);
     }
 
-    async count(): Promise<number> {
+    async count(query?: string): Promise<number> {
+        if (query) {
+            // This is a simplified fallback. Repositories should override this for specific column searching.
+            return 0; 
+        }
         const rows = await (this.db as any).query(`SELECT count(*)::int as count FROM ${this.tableName}`);
         const row = rows[0];
         return row?.count || 0;

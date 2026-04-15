@@ -1,6 +1,7 @@
 export interface PaginationParams {
     page: number;
     limit: number;
+    query?: string;
 }
 
 export interface PaginatedResult<T> {
@@ -18,7 +19,8 @@ export interface PaginatedResult<T> {
 export function parsePagination(query: Record<string, any>): PaginationParams {
     const page = Math.max(1, parseInt(query.page) || 1);
     const limit = Math.min(100, Math.max(1, parseInt(query.limit) || 20));
-    return { page, limit };
+    const q = query.q ? String(query.q) : undefined;
+    return { page, limit, query: q };
 }
 
 export function buildPaginatedResult<T>(data: T[], total: number, params: PaginationParams): PaginatedResult<T> {

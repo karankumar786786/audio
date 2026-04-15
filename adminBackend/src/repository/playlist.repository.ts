@@ -5,7 +5,7 @@ import { BaseRepository } from "./base.repository";
 import { logMethods, type Logger } from "../observablity";
 import { songSchema, type SongSchema } from "../schema";
 
-type CreatePlaylistData = Omit<PlaylistSchema,  "createdAt" | "updatedAt">;
+type CreatePlaylistData = Omit<PlaylistSchema, "createdAt" | "updatedAt">;
 type UpdatePlaylistData = Partial<CreatePlaylistData>;
 
 export class PlaylistRepository extends BaseRepository<PlaylistSchema, CreatePlaylistData, UpdatePlaylistData> {

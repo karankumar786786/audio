@@ -63,13 +63,15 @@ export class SongRepository extends BaseRepository<SongSchema, CreateSongData, U
     }
 
     async getArtistSongs(name: string, limit: number, offset: number): Promise<SongSchema[]> {
+        // Normalize: Strip dots and spaces from both search term and DB column
+        const normalizedName = `%${name.replace(/\.|\s/g, "")}%`;
         const rows = await this.db`
             SELECT 
                 id, title, artist_name AS "artistName", duration, 
                 song_key AS "songKey", image_key AS "imageKey", 
                 language, job_id AS "jobId", created_at AS "createdAt"
             FROM songs
-            WHERE artist_name = ${name}
+            WHERE REPLACE(REPLACE(artist_name, '.', ''), ' ', '') ILIKE ${normalizedName}
             ORDER BY created_at DESC
             LIMIT ${limit} OFFSET ${offset}
         `;
@@ -77,8 +79,12 @@ export class SongRepository extends BaseRepository<SongSchema, CreateSongData, U
     }
 
     async countByArtistName(name: string): Promise<number> {
+        // Normalize: Strip dots and spaces from both search term and DB column
+        const normalizedName = `%${name.replace(/\.|\s/g, "")}%`;
         const [row] = await this.db`
-            SELECT count(*)::int as count FROM songs WHERE artist_name = ${name}
+            SELECT count(*)::int as count 
+            FROM songs 
+            WHERE REPLACE(REPLACE(artist_name, '.', ''), ' ', '') ILIKE ${normalizedName}
         `;
         return row?.count || 0;
     }

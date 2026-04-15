@@ -15,10 +15,11 @@ import {
     NodeCryptoSignatureService,
 } from "../lib";
 import { logger } from "../observablity";
-import {
+import{
     PlaylistService,
     MiscService, SongService,
-    ArtistService
+    ArtistService,
+    SearchService
 } from "../services";
 import { S3StorageService } from "../lib";
 import { db } from "./db";
@@ -27,7 +28,7 @@ import { db } from "./db";
 
 
 // Search Service
-const searchService = new AlgoliaSearchService(
+const algoliaSearchService = new AlgoliaSearchService(
     `${process.env.APP_ID}`,
     `${process.env.API_KEY}`,
     `${process.env.INDEX_NAME}`,
@@ -72,8 +73,9 @@ const songProcessingJobRepository = new SongProcessingJobRepository(db, logger.c
 const inngest = new Inngest({ id: "test-music" });
 
 // Services
-export const artistService = new ArtistService(artistRepository, songRepository, signatureService, searchService, logger.child({ service: "ArtistService" }));
-export const playlistService = new PlaylistService(playlistRepository, signatureService, searchService, logger.child({ service: "PlaylistService" }));
-export const songService = new SongService(songRepository, songProcessingJobRepository, signatureService, searchService, recommendationService, logger.child({ service: "SongService" }), inngest);
+export const artistService = new ArtistService(artistRepository, songRepository, signatureService, algoliaSearchService, logger.child({ service: "ArtistService" }));
+export const playlistService = new PlaylistService(playlistRepository, signatureService, algoliaSearchService, logger.child({ service: "PlaylistService" }));
+export const songService = new SongService(songRepository, songProcessingJobRepository, signatureService, algoliaSearchService, recommendationService, logger.child({ service: "SongService" }), inngest);
 export const miscService = new MiscService(logger.child({ service: "MiscService" }), storageService, imagekitClient, signatureService);
+export const searchService = new SearchService(algoliaSearchService, logger.child({ service: "UnifiedSearchService" }));
 

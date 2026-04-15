@@ -12,20 +12,20 @@ import { buildPaginatedResult } from "../types/pagination.type";
 export class SongService {
 
     constructor(
-        private readonly songRepository:SongRepository,
-        private readonly songProcessingJobRepository:SongProcessingJobRepository,
-        private readonly signatureService:SignatureService,
-        private readonly searchService:SearchService,
-        private readonly recommendationService:RecommendationService,
-        private readonly logger:Logger,
-        private readonly inngest:Inngest,
+        private readonly songRepository: SongRepository,
+        private readonly songProcessingJobRepository: SongProcessingJobRepository,
+        private readonly signatureService: SignatureService,
+        private readonly searchService: SearchService,
+        private readonly recommendationService: RecommendationService,
+        private readonly logger: Logger,
+        private readonly inngest: Inngest,
     ) {
-        logMethods(this,this.logger);
+        logMethods(this, this.logger);
     }
     async createSong(input: CreateSongInput): Promise<{ id: string, jobId: string, status: string }> {
         this.logger.debug({ input }, "createSong starting");
-        const jobId:string = this.signatureService.generateSignedId();
-        const songId:string = this.signatureService.generateSignedId();
+        const jobId: string = this.signatureService.generateSignedId();
+        const songId: string = this.signatureService.generateSignedId();
         this.logger.info({ jobId, title: input.title }, "initializing processing job for song");
         await this.songProcessingJobRepository.create({
             id: songId,
@@ -56,7 +56,7 @@ export class SongService {
     }
     async getSongs(params: PaginationParams): Promise<PaginatedResult<SongSchema>> {
         this.logger.debug({ params }, "getSongs starting");
-        const offset:number = (params.page - 1) * params.limit;
+        const offset: number = (params.page - 1) * params.limit;
         const [data, total] = await Promise.all([
             this.songRepository.getAll(params.limit, offset),
             this.songRepository.count()
@@ -68,8 +68,8 @@ export class SongService {
     async updateSong(id: string, data: UpdateSongInput): Promise<SongSchema> {
         this.logger.debug({ id, data }, "updateSong starting");
         // Best effort update in search index if title/artist changes
-        this.signatureService.verifyId(id,"songId");
-        const song:SongSchema = await this.songRepository.update(id, data);
+        this.signatureService.verifyId(id, "songId");
+        const song: SongSchema = await this.songRepository.update(id, data);
         this.logger.info({ id }, "song updated in repository");
         try {
             await this.searchService.save(song as SearchRecord);
@@ -81,17 +81,17 @@ export class SongService {
     }
     async deleteSong(id: string): Promise<SongSchema> {
         this.logger.debug({ id }, "deleteSong starting");
-        this.signatureService.verifyId(id,"songId");
-        const song:SongSchema = await this.songRepository.delete(id);
+        this.signatureService.verifyId(id, "songId");
+        const song: SongSchema = await this.songRepository.delete(id);
         this.logger.info({ id }, "song deleted from repository");
-        try { 
-            await this.searchService.delete(id); 
+        try {
+            await this.searchService.delete(id);
             this.logger.info({ id }, "song deleted from search index");
         } catch (err) {
             this.logger.error({ err, id }, "failed to delete song from search index");
         }
-        try { 
-            await this.recommendationService.delete(id); 
+        try {
+            await this.recommendationService.delete(id);
             this.logger.info({ id }, "song deleted from recommendation engine");
         } catch (err) {
             this.logger.error({ err, id }, "failed to delete song from recommendation engine");
