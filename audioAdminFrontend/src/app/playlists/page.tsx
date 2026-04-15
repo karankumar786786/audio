@@ -6,6 +6,8 @@ interface Playlist {
   id: string;
   name: string;
   description: string;
+  coverImageKey: string;
+  bannerImageKey: string;
 }
 
 interface Song {
@@ -20,13 +22,21 @@ export default function PlaylistsPage() {
   const [selectedPlaylist, setSelectedPlaylist] = useState<Playlist | null>(null);
   const [playlistSongs, setPlaylistSongs] = useState<Song[]>([]);
   const [availableSongs, setAvailableSongs] = useState<Song[]>([]);
-  const [newPlaylist, setNewPlaylist] = useState({ name: "", description: "" });
+  const [newPlaylist, setNewPlaylist] = useState({ 
+    name: "", 
+    description: "",
+    coverImage: null as File | null,
+    bannerImage: null as File | null,
+  });
+  const [creating, setCreating] = useState(false);
 
   const fetchPlaylists = async () => {
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/playlists`);
       const data = await res.json();
-      if (data.success) setPlaylists(data.data.data || []);
+      if (data.success) {
+        setPlaylists(data.data.data || []);
+      }
     } catch (err) {
       console.error(err);
     } finally {
@@ -38,7 +48,7 @@ export default function PlaylistsPage() {
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/playlists/${id}/songs`);
       const data = await res.json();
-      if (data.success) setPlaylistSongs(data.data || []);
+      if (data.success) setPlaylistSongs(data.data.data || []);
     } catch (err) {
       console.error(err);
     }
@@ -60,19 +70,80 @@ export default function PlaylistsPage() {
   }, []);
 
   const handleCreatePlaylist = async () => {
+    if (!newPlaylist.name) return alert("Please enter a name");
+    if (!newPlaylist.coverImage) return alert("Please select a cover image");
+    if (!newPlaylist.bannerImage) return alert("Please select a banner image");
+
+    setCreating(true);
     try {
+      // 1. Upload Cover Image
+      const sigResCover = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/misc/presigned-url/image`);
+      if (!sigResCover.ok) throw new Error("Failed to get cover upload signature");
+      const sigDataCover = await sigResCover.json();
+
+      const formDataCover = new FormData();
+      formDataCover.append("file", newPlaylist.coverImage);
+      formDataCover.append("publicKey", process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY || "");
+      formDataCover.append("signature", sigDataCover.data.signature);
+      formDataCover.append("expire", sigDataCover.data.expire.toString());
+      formDataCover.append("token", sigDataCover.data.token);
+      formDataCover.append("folder", "/playlists/covers");
+      const extCover = newPlaylist.coverImage.name.split('.').pop();
+      formDataCover.append("fileName", `${sigDataCover.data.tempKey}.${extCover}`);
+
+      const uploadResCover = await fetch("https://upload.imagekit.io/api/v1/files/upload", {
+        method: "POST",
+        body: formDataCover,
+      });
+      const uploadDataCover = await uploadResCover.json();
+      if (!uploadResCover.ok) throw new Error("Cover image upload failed");
+
+      // 2. Upload Banner Image
+      const sigResBanner = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/misc/presigned-url/image`);
+      if (!sigResBanner.ok) throw new Error("Failed to get banner upload signature");
+      const sigDataBanner = await sigResBanner.json();
+
+      const formDataBanner = new FormData();
+      formDataBanner.append("file", newPlaylist.bannerImage);
+      formDataBanner.append("publicKey", process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY || "");
+      formDataBanner.append("signature", sigDataBanner.data.signature);
+      formDataBanner.append("expire", sigDataBanner.data.expire.toString());
+      formDataBanner.append("token", sigDataBanner.data.token);
+      formDataBanner.append("folder", "/playlists/banners");
+      const extBanner = newPlaylist.bannerImage.name.split('.').pop();
+      formDataBanner.append("fileName", `${sigDataBanner.data.tempKey}.${extBanner}`);
+
+      const uploadResBanner = await fetch("https://upload.imagekit.io/api/v1/files/upload", {
+        method: "POST",
+        body: formDataBanner,
+      });
+      const uploadDataBanner = await uploadResBanner.json();
+      if (!uploadResBanner.ok) throw new Error("Banner image upload failed");
+
+      // 3. Create Playlist in Backend
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/playlists`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newPlaylist),
+        body: JSON.stringify({
+          name: newPlaylist.name,
+          description: newPlaylist.description,
+          coverImageKey: uploadDataCover.filePath,
+          bannerImageKey: uploadDataBanner.filePath,
+        }),
       });
+      
+      const resData = await res.json();
       if (res.ok) {
         setIsCreateModalOpen(false);
-        setNewPlaylist({ name: "", description: "" });
+        setNewPlaylist({ name: "", description: "", coverImage: null, bannerImage: null });
         fetchPlaylists();
+      } else {
+        throw new Error(resData.message || "Failed to create playlist");
       }
-    } catch (err) {
-      alert("Failed to create playlist");
+    } catch (err: any) {
+      alert(err.message || "Failed to create playlist");
+    } finally {
+      setCreating(false);
     }
   };
 
@@ -135,14 +206,21 @@ export default function PlaylistsPage() {
               <button
                 key={pl.id}
                 onClick={() => { setSelectedPlaylist(pl); fetchPlaylistSongs(pl.id); }}
-                className={`w-full text-left p-6 rounded-3xl border transition-all ${
+                className={`w-full text-left p-4 rounded-3xl border transition-all flex items-center gap-4 ${
                   selectedPlaylist?.id === pl.id 
                     ? "bg-indigo-600 border-indigo-600 text-white shadow-xl shadow-indigo-500/20" 
-                    : "bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white hover:border-indigo-400"
+                    : "bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white hover:border-indigo-400 shadow-sm"
                 }`}
               >
-                <div className="font-bold text-lg mb-1">{pl.name}</div>
-                <p className={`text-sm ${selectedPlaylist?.id === pl.id ? "text-indigo-100" : "text-zinc-500"}`}>{pl.description}</p>
+                <div className="w-16 h-16 rounded-2xl bg-zinc-100 dark:bg-zinc-800 shrink-0 overflow-hidden shadow-inner">
+                  {pl.coverImageKey && (
+                    <img src={`https://ik.imagekit.io/zaa6pbi9f${pl.coverImageKey}`} alt={pl.name} className="w-full h-full object-cover" />
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="font-bold text-lg mb-0.5 truncate">{pl.name}</div>
+                  <p className={`text-xs line-clamp-2 ${selectedPlaylist?.id === pl.id ? "text-indigo-100" : "text-zinc-500"}`}>{pl.description}</p>
+                </div>
               </button>
             ))
           )}
@@ -218,9 +296,27 @@ export default function PlaylistsPage() {
               <button onClick={() => setIsCreateModalOpen(false)} className="text-zinc-400 hover:text-zinc-900"><svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg></button>
             </div>
             <div className="p-8 space-y-4">
-              <input value={newPlaylist.name} onChange={e => setNewPlaylist({...newPlaylist, name: e.target.value})} placeholder="Playlist Name" className="w-full bg-zinc-50 dark:bg-zinc-800 rounded-2xl p-4 focus:ring-2 focus:ring-indigo-500" />
-              <textarea value={newPlaylist.description} onChange={e => setNewPlaylist({...newPlaylist, description: e.target.value})} placeholder="Description" rows={3} className="w-full bg-zinc-50 dark:bg-zinc-800 rounded-2xl p-4 focus:ring-2 focus:ring-indigo-500" />
-              <button onClick={handleCreatePlaylist} className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-bold shadow-lg shadow-indigo-500/20">Create Playlist</button>
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-zinc-500 uppercase ml-2">Playlist Name</label>
+                <input value={newPlaylist.name} onChange={e => setNewPlaylist({...newPlaylist, name: e.target.value})} placeholder="Top Hits..." className="w-full bg-zinc-50 dark:bg-zinc-800 rounded-2xl p-4 focus:ring-2 focus:ring-indigo-500" />
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-zinc-500 uppercase ml-2">Description</label>
+                <textarea value={newPlaylist.description} onChange={e => setNewPlaylist({...newPlaylist, description: e.target.value})} placeholder="The best of..." rows={2} className="w-full bg-zinc-50 dark:bg-zinc-800 rounded-2xl p-4 focus:ring-2 focus:ring-indigo-500" />
+              </div>
+              <div className="grid grid-cols-1 gap-4">
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-zinc-500 uppercase ml-2">Cover Image</label>
+                  <input type="file" accept="image/*" onChange={e => setNewPlaylist({...newPlaylist, coverImage: e.target.files?.[0] || null})} className="w-full text-xs text-zinc-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:bg-indigo-50 file:text-indigo-600" />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-zinc-500 uppercase ml-2">Banner Image</label>
+                  <input type="file" accept="image/*" onChange={e => setNewPlaylist({...newPlaylist, bannerImage: e.target.files?.[0] || null})} className="w-full text-xs text-zinc-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:bg-indigo-50 file:text-indigo-600" />
+                </div>
+              </div>
+              <button disabled={creating} onClick={handleCreatePlaylist} className={`w-full py-4 rounded-2xl font-bold text-white shadow-lg transition-all ${creating ? "bg-indigo-400" : "bg-indigo-600 hover:bg-indigo-700 shadow-indigo-500/20"}`}>
+                {creating ? "Creating..." : "Create Playlist"}
+              </button>
             </div>
           </div>
         </div>

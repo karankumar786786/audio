@@ -44,11 +44,12 @@ const sql = neon(`${process.env.DATABASE_URL}`);
             )
         `;
 
-        // 📀 SYSTEM PLAYLIST
+        // 📀 PLAYLIST
         await sql`
-            CREATE TABLE IF NOT EXISTS system_playlists (
+            CREATE TABLE IF NOT EXISTS playlists (
                 id VARCHAR(255) PRIMARY KEY,
                 name VARCHAR(255) NOT NULL,
+                description TEXT,
                 cover_image_key TEXT NOT NULL,
                 banner_image_key TEXT NOT NULL,
                 created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
@@ -56,16 +57,16 @@ const sql = neon(`${process.env.DATABASE_URL}`);
             )
         `;
 
-        // 🎶 SYSTEM PLAYLIST SONGS (many-to-many)
+        // 🎶 PLAYLIST SONGS (many-to-many)
         await sql`
-            CREATE TABLE IF NOT EXISTS system_playlist_songs (
+            CREATE TABLE IF NOT EXISTS playlist_songs (
                 id VARCHAR(255) PRIMARY KEY,
                 playlist_id VARCHAR(255) NOT NULL,
                 song_id VARCHAR(255) NOT NULL,
 
                 CONSTRAINT fk_playlist
                     FOREIGN KEY (playlist_id)
-                    REFERENCES system_playlists(id)
+                    REFERENCES playlists(id)
                     ON DELETE CASCADE,
 
                 CONSTRAINT fk_song

@@ -5,6 +5,7 @@ import { registry } from "../docs/openapi-registry";
 export const playlistSchema = z.object({
     id: z.string().openapi({ description: "Unique identifier for the playlist", example: "ply_123" }),
     name: z.string().min(1, { message: "name is required" }).openapi({ description: "Name of the playlist", example: "Top Hits 2024" }),
+    description: z.string().openapi({ description: "Description of the playlist", example: "The best songs of the year" }),
     coverImageKey: z.string().min(1, { message: "coverImageKey is required" }).openapi({ description: "S3 key for the playlist cover", example: "playlists/cover/hits.jpg" }),
     bannerImageKey: z.string().min(1, { message: "bannerImageKey is required" }).openapi({ description: "S3 key for the playlist banner artist", example: "playlists/banner/hits_wide.jpg" }),
     createdAt: z.coerce.string().optional().openapi({ description: "Creation timestamp" }),
@@ -26,6 +27,7 @@ export const createPlaylistInput = playlistSchema
     .omit({ id: true, createdAt: true, updatedAt: true })
     .extend({
         name: z.string().min(1, { message: "name cannot be empty" }).openapi({ description: "Name of the new playlist", example: "Party Vibes" }),
+        description: z.string().openapi({ description: "Description of the new playlist", example: "A mix of upbeat tracks" }),
         coverImageKey: z.string().min(1, { message: "coverImageKey cannot be empty" }).openapi({ description: "Initial cover art key", example: "temp/cover.jpg" }),
         bannerImageKey: z.string().min(1, { message: "bannerImageKey cannot be empty" }).openapi({ description: "Initial banner art key", example: "temp/banner.jpg" }),
     }).openapi("CreatePlaylistRequest");

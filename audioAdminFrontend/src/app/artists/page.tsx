@@ -8,6 +8,7 @@ interface Artist {
   about: string;
   dob: string;
   coverImageKey: string;
+  bannerImageKey: string;
 }
 
 export default function ArtistsPage() {
@@ -22,6 +23,7 @@ export default function ArtistsPage() {
     about: "",
     dob: "",
     coverImage: null as File | null,
+    bannerImage: null as File | null,
   });
 
   const fetchArtists = async () => {
@@ -55,37 +57,53 @@ export default function ArtistsPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.coverImage) return alert("Please select a cover image");
+    if (!formData.bannerImage) return alert("Please select a banner image");
 
     setUploading(true);
     try {
-      // 1. Get ImageKit Signature
-      const sigRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/misc/presigned-url/image`);
-      if (!sigRes.ok) {
-          const errData = await sigRes.json();
-          throw new Error(errData.message || "Failed to get upload signature");
-      }
-      const sigData = await sigRes.json();
+      // 1. Upload Cover Image
+      const sigResCover = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/misc/presigned-url/image`);
+      if (!sigResCover.ok) throw new Error("Failed to get cover upload signature");
+      const sigDataCover = await sigResCover.json();
 
-      // 2. Upload to ImageKit
-      const imageFormData = new FormData();
-      imageFormData.append("file", formData.coverImage);
-      imageFormData.append("publicKey", process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY || "");
-      imageFormData.append("signature", sigData.data.signature);
-      imageFormData.append("expire", sigData.data.expire.toString());
-      imageFormData.append("token", sigData.data.token);
-      
-      const extension = formData.coverImage.name.split('.').pop();
-      const fileNameWithExt = `${sigData.data.tempKey}.${extension}`;
+      const formDataCover = new FormData();
+      formDataCover.append("file", formData.coverImage);
+      formDataCover.append("publicKey", process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY || "");
+      formDataCover.append("signature", sigDataCover.data.signature);
+      formDataCover.append("expire", sigDataCover.data.expire.toString());
+      formDataCover.append("token", sigDataCover.data.token);
+      formDataCover.append("folder", "/artists/covers");
+      const extCover = formData.coverImage.name.split('.').pop();
+      formDataCover.append("fileName", `${sigDataCover.data.tempKey}.${extCover}`);
 
-      imageFormData.append("fileName", fileNameWithExt);
-      imageFormData.append("folder", "/artists");
-
-      const uploadRes = await fetch("https://upload.imagekit.io/api/v1/files/upload", {
+      const uploadResCover = await fetch("https://upload.imagekit.io/api/v1/files/upload", {
         method: "POST",
-        body: imageFormData,
+        body: formDataCover,
       });
-      const uploadData = await uploadRes.json();
-      if (!uploadRes.ok) throw new Error(uploadData.message || "ImageKit upload failed");
+      const uploadDataCover = await uploadResCover.json();
+      if (!uploadResCover.ok) throw new Error("Cover image upload failed");
+
+      // 2. Upload Banner Image
+      const sigResBanner = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/misc/presigned-url/image`);
+      if (!sigResBanner.ok) throw new Error("Failed to get banner upload signature");
+      const sigDataBanner = await sigResBanner.json();
+
+      const formDataBanner = new FormData();
+      formDataBanner.append("file", formData.bannerImage);
+      formDataBanner.append("publicKey", process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY || "");
+      formDataBanner.append("signature", sigDataBanner.data.signature);
+      formDataBanner.append("expire", sigDataBanner.data.expire.toString());
+      formDataBanner.append("token", sigDataBanner.data.token);
+      formDataBanner.append("folder", "/artists/banners");
+      const extBanner = formData.bannerImage.name.split('.').pop();
+      formDataBanner.append("fileName", `${sigDataBanner.data.tempKey}.${extBanner}`);
+
+      const uploadResBanner = await fetch("https://upload.imagekit.io/api/v1/files/upload", {
+        method: "POST",
+        body: formDataBanner,
+      });
+      const uploadDataBanner = await uploadResBanner.json();
+      if (!uploadResBanner.ok) throw new Error("Banner image upload failed");
 
       // 3. Create Artist in Backend
       const createRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/artists`, {
@@ -95,18 +113,16 @@ export default function ArtistsPage() {
           name: formData.name,
           about: formData.about,
           dob: formData.dob,
-          coverImageKey: uploadData.filePath,
-          bannerImageKey: uploadData.filePath,
+          coverImageKey: uploadDataCover.filePath,
+          bannerImageKey: uploadDataBanner.filePath,
         }),
       });
 
       const createData = await createRes.json();
-      if (!createRes.ok) {
-          throw new Error(createData.message || "Backend failed to create artist");
-      }
+      if (!createRes.ok) throw new Error(createData.message || "Backend failed to create artist");
 
       setIsModalOpen(false);
-      setFormData({ name: "", about: "", dob: "", coverImage: null });
+      setFormData({ name: "", about: "", dob: "", coverImage: null, bannerImage: null });
       fetchArtists();
     } catch (err: any) {
       alert(err.message || "An unexpected error occurred");
@@ -193,8 +209,12 @@ export default function ArtistsPage() {
                     <input required value={formData.dob} onChange={e => setFormData({...formData, dob: e.target.value})} type="date" className="w-full bg-zinc-50 dark:bg-zinc-800 border-none rounded-2xl p-4 focus:ring-2 focus:ring-indigo-500" />
                   </div>
                   <div>
-                    <label className="block text-sm font-bold text-zinc-700 dark:text-zinc-300 mb-2 uppercase tracking-wider">Profile Picture</label>
+                    <label className="block text-sm font-bold text-zinc-700 dark:text-zinc-300 mb-2 uppercase tracking-wider">Cover Image</label>
                     <input required type="file" accept="image/*" onChange={e => setFormData({...formData, coverImage: e.target.files?.[0] || null})} className="w-full text-xs text-zinc-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:bg-indigo-50 file:text-indigo-600" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-bold text-zinc-700 dark:text-zinc-300 mb-2 uppercase tracking-wider">Banner Image</label>
+                    <input required type="file" accept="image/*" onChange={e => setFormData({...formData, bannerImage: e.target.files?.[0] || null})} className="w-full text-xs text-zinc-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:bg-indigo-50 file:text-indigo-600" />
                   </div>
                 </div>
               </div>

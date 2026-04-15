@@ -19,10 +19,10 @@ export class PlaylistRepository extends BaseRepository<PlaylistSchema, CreatePla
 
     async create(data: CreatePlaylistData): Promise<PlaylistSchema> {
         const [playlist] = await this.db`
-            INSERT INTO playlists (id, name, cover_image_key, banner_image_key)
-            VALUES (${data.id}, ${data.name}, ${data.coverImageKey}, ${data.bannerImageKey})
+            INSERT INTO playlists (id, name, description, cover_image_key, banner_image_key)
+            VALUES (${data.id}, ${data.name}, ${data.description}, ${data.coverImageKey}, ${data.bannerImageKey})
             RETURNING 
-                id, name, 
+                id, name, description,
                 cover_image_key AS "coverImageKey", 
                 banner_image_key AS "bannerImageKey", 
                 created_at AS "createdAt", 
@@ -38,12 +38,13 @@ export class PlaylistRepository extends BaseRepository<PlaylistSchema, CreatePla
             UPDATE playlists
             SET
                 name             = COALESCE(${data.name ?? null}, name),
+                description      = COALESCE(${data.description ?? null}, description),
                 cover_image_key  = COALESCE(${data.coverImageKey ?? null}, cover_image_key),
                 banner_image_key = COALESCE(${data.bannerImageKey ?? null}, banner_image_key),
                 updated_at       = NOW()
             WHERE id = ${id}
             RETURNING 
-                id, name, 
+                id, name, description,
                 cover_image_key AS "coverImageKey", 
                 banner_image_key AS "bannerImageKey", 
                 created_at AS "createdAt", 
@@ -57,7 +58,7 @@ export class PlaylistRepository extends BaseRepository<PlaylistSchema, CreatePla
     async getAll(limit?: number, offset?: number): Promise<PlaylistSchema[]> {
         const rows = await this.db`
             SELECT 
-                id, name, 
+                id, name, description,
                 cover_image_key AS "coverImageKey", 
                 banner_image_key AS "bannerImageKey", 
                 created_at AS "createdAt", 
