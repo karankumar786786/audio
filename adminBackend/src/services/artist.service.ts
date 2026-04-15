@@ -82,15 +82,12 @@ export class ArtistService {
     async getArtistSongs(artistId: string, params: PaginationParams): Promise<PaginatedResult<SongSchema>> {
         this.logger.debug({ artistId, params }, "getArtistSongs starting");
         this.signatureService.verifyId(artistId, "artistId");
-        
         const artist = await this.artistRepository.getById(artistId);
-        
         const offset: number = (params.page - 1) * params.limit;
         const [data, total] = await Promise.all([
             this.songRepository.getArtistSongs(artist.name, params.limit, offset),
             this.songRepository.countByArtistName(artist.name)
         ]);
-        
         this.logger.debug({ artistId, total }, "getArtistSongs successfully fetched");
         return buildPaginatedResult<SongSchema>(data as SongSchema[], total, params);
     }

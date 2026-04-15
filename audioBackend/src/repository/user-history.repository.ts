@@ -3,20 +3,24 @@ import type { Database } from "../infra/db";
 import { userHistorySchema, type UserHistorySchema } from "../schema/userHistory.schema";
 import { BaseRepository } from "./base.repository";
 import { logMethods, type Logger } from "../observability";
+import type { SignatureService } from "../lib";
 
 type CreateHistoryData = Omit<UserHistorySchema, "id" | "listenedAt">;
 
 export class UserHistoryRepository extends BaseRepository<UserHistorySchema, CreateHistoryData, any> {
     constructor(
         db: Database,
-        logger: Logger
+        logger: Logger,
+        private readonly signatureService:SignatureService,
     ) {
         super(db, "user_histories", userHistorySchema, logger);
         logMethods(this, this.logger);
     }
 
     async create(data: CreateHistoryData): Promise<UserHistorySchema> {
-        const id = randomUUIDv7();
+        const id:string = this.signatureService.generateSignedId();
+        this.signatureService.verifyId(data.songId,"songId");
+        this.signatureService.verifyId(data.userId,"userId");
         const [entry] = await this.db`
             INSERT INTO user_histories (id, user_id, song_id, part)
             VALUES (${id}, ${data.userId}, ${data.songId}, ${data.part})
@@ -39,5 +43,14 @@ export class UserHistoryRepository extends BaseRepository<UserHistorySchema, Cre
             LIMIT ${limit} OFFSET ${offset}
         `;
         return rows.map((row) => this.mapRow(row));
+    }
+
+    async countByUserId(userId: string): Promise<number> {
+        const [row] = await this.db`
+            SELECT COUNT(*) AS count
+            FROM user_histories
+            WHERE user_id = ${userId}
+        `;
+        return parseInt(row?.count || "0");
     }
 }

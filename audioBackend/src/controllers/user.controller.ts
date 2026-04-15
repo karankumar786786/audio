@@ -3,82 +3,119 @@ import { type UserService } from "../services/user.service";
 import { ApiResponse } from "../utils/ApiResponse";
 import { asyncHandler } from "../utils/asyncHandler";
 import { logMethods, type Logger } from "../observability";
-import { userSchema } from "../schema/user.schema";
-import { parsePagination } from "../type/pagination.type";
+import { parsePagination, type PaginationParams, type PaginatedResult } from "../type/pagination.type";
+import { type UserSchema, type UserFavouriteSongSchema, type UserPlaylistSchema, type UserPlaylistSongSchema, type SongSchema } from "../schema";
+
 
 export class UserController {
     constructor(
         private readonly userService: UserService,
-        private readonly logger: Logger
+        private readonly logger: Logger,
     ) {
         logMethods(this, this.logger);
     }
 
-    createUser = asyncHandler(async (req: Request, res: Response) => {
-        const validatedData = userSchema.parse(req.body);
-        const user = await this.userService.createUser(validatedData.id, validatedData.email);
-        return res.status(201).json(new ApiResponse(201, "User created successfully", user));
+    handleUser = asyncHandler(async (req: Request, res: Response) => {
+        const accessToken = req.params["access-token"] as string;
+        const user: string = await this.userService.createUser(accessToken);
+        return new ApiResponse(201, "User created successfully", user).send(res);
     });
 
     getUserById = asyncHandler(async (req: Request, res: Response) => {
-        const id = req.params.id as string;
-        const user = await this.userService.getUserById(id);
-        if (!user) {
-            return res.status(404).json(new ApiResponse(404, "User not found", null));
-        }
-        return res.status(200).json(new ApiResponse(200, "User fetched successfully", user));
-    });
-
-    getAllUsers = asyncHandler(async (_req: Request, res: Response) => {
-        const users = await this.userService.getAllUsers();
-        return res.status(200).json(new ApiResponse(200, "Users fetched successfully", users));
+        const id: string = req.params.id as string;
+        const user: UserSchema = await this.userService.getUserById(id);
+        return new ApiResponse(200, "User fetched successfully", user).send(res);
     });
 
     // Favourites
     addSongInUserFavourites = asyncHandler(async (req: Request, res: Response) => {
         const { userId, songId } = req.body;
-        const entry = await this.userService.addFavourite(userId, songId);
-        return res.status(201).json(new ApiResponse(201, "Song added to favourites", entry));
+        const entry: UserFavouriteSongSchema = await this.userService.addFavourite(userId, songId);
+        return new ApiResponse(201, "Song added to favourites", entry).send(res);
     });
 
     deleteSongInUserFavourites = asyncHandler(async (req: Request, res: Response) => {
         const { userId, songId } = req.body;
-        const entry = await this.userService.removeFavourite(userId, songId);
-        return res.status(200).json(new ApiResponse(200, "Song removed from favourites", entry));
+        const entry: UserFavouriteSongSchema = await this.userService.removeFavourite(userId, songId);
+        return new ApiResponse(200, "Song removed from favourites", entry).send(res);
     });
 
     getUserFavourites = asyncHandler(async (req: Request, res: Response) => {
-        const userId = req.params.userId as string;
-        const params = parsePagination(req.query);
-        const result = await this.userService.getFavourites(userId, params.limit, (params.page - 1) * params.limit);
-        return res.status(200).json(new ApiResponse(200, "User favourites fetched", { data: result, ...params }));
+        const userId: string = req.params.userId as string;
+        const params: PaginationParams = parsePagination(req.query);
+        const result: PaginatedResult<UserFavouriteSongSchema> = await this.userService.getFavourites(userId, params.limit, (params.page - 1) * params.limit);
+        return new ApiResponse(200, "User favourites fetched", result).send(res);
     });
 
     // History
     getUserHistory = asyncHandler(async (req: Request, res: Response) => {
-        const userId = req.params.userId as string;
-        const params = parsePagination(req.query);
-        const result = await this.userService.getHistory(userId, params.limit, (params.page - 1) * params.limit);
-        return res.status(200).json(new ApiResponse(200, "User history fetched", { data: result, ...params }));
+        const userId: string = req.params.userId as string;
+        const params: PaginationParams = parsePagination(req.query);
+        const result: PaginatedResult<any> = await this.userService.getHistory(userId, params.limit, (params.page - 1) * params.limit);
+        return new ApiResponse(200, "User history fetched", result).send(res);
     });
 
     // Search History
     getUserSearchHistory = asyncHandler(async (req: Request, res: Response) => {
-        const userId = req.params.userId as string;
-        const params = parsePagination(req.query);
-        const result = await this.userService.getSearchHistory(userId, params.limit, (params.page - 1) * params.limit);
-        return res.status(200).json(new ApiResponse(200, "User search history fetched", { data: result, ...params }));
+        const userId: string = req.params.userId as string;
+        const params: PaginationParams = parsePagination(req.query);
+        const result: PaginatedResult<any> = await this.userService.getSearchHistory(userId, params.limit, (params.page - 1) * params.limit);
+        return new ApiResponse(200, "User search history fetched", result).send(res);
     });
 
     saveUserSearchHistory = asyncHandler(async (req: Request, res: Response) => {
         const { userId, searchedText } = req.body;
         const entry = await this.userService.saveSearchHistory(userId, searchedText);
-        return res.status(201).json(new ApiResponse(201, "Search history saved", entry));
+        return new ApiResponse(201, "Search history saved", entry).send(res);
     });
 
     clearUserSearchHistory = asyncHandler(async (req: Request, res: Response) => {
-        const userId = req.params.userId as string;
+        const userId: string = req.params.userId as string;
         await this.userService.clearSearchHistory(userId);
-        return res.status(200).json(new ApiResponse(200, "User search history cleared", null));
+        return new ApiResponse(200, "User search history cleared", null).send(res);
+    });
+
+    // Playlist logic
+    createUserPlaylist = asyncHandler(async (req: Request, res: Response) => {
+        const playlist: UserPlaylistSchema = await this.userService.createUserPlaylist(req.body);
+        return new ApiResponse(201, "User playlist created", playlist).send(res);
+    });
+
+    getUserPlaylistById = asyncHandler(async (req: Request, res: Response) => {
+        const id: string = req.params.id as string;
+        const playlist: UserPlaylistSchema = await this.userService.getUserPlaylistById(id);
+        return new ApiResponse(200, "User playlist fetched", playlist).send(res);
+    });
+
+    getUserPlaylists = asyncHandler(async (req: Request, res: Response) => {
+        const userId: string = req.params.userId as string;
+        const params: PaginationParams = parsePagination(req.query);
+        const result: PaginatedResult<UserPlaylistSchema> = await this.userService.getUserPlaylists(userId, params.limit, (params.page - 1) * params.limit);
+        return new ApiResponse(200, "User playlists fetched", result).send(res);
+    });
+
+    addSongToUserPlaylist = asyncHandler(async (req: Request, res: Response) => {
+        const { playlistId, songId, userId } = req.body;
+        const entry: UserPlaylistSongSchema = await this.userService.addSongToUserPlaylist(playlistId, songId, userId);
+        return new ApiResponse(200, "Song added to playlist", entry).send(res);
+    });
+
+    removeSongFromUserPlaylist = asyncHandler(async (req: Request, res: Response) => {
+        const { playlistId, songId, userId } = req.body;
+        const entry: UserPlaylistSongSchema = await this.userService.removeSongFromUserPlaylist(playlistId, songId, userId);
+        return new ApiResponse(200, "Song removed from playlist", entry).send(res);
+    });
+
+    getUserPlaylistSongs = asyncHandler(async (req: Request, res: Response) => {
+        const id: string = req.params.id as string;
+        const params: PaginationParams = parsePagination(req.query);
+        const result: PaginatedResult<SongSchema> = await this.userService.getUserPlaylistSongs(id, params.limit, (params.page - 1) * params.limit);
+        return new ApiResponse(200, "Songs of user playlist fetched", result).send(res);
+    });
+
+    deleteUserPlaylist = asyncHandler(async (req: Request, res: Response) => {
+        const id: string = req.params.id as string;
+        const playlist: UserPlaylistSchema = await this.userService.deleteUserPlaylist(id);
+        return new ApiResponse(200, "User playlist deleted", playlist).send(res);
     });
 }

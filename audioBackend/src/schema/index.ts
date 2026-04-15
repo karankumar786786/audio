@@ -7,3 +7,4 @@ export * from "./userFavouriteSong.schema";
 export * from "./userHistory.schema";
 export * from "./userPlaylist.schema";
 export * from "./userSearchHistory.schema";
+export * from "./jwt.schema";

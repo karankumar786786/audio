@@ -2,23 +2,26 @@ import type { Database } from "../infra/db";
 import { userSchema, type UserSchema } from "../schema/user.schema";
 import { BaseRepository } from "./base.repository";
 import { logMethods, type Logger } from "../observability";
+import type { SignatureService } from "../lib";
 
-type CreateUserData = Pick<UserSchema, "id" | "email">;
+type CreateUserData = Pick<UserSchema,   "email">;
 type UpdateUserData = Partial<CreateUserData>;
 
 export class UserRepository extends BaseRepository<UserSchema, CreateUserData, UpdateUserData> {
     constructor(
         db: Database,
-        logger: Logger
+        logger: Logger,
+        private readonly signatureService:SignatureService
     ) {
         super(db, "users", userSchema, logger);
         logMethods(this, this.logger);
     }
 
     async create(data: CreateUserData): Promise<UserSchema> {
+        const id = this.signatureService.generateSignedId();
         const [user] = await this.db`
             INSERT INTO users (id, email)
-            VALUES (${data.id}, ${data.email})
+            VALUES (${id}, ${data.email})
             ON CONFLICT (id) DO UPDATE SET email = EXCLUDED.email
             RETURNING id, email, created_at AS "createdAt"
         `;

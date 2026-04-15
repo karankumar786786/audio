@@ -1,22 +1,23 @@
-import { randomUUIDv7 } from "bun";
 import type { Database } from "../infra/db";
 import { userSearchHistorySchema, type UserSearchHistorySchema } from "../schema/userSearchHistory.schema";
 import { BaseRepository } from "./base.repository";
 import { logMethods, type Logger } from "../observability";
+import type { SignatureService } from "../lib";
 
 type CreateSearchHistoryData = Omit<UserSearchHistorySchema, "id">;
 
 export class UserSearchHistoryRepository extends BaseRepository<UserSearchHistorySchema, CreateSearchHistoryData, any> {
     constructor(
         db: Database,
-        logger: Logger
+        logger: Logger,
+        private readonly signatureService: SignatureService
     ) {
         super(db, "user_search_histories", userSearchHistorySchema, logger);
         logMethods(this, this.logger);
     }
 
     async create(data: CreateSearchHistoryData): Promise<UserSearchHistorySchema> {
-        const id = randomUUIDv7();
+        const id = this.signatureService.generateSignedId();
         const [entry] = await this.db`
             INSERT INTO user_search_histories (id, user_id, searched_text)
             VALUES (${id}, ${data.userId}, ${data.searchedText})
@@ -39,6 +40,15 @@ export class UserSearchHistoryRepository extends BaseRepository<UserSearchHistor
             LIMIT ${limit} OFFSET ${offset}
         `;
         return rows.map((row) => this.mapRow(row));
+    }
+
+    async countByUserId(userId: string): Promise<number> {
+        const [row] = await this.db`
+            SELECT COUNT(*) AS count
+            FROM user_search_histories
+            WHERE user_id = ${userId}
+        `;
+        return parseInt(row?.count || "0");
     }
 
     async clearByUserId(userId: string): Promise<void> {

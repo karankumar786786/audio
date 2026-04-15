@@ -11,6 +11,6 @@ export class SystemStatusController {
     }
 
     getStatus = asyncHandler(async (_req: Request, res: Response) => {
-        return res.json(new ApiResponse(200, "healthy"));
+        return new ApiResponse(200, "healthy").send(res);
     });
 }

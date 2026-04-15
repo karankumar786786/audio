@@ -1,36 +1,39 @@
-import { randomUUIDv7 } from "bun";
 import type { Database } from "../infra/db";
 import { type UserPlaylistSchema, type UserPlaylistSongSchema } from "../schema/userPlaylist.schema";
 import type { Repository } from "../type/repository.type";
 import { logMethods, type Logger } from "../observability";
+import { type SignatureService } from "../lib";
 
 type UpdatePlaylistData = Partial<UserPlaylistSchema>;
 
 export class UserPlaylistRepository implements Repository<UserPlaylistSchema, UserPlaylistSchema, UpdatePlaylistData> {
     constructor(
         private readonly db: Database,
-        private readonly logger: Logger
+        private readonly logger: Logger,
+        private readonly signatureService: SignatureService
     ) {
         logMethods(this, this.logger);
     }
 
-    async create(data: UserPlaylistSchema): Promise<UserPlaylistSchema> {
+    async create(data: Omit<UserPlaylistSchema, "id">): Promise<UserPlaylistSchema> {
+        const id = this.signatureService.generateSignedId();
         const [playlist] = await this.db`
             INSERT INTO user_playlists (id, name, user_id)
             VALUES (
-                ${data.id},
+                ${id},
                 ${data.name},
                 ${data.userId}
             )
-            RETURNING *
+            RETURNING id, name, user_id AS "userId"
         `;
         if (!playlist) throw new Error("Failed to create user playlist");
         return this.mapRow(playlist);
     }
 
     async getById(id: string): Promise<UserPlaylistSchema> {
+        this.signatureService.verifyId(id, "userPlaylistId");
         const [playlist] = await this.db`
-            SELECT * FROM user_playlists WHERE id = ${id}
+            SELECT id, name, user_id AS "userId" FROM user_playlists WHERE id = ${id}
         `;
         if (!playlist) throw new Error(`User playlist with id ${id} not found`);
         return this.mapRow(playlist);
@@ -46,7 +49,7 @@ export class UserPlaylistRepository implements Repository<UserPlaylistSchema, Us
     /** Returns paginated playlists for a given user. */
     async getByUserId(userId: string, limit?: number, offset?: number): Promise<UserPlaylistSchema[]> {
         const rows = await this.db`
-            SELECT * FROM user_playlists 
+            SELECT id, name, user_id AS "userId" FROM user_playlists 
             WHERE user_id = ${userId}
             LIMIT ${limit ?? null} OFFSET ${offset ?? null}
         `;
@@ -54,26 +57,28 @@ export class UserPlaylistRepository implements Repository<UserPlaylistSchema, Us
     }
 
     async getAll(): Promise<UserPlaylistSchema[]> {
-        const rows = await this.db`SELECT * FROM user_playlists`;
+        const rows = await this.db`SELECT id, name, user_id AS "userId" FROM user_playlists`;
         return rows.map((row) => this.mapRow(row));
     }
 
     async update(id: string, data: UpdatePlaylistData): Promise<UserPlaylistSchema> {
+        this.signatureService.verifyId(id, "userPlaylistId");
         const [playlist] = await this.db`
             UPDATE user_playlists
             SET
                 name    = COALESCE(${data.name ?? null}, name),
                 user_id = COALESCE(${data.userId ?? null}, user_id)
             WHERE id = ${id}
-            RETURNING *
+            RETURNING id, name, user_id AS "userId"
         `;
         if (!playlist) throw new Error(`User playlist with id ${id} not found`);
         return this.mapRow(playlist);
     }
 
     async delete(id: string): Promise<UserPlaylistSchema> {
+        this.signatureService.verifyId(id, "userPlaylistId");
         const [playlist] = await this.db`
-            DELETE FROM user_playlists WHERE id = ${id} RETURNING *
+            DELETE FROM user_playlists WHERE id = ${id} RETURNING id, name, user_id AS "userId"
         `;
         if (!playlist) throw new Error(`User playlist with id ${id} not found`);
         return this.mapRow(playlist);
@@ -82,22 +87,26 @@ export class UserPlaylistRepository implements Repository<UserPlaylistSchema, Us
     // ── Playlist ↔ Song join operations ────────────────────────────────────────
 
     async addSong(playlistId: string, songId: string): Promise<UserPlaylistSongSchema> {
-        const id = randomUUIDv7();
+        this.signatureService.verifyId(playlistId, "userPlaylistId");
+        this.signatureService.verifyId(songId, "songId");
+        const id = this.signatureService.generateSignedId();
         const [entry] = await this.db`
             INSERT INTO user_playlist_songs (id, playlist_id, song_id)
             VALUES (${id}, ${playlistId}, ${songId})
             ON CONFLICT (playlist_id, song_id) DO NOTHING
-            RETURNING *
+            RETURNING id, playlist_id AS "playlistId", song_id AS "songId"
         `;
         if (!entry) throw new Error("Song already exists in playlist or insert failed");
         return this.mapSongRow(entry);
     }
 
     async removeSong(playlistId: string, songId: string): Promise<UserPlaylistSongSchema> {
+        this.signatureService.verifyId(playlistId, "userPlaylistId");
+        this.signatureService.verifyId(songId, "songId");
         const [entry] = await this.db`
             DELETE FROM user_playlist_songs
             WHERE playlist_id = ${playlistId} AND song_id = ${songId}
-            RETURNING *
+            RETURNING id, playlist_id AS "playlistId", song_id AS "songId"
         `;
         if (!entry) throw new Error(`Song ${songId} not found in playlist ${playlistId}`);
         return this.mapSongRow(entry);
@@ -112,6 +121,7 @@ export class UserPlaylistRepository implements Repository<UserPlaylistSchema, Us
     }
 
     async getSongs(playlistId: string, limit?: number, offset?: number): Promise<any[]> {
+        this.signatureService.verifyId(playlistId, "userPlaylistId");
         const rows = await this.db`
             SELECT 
                 s.id,
@@ -131,23 +141,23 @@ export class UserPlaylistRepository implements Repository<UserPlaylistSchema, Us
         return rows;
     }
 
-    // Maps DB snake_case row → camelCase UserPlaylistSchema
+    // Maps DB row → camelCase UserPlaylistSchema
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private mapRow(row: Record<string, any>): UserPlaylistSchema {
         return {
             id: row.id as string,
             name: row.name as string,
-            userId: row.user_id as string,
+            userId: row.userId as string,
         };
     }
 
-    // Maps DB snake_case row → camelCase UserPlaylistSongSchema
+    // Maps DB row → camelCase UserPlaylistSongSchema
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private mapSongRow(row: Record<string, any>): UserPlaylistSongSchema {
         return {
             id: row.id as string,
-            playlistId: row.playlist_id as string,
-            songId: row.song_id as string,
+            playlistId: row.playlistId as string,
+            songId: row.songId as string,
         };
     }
 }

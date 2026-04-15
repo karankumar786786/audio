@@ -1,5 +1,6 @@
 import { type AlgoliaSearchService } from "../lib/search";
 import { logMethods, type Logger } from "../observability";
+import type { ArtistSchema, PlaylistSchema, SongSchema } from "../schema";
 
 export class SearchService {
     constructor(

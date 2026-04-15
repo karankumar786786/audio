@@ -3,20 +3,22 @@ import type { Database } from "../infra/db";
 import { userFavouriteSongSchema, type UserFavouriteSongSchema } from "../schema/userFavouriteSong.schema";
 import { BaseRepository } from "./base.repository";
 import { logMethods, type Logger } from "../observability";
+import type { SignatureService } from "../lib";
 
 type CreateFavData = Omit<UserFavouriteSongSchema, "id">;
 
 export class UserFavouriteSongRepository extends BaseRepository<UserFavouriteSongSchema, CreateFavData, any> {
     constructor(
         db: Database,
-        logger: Logger
+        logger: Logger,
+        private readonly signatureService:SignatureService
     ) {
         super(db, "user_favourite_songs", userFavouriteSongSchema, logger);
         logMethods(this, this.logger);
     }
 
     async create(data: CreateFavData): Promise<UserFavouriteSongSchema> {
-        const id = randomUUIDv7();
+        const id:string = this.signatureService.generateSignedId();
         const [entry] = await this.db`
             INSERT INTO user_favourite_songs (id, user_id, song_id)
             VALUES (${id}, ${data.userId}, ${data.songId})
@@ -52,6 +54,8 @@ export class UserFavouriteSongRepository extends BaseRepository<UserFavouriteSon
     }
 
     async deleteFavorite(userId: string, songId: string): Promise<UserFavouriteSongSchema> {
+        this.signatureService.verifyId(userId,"userId");
+        this.signatureService.verifyId(songId,"songId");
         const [entry] = await this.db`
             DELETE FROM user_favourite_songs
             WHERE user_id = ${userId} AND song_id = ${songId}
@@ -59,5 +63,14 @@ export class UserFavouriteSongRepository extends BaseRepository<UserFavouriteSon
         `;
         if (!entry) throw new Error("Favourite not found");
         return this.mapRow(entry);
+    }
+
+    async countByUserId(userId: string): Promise<number> {
+        const [row] = await this.db`
+            SELECT COUNT(*) AS count
+            FROM user_favourite_songs
+            WHERE user_id = ${userId}
+        `;
+        return parseInt(row?.count || "0");
     }
 }

@@ -1,9 +1,10 @@
 import { type Request, type Response } from "express";
 import { type InteractionService } from "../services/interaction.service";
 import { ApiResponse } from "../utils/ApiResponse";
-import { parsePagination } from "../type/pagination.type";
+import { parsePagination, type PaginatedResult, type PaginationParams } from "../type/pagination.type";
 import { asyncHandler } from "../utils/asyncHandler";
 import { logMethods, type Logger } from "../observability";
+import type { SongSchema } from "../schema";
 
 export class InteractionController {
     constructor(
@@ -15,20 +16,20 @@ export class InteractionController {
 
     recordListen = asyncHandler(async (req: Request, res: Response) => {
         const { userId, songId, part } = req.body;
-        const entry = await this.interactionService.recordListen(userId, songId, part);
-        return res.status(200).json(new ApiResponse(200, "Listen recorded", entry));
+        await this.interactionService.recordListen(userId, songId, part);
+        return new ApiResponse(200, "Listen recorded").send(res);
     });
 
     getTrendingSongs = asyncHandler(async (req: Request, res: Response) => {
-        const params = parsePagination(req.query);
-        const result = await this.interactionService.getTrendingSongs(params);
-        return res.status(200).json(new ApiResponse(200, "Trending songs fetched", result));
+        const params:PaginationParams = parsePagination(req.query);
+        const result:PaginatedResult<SongSchema> = await this.interactionService.getTrendingSongs(params);
+        return  new ApiResponse(200, "Trending songs fetched", result).send(res);
     });
 
     getRecommendations = asyncHandler(async (req: Request, res: Response) => {
-        const userId = req.params.userId as string;
-        const limit = parseInt(req.query.limit as string) || 10;
-        const result = await this.interactionService.getRecommendations(userId, limit);
+        const userId:string = req.params.userId as string;
+        const limit:number = parseInt(req.query.limit as string) || 10;
+        const result:PaginatedResult<SongSchema> = await this.interactionService.getRecommendations(userId, limit);
         return res.status(200).json(new ApiResponse(200, "Recommendations fetched", result));
     });
 }

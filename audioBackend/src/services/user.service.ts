@@ -2,10 +2,24 @@ import { type UserRepository } from "../repository/user.repository";
 import { type UserFavouriteSongRepository } from "../repository/user-favourite-song.repository";
 import { type UserHistoryRepository } from "../repository/user-history.repository";
 import { type UserSearchHistoryRepository } from "../repository/user-search-history.repository";
+import { type UserPlaylistRepository } from "../repository/user-playlist.repository";
 import { type SignatureService } from "../lib/signature";
-import type { UserSchema } from "../schema/user.schema";
+import type { UserInfo, UserSchema } from "../schema/user.schema";
+import { type UserPlaylistSchema, type UserPlaylistSongSchema } from "../schema/userPlaylist.schema";
 import { logMethods, type Logger } from "../observability";
+import axios from "axios";
+import axiosRetry from "axios-retry";
 import { NotFoundError } from "../errors";
+import type { JWT, JWTService } from "../lib";
+import type { Payload, SongSchema, UserFavouriteSongSchema } from "../schema";
+import { buildPaginatedResult, type PaginatedResult } from "../type/pagination.type";
+
+
+axiosRetry(axios, {
+    retries: 3,
+    retryDelay: axiosRetry.exponentialDelay
+})
+
 
 export class UserService {
     constructor(
@@ -13,55 +27,137 @@ export class UserService {
         private readonly favouriteRepo: UserFavouriteSongRepository,
         private readonly historyRepo: UserHistoryRepository,
         private readonly searchHistoryRepo: UserSearchHistoryRepository,
+        private readonly userPlaylistRepo: UserPlaylistRepository,
         private readonly signatureService: SignatureService,
-        private readonly logger: Logger
+        private readonly logger: Logger,
+        private readonly jwtService:JWTService
     ) {
         logMethods(this, this.logger);
     }
 
-    async createUser(id: string, email: string): Promise<UserSchema> {
-        return await this.userRepository.create({ id, email });
+    async createUser(accessToken: string): Promise<string> {
+        const userInfo: UserInfo = await axios.get(`https://${process.env.AUTH0_DOMAIN}/userinfo`, { headers: { Authorization: `Bearer ${accessToken}` } });
+        if (!userInfo.email) {
+            throw new NotFoundError("email not found");
+        };
+        const email = userInfo.email;
+        const user:UserSchema = await this.userRepository.create({ email });
+        const payload:Payload = {
+            id: user.id,
+            userName: userInfo.name ? userInfo.name : "",
+            email: email,
+            picture: userInfo.picture ? userInfo.picture : "",
+        };
+        return await this.jwtService.sign(payload);
     }
 
     async getUserById(id: string): Promise<UserSchema> {
         // Repository now auto-throws NotFoundError
+        this.signatureService.verifyId(id,"userId");
         return await this.userRepository.getById(id);
     }
 
-    async getAllUsers(): Promise<UserSchema[]> {
-        return await this.userRepository.getAll();
-    }
 
     // Favourites logic
-    async addFavourite(userId: string, songId: string) {
-        // Repo handles ID generation internally using randomUUIDv7
+    async addFavourite(userId: string, songId: string): Promise<UserFavouriteSongSchema> {
+        this.signatureService.verifyId(userId, "userId");
+        this.signatureService.verifyId(songId, "songId");
         return await this.favouriteRepo.create({ userId, songId });
     }
 
-    async removeFavourite(userId: string, songId: string) {
+    async removeFavourite(userId: string, songId: string): Promise<UserFavouriteSongSchema> {
+        this.signatureService.verifyId(userId, "userId");
+        this.signatureService.verifyId(songId, "songId");
         return await this.favouriteRepo.deleteFavorite(userId, songId);
     }
 
-    async getFavourites(userId: string, limit: number = 20, offset: number = 0) {
-        return await this.favouriteRepo.getByUserId(userId, limit, offset);
+    async getFavourites(userId: string, limit: number = 20, offset: number = 0): Promise<PaginatedResult<UserFavouriteSongSchema>> {
+        this.signatureService.verifyId(userId, "userId");
+        const page = Math.floor(offset / limit) + 1;
+        const [data, total] = await Promise.all([
+            this.favouriteRepo.getByUserId(userId, limit, offset),
+            this.favouriteRepo.countByUserId(userId)
+        ]);
+        return buildPaginatedResult(data, total, { page, limit });
     }
 
     // History logic
-    async getHistory(userId: string, limit: number = 20, offset: number = 0) {
-        return await this.historyRepo.getByUserId(userId, limit, offset);
+    async getHistory(userId: string, limit: number = 20, offset: number = 0): Promise<PaginatedResult<any>> {
+        this.signatureService.verifyId(userId, "userId");
+        const page = Math.floor(offset / limit) + 1;
+        const [data, total] = await Promise.all([
+            this.historyRepo.getByUserId(userId, limit, offset),
+            this.historyRepo.countByUserId(userId)
+        ]);
+        return buildPaginatedResult(data, total, { page, limit });
     }
 
     // Search History logic
-    async getSearchHistory(userId: string, limit: number = 20, offset: number = 0) {
-        return await this.searchHistoryRepo.getByUserId(userId, limit, offset);
+    async getSearchHistory(userId: string, limit: number = 20, offset: number = 0): Promise<PaginatedResult<any>> {
+        this.signatureService.verifyId(userId, "userId");
+        const page = Math.floor(offset / limit) + 1;
+        const [data, total] = await Promise.all([
+            this.searchHistoryRepo.getByUserId(userId, limit, offset),
+            this.searchHistoryRepo.countByUserId(userId)
+        ]);
+        return buildPaginatedResult(data, total, { page, limit });
     }
 
-    async saveSearchHistory(userId: string, text: string) {
-        // Repo handles ID generation internally
-        return await this.searchHistoryRepo.create({ userId, searchedText: text });
+    async saveSearchHistory(userId: string, text: string):Promise<void> {
+        this.signatureService.verifyId(userId, "userId");
+        await this.searchHistoryRepo.create({ userId, searchedText: text });
+        return;
     }
 
-    async clearSearchHistory(userId: string) {
-        return await this.searchHistoryRepo.clearByUserId(userId);
+    async clearSearchHistory(userId: string):Promise<void> {
+        this.signatureService.verifyId(userId, "userId");
+        await this.searchHistoryRepo.clearByUserId(userId);
+        return;
     }
+
+    // Playlist logic
+    async createUserPlaylist(data: Omit<UserPlaylistSchema, "id">):Promise<UserPlaylistSchema> {
+        this.signatureService.verifyId(data.userId, "userId");
+        return await this.userPlaylistRepo.create(data);
+    }
+
+    async getUserPlaylistById(id: string):Promise<UserPlaylistSchema> {
+        return await this.userPlaylistRepo.getById(id);
+    }
+
+    async getUserPlaylists(userId: string, limit: number = 20, offset: number = 0):Promise<PaginatedResult<UserPlaylistSchema>> {
+        this.signatureService.verifyId(userId, "userId");
+        const page = Math.floor(offset / limit) + 1;
+        const [data, total] = await Promise.all([
+            this.userPlaylistRepo.getByUserId(userId, limit, offset),
+            this.userPlaylistRepo.countByUserId(userId)
+        ]);
+        return buildPaginatedResult(data, total, { page, limit });
+    }
+
+    async addSongToUserPlaylist(playlistId: string, songId: string, userId: string):Promise<UserPlaylistSongSchema> {
+        this.signatureService.verifyId(userId, "userId");
+        // Verify user owns playlist? Or repo handles it? 
+        // For now, repo handles signed IDs.
+        return await this.userPlaylistRepo.addSong(playlistId, songId);
+    }
+
+    async removeSongFromUserPlaylist(playlistId: string, songId: string, userId: string):Promise<UserPlaylistSongSchema> {
+        this.signatureService.verifyId(userId, "userId");
+        return await this.userPlaylistRepo.removeSong(playlistId, songId);
+    }
+
+    async getUserPlaylistSongs(playlistId: string, limit: number = 20, offset: number = 0):Promise<PaginatedResult<SongSchema>> {
+        const page = Math.floor(offset / limit) + 1;
+        const [data, total] = await Promise.all([
+            this.userPlaylistRepo.getSongs(playlistId, limit, offset),
+            this.userPlaylistRepo.countSongs(playlistId)
+        ]);
+        return buildPaginatedResult(data, total, { page, limit });
+    }
+
+    async deleteUserPlaylist(id: string):Promise<UserPlaylistSchema> {
+        return await this.userPlaylistRepo.delete(id);
+    }
+
 }

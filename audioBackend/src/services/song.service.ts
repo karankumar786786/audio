@@ -3,11 +3,13 @@ import type { SongSchema } from "../schema/songs.schema";
 import type { PaginationParams, PaginatedResult } from "../type/pagination.type";
 import { buildPaginatedResult } from "../type/pagination.type";
 import { logMethods, type Logger } from "../observability";
+import type { SignatureService } from "../lib";
 
 export class SongService {
     constructor(
         private readonly songRepository: SongRepository,
-        private readonly logger: Logger
+        private readonly logger: Logger,
+        private readonly signatureService:SignatureService
     ) {
         logMethods(this, this.logger);
     }
@@ -23,6 +25,7 @@ export class SongService {
     }
 
     async getSongById(id: string): Promise<SongSchema> {
+        this.signatureService.verifyId(id,"songId");
         return await this.songRepository.getById(id);
     }
 }

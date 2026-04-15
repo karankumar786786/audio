@@ -56,4 +56,4 @@ export const getSongsOfPlaylist = asyncHandler(async (req: Request, res: Respons
     const params: PaginationParams = parsePagination(req.query);
     const result: PaginatedResult<SongSchema> = await playlistService.getPlaylistSongs(id, params);
     return res.status(200).json(new ApiResponse(200, "Songs of playlist fetched", result));
-})
+});

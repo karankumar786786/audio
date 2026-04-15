@@ -15,3 +15,15 @@ export const createUserSchema = z.object({
 });
 
 export type CreateUserInput = z.infer<typeof createUserSchema>;
+
+export type UserInfo = {
+  sub: string;        // unique user id (IMPORTANT)
+  name?: string;
+  given_name?: string;
+  family_name?: string;
+  nickname?: string;
+  picture?: string;
+  email?: string;
+  email_verified?: boolean;
+  updated_at?: string;
+};

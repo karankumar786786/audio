@@ -46,7 +46,6 @@ export class PlaylistService {
     async getPlaylistById(id: string): Promise<PlaylistSchema> {
         this.logger.debug({ id }, "getPlaylistById starting");
         this.signatureService.verifyId(id,"playlistId");
-        // Repository now auto-throws NotFoundError
         return await this.playlistRepository.getById(id);
     }
 
@@ -67,7 +66,6 @@ export class PlaylistService {
         this.signatureService.verifyId(id,"playlistId");
         const playlist = await this.playlistRepository.delete(id);
         this.logger.info({ id }, "playlist deleted from repository");
-        
         try { 
             await this.searchService.delete(id); 
             this.logger.info({ id }, "playlist deleted from search index");
@@ -81,7 +79,6 @@ export class PlaylistService {
         this.logger.debug({ data }, "addSongToPlaylist starting");
         this.signatureService.verifyId(data.playlistId,"playlistId");
         this.signatureService.verifyId(data.songId,"songId");
-        // Repository signature corrected to take the schema object
         const result = await this.playlistRepository.addSong(data);
         this.logger.info({ playlistId: data.playlistId, songId: data.songId }, "song added to playlist");
         return result;
@@ -91,7 +88,6 @@ export class PlaylistService {
         this.logger.debug({ data }, "removeSongFromPlaylist starting");
         this.signatureService.verifyId(data.playlistId,"playlistId");
         this.signatureService.verifyId(data.songId,"songId");
-        // Repository signature corrected to take the schema object
         const result = await this.playlistRepository.removeSong(data);
         this.logger.info({ playlistId: data.playlistId, songId: data.songId }, "song removed from playlist");
         return result;

@@ -19,15 +19,12 @@ export class InteractionService {
         logMethods(this, this.logger);
     }
 
-    async recordListen(userId: string, songId: string, part: number) {
-        // ID is now generated inside the repository using randomUUIDv7()
-        const entry = await this.userHistoryRepository.create({ userId, songId, part: part ?? 100 });
-
-        // Sync listen portion with Recombee (part is 0-100, Recombee expects 0-1)
+    async recordListen(userId: string, songId: string, part: number):Promise<void> {
+        await this.userHistoryRepository.create({ userId, songId, part: part ?? 100 });
         const portion = Math.min(1, Math.max(0, (part ?? 100) / 100));
         try { await this.recommendationService.addListen(userId, songId, portion); } catch (_) {}
 
-        return entry;
+        return ;
     }
 
     async getTrendingSongs(params: PaginationParams): Promise<PaginatedResult<any>> {
@@ -42,17 +39,13 @@ export class InteractionService {
     }
 
     async getRecommendations(userId: string, limit: number): Promise<PaginatedResult<any>> {
+        this.signatureService.verifyId(userId,"userId");
         const recommendations = await this.recommendationService.recommendUser(userId, limit);
         const songIds = recommendations.map(r => r.id).filter((id): id is string => !!id);
-        
         if (songIds.length === 0) return buildPaginatedResult([], 0, { page: 1, limit });
-
         const songs = await this.songRepository.getByIds(songIds);
-
-        // Re-order songs to match Recombee's ranking
         const songMap = new Map(songs.map(s => [s.id, s]));
         const result = songIds.map(id => songMap.get(id)).filter(Boolean);
-        
         return buildPaginatedResult(result, result.length, { page: 1, limit });
     }
 }
