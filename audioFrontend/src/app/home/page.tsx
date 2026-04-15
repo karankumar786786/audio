@@ -1,20 +1,13 @@
 "use client";
 
 import { useInfiniteQuery } from "@tanstack/react-query";
-import { api, type Song } from "../../lib/api";
+import { musicApi, type Song } from "../../lib/api";
 import { SongCard } from "../../components/SongCard";
-import { Sidebar } from "../../components/Sidebar";
-import { MusicPlayer } from "../../components/MusicPlayer";
-import { LyricsOverlay } from "../../components/LyricsOverlay";
 import { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
-import { Search, Bell, Sparkles, TrendingUp, Clock } from "lucide-react";
-import { useAuth0 } from "@auth0/auth0-react";
+import { Sparkles, TrendingUp, Clock, Compass } from "lucide-react";
 
 export default function HomePage() {
-  const { user } = useAuth0();
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-
   const {
     data,
     fetchNextPage,
@@ -23,7 +16,7 @@ export default function HomePage() {
     status,
   } = useInfiniteQuery({
     queryKey: ["discover-songs"],
-    queryFn: ({ pageParam }) => api.songs.list(pageParam as number, 15),
+    queryFn: ({ pageParam }) => musicApi.getFeed(pageParam as number, 15),
     initialPageParam: 1,
     getNextPageParam: (lastPage) => 
       lastPage.data.pagination.hasNext ? lastPage.data.pagination.page + 1 : undefined,
@@ -46,109 +39,92 @@ export default function HomePage() {
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   return (
-    <div className="flex h-screen bg-black overflow-hidden font-sans selection:bg-indigo-500/30">
-      <Sidebar />
-      <LyricsOverlay />
+    <div className="px-10 pb-20">
+      {/* Hero Section */}
+      <motion.section 
+        initial={{ opacity: 0, scale: 0.98 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="mb-20 relative rounded-[3rem] overflow-hidden group shadow-2xl"
+      >
+        <div className="bg-gradient-to-br from-indigo-900 via-indigo-600 to-purple-900 p-20 relative overflow-hidden ring-1 ring-white/10">
+          <div className="relative z-10 max-w-3xl py-10">
+            <div className="flex items-center gap-3 mb-6 bg-white/10 backdrop-blur-md w-fit px-4 py-1.5 rounded-full border border-white/10">
+              <Sparkles className="text-indigo-300" size={14} />
+              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white italic">Synthetic Frequency</span>
+            </div>
+            <h1 className="text-6xl md:text-8xl font-black text-white italic tracking-tighter mb-8 leading-[0.85] uppercase">
+              Immerse In<br/><span className="text-indigo-300">New Dimensions.</span>
+            </h1>
+            <p className="text-xl text-indigo-100 opacity-80 mb-12 font-medium leading-relaxed max-w-xl">
+              Sync your soul with word-level high fidelity audio. 
+              Discover deep-cuts and trending transients curated by your listening frequency.
+            </p>
+            <div className="flex items-center gap-6">
+              <button className="px-10 py-5 bg-white text-indigo-700 rounded-3xl font-black text-xs uppercase tracking-widest shadow-2xl hover:bg-indigo-50 transition-all flex items-center gap-3">
+                <TrendingUp size={18} />
+                Explore Trends
+              </button>
+              <button className="px-10 py-5 bg-zinc-900/60 backdrop-blur-xl text-white rounded-3xl font-black text-xs uppercase tracking-widest border border-white/10 hover:bg-zinc-900 transition-all">
+                The Lab
+              </button>
+            </div>
+          </div>
 
-      <main className="flex-1 ml-72 flex flex-col relative">
-        {/* Top Floating Header */}
-        <header className="sticky top-0 z-40 px-12 py-8 flex items-center justify-between pointer-events-none">
-           <div className="flex items-center gap-6 pointer-events-auto">
-              <div className="relative group">
-                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-zinc-500 group-focus-within:text-indigo-500 transition-colors">
-                    <Search size={18} />
-                 </div>
-                 <input 
-                  type="text" 
-                  placeholder="Songs, artists, or moods..."
-                  className="bg-zinc-900/50 backdrop-blur-md border border-white/5 rounded-2xl py-2.5 pl-12 pr-6 text-sm focus:ring-2 focus:ring-indigo-500 transition-all outline-none w-80 text-white placeholder-zinc-500"
-                 />
-              </div>
-           </div>
+          {/* Abstract visuals */}
+          <div className="absolute top-0 right-0 -mr-40 -mt-40 w-[800px] h-[800px] bg-indigo-500/20 rounded-full blur-[120px] animate-pulse" />
+          <div className="absolute -bottom-20 -right-20 w-96 h-96 bg-purple-500/20 rounded-full blur-[100px]" />
+          <Compass className="absolute top-20 right-20 text-white/5 w-80 h-80 -rotate-12 pointer-events-none" />
+        </div>
+      </motion.section>
 
-           <div className="flex items-center gap-4 pointer-events-auto">
-              <button className="w-12 h-12 rounded-2xl bg-zinc-900/50 backdrop-blur-md border border-white/5 flex items-center justify-center text-zinc-400 hover:text-white transition-all"><Bell size={20} /></button>
-              <div className="w-12 h-12 rounded-2xl overflow-hidden border border-white/10 ring-2 ring-transparent hover:ring-indigo-500 transition-all cursor-pointer shadow-xl">
-                 <img src={user?.picture || "https://avatar.vercel.sh/me"} className="w-full h-full object-cover" alt="Profile" />
-              </div>
-           </div>
-        </header>
-
-        {/* Dynamic Content */}
-        <div ref={scrollContainerRef} className="flex-1 overflow-y-auto px-12 pb-32 pt-4">
-           
-           {/* Hero Section */}
-           <motion.section 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mb-16 relative rounded-[40px] overflow-hidden group"
-           >
-              <div className="bg-gradient-to-r from-indigo-600 to-purple-800 p-16 relative overflow-hidden">
-                 <div className="relative z-10 max-w-2xl mt-8">
-                    <div className="flex items-center gap-2 mb-4">
-                       <Sparkles className="text-indigo-200" size={16} />
-                       <span className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-100 italic">Curated for you</span>
-                    </div>
-                    <h1 className="text-5xl md:text-7xl font-black text-white italic tracking-tighter mb-6 leading-[0.9]">
-                       DISCOVER YOUR<br/>NEW SOUND.
-                    </h1>
-                    <p className="text-lg text-indigo-100 opacity-80 mb-10 font-medium leading-relaxed">
-                       A personalized feed based on your listening history and mood.
-                       New tracks added every hour.
-                    </p>
-                    <button className="px-8 py-4 bg-white text-indigo-700 rounded-2xl font-black text-sm uppercase tracking-widest shadow-2xl hover:scale-105 active:scale-95 transition-all">Start Listening</button>
-                 </div>
-
-                 {/* Decorative elements */}
-                 <div className="absolute top-0 right-0 -mr-20 -mt-20 w-[600px] h-[600px] bg-white/10 rounded-full blur-[100px] animate-pulse" />
-                 <TrendingUp className="absolute bottom-10 right-10 text-white/5 w-64 h-64 -rotate-12 pointer-events-none" />
-              </div>
-           </motion.section>
-
-           {/* Infinite Scroll Feed */}
-           <section>
-              <div className="flex items-center justify-between mb-8 px-2">
-                 <div className="flex items-center gap-4">
-                    <h2 className="text-2xl font-black italic tracking-tight">EXPLORE FEED</h2>
-                    <div className="h-0.5 w-12 bg-indigo-500 rounded-full" />
-                 </div>
-                 <div className="flex items-center gap-2 text-zinc-500 text-xs font-bold">
-                    <Clock size={14} />
-                    <span>RECENTLY TRANSCODED</span>
-                 </div>
-              </div>
-
-              {status === "pending" ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-8">
-                  {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
-                    <div key={i} className="aspect-square bg-zinc-900 rounded-3xl animate-pulse" />
-                  ))}
-                </div>
-              ) : status === "error" ? (
-                <div className="p-20 text-center text-zinc-500 border-2 border-dashed border-zinc-900 rounded-[40px] italic">Failed to synchronize library. Please check connection.</div>
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-8">
-                  {data?.pages.map((page, i) => (
-                    page.data.data.map((song, songIdx) => (
-                      <SongCard 
-                        key={song.id} 
-                        song={song} 
-                        priority={i === 0 && songIdx < 6}
-                      />
-                    ))
-                  ))}
-                </div>
-              )}
-
-              {/* Loader/Trigger */}
-              <div id="infinite-scroll-trigger" className="h-20 flex items-center justify-center mt-20">
-                {isFetchingNextPage && <div className="w-10 h-10 border-4 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin" />}
-              </div>
-           </section>
+      {/* Discovery Feed */}
+      <section>
+        <div className="flex items-center justify-between mb-12 px-2">
+          <div className="flex items-center gap-6">
+            <h2 className="text-3xl font-black italic tracking-tighter uppercase text-white">Discovery Stream</h2>
+            <div className="h-px w-24 bg-gradient-to-r from-indigo-500 to-transparent" />
+          </div>
+          <div className="flex items-center gap-3 text-zinc-500 text-[10px] font-black uppercase tracking-widest italic group cursor-pointer hover:text-white transition-colors">
+            <Clock size={14} />
+            <span>Frequency: Recent</span>
+          </div>
         </div>
 
-        <MusicPlayer />
-      </main>
+        {status === "pending" ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-10">
+            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(i => (
+              <div key={i} className="aspect-square bg-zinc-900/40 border border-white/5 rounded-[3rem] animate-pulse" />
+            ))}
+          </div>
+        ) : status === "error" ? (
+          <div className="p-32 text-center text-zinc-500 border-2 border-dashed border-zinc-900 rounded-[4rem] font-bold italic tracking-tight">
+            COMMUNICATION ERROR: SYSTEM SYNC FAILED
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-10">
+            {data?.pages.map((page, i) => (
+              page.data.data.map((song, songIdx) => (
+                <SongCard 
+                  key={`${song.id}-${i}-${songIdx}`} 
+                  song={song} 
+                  priority={i === 0 && songIdx < 6}
+                />
+              ))
+            ))}
+          </div>
+        )}
+
+        {/* Loader/Trigger */}
+        <div id="infinite-scroll-trigger" className="h-40 flex items-center justify-center mt-20">
+          {isFetchingNextPage && (
+            <div className="relative w-12 h-12 flex items-center justify-center">
+              <div className="absolute inset-0 border-4 border-indigo-500/10 rounded-full" />
+              <div className="absolute inset-0 border-4 border-t-indigo-500 rounded-full animate-spin" />
+            </div>
+          )}
+        </div>
+      </section>
     </div>
   );
 }
+
