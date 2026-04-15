@@ -16,7 +16,7 @@ export class UserController {
     }
 
     handleUser = asyncHandler(async (req: Request, res: Response) => {
-        const accessToken = req.params["access-token"] as string;
+        const { accessToken } = req.body;
         const data: {payload:Payload,token:string} = await this.userService.createUser(accessToken);
         return new ApiResponse<Payload>(201, "User created successfully", data.payload).sendToken(req,res,data.token);
     });

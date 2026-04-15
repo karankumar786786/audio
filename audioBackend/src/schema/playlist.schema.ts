@@ -5,8 +5,8 @@ export const playlistSchema = z.object({
     name: z.string().min(1, { message: "name is required" }),
     coverImageKey: z.string().min(1, { message: "coverImageKey is required" }),
     bannerImageKey: z.string().min(1, { message: "bannerImageKey is required" }),
-    createdAt: z.string().datetime().optional(),
-    updatedAt: z.string().datetime().optional(),
+    createdAt: z.coerce.string().optional(),
+    updatedAt: z.coerce.string().optional(),
 });
 
 export type PlaylistSchema = z.infer<typeof playlistSchema>;

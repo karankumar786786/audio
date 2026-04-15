@@ -12,7 +12,7 @@ export const artistSchema = z.object({
     // Optional for testing — defaults to empty string
     coverImageKey: z.string(),
     bannerImageKey: z.string(),
-    createdAt: z.string().datetime().optional(),
+    createdAt: z.coerce.string().optional(),
 });
 
 export type ArtistSchema = z.infer<typeof artistSchema>;

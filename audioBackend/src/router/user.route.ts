@@ -17,7 +17,7 @@ const playlistSongInput = userPlaylistSongSchema.pick({ playlistId: true, songId
 export const userRouter = Router();
 
 // Create / upsert user (for testing & Auth0 post-login callback)
-userRouter.post("/:access-token", userController.handleUser);
+userRouter.post("/register", userController.handleUser);
 userRouter.get("/:id", userController.getUserById);
 
 // Favourites

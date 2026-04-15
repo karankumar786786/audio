@@ -4,7 +4,7 @@ import { z } from "zod";
 export const userSchema = z.object({
     id: z.string().min(1, { message: "id is required" }),
     email: z.string().email({ message: "Valid email is required" }),
-    createdAt: z.string().datetime().optional(),
+    createdAt: z.coerce.string().optional(),
 });
 
 export type UserSchema = z.infer<typeof userSchema>;
