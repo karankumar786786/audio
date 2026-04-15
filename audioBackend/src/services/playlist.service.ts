@@ -22,7 +22,7 @@ export class PlaylistService {
             this.playlistRepository.count()
         ]);
         
-        return buildPaginatedResult(data, total, params);
+        return buildPaginatedResult<PlaylistSchema>(data, total, params);
     }
 
     async getPlaylistById(id: string): Promise<PlaylistSchema> {
@@ -38,6 +38,6 @@ export class PlaylistService {
             this.playlistRepository.countSongs(id)
         ]);
         
-        return buildPaginatedResult(data, total, params);
+        return buildPaginatedResult<SongSchema>(data, total, params);
     }
 }

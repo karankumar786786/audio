@@ -23,7 +23,7 @@ export class ArtistService {
             this.artistRepository.count()
         ]);
         
-        return buildPaginatedResult(data, total, params);
+        return buildPaginatedResult<ArtistSchema>(data, total, params);
     }
     async getArtistById(id: string): Promise<ArtistSchema> {
         this.signatureService.verifyId(id, "artistId");
@@ -38,6 +38,6 @@ export class ArtistService {
             this.songRepository.countByArtistName(artist.name),
             this.songRepository.getByArtistName(artist.name, params.limit, offset)
         ]);
-        return buildPaginatedResult(songs, total, params);
+        return buildPaginatedResult<SongSchema>(songs, total, params);
     }
 }

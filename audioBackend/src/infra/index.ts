@@ -90,7 +90,7 @@ export const imagekitClient = new ImageKit({
 });
 
 export const inngest = new Inngest({ id: "test-music" });
-const jwtServices:JWTService = new Jose(process.env.JWT_SECRET!,process.env.JWT_EXPIRY_IN_HR!,process.env.JWT_ISSUER!);
+export const jwtServices:JWTService = new Jose(process.env.JWT_SECRET!,process.env.JWT_EXPIRY_IN_HR!,process.env.JWT_ISSUER!);
 
 // --- 2. Repositories (Wired with DI) ---
 

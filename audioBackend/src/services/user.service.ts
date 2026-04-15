@@ -10,8 +10,8 @@ import { logMethods, type Logger } from "../observability";
 import axios from "axios";
 import axiosRetry from "axios-retry";
 import { NotFoundError } from "../errors";
-import type {  JWTService } from "../lib";
-import type { Payload, SongSchema, UserFavouriteSongSchema } from "../schema";
+import type { JWTService } from "../lib";
+import type { Payload, SongSchema, UserFavouriteSongSchema, UserSearchHistorySchema } from "../schema";
 import { buildPaginatedResult, type PaginatedResult } from "../type/pagination.type";
 
 
@@ -30,30 +30,37 @@ export class UserService {
         private readonly userPlaylistRepo: UserPlaylistRepository,
         private readonly signatureService: SignatureService,
         private readonly logger: Logger,
-        private readonly jwtService:JWTService
+        private readonly jwtService: JWTService
     ) {
         logMethods(this, this.logger);
     }
 
-    async createUser(accessToken: string): Promise<string> {
-        const userInfo: UserInfo = await axios.get(`https://${process.env.AUTH0_DOMAIN}/userinfo`, { headers: { Authorization: `Bearer ${accessToken}` } });
+    async createUser(accessToken: string): Promise<{ payload: Payload, token: string }> {
+        const { data: userInfo } = await axios.get<UserInfo>(`https://${process.env.AUTH0_DOMAIN}/userinfo`, { headers: { Authorization: `Bearer ${accessToken}` } });
         if (!userInfo.email) {
             throw new NotFoundError("email not found");
         };
         const email = userInfo.email;
-        const user:UserSchema = await this.userRepository.create({ email });
-        const payload:Payload = {
+        let user = await this.userRepository.getByEmail(email);
+        if (!user) {
+            user = await this.userRepository.create({ email });
+        }
+        const payload: Payload = {
             id: user.id,
             userName: userInfo.name ? userInfo.name : "",
             email: email,
             picture: userInfo.picture ? userInfo.picture : "",
         };
-        return await this.jwtService.sign(payload);
+        const token = await this.jwtService.sign(payload);
+        return {
+            payload,
+            token
+        }
     }
 
     async getUserById(id: string): Promise<UserSchema> {
         // Repository now auto-throws NotFoundError
-        this.signatureService.verifyId(id,"userId");
+        this.signatureService.verifyId(id, "userId");
         return await this.userRepository.getById(id);
     }
 
@@ -78,7 +85,7 @@ export class UserService {
             this.favouriteRepo.getByUserId(userId, limit, offset),
             this.favouriteRepo.countByUserId(userId)
         ]);
-        return buildPaginatedResult(data, total, { page, limit });
+        return buildPaginatedResult<SongSchema>(data, total, { page, limit });
     }
 
     // History logic
@@ -89,72 +96,79 @@ export class UserService {
             this.historyRepo.getByUserId(userId, limit, offset),
             this.historyRepo.countByUserId(userId)
         ]);
-        return buildPaginatedResult(data, total, { page, limit });
+        return buildPaginatedResult<SongSchema>(data, total, { page, limit });
     }
 
     // Search History logic
-    async getSearchHistory(userId: string, limit: number = 20, offset: number = 0): Promise<PaginatedResult<any>> {
+    async getSearchHistory(userId: string, limit: number = 20, offset: number = 0): Promise<PaginatedResult<UserSearchHistorySchema>> {
         this.signatureService.verifyId(userId, "userId");
         const page = Math.floor(offset / limit) + 1;
         const [data, total] = await Promise.all([
             this.searchHistoryRepo.getByUserId(userId, limit, offset),
             this.searchHistoryRepo.countByUserId(userId)
         ]);
-        return buildPaginatedResult(data, total, { page, limit });
+        return buildPaginatedResult<UserSearchHistorySchema>(data, total, { page, limit });
     }
 
-    async saveSearchHistory(userId: string, text: string):Promise<void> {
+    async saveSearchHistory(userId: string, text: string): Promise<void> {
         this.signatureService.verifyId(userId, "userId");
         await this.searchHistoryRepo.create({ userId, searchedText: text });
         return;
     }
 
-    async clearSearchHistory(userId: string):Promise<void> {
+    async clearSearchHistory(userId: string): Promise<void> {
         this.signatureService.verifyId(userId, "userId");
         await this.searchHistoryRepo.clearByUserId(userId);
         return;
     }
 
     // Playlist logic
-    async createUserPlaylist(data: Omit<UserPlaylistSchema, "id">):Promise<UserPlaylistSchema> {
+    async createUserPlaylist(data: Omit<UserPlaylistSchema, "id">): Promise<UserPlaylistSchema> {
         this.signatureService.verifyId(data.userId, "userId");
         return await this.userPlaylistRepo.create(data);
     }
 
-    async getUserPlaylistById(id: string):Promise<UserPlaylistSchema> {
+    async getUserPlaylistById(id: string): Promise<UserPlaylistSchema> {
+        this.signatureService.verifyId(id, "userPlaylistId");
         return await this.userPlaylistRepo.getById(id);
     }
 
-    async getUserPlaylists(userId: string, limit: number = 20, offset: number = 0):Promise<PaginatedResult<UserPlaylistSchema>> {
+    async getUserPlaylists(userId: string, limit: number = 20, offset: number = 0): Promise<PaginatedResult<UserPlaylistSchema>> {
         this.signatureService.verifyId(userId, "userId");
         const page = Math.floor(offset / limit) + 1;
         const [data, total] = await Promise.all([
             this.userPlaylistRepo.getByUserId(userId, limit, offset),
             this.userPlaylistRepo.countByUserId(userId)
         ]);
-        return buildPaginatedResult(data, total, { page, limit });
+        return buildPaginatedResult<UserPlaylistSchema>(data, total, { page, limit });
     }
 
-    async addSongToUserPlaylist(playlistId: string, songId: string, userId: string):Promise<UserPlaylistSongSchema> {
+    async addSongToUserPlaylist(playlistId: string, songId: string, userId: string): Promise<UserPlaylistSongSchema> {
         this.signatureService.verifyId(userId, "userId");
+        this.signatureService.verifyId(playlistId, "userPlaylistId");
+        this.signatureService.verifyId(songId, "songId");
         return await this.userPlaylistRepo.addSong(playlistId, songId);
     }
 
-    async removeSongFromUserPlaylist(playlistId: string, songId: string, userId: string):Promise<UserPlaylistSongSchema> {
+    async removeSongFromUserPlaylist(playlistId: string, songId: string, userId: string): Promise<UserPlaylistSongSchema> {
         this.signatureService.verifyId(userId, "userId");
+        this.signatureService.verifyId(playlistId, "userPlaylistId");
+        this.signatureService.verifyId(songId, "songId");
         return await this.userPlaylistRepo.removeSong(playlistId, songId);
     }
 
-    async getUserPlaylistSongs(playlistId: string, limit: number = 20, offset: number = 0):Promise<PaginatedResult<SongSchema>> {
+    async getUserPlaylistSongs(playlistId: string, limit: number = 20, offset: number = 0): Promise<PaginatedResult<SongSchema>> {
+        this.signatureService.verifyId(playlistId, "userPlaylistId");
         const page = Math.floor(offset / limit) + 1;
         const [data, total] = await Promise.all([
             this.userPlaylistRepo.getSongs(playlistId, limit, offset),
             this.userPlaylistRepo.countSongs(playlistId)
         ]);
-        return buildPaginatedResult(data, total, { page, limit });
+        return buildPaginatedResult<SongSchema>(data, total, { page, limit });
     }
 
-    async deleteUserPlaylist(id: string):Promise<UserPlaylistSchema> {
+    async deleteUserPlaylist(id: string): Promise<UserPlaylistSchema> {
+        this.signatureService.verifyId(id, "userPlaylistId");
         return await this.userPlaylistRepo.delete(id);
     }
 

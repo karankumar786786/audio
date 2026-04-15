@@ -4,6 +4,7 @@ import { config } from "dotenv";
 import { errorHandler } from "./middlewares/errorHandler";
 import { ApiError } from "./utils/ApiError";
 import helmet from "helmet";
+import cookieParser from "cookie-parser";
 import { masterRouter } from "./router";
 import { logger } from "./infra";
 import { swaggerRouter } from "./docs/openapi-routes";
@@ -14,6 +15,7 @@ export const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(cors());
+app.use(cookieParser());
 app.use(express.json());
 app.use(helmet());
 app.use(express.urlencoded({ extended: true }));

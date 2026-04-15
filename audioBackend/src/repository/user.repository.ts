@@ -40,6 +40,13 @@ export class UserRepository extends BaseRepository<UserSchema, CreateUserData, U
         return this.mapRow(user);
     }
 
+    async getByEmail(email: string): Promise<UserSchema | null> {
+        const [user] = await this.db`
+            SELECT id, email, created_at AS "createdAt" FROM users WHERE email = ${email}
+        `;
+        return user ? this.mapRow(user) : null;
+    }
+
     async getAll(): Promise<UserSchema[]> {
         const rows = await this.db`
             SELECT id, email, created_at AS "createdAt" FROM users ORDER BY created_at DESC

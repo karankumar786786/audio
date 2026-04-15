@@ -17,19 +17,19 @@ export class InteractionController {
     recordListen = asyncHandler(async (req: Request, res: Response) => {
         const { userId, songId, part } = req.body;
         await this.interactionService.recordListen(userId, songId, part);
-        return new ApiResponse(200, "Listen recorded").send(res);
+        return new ApiResponse<null>(200, "Listen recorded").send(res);
     });
 
     getTrendingSongs = asyncHandler(async (req: Request, res: Response) => {
         const params:PaginationParams = parsePagination(req.query);
         const result:PaginatedResult<SongSchema> = await this.interactionService.getTrendingSongs(params);
-        return  new ApiResponse(200, "Trending songs fetched", result).send(res);
+        return  new ApiResponse<PaginatedResult<SongSchema>>(200, "Trending songs fetched", result).send(res);
     });
 
     getRecommendations = asyncHandler(async (req: Request, res: Response) => {
         const userId:string = req.params.userId as string;
         const limit:number = parseInt(req.query.limit as string) || 10;
         const result:PaginatedResult<SongSchema> = await this.interactionService.getRecommendations(userId, limit);
-        return res.status(200).json(new ApiResponse(200, "Recommendations fetched", result));
+        return new ApiResponse<PaginatedResult<SongSchema>>(200, "Recommendations fetched", result).send(res);
     });
 }

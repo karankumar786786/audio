@@ -6,6 +6,7 @@ import { type SignatureService } from "../lib/signature";
 import type { PaginationParams, PaginatedResult } from "../type/pagination.type";
 import { buildPaginatedResult } from "../type/pagination.type";
 import { logMethods, type Logger } from "../observability";
+import type { SongSchema } from "../schema";
 
 export class InteractionService {
     constructor(
@@ -23,11 +24,10 @@ export class InteractionService {
         await this.userHistoryRepository.create({ userId, songId, part: part ?? 100 });
         const portion = Math.min(1, Math.max(0, (part ?? 100) / 100));
         try { await this.recommendationService.addListen(userId, songId, portion); } catch (_) {}
-
         return ;
     }
 
-    async getTrendingSongs(params: PaginationParams): Promise<PaginatedResult<any>> {
+    async getTrendingSongs(params: PaginationParams): Promise<PaginatedResult<SongSchema>> {
         const offset = (params.page - 1) * params.limit;
         
         const [total, trending] = await Promise.all([
@@ -35,17 +35,17 @@ export class InteractionService {
             this.interactionRepository.getTrendingSongs(params.limit, offset)
         ]);
         
-        return buildPaginatedResult(trending, total, params);
+        return buildPaginatedResult<SongSchema>(trending, total, params);
     }
 
-    async getRecommendations(userId: string, limit: number): Promise<PaginatedResult<any>> {
+    async getRecommendations(userId: string, limit: number): Promise<PaginatedResult<SongSchema>> {
         this.signatureService.verifyId(userId,"userId");
         const recommendations = await this.recommendationService.recommendUser(userId, limit);
         const songIds = recommendations.map(r => r.id).filter((id): id is string => !!id);
         if (songIds.length === 0) return buildPaginatedResult([], 0, { page: 1, limit });
         const songs = await this.songRepository.getByIds(songIds);
         const songMap = new Map(songs.map(s => [s.id, s]));
-        const result = songIds.map(id => songMap.get(id)).filter(Boolean);
-        return buildPaginatedResult(result, result.length, { page: 1, limit });
+        const result = songIds.map(id => songMap.get(id)).filter((song): song is SongSchema => !!song);
+        return buildPaginatedResult<SongSchema>(result, result.length, { page: 1, limit });
     }
 }

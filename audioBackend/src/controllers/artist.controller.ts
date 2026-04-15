@@ -17,19 +17,19 @@ export class ArtistController {
     getArtists = asyncHandler(async (req: Request, res: Response) => {
         const params:PaginationParams = parsePagination(req.query);
         const result:PaginatedResult<ArtistSchema> = await this.artistService.getArtists(params);
-        return new ApiResponse(200, "Artists fetched", result).send(res);
+        return new ApiResponse<PaginatedResult<ArtistSchema>>(200, "Artists fetched", result).send(res);
     });
 
     getArtistById = asyncHandler(async (req: Request, res: Response) => {
         const id:string = req.params.id as string;
         const artist:ArtistSchema = await this.artistService.getArtistById(id);
-        return new ApiResponse(200, "Artist fetched", artist).send(res);
+        return new ApiResponse<ArtistSchema>(200, "Artist fetched", artist).send(res);
     });
 
     getSongsOfArtist = asyncHandler(async (req: Request, res: Response) => {
         const id:string = req.params.id as string;
         const params:PaginationParams = parsePagination(req.query);
         const result:PaginatedResult<SongSchema> = await this.artistService.getArtistSongs(id, params);
-        return new ApiResponse(200, "Songs of artist fetched", result).send(res);
+        return new ApiResponse<PaginatedResult<SongSchema>>(200, "Songs of artist fetched", result).send(res);
     });
 }
