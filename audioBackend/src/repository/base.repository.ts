@@ -54,10 +54,13 @@ export abstract class BaseRepository<
         return this.mapRow(row);
     }
 
-    async count(): Promise<number> {
-        const rows = await (this.db as any)(`SELECT count(*)::int as count FROM ${this.tableName}`);
-        const row = rows[0];
-        return row?.count || 0;
+    async count(query?: string): Promise<number> {
+        const sql = query 
+            ? `SELECT count(*)::int as count FROM ${this.tableName} WHERE name ILIKE $1`
+            : `SELECT count(*)::int as count FROM ${this.tableName}`;
+        
+        const rows = await (this.db as any)(sql, query ? [`%${query}%`] : []);
+        return rows[0]?.count || 0;
     }
 
     async delete(id: string): Promise<T> {

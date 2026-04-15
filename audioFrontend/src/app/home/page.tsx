@@ -1,187 +1,154 @@
 "use client";
 
+import { useInfiniteQuery } from "@tanstack/react-query";
+import { api, type Song } from "../../lib/api";
+import { SongCard } from "../../components/SongCard";
+import { Sidebar } from "../../components/Sidebar";
+import { MusicPlayer } from "../../components/MusicPlayer";
+import { LyricsOverlay } from "../../components/LyricsOverlay";
+import { useEffect, useRef } from "react";
+import { motion } from "framer-motion";
+import { Search, Bell, Sparkles, TrendingUp, Clock } from "lucide-react";
 import { useAuth0 } from "@auth0/auth0-react";
-import Image from "next/image";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
 
 export default function HomePage() {
-  const { user, isAuthenticated, isLoading, logout } = useAuth0();
-  const router = useRouter();
+  const { user } = useAuth0();
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    status,
+  } = useInfiniteQuery({
+    queryKey: ["discover-songs"],
+    queryFn: ({ pageParam }) => api.songs.list(pageParam as number, 15),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => 
+      lastPage.data.pagination.hasNext ? lastPage.data.pagination.page + 1 : undefined,
+  });
+
+  // Infinite scroll observer
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      router.push("/");
-    }
-  }, [isAuthenticated, isLoading, router]);
-
-  if (isLoading || !isAuthenticated) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-black">
-        <div className="animate-pulse text-zinc-500 font-medium text-lg italic">Loading your library...</div>
-      </div>
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage();
+        }
+      },
+      { threshold: 0.1 }
     );
-  }
+
+    const target = document.getElementById("infinite-scroll-trigger");
+    if (target) observer.observe(target);
+    return () => observer.disconnect();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   return (
-    <div className="flex flex-col min-h-screen bg-black text-white font-sans">
-      {/* Sidebar - Desktop */}
-      <div className="flex h-screen overflow-hidden">
-        <aside className="w-64 bg-zinc-950 border-r border-white/5 flex flex-col hidden md:flex">
-          <div className="p-6">
-            <div className="flex items-center gap-3 mb-10">
-              <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+    <div className="flex h-screen bg-black overflow-hidden font-sans selection:bg-indigo-500/30">
+      <Sidebar />
+      <LyricsOverlay />
+
+      <main className="flex-1 ml-72 flex flex-col relative">
+        {/* Top Floating Header */}
+        <header className="sticky top-0 z-40 px-12 py-8 flex items-center justify-between pointer-events-none">
+           <div className="flex items-center gap-6 pointer-events-auto">
+              <div className="relative group">
+                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-zinc-500 group-focus-within:text-indigo-500 transition-colors">
+                    <Search size={18} />
+                 </div>
+                 <input 
+                  type="text" 
+                  placeholder="Songs, artists, or moods..."
+                  className="bg-zinc-900/50 backdrop-blur-md border border-white/5 rounded-2xl py-2.5 pl-12 pr-6 text-sm focus:ring-2 focus:ring-indigo-500 transition-all outline-none w-80 text-white placeholder-zinc-500"
+                 />
               </div>
-              <span className="text-lg font-bold">AudioSync</span>
-            </div>
+           </div>
 
-            <nav className="space-y-1">
-              {['Home', 'Search', 'Library'].map((item) => (
-                <button 
-                    key={item} 
-                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${item === 'Home' ? 'bg-white/10 text-white' : 'text-zinc-500 hover:text-white hover:bg-white/5'}`}
-                >
-                  <div className="w-5 h-5" />
-                  {item}
-                </button>
-              ))}
-            </nav>
-
-            <div className="mt-10">
-              <h3 className="px-3 text-xs font-semibold text-zinc-500 uppercase tracking-widest mb-4">Playlists</h3>
-              <div className="space-y-1">
-                 <button className="w-full text-left px-3 py-2 text-sm text-zinc-400 hover:text-white transition-colors truncate">Recently Played</button>
-                 <button className="w-full text-left px-3 py-2 text-sm text-zinc-400 hover:text-white transition-colors truncate">Favorites</button>
-                 <button className="w-full text-left px-3 py-2 text-sm text-zinc-400 hover:text-white transition-colors truncate">Deep Focus</button>
+           <div className="flex items-center gap-4 pointer-events-auto">
+              <button className="w-12 h-12 rounded-2xl bg-zinc-900/50 backdrop-blur-md border border-white/5 flex items-center justify-center text-zinc-400 hover:text-white transition-all"><Bell size={20} /></button>
+              <div className="w-12 h-12 rounded-2xl overflow-hidden border border-white/10 ring-2 ring-transparent hover:ring-indigo-500 transition-all cursor-pointer shadow-xl">
+                 <img src={user?.picture || "https://avatar.vercel.sh/me"} className="w-full h-full object-cover" alt="Profile" />
               </div>
-            </div>
-          </div>
+           </div>
+        </header>
 
-          <div className="mt-auto p-4 border-t border-white/5">
-             <div className="flex items-center gap-3 p-2 bg-white/5 rounded-xl">
-                <Image 
-                    src={user?.picture || "https://avatar.vercel.sh/user"} 
-                    alt="Profile" 
-                    width={32} 
-                    height={32} 
-                    className="rounded-full"
-                />
-                <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{user?.name}</p>
-                    <button 
-                        onClick={() => logout({ logoutParams: { returnTo: typeof window !== "undefined" ? window.location.origin : "" } })}
-                        className="text-[10px] text-zinc-500 hover:text-indigo-400 uppercase tracking-wider font-bold transition-colors"
-                    >
-                        Sign Out
-                    </button>
-                </div>
-             </div>
-          </div>
-        </aside>
+        {/* Dynamic Content */}
+        <div ref={scrollContainerRef} className="flex-1 overflow-y-auto px-12 pb-32 pt-4">
+           
+           {/* Hero Section */}
+           <motion.section 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-16 relative rounded-[40px] overflow-hidden group"
+           >
+              <div className="bg-gradient-to-r from-indigo-600 to-purple-800 p-16 relative overflow-hidden">
+                 <div className="relative z-10 max-w-2xl mt-8">
+                    <div className="flex items-center gap-2 mb-4">
+                       <Sparkles className="text-indigo-200" size={16} />
+                       <span className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-100 italic">Curated for you</span>
+                    </div>
+                    <h1 className="text-5xl md:text-7xl font-black text-white italic tracking-tighter mb-6 leading-[0.9]">
+                       DISCOVER YOUR<br/>NEW SOUND.
+                    </h1>
+                    <p className="text-lg text-indigo-100 opacity-80 mb-10 font-medium leading-relaxed">
+                       A personalized feed based on your listening history and mood.
+                       New tracks added every hour.
+                    </p>
+                    <button className="px-8 py-4 bg-white text-indigo-700 rounded-2xl font-black text-sm uppercase tracking-widest shadow-2xl hover:scale-105 active:scale-95 transition-all">Start Listening</button>
+                 </div>
 
-        {/* Main Content */}
-        <main className="flex-1 flex flex-col overflow-y-auto bg-gradient-to-b from-indigo-900/20 to-black">
-          <header className="sticky top-0 z-10 px-8 py-6 flex items-center justify-between backdrop-blur-md bg-black/20">
-             <div className="flex items-center gap-4">
-                <button className="w-8 h-8 rounded-full bg-black/40 flex items-center justify-center hover:bg-black/60 transition-colors">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
-                </button>
-                <button className="w-8 h-8 rounded-full bg-black/40 flex items-center justify-center hover:bg-black/60 transition-colors">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" transform="rotate(180 12 12)"/></svg>
-                </button>
-             </div>
-             
-             <div className="flex items-center gap-4">
-                <button className="px-4 py-2 bg-white text-black text-sm font-bold rounded-full hover:scale-105 transition-transform active:scale-95">
-                    Upgrade to Pro
-                </button>
-             </div>
-          </header>
-
-          <div className="px-8 py-4 space-y-12 pb-32">
-            <section>
-              <h1 className="text-3xl font-black mb-6">Good evening, {user?.given_name || user?.name?.split(' ')[0]}</h1>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {[1, 2, 3, 4, 5, 6].map((i) => (
-                  <div key={i} className="group flex items-center gap-4 bg-white/5 hover:bg-white/10 transition-all rounded-md overflow-hidden cursor-pointer relative pr-4">
-                    <div className="w-20 h-20 bg-zinc-800 flex-shrink-0 animate-pulse" />
-                    <span className="font-bold truncate text-sm">Recently Played Album {i}</span>
-                    <button className="absolute right-4 w-12 h-12 bg-indigo-500 rounded-full shadow-xl opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all flex items-center justify-center text-black">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="m7 4 12 8-12 8V4z"/></svg>
-                    </button>
-                  </div>
-                ))}
+                 {/* Decorative elements */}
+                 <div className="absolute top-0 right-0 -mr-20 -mt-20 w-[600px] h-[600px] bg-white/10 rounded-full blur-[100px] animate-pulse" />
+                 <TrendingUp className="absolute bottom-10 right-10 text-white/5 w-64 h-64 -rotate-12 pointer-events-none" />
               </div>
-            </section>
+           </motion.section>
 
-            <section>
-                <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-2xl font-bold">Recommended for you</h2>
-                    <button className="text-sm font-bold text-zinc-500 hover:underline">Show all</button>
+           {/* Infinite Scroll Feed */}
+           <section>
+              <div className="flex items-center justify-between mb-8 px-2">
+                 <div className="flex items-center gap-4">
+                    <h2 className="text-2xl font-black italic tracking-tight">EXPLORE FEED</h2>
+                    <div className="h-0.5 w-12 bg-indigo-500 rounded-full" />
+                 </div>
+                 <div className="flex items-center gap-2 text-zinc-500 text-xs font-bold">
+                    <Clock size={14} />
+                    <span>RECENTLY TRANSCODED</span>
+                 </div>
+              </div>
+
+              {status === "pending" ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-8">
+                  {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
+                    <div key={i} className="aspect-square bg-zinc-900 rounded-3xl animate-pulse" />
+                  ))}
                 </div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
-                    {[1, 2, 3, 4, 5].map((i) => (
-                        <div key={i} className="bg-zinc-900/40 hover:bg-zinc-900 transition-all p-4 rounded-xl group cursor-pointer">
-                            <div className="aspect-square bg-zinc-800 rounded-lg mb-4 relative shadow-2xl">
-                                <button className="absolute bottom-2 right-2 w-10 h-10 bg-indigo-500 rounded-full shadow-xl opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all flex items-center justify-center text-black">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="m7 4 12 8-12 8V4z"/></svg>
-                                </button>
-                            </div>
-                            <h3 className="font-bold text-sm mb-1 truncate">Daily Mix {i}</h3>
-                            <p className="text-xs text-zinc-500 line-clamp-2">A curated selection of the tracks you love most.</p>
-                        </div>
-                    ))}
+              ) : status === "error" ? (
+                <div className="p-20 text-center text-zinc-500 border-2 border-dashed border-zinc-900 rounded-[40px] italic">Failed to synchronize library. Please check connection.</div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-8">
+                  {data?.pages.map((page, i) => (
+                    page.data.data.map((song, songIdx) => (
+                      <SongCard 
+                        key={song.id} 
+                        song={song} 
+                        priority={i === 0 && songIdx < 6}
+                      />
+                    ))
+                  ))}
                 </div>
-            </section>
-          </div>
-        </main>
-      </div>
+              )}
 
-      {/* Player - Static for UI */}
-      <footer className="fixed bottom-0 left-0 right-0 h-24 bg-black border-t border-white/5 px-4 flex items-center justify-between z-20">
-         <div className="flex items-center gap-4 w-1/3">
-            <div className="w-14 h-14 bg-zinc-800 rounded-md" />
-            <div>
-                <p className="text-sm font-bold hover:underline cursor-pointer">Echoes in the Dark</p>
-                <p className="text-xs text-zinc-500 hover:text-white cursor-pointer transition-colors">Digital Mirage</p>
-            </div>
-         </div>
+              {/* Loader/Trigger */}
+              <div id="infinite-scroll-trigger" className="h-20 flex items-center justify-center mt-20">
+                {isFetchingNextPage && <div className="w-10 h-10 border-4 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin" />}
+              </div>
+           </section>
+        </div>
 
-         <div className="flex flex-col items-center gap-2 w-1/3">
-            <div className="flex items-center gap-6">
-                <button className="text-zinc-500 hover:text-white transition-colors">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m19 20-4-4m0-4 4-4m-4 4H3"/></svg>
-                </button>
-                <button className="text-zinc-500 hover:text-white transition-colors rotate-180">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m11 19-7-7 7-7"/><path d="M11 12H19"/></svg>
-                </button>
-                <button className="w-8 h-8 rounded-full bg-white text-black flex items-center justify-center hover:scale-105 transition-transform active:scale-95">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="m7 4 12 8-12 8V4z"/></svg>
-                </button>
-                <button className="text-zinc-500 hover:text-white transition-colors">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m13 5 7 7-7 7"/><path d="M13 12H5"/></svg>
-                </button>
-                <button className="text-zinc-500 hover:text-white transition-colors">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
-                </button>
-            </div>
-            <div className="flex items-center gap-2 w-full max-w-md">
-                <span className="text-[10px] text-zinc-500">1:45</span>
-                <div className="flex-1 h-1 bg-zinc-800 rounded-full relative group cursor-pointer">
-                    <div className="absolute top-0 left-0 h-full w-1/3 bg-white group-hover:bg-indigo-500 rounded-full" />
-                </div>
-                <span className="text-[10px] text-zinc-500">3:52</span>
-            </div>
-         </div>
-
-         <div className="flex items-center justify-end gap-4 w-1/3">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-zinc-500"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
-            <div className="w-24 h-1 bg-zinc-800 rounded-full">
-                <div className="h-full w-2/3 bg-white hover:bg-indigo-500 rounded-full" />
-            </div>
-         </div>
-      </footer>
+        <MusicPlayer />
+      </main>
     </div>
   );
 }

@@ -3,6 +3,7 @@ import { z } from "zod";
 export const playlistSchema = z.object({
     id: z.string(),
     name: z.string().min(1, { message: "name is required" }),
+    description: z.string().optional(),
     coverImageKey: z.string().min(1, { message: "coverImageKey is required" }),
     bannerImageKey: z.string().min(1, { message: "bannerImageKey is required" }),
     createdAt: z.coerce.string().optional(),

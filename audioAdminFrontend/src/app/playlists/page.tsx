@@ -48,9 +48,13 @@ export default function PlaylistsPage() {
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/playlists/${id}/songs`);
       const data = await res.json();
-      if (data.success) setPlaylistSongs(data.data.data || []);
+      if (data.success) {
+        // Handle both paginated and non-paginated structures for resilience
+        const songs = Array.isArray(data.data) ? data.data : (data.data?.data || []);
+        setPlaylistSongs(songs);
+      }
     } catch (err) {
-      console.error(err);
+      console.error("Failed to fetch playlist songs:", err);
     }
   };
 
@@ -246,7 +250,7 @@ export default function PlaylistsPage() {
                 <div>
                   <h4 className="text-xs font-bold uppercase tracking-widest text-zinc-500 mb-4">Current Songs</h4>
                   <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2">
-                    {playlistSongs.map(song => (
+                    {Array.isArray(playlistSongs) && playlistSongs.map(song => (
                       <div key={song.id} className="flex justify-between items-center p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-800/50 group">
                         <span className="font-medium text-zinc-900 dark:text-zinc-100">{song.title}</span>
                         <button onClick={() => removeSongFromPlaylist(song.id)} className="text-zinc-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all">
@@ -256,7 +260,7 @@ export default function PlaylistsPage() {
                         </button>
                       </div>
                     ))}
-                    {playlistSongs.length === 0 && <div className="text-sm text-zinc-400 italic p-4 text-center border-2 border-dashed border-zinc-100 dark:border-zinc-800 rounded-2xl">Empty</div>}
+                    {(!playlistSongs || playlistSongs.length === 0) && <div className="text-sm text-zinc-400 italic p-4 text-center border-2 border-dashed border-zinc-100 dark:border-zinc-800 rounded-2xl">Empty</div>}
                   </div>
                 </div>
 
