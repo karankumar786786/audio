@@ -10,6 +10,31 @@ extendZodWithOpenApi(z);
 
 export const registry = new OpenAPIRegistry();
 
+// --- API Commons ---
+
+export const ApiResponseSchema = registry.register("ApiResponse", z.object({
+  success: z.boolean(),
+  message: z.string(),
+  data: z.any().optional(),
+}));
+
+export const PaginationParamsSchema = registry.register("PaginationParams", z.object({
+  page: z.number().default(1),
+  limit: z.number().default(10),
+}));
+
+export const PaginatedResultSchema = registry.register("PaginatedResult", z.object({
+  data: z.array(z.any()),
+  pagination: z.object({
+    page: z.number(),
+    limit: z.number(),
+    total: z.number(),
+    totalPages: z.number(),
+    hasNext: z.boolean(),
+    hasPrev: z.boolean(),
+  }),
+}));
+
 export function generateOpenApiDocument() {
   const generator = new OpenApiGeneratorV3(registry.definitions);
 

@@ -33,8 +33,12 @@ export const PaginationParamsSchema = registry.register("PaginationParams", z.ob
 
 export const PaginatedResultSchema = registry.register("PaginatedResult", z.object({
   data: z.array(z.any()),
-  total: z.number(),
-  page: z.number(),
-  limit: z.number(),
-  totalPages: z.number(),
+  pagination: z.object({
+    page: z.number(),
+    limit: z.number(),
+    total: z.number(),
+    totalPages: z.number(),
+    hasNext: z.boolean(),
+    hasPrev: z.boolean(),
+  }),
 }));
