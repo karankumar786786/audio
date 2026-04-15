@@ -1,6 +1,7 @@
 import { randomUUIDv7 } from "bun";
 import type { Database } from "../infra/db";
 import { userHistorySchema, type UserHistorySchema } from "../schema/userHistory.schema";
+import { songSchema, type SongSchema } from "../schema/songs.schema";
 import { BaseRepository } from "./base.repository";
 import { logMethods, type Logger } from "../observability";
 import type { SignatureService } from "../lib";
@@ -34,15 +35,25 @@ export class UserHistoryRepository extends BaseRepository<UserHistorySchema, Cre
         throw new Error("Update not supported for history");
     }
 
-    async getByUserId(userId: string, limit: number, offset: number): Promise<UserHistorySchema[]> {
+    async getByUserId(userId: string, limit: number, offset: number): Promise<SongSchema[]> {
         const rows = await this.db`
-            SELECT id, user_id AS "userId", song_id AS "songId", part, listened_at AS "listenedAt"
-            FROM user_histories
-            WHERE user_id = ${userId}
-            ORDER BY listened_at DESC
+            SELECT 
+                s.id,
+                s.title,
+                s.artist_name AS "artistName",
+                s.duration,
+                s.song_key AS "songKey",
+                s.image_key AS "imageKey",
+                s.language,
+                s.job_id AS "jobId",
+                s.created_at AS "createdAt"
+            FROM user_histories uh
+            JOIN songs s ON s.id = uh.song_id
+            WHERE uh.user_id = ${userId}
+            ORDER BY uh.listened_at DESC
             LIMIT ${limit} OFFSET ${offset}
         `;
-        return rows.map((row) => this.mapRow(row));
+        return rows.map((row) => songSchema.parse(row));
     }
 
     async countByUserId(userId: string): Promise<number> {

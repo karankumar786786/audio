@@ -1,5 +1,6 @@
 import type { Database } from "../infra/db";
 import { type UserPlaylistSchema, type UserPlaylistSongSchema } from "../schema/userPlaylist.schema";
+import { songSchema, type SongSchema } from "../schema/songs.schema";
 import type { Repository } from "../type/repository.type";
 import { logMethods, type Logger } from "../observability";
 import { type SignatureService } from "../lib";
@@ -120,7 +121,7 @@ export class UserPlaylistRepository implements Repository<UserPlaylistSchema, Us
         return row?.count || 0;
     }
 
-    async getSongs(playlistId: string, limit?: number, offset?: number): Promise<any[]> {
+    async getSongs(playlistId: string, limit?: number, offset?: number): Promise<SongSchema[]> {
         this.signatureService.verifyId(playlistId, "userPlaylistId");
         const rows = await this.db`
             SELECT 
@@ -138,7 +139,7 @@ export class UserPlaylistRepository implements Repository<UserPlaylistSchema, Us
             WHERE ups.playlist_id = ${playlistId}
             LIMIT ${limit ?? null} OFFSET ${offset ?? null}
         `;
-        return rows;
+        return rows.map(row => songSchema.parse(row));
     }
 
     // Maps DB row → camelCase UserPlaylistSchema

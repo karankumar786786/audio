@@ -1,8 +1,9 @@
-import { randomUUIDv7 } from "bun";
 import type { Database } from "../infra/db";
 import { playlistSchema, playlistSongSchema, type PlaylistSchema, type PlaylistSongSchema } from "../schema/playlist.schema";
+import { songSchema, type SongSchema } from "../schema/songs.schema";
 import { BaseRepository } from "./base.repository";
 import { logMethods, type Logger } from "../observability";
+import { type SignatureService } from "../lib";
 
 type CreatePlaylistData = Omit<PlaylistSchema,  "createdAt" | "updatedAt">;
 type UpdatePlaylistData = Partial<CreatePlaylistData>;
@@ -10,16 +11,18 @@ type UpdatePlaylistData = Partial<CreatePlaylistData>;
 export class PlaylistRepository extends BaseRepository<PlaylistSchema, CreatePlaylistData, UpdatePlaylistData> {
     constructor(
         db: Database,
-        logger: Logger
+        logger: Logger,
+        private readonly signatureService: SignatureService
     ) {
         super(db, "playlists", playlistSchema, logger);
         logMethods(this, this.logger);
     }
 
     async create(data: CreatePlaylistData): Promise<PlaylistSchema> {
+        const id = this.signatureService.generateSignedId();
         const [playlist] = await this.db`
             INSERT INTO playlists (id, name, cover_image_key, banner_image_key)
-            VALUES (${data.id}, ${data.name}, ${data.coverImageKey}, ${data.bannerImageKey})
+            VALUES (${id}, ${data.name}, ${data.coverImageKey}, ${data.bannerImageKey})
             RETURNING 
                 id, name, 
                 cover_image_key AS "coverImageKey", 
@@ -33,6 +36,7 @@ export class PlaylistRepository extends BaseRepository<PlaylistSchema, CreatePla
     }
 
     async update(id: string, data: UpdatePlaylistData): Promise<PlaylistSchema> {
+        this.signatureService.verifyId(id, "playlistId");
         const [playlist] = await this.db`
             UPDATE playlists
             SET
@@ -71,7 +75,9 @@ export class PlaylistRepository extends BaseRepository<PlaylistSchema, CreatePla
     // ── Playlist ↔ Song join operations ────────────────────────────────────────
 
     async addSong(playlistId: string, songId: string): Promise<PlaylistSongSchema> {
-        const id = randomUUIDv7();
+        this.signatureService.verifyId(playlistId, "playlistId");
+        this.signatureService.verifyId(songId, "songId");
+        const id = this.signatureService.generateSignedId();
         const [entry] = await this.db`
             INSERT INTO playlist_songs (id, playlist_id, song_id)
             VALUES (${id}, ${playlistId}, ${songId})
@@ -83,6 +89,8 @@ export class PlaylistRepository extends BaseRepository<PlaylistSchema, CreatePla
     }
 
     async removeSong(playlistId: string, songId: string): Promise<PlaylistSongSchema> {
+        this.signatureService.verifyId(playlistId, "playlistId");
+        this.signatureService.verifyId(songId, "songId");
         const [entry] = await this.db`
             DELETE FROM playlist_songs
             WHERE playlist_id = ${playlistId} AND song_id = ${songId}
@@ -100,7 +108,8 @@ export class PlaylistRepository extends BaseRepository<PlaylistSchema, CreatePla
         return row?.count || 0;
     }
 
-    async getSongs(playlistId: string, limit?: number, offset?: number): Promise<any[]> {
+    async getSongs(playlistId: string, limit?: number, offset?: number): Promise<SongSchema[]> {
+        this.signatureService.verifyId(playlistId, "playlistId");
         const rows = await this.db`
             SELECT 
                 s.id,
@@ -117,7 +126,6 @@ export class PlaylistRepository extends BaseRepository<PlaylistSchema, CreatePla
             WHERE sps.playlist_id = ${playlistId}
             LIMIT ${limit ?? null} OFFSET ${offset ?? null}
         `;
-        // Since this returns Songs, we should ideally use the songSchema here
-        return rows;
+        return rows.map((row) => songSchema.parse(row));
     }
 }

@@ -2,11 +2,13 @@ import type { Database } from "../infra/db";
 import { songSchema, type SongSchema } from "../schema/songs.schema";
 import { BaseRepository } from "./base.repository";
 import { logMethods, type Logger } from "../observability";
+import { type SignatureService } from "../lib";
 
 export class InteractionRepository extends BaseRepository<SongSchema, any, any> {
     constructor(
         db: Database,
-        logger: Logger
+        logger: Logger,
+        private readonly signatureService: SignatureService
     ) {
         // This repository primarily returns Songs (Trending), so we use songSchema
         super(db, "user_histories", songSchema, logger);

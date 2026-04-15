@@ -10,7 +10,7 @@ import { logMethods, type Logger } from "../observability";
 import axios from "axios";
 import axiosRetry from "axios-retry";
 import { NotFoundError } from "../errors";
-import type { JWT, JWTService } from "../lib";
+import type {  JWTService } from "../lib";
 import type { Payload, SongSchema, UserFavouriteSongSchema } from "../schema";
 import { buildPaginatedResult, type PaginatedResult } from "../type/pagination.type";
 
@@ -71,7 +71,7 @@ export class UserService {
         return await this.favouriteRepo.deleteFavorite(userId, songId);
     }
 
-    async getFavourites(userId: string, limit: number = 20, offset: number = 0): Promise<PaginatedResult<UserFavouriteSongSchema>> {
+    async getFavourites(userId: string, limit: number = 20, offset: number = 0): Promise<PaginatedResult<SongSchema>> {
         this.signatureService.verifyId(userId, "userId");
         const page = Math.floor(offset / limit) + 1;
         const [data, total] = await Promise.all([
@@ -82,7 +82,7 @@ export class UserService {
     }
 
     // History logic
-    async getHistory(userId: string, limit: number = 20, offset: number = 0): Promise<PaginatedResult<any>> {
+    async getHistory(userId: string, limit: number = 20, offset: number = 0): Promise<PaginatedResult<SongSchema>> {
         this.signatureService.verifyId(userId, "userId");
         const page = Math.floor(offset / limit) + 1;
         const [data, total] = await Promise.all([
@@ -137,8 +137,6 @@ export class UserService {
 
     async addSongToUserPlaylist(playlistId: string, songId: string, userId: string):Promise<UserPlaylistSongSchema> {
         this.signatureService.verifyId(userId, "userId");
-        // Verify user owns playlist? Or repo handles it? 
-        // For now, repo handles signed IDs.
         return await this.userPlaylistRepo.addSong(playlistId, songId);
     }
 

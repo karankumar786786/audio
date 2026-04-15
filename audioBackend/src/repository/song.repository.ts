@@ -2,6 +2,7 @@ import type { Database } from "../infra/db";
 import { songSchema, type SongSchema } from "../schema/songs.schema";
 import { BaseRepository } from "./base.repository";
 import { logMethods, type Logger } from "../observability";
+import { type SignatureService } from "../lib";
 
 type CreateSongData = Omit<SongSchema, "createdAt">;
 type partial = Partial<CreateSongData>;
@@ -10,17 +11,19 @@ type UpdateSongData = Omit<partial, "songKey" | 'language' | 'jobId' | 'duration
 export class SongRepository extends BaseRepository<SongSchema, CreateSongData, UpdateSongData> {
     constructor(
         db: Database,
-        logger: Logger
+        logger: Logger,
+        private readonly signatureService: SignatureService
     ) {
         super(db, "songs", songSchema, logger);
         logMethods(this, this.logger);
     }
 
     async create(data: CreateSongData): Promise<SongSchema> {
+        const id = this.signatureService.generateSignedId();
         const [song] = await this.db`
             INSERT INTO songs (id, title, artist_name, duration, song_key, image_key, language, job_id)
             VALUES (
-                ${data.id}, ${data.title}, ${data.artistName}, ${data.duration},
+                ${id}, ${data.title}, ${data.artistName}, ${data.duration},
                 ${data.songKey}, ${data.imageKey}, ${data.language}, ${data.jobId}
             )
             RETURNING 
@@ -33,6 +36,7 @@ export class SongRepository extends BaseRepository<SongSchema, CreateSongData, U
     }
 
     async update(id: string, data: UpdateSongData): Promise<SongSchema> {
+        this.signatureService.verifyId(id, "songId");
         const [song] = await this.db`
             UPDATE songs
             SET
@@ -85,6 +89,7 @@ export class SongRepository extends BaseRepository<SongSchema, CreateSongData, U
 
     async getByIds(ids: string[]): Promise<SongSchema[]> {
         if (ids.length === 0) return [];
+        // Optional: verify each ID in songs service instead of here for batches
         const rows = await this.db`
             SELECT 
                 id, title, artist_name AS "artistName", duration, 

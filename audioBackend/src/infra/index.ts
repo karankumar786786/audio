@@ -94,21 +94,21 @@ const jwtServices:JWTService = new Jose(process.env.JWT_SECRET!,process.env.JWT_
 
 // --- 2. Repositories (Wired with DI) ---
 
-const artistRepository = new ArtistRepository(db, logger.child({ service: "ArtistRepository" }));
-const songRepository = new SongRepository(db, logger.child({ service: "SongRepository" }));
-const playlistRepository = new PlaylistRepository(db, logger.child({ service: "PlaylistRepository" }));
+const artistRepository = new ArtistRepository(db, logger.child({ service: "ArtistRepository" }), signatureService);
+const songRepository = new SongRepository(db, logger.child({ service: "SongRepository" }), signatureService);
+const playlistRepository = new PlaylistRepository(db, logger.child({ service: "PlaylistRepository" }), signatureService);
 const userPlaylistRepository = new UserPlaylistRepository(db, logger.child({ service: "UserPlaylistRepository" }), signatureService);
 const userFavouriteSongRepository = new UserFavouriteSongRepository(db, logger.child({ service: "UserFavouriteSongRepository" }),signatureService);
 const userHistoryRepository = new UserHistoryRepository(db, logger.child({ service: "UserHistoryRepository" }),signatureService);
 const userRepository = new UserRepository(db, logger.child({ service: "UserRepository" }), signatureService);
 const userSearchHistoryRepository = new UserSearchHistoryRepository(db, logger.child({ service: "UserSearchHistoryRepository" }), signatureService);
-const interactionRepository = new InteractionRepository(db, logger.child({ service: "InteractionRepository" }));
+const interactionRepository = new InteractionRepository(db, logger.child({ service: "InteractionRepository" }), signatureService);
 
 // --- 3. Services (Wired with DI) ---
 
-export const artistService = new ArtistService(artistRepository, songRepository, logger.child({ service: "ArtistService" }));
+export const artistService = new ArtistService(artistRepository, songRepository, logger.child({ service: "ArtistService" }), signatureService);
 export const songService = new SongService(songRepository, logger.child({ service: "SongService" }),signatureService);
-export const playlistService = new PlaylistService(playlistRepository, logger.child({ service: "PlaylistService" }));
+export const playlistService = new PlaylistService(playlistRepository, logger.child({ service: "PlaylistService" }), signatureService);
 export const userService = new UserService(
     userRepository,
     userFavouriteSongRepository,

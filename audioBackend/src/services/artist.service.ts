@@ -1,15 +1,18 @@
 import { type ArtistRepository } from "../repository/artist.repository";
 import { type SongRepository } from "../repository/song.repository";
-import type { ArtistSchema } from "../schema/artist.schema";
-import type { PaginationParams, PaginatedResult } from "../type/pagination.type";
+import { type ArtistSchema } from "../schema/artist.schema";
+import { type SongSchema } from "../schema/songs.schema";
+import { type PaginationParams, type PaginatedResult } from "../type/pagination.type";
 import { buildPaginatedResult } from "../type/pagination.type";
 import { logMethods, type Logger } from "../observability";
+import { type SignatureService } from "../lib";
 
 export class ArtistService {
     constructor(
         private readonly artistRepository: ArtistRepository,
         private readonly songRepository: SongRepository,
-        private readonly logger: Logger
+        private readonly logger: Logger,
+        private readonly signatureService: SignatureService
     ) {
         logMethods(this, this.logger);
     }
@@ -23,9 +26,11 @@ export class ArtistService {
         return buildPaginatedResult(data, total, params);
     }
     async getArtistById(id: string): Promise<ArtistSchema> {
+        this.signatureService.verifyId(id, "artistId");
         return await this.artistRepository.getById(id);
     }
-    async getArtistSongs(artistId: string, params: PaginationParams): Promise<PaginatedResult<any>> {
+    async getArtistSongs(artistId: string, params: PaginationParams): Promise<PaginatedResult<SongSchema>> {
+        this.signatureService.verifyId(artistId, "artistId");
         const artist = await this.artistRepository.getById(artistId);
         const offset = (params.page - 1) * params.limit;
         

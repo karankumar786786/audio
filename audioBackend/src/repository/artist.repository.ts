@@ -2,6 +2,7 @@ import type { Database } from "../infra/db";
 import { artistSchema, type ArtistSchema } from "../schema/artist.schema";
 import { BaseRepository } from "./base.repository";
 import { logMethods, type Logger } from "../observability";
+import { type SignatureService } from "../lib";
 
 type CreateArtistData = Omit<ArtistSchema, "createdAt">;
 type UpdateArtistData = Partial<CreateArtistData>;
@@ -9,17 +10,19 @@ type UpdateArtistData = Partial<CreateArtistData>;
 export class ArtistRepository extends BaseRepository<ArtistSchema, CreateArtistData, UpdateArtistData> {
     constructor(
         db: Database,
-        logger: Logger
+        logger: Logger,
+        private readonly signatureService: SignatureService
     ) {
         super(db, "artists", artistSchema, logger);
         logMethods(this, this.logger);
     }
 
     async create(data: CreateArtistData): Promise<ArtistSchema> {
+        const id = this.signatureService.generateSignedId();
         const [artist] = await this.db`
             INSERT INTO artists (id, name, about, dob, cover_image_key, banner_image_key)
             VALUES (
-                ${data.id}, ${data.name}, ${data.about}, ${data.dob}, 
+                ${id}, ${data.name}, ${data.about}, ${data.dob}, 
                 ${data.coverImageKey}, ${data.bannerImageKey}
             )
             RETURNING 
@@ -33,6 +36,7 @@ export class ArtistRepository extends BaseRepository<ArtistSchema, CreateArtistD
     }
 
     async update(id: string, data: UpdateArtistData): Promise<ArtistSchema> {
+        this.signatureService.verifyId(id, "artistId");
         const [artist] = await this.db`
             UPDATE artists
             SET
