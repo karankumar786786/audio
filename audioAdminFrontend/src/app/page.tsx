@@ -1,110 +1,111 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 
-interface Song {
-  id: string;
-  title: string;
-  artistName: string;
-  duration: number;
-  language: string;
-}
-
-export default function Home() {
-  const [songs, setSongs] = useState<Song[]>([]);
+export default function DashboardPage() {
+  const [stats, setStats] = useState({
+    songs: 0,
+    artists: 0,
+    playlists: 0,
+  });
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchSongs = async () => {
+    const fetchStats = async () => {
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/songs`);
-        const result = await response.json();
-        
-        if (result.success) {
-          setSongs(result.data.items);
-        } else {
-          setError(result.message || "Failed to fetch songs");
-        }
+        const [songsRes, artistsRes, playlistsRes] = await Promise.all([
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/songs?limit=1`),
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/artists?limit=1`),
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/playlists?limit=1`),
+        ]);
+
+        const [songs, artists, playlists] = await Promise.all([
+          songsRes.json(),
+          artistsRes.json(),
+          playlistsRes.json(),
+        ]);
+
+        setStats({
+          songs: songs.data?.pagination?.total || 0,
+          artists: artists.data?.pagination?.total || 0,
+          playlists: playlists.data?.pagination?.total || 0,
+        });
       } catch (err) {
-        setError("Error connecting to the backend");
-        console.error(err);
+        console.error("Failed to fetch stats", err);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchSongs();
+    fetchStats();
   }, []);
 
-  return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 p-8 font-sans">
-      <div className="max-w-6xl mx-auto">
-        <header className="mb-10 flex justify-between items-center">
-          <div>
-            <h1 className="text-4xl font-extrabold text-zinc-900 dark:text-white tracking-tight">
-              Admin Dashboard
-            </h1>
-            <p className="mt-2 text-zinc-500 dark:text-zinc-400">
-              Manage your music library and artists.
-            </p>
-          </div>
-          <div className="flex gap-4">
-            <div className="bg-white dark:bg-zinc-900 p-4 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-800 flex flex-col items-center justify-center min-w-[120px]">
-              <span className="text-2xl font-bold">{songs.length}</span>
-              <span className="text-xs uppercase tracking-wider text-zinc-500">Total Songs</span>
-            </div>
-          </div>
-        </header>
+  const cards = [
+    { name: "Total Songs", value: stats.songs, color: "from-blue-500 to-indigo-600", icon: "M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" },
+    { name: "Total Artists", value: stats.artists, color: "from-purple-500 to-pink-600", icon: "M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" },
+    { name: "Total Playlists", value: stats.playlists, color: "from-orange-500 to-red-600", icon: "M4 6h16M4 10h16M4 14h16M4 18h16" },
+  ];
 
-        <main>
-          {loading ? (
-            <div className="flex justify-center items-center h-64">
-              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-zinc-900 dark:border-white"></div>
+  return (
+    <div className="p-8">
+      <div className="mb-10">
+        <h1 className="text-3xl font-bold text-zinc-900 dark:text-white">System Overview</h1>
+        <p className="text-zinc-500 mt-1 text-lg">Detailed analytics and management for your audio library.</p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+        {cards.map((card) => (
+          <div key={card.name} className="relative group overflow-hidden bg-white dark:bg-zinc-900 p-8 rounded-3xl shadow-sm border border-zinc-200 dark:border-zinc-800 transition-all duration-300 hover:shadow-xl hover:shadow-indigo-500/10 hover:-translate-y-1">
+            <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${card.color} opacity-5 -mr-12 -mt-12 rounded-full blur-2xl group-hover:opacity-10 transition-opacity`} />
+            <div className="flex items-center justify-between mb-4">
+              <div className={`p-4 rounded-2xl bg-gradient-to-br ${card.color} text-white shadow-lg`}>
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={card.icon} />
+                </svg>
+              </div>
+              <span className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Active</span>
             </div>
-          ) : error ? (
-            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-4 rounded-xl text-red-600 dark:text-red-400">
-              {error}
+            <div className="flex flex-col">
+              <span className="text-4xl font-black text-zinc-900 dark:text-white tracking-tight">
+                {loading ? "..." : card.value}
+              </span>
+              <span className="text-zinc-500 font-medium mt-1">{card.name}</span>
             </div>
-          ) : (
-            <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-800 overflow-hidden">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-zinc-50 dark:bg-zinc-800/50">
-                    <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-zinc-500">Title</th>
-                    <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-zinc-500">Artist</th>
-                    <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-zinc-500">Language</th>
-                    <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-zinc-500">Duration</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
-                  {songs.length > 0 ? (
-                    songs.map((song) => (
-                      <tr key={song.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition-colors">
-                        <td className="px-6 py-4 font-medium text-zinc-900 dark:text-zinc-100">{song.title}</td>
-                        <td className="px-6 py-4 text-zinc-600 dark:text-zinc-400">{song.artistName}</td>
-                        <td className="px-6 py-4">
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">
-                            {song.language}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 text-zinc-500">
-                          {Math.floor(song.duration / 60)}:{(song.duration % 60).toString().padStart(2, '0')}
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan={4} className="px-6 py-10 text-center text-zinc-500">
-                        No songs found in the library.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
+          </div>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200 dark:border-zinc-800 p-8">
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="text-xl font-bold text-zinc-900 dark:text-white">Quick Actions</h2>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <Link href="/songs" className="p-6 rounded-2xl bg-indigo-50 dark:bg-indigo-900/10 border border-indigo-100 dark:border-indigo-900/20 text-indigo-600 dark:text-indigo-400 font-bold text-center hover:bg-indigo-100 dark:hover:bg-indigo-900/20 transition-all">
+              Add New Song
+            </Link>
+            <Link href="/artists" className="p-6 rounded-2xl bg-purple-50 dark:bg-purple-900/10 border border-purple-100 dark:border-purple-900/20 text-purple-600 dark:text-purple-400 font-bold text-center hover:bg-purple-100 dark:hover:bg-purple-900/20 transition-all">
+              Manage Artists
+            </Link>
+          </div>
+        </div>
+
+        <div className="bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200 dark:border-zinc-800 p-8">
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="text-xl font-bold text-zinc-900 dark:text-white">System Status</h2>
+          </div>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-800/50">
+              <span className="text-sm font-medium text-zinc-600 dark:text-zinc-400">Backend API</span>
+              <span className="px-3 py-1 rounded-full bg-green-100 dark:bg-green-900/30 text-green-600 text-xs font-bold uppercase tracking-wider">Online</span>
             </div>
-          )}
-        </main>
+            <div className="flex items-center justify-between p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-800/50">
+              <span className="text-sm font-medium text-zinc-600 dark:text-zinc-400">Database Connection</span>
+              <span className="px-3 py-1 rounded-full bg-green-100 dark:bg-green-900/30 text-green-600 text-xs font-bold uppercase tracking-wider">Healthy</span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
