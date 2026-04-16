@@ -5,7 +5,7 @@ export const artistSchema = z.object({
     name: z.string().min(1, { message: "name is required" }),
     about: z.string().min(1, { message: "about is required" }),
     // Accept YYYY-MM-DD or ISO datetime — coerced to ISO string before DB insert
-    dob: z.string().min(1, { message: "dob is required" }).refine(
+    dob: z.coerce.string().min(1, { message: "dob is required" }).refine(
         (v) => !isNaN(new Date(v).getTime()),
         { message: "dob must be a valid date (e.g. 2004-09-25)" }
     ),

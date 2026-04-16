@@ -35,18 +35,17 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="min-h-full flex h-screen bg-black text-white selection:bg-indigo-500/30 overflow-hidden">
-          <Provider>
-            <AuthSync />
-            <LeftSidebar />
-            <div className="flex-1 flex flex-col min-w-0 ml-64 overflow-hidden relative">
-              <AppNavbar />
-              <main className="flex-1 overflow-y-auto no-scrollbar pt-2 pb-32">
-                {children}
-              </main>
-            </div>
-
-            <ShakaMusicPlayer />
-          </Provider>
+        <Provider>
+          <AuthSync />
+          <LeftSidebar />
+          <div className="flex-1 flex flex-col min-w-0 ml-64 overflow-hidden relative">
+            <AppNavbar />
+            <main className="flex-1 overflow-y-auto no-scrollbar pt-2 pb-32">
+              {children}
+            </main>
+          </div>
+          <ShakaMusicPlayer />
+        </Provider>
       </body>
     </html>
   );
