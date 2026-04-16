@@ -72,14 +72,15 @@ export class SongRepository extends BaseRepository<SongSchema, CreateSongData, U
     }
 
     async getByArtistName(name: string, limit: number, offset: number): Promise<SongSchema[]> {
-        const normalizedName = `%${name.replace(/\.|\s/g, "")}%`;
+        // Normalize: Strip all non-alphanumeric characters for fuzzy match
+        const normalizedName = `%${name.replace(/[^a-zA-Z0-9]/g, "").toLowerCase()}%`;
         const rows = await this.db`
             SELECT 
                 id, title, artist_name AS "artistName", duration, 
                 song_key AS "songKey", image_key AS "imageKey", 
                 language, job_id AS "jobId", created_at AS "createdAt"
             FROM songs
-            WHERE REPLACE(REPLACE(artist_name, '.', ''), ' ', '') ILIKE ${normalizedName}
+            WHERE regexp_replace(COALESCE(artist_name, ''), '[^a-zA-Z0-9]', '', 'g') ILIKE ${normalizedName}
             ORDER BY created_at DESC
             LIMIT ${limit} OFFSET ${offset}
         `;
@@ -87,11 +88,11 @@ export class SongRepository extends BaseRepository<SongSchema, CreateSongData, U
     }
 
     async countByArtistName(name: string): Promise<number> {
-        const normalizedName = `%${name.replace(/\.|\s/g, "")}%`;
+        const normalizedName = `%${name.replace(/[^a-zA-Z0-9]/g, "").toLowerCase()}%`;
         const [row] = await this.db`
             SELECT count(*)::int as count 
             FROM songs 
-            WHERE REPLACE(REPLACE(artist_name, '.', ''), ' ', '') ILIKE ${normalizedName}
+            WHERE regexp_replace(COALESCE(artist_name, ''), '[^a-zA-Z0-9]', '', 'g') ILIKE ${normalizedName}
         `;
         return row?.count || 0;
     }

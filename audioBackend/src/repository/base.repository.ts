@@ -44,7 +44,7 @@ export abstract class BaseRepository<
     async getById(id: string): Promise<T> {
         // Neon driver (NeonQueryFunction) expects tagged template literals.
         // For generic table names, we bypass the type check as the table name is provided safely via constructor.
-        const rows = await (this.db as any)(`SELECT * FROM ${this.tableName} WHERE id = $1`, [id]);
+        const rows = await (this.db as any).query(`SELECT * FROM ${this.tableName} WHERE id = $1`, [id]);
         const row = rows[0];
 
         if (!row) {
@@ -59,12 +59,12 @@ export abstract class BaseRepository<
             ? `SELECT count(*)::int as count FROM ${this.tableName} WHERE name ILIKE $1`
             : `SELECT count(*)::int as count FROM ${this.tableName}`;
         
-        const rows = await (this.db as any)(sql, query ? [`%${query}%`] : []);
+        const rows = await (this.db as any).query(sql, query ? [`%${query}%`] : []);
         return rows[0]?.count || 0;
     }
 
     async delete(id: string): Promise<T> {
-        const rows = await (this.db as any)(`DELETE FROM ${this.tableName} WHERE id = $1 RETURNING *`, [id]);
+        const rows = await (this.db as any).query(`DELETE FROM ${this.tableName} WHERE id = $1 RETURNING *`, [id]);
         const row = rows[0];
 
         if (!row) {
