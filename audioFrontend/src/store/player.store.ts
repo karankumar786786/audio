@@ -23,6 +23,15 @@ interface PlayerState {
   favourites: Set<string>;
 }
 
+// Restore systemUser from localStorage on init
+const _initSystemUser = (() => {
+  if (typeof window === "undefined") return null;
+  try {
+    const saved = localStorage.getItem("system_user");
+    return saved ? JSON.parse(saved) : null;
+  } catch { return null; }
+})();
+
 export const playerStore = new Store<PlayerState>({
   currentSong: null,
   isPlaying: false,
@@ -38,19 +47,21 @@ export const playerStore = new Store<PlayerState>({
   selectedQuality: "auto",
   isLyricsOpen: false,
   systemToken: typeof window !== "undefined" ? localStorage.getItem("system_token") : null,
-  systemUser: null,
+  systemUser: _initSystemUser,
   favourites: new Set<string>(),
 });
 
 export const playerActions = {
   setSystemSession: (token: string, user: any) => {
     localStorage.setItem("system_token", token);
+    localStorage.setItem("system_user", JSON.stringify(user));
     playerStore.setState((s) => ({ ...s, systemToken: token, systemUser: user }));
   },
 
   clearSystemSession: () => {
     localStorage.removeItem("system_token");
-    playerStore.setState((s) => ({ ...s, systemToken: null, systemUser: null }));
+    localStorage.removeItem("system_user");
+    playerStore.setState((s) => ({ ...s, systemToken: null, systemUser: null, favourites: new Set() }));
   },
 
   play: (song: PlayerSong) => {
@@ -176,7 +187,7 @@ export const playerActions = {
     const { systemUser } = playerStore.state;
     if (!systemUser?.id) return;
     try {
-      const res = await musicApi.users.getFavourites(systemUser.id, 100);
+      const res = await musicApi.users.getFavourites(systemUser.id, 1, 100);
       const ids = res.data.data.map((s: any) => s.id);
       playerStore.setState((s) => ({ ...s, favourites: new Set(ids) }));
     } catch (err) {

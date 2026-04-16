@@ -39,5 +39,6 @@ userRouter.post("/playlists",validate(createPlaylistInput), userController.creat
 userRouter.get("/:userId/playlists",userController.getUserPlaylists);
 userRouter.post("/playlists/songs", validate(playlistSongInput), userController.addSongToUserPlaylist);
 userRouter.delete("/playlists/songs", validate(playlistSongInput), userController.removeSongFromUserPlaylist);
+userRouter.get("/playlists/:id", userController.getUserPlaylistById);
 userRouter.get("/playlists/:id/songs", userController.getUserPlaylistSongs);
 userRouter.delete("/playlists/:id",userController.deleteUserPlaylist);

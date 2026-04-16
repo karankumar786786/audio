@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Play, MoreVertical, Heart, Plus } from "lucide-react";
+import { Play, MoreVertical, Heart, Plus, X } from "lucide-react";
 import { musicApi, type Song } from "../lib/api";
 import { playerActions, playerStore } from "../store/player.store";
 import { mapToPlayerSong } from "../lib/player-utils";
@@ -11,9 +11,10 @@ import { PlaylistPickerModal } from "./PlaylistPickerModal";
 interface SongCardProps {
   song: Song;
   priority?: boolean;
+  onRemove?: () => void;
 }
 
-export function SongCard({ song, priority }: SongCardProps) {
+export function SongCard({ song, priority, onRemove }: SongCardProps) {
   const systemUser = useStore(playerStore, (s) => s.systemUser);
   const favourites = useStore(playerStore, (s) => s.favourites);
   const [isPlaylistModalOpen, setIsPlaylistModalOpen] = useState(false);
@@ -79,6 +80,15 @@ export function SongCard({ song, priority }: SongCardProps) {
 
       {/* Quick Actions */}
       <div className="absolute top-6 right-6 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-all translate-x-4 group-hover:translate-x-0 duration-300">
+          {onRemove && (
+            <button 
+              onClick={(e) => { e.stopPropagation(); onRemove(); }}
+              className="w-8 h-8 rounded-xl bg-red-500/80 backdrop-blur-xl border border-white/10 flex items-center justify-center text-white hover:bg-red-600 transition-all shadow-2xl"
+              title="Remove from context"
+            >
+              <X size={14} />
+            </button>
+          )}
           <button 
             onClick={handleToggleFavourite}
             className={`w-8 h-8 rounded-xl bg-black/60 backdrop-blur-xl border border-white/10 flex items-center justify-center transition-colors shadow-2xl ${

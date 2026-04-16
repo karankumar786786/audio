@@ -1,9 +1,9 @@
 "use client";
 
-import { Home, Search, Library, Heart, History, PlusSquare, Disc, Mic2, Compass, ListMusic, Users2 } from "lucide-react";
+import { Home, Library, Heart, History, PlusSquare, Mic2, ListMusic, Users2 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { musicApi } from "@/lib/api";
 import { useStore } from "@tanstack/react-store";
@@ -23,18 +23,23 @@ const libraryItems = [
 export function LeftSidebar() {
   const pathname = usePathname();
   const systemUser = useStore(playerStore, (s) => s.systemUser);
+  const [hasMounted, setHasMounted] = useState(false);
+
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
 
   const { data: playlistsResponse, isLoading } = useQuery({
     queryKey: ["user-playlists", systemUser?.id],
     queryFn: () => musicApi.users.getPlaylists(systemUser!.id),
-    enabled: !!systemUser?.id,
+    enabled: !!systemUser?.id && hasMounted,
   });
 
   const userPlaylists = playlistsResponse?.data?.data || [];
 
   return (
-    <aside className="w-64 bg-zinc-950 border-r border-white/5 flex flex-col h-screen fixed left-0 top-0 z-50">
-      <div className="p-8 flex flex-col h-full overflow-hidden">
+    <aside className="w-64 bg-zinc-950 border-r border-white/5 flex flex-col h-screen fixed left-0 top-0 z-50 overflow-hidden">
+      <div className="p-8 flex flex-col h-full">
         {/* Logo */}
         <div className="flex items-center gap-3 mb-10 group cursor-pointer flex-shrink-0">
           <div className="w-10 h-10 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-500/20 group-hover:scale-110 transition-transform">
@@ -86,15 +91,23 @@ export function LeftSidebar() {
             </nav>
           </section>
 
-          {/* User Playlists */}
+          {/* User Playlists (Dynamic Content with Hydration Guard) */}
           <section>
             <div className="flex items-center justify-between px-4 mb-4">
               <h3 className="text-[10px] font-black text-zinc-500 uppercase tracking-widest italic">Playlists</h3>
-              <PlusSquare size={14} className="text-zinc-500 hover:text-white cursor-pointer transition-colors" />
+              <Link href="/library?tab=playlists">
+                <PlusSquare size={14} className="text-zinc-500 hover:text-white cursor-pointer transition-colors" />
+              </Link>
             </div>
             
             <nav className="space-y-1">
-               {isLoading ? (
+               {/* 
+                  HYDRATION GUARD: 
+                  We intentionally render the skeleton on both server AND initial client pass 
+                  if hasMounted is false. This prevents the mismatch where server renders nothing 
+                  and client renders skeleton.
+               */}
+               {(!hasMounted || isLoading) ? (
                   [1, 2, 3].map(i => (
                     <div key={i} className="h-10 mx-4 bg-zinc-900/50 rounded-xl animate-pulse" />
                   ))
@@ -125,4 +138,3 @@ export function LeftSidebar() {
     </aside>
   );
 }
-

@@ -12,6 +12,7 @@ import { playerStore } from "../../store/player.store";
 export default function HomePage() {
   const systemUser = useStore(playerStore, (s) => s.systemUser);
 
+  // Discover Feed (Infinite Scroll)
   const {
     data,
     fetchNextPage,
@@ -26,11 +27,24 @@ export default function HomePage() {
       lastPage.data.pagination.hasNext ? lastPage.data.pagination.page + 1 : undefined,
   });
 
+  // Trending Songs
+  const { data: trending, isLoading: isTrendingLoading } = useQuery({
+    queryKey: ["trending-songs"],
+    queryFn: () => musicApi.interactions.getTrending(),
+  });
+
+  // Recommendations
   const { data: recommendations, isLoading: isRecLoading } = useQuery({
     queryKey: ["recommendations", systemUser?.id],
     queryFn: () => musicApi.interactions.getRecommendations(systemUser!.id),
     enabled: !!systemUser?.id,
   });
+
+  const trendingRef = useRef<HTMLDivElement>(null);
+
+  const scrollToTrending = () => {
+    trendingRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
 
   // Infinite scroll observer
   useEffect(() => {
@@ -70,7 +84,10 @@ export default function HomePage() {
               Discover deep-cuts and trending transients curated by your listening frequency.
             </p>
             <div className="flex items-center gap-6">
-              <button className="px-10 py-5 bg-white text-indigo-700 rounded-3xl font-black text-xs uppercase tracking-widest shadow-2xl hover:bg-indigo-50 transition-all flex items-center gap-3">
+              <button 
+                onClick={scrollToTrending}
+                className="px-10 py-5 bg-white text-indigo-700 rounded-3xl font-black text-xs uppercase tracking-widest shadow-2xl hover:bg-indigo-50 transition-all flex items-center gap-3"
+              >
                 <TrendingUp size={18} />
                 Explore Trends
               </button>
@@ -86,8 +103,33 @@ export default function HomePage() {
         </div>
       </motion.section>
 
+      {/* Trending Section */}
+      <section ref={trendingRef} className="mb-20">
+         <div className="flex items-center gap-6 mb-12 px-2">
+           <h2 className="text-3xl font-black italic tracking-tighter uppercase text-white flex items-center gap-3">
+             <TrendingUp className="text-indigo-400" size={28} />
+             Trending Transients
+           </h2>
+           <div className="h-px flex-1 bg-gradient-to-r from-indigo-500/30 to-transparent" />
+         </div>
+
+         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-10">
+           {isTrendingLoading ? (
+              [1, 2, 3, 4, 5].map(i => <div key={i} className="aspect-square bg-zinc-900/40 rounded-[3rem] animate-pulse" />)
+           ) : trending?.data?.data && trending.data.data.length > 0 ? (
+             trending.data.data.slice(0, 5).map((song: Song) => (
+               <SongCard key={`trend-${song.id}`} song={song} />
+             ))
+           ) : (
+             <div className="col-span-full py-10 text-center text-zinc-600 font-bold italic tracking-tight uppercase border border-dashed border-zinc-900 rounded-[3rem]">
+                No Trending Data Synchronized
+             </div>
+           )}
+         </div>
+      </section>
+
       {/* Recommended Section (Conditional) */}
-      {systemUser && recommendations?.data && recommendations.data.length > 0 && (
+      {systemUser && recommendations?.data?.data && recommendations.data.data.length > 0 && (
          <section className="mb-20">
             <div className="flex items-center gap-6 mb-12 px-2">
               <h2 className="text-3xl font-black italic tracking-tighter uppercase text-white flex items-center gap-3">
@@ -98,7 +140,7 @@ export default function HomePage() {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-10">
-              {recommendations.data.slice(0, 5).map((song: Song) => (
+              {recommendations.data.data.slice(0, 5).map((song: Song) => (
                 <SongCard key={`rec-${song.id}`} song={song} />
               ))}
             </div>
@@ -155,4 +197,3 @@ export default function HomePage() {
     </div>
   );
 }
-

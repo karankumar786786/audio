@@ -15,7 +15,7 @@ export function MusicPlayer() {
     if (!audioRef.current) return;
     
     if (state.isPlaying) {
-      audioRef.current.play().catch(() => playerActions.pause());
+      audioRef.current.play().catch(() => playerActions.setIsPlaying(false));
     } else {
       audioRef.current.pause();
     }
@@ -28,19 +28,20 @@ export function MusicPlayer() {
 
   const onTimeUpdate = () => {
     if (!audioRef.current) return;
-    playerActions.setProgress(audioRef.current.currentTime, audioRef.current.duration || 0);
+    playerActions.setCurrentTime(audioRef.current.currentTime);
+    playerActions.setDuration(audioRef.current.duration || 0);
   };
 
   const togglePlay = () => {
-    if (state.isPlaying) playerActions.pause();
-    else playerActions.play();
+    if (state.isPlaying) playerActions.setIsPlaying(false);
+    else playerActions.setIsPlaying(true);
   };
 
   const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
     const time = parseFloat(e.target.value);
     if (!audioRef.current) return;
     audioRef.current.currentTime = time;
-    playerActions.setProgress(time, audioRef.current.duration);
+    playerActions.setCurrentTime(time);
   };
 
   if (!state.currentSong) return null;
@@ -55,7 +56,7 @@ export function MusicPlayer() {
         ref={audioRef}
         src={`https://ik.imagekit.io/zaa6pbi9f${state.currentSong.songKey}`}
         onTimeUpdate={onTimeUpdate}
-        onEnded={() => playerActions.pause()}
+        onEnded={() => playerActions.setIsPlaying(false)}
       />
 
       {/* Info */}
@@ -102,7 +103,7 @@ export function MusicPlayer() {
               onChange={handleSeek}
               className="absolute w-full h-1 bg-zinc-800 rounded-full appearance-none cursor-pointer accent-indigo-500 overflow-hidden"
               style={{
-                background: `linear-gradient(to right, #6366f1 ${state.progress}%, #27272a ${state.progress}%)`
+                background: `linear-gradient(to right, #6366f1 ${state.duration > 0 ? (state.currentTime / state.duration) * 100 : 0}%, #27272a ${state.duration > 0 ? (state.currentTime / state.duration) * 100 : 0}%)`
               }}
             />
           </div>

@@ -1,49 +1,52 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { musicApi, type Song, type Playlist } from "../../lib/api";
 import { SongCard } from "../../components/SongCard";
 import { useStore } from "@tanstack/react-store";
-import { playerStore } from "../../store/player.store";
+import { playerStore, playerActions } from "../../store/player.store";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
-import { Heart, Clock, ListMusic, Plus, Music, Library as LibraryIcon, Search, Trash2 } from "lucide-react";
+import { Heart, Clock, ListMusic, Plus, Music, Library as LibraryIcon, Search, Trash2, Play } from "lucide-react";
 import { toast } from "sonner";
+import { mapListToPlayerSongs } from "../../lib/player-utils";
+import Link from "next/link";
 
 type Tab = "favourites" | "history" | "playlists";
 
 export default function LibraryPage() {
+  const queryClient = useQueryClient();
   const systemUser = useStore(playerStore, (s) => s.systemUser);
   const [activeTab, setActiveTab] = useState<Tab>("favourites");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [newPlaylistName, setNewPlaylistName] = useState("");
 
   const { data: favourites, isLoading: isFavLoading } = useQuery({
-    queryKey: ["library-favourites", systemUser?.sub],
-    queryFn: () => musicApi.users.getFavourites(systemUser!.sub),
-    enabled: !!systemUser?.sub && activeTab === "favourites",
+    queryKey: ["library-favourites", systemUser?.id],
+    queryFn: () => musicApi.users.getFavourites(systemUser!.id),
+    enabled: !!systemUser?.id && activeTab === "favourites",
   });
 
   const { data: history, isLoading: isHistLoading } = useQuery({
-    queryKey: ["library-history", systemUser?.sub],
-    queryFn: () => musicApi.users.getHistory(systemUser!.sub),
-    enabled: !!systemUser?.sub && activeTab === "history",
+    queryKey: ["library-history", systemUser?.id],
+    queryFn: () => musicApi.users.getHistory(systemUser!.id),
+    enabled: !!systemUser?.id && activeTab === "history",
   });
 
   const { data: userPlaylists, isLoading: isPlaylistsLoading, refetch: refetchPlaylists } = useQuery({
-    queryKey: ["library-playlists", systemUser?.sub],
-    queryFn: () => musicApi.users.getPlaylists(systemUser!.sub),
-    enabled: !!systemUser?.sub && activeTab === "playlists",
+    queryKey: ["library-playlists", systemUser?.id],
+    queryFn: () => musicApi.users.getPlaylists(systemUser!.id),
+    enabled: !!systemUser?.id && activeTab === "playlists",
   });
 
   const handleCreatePlaylist = async () => {
-    if (!newPlaylistName.trim() || !systemUser?.sub) return;
+    if (!newPlaylistName.trim() || !systemUser?.id) return;
     try {
-      await musicApi.users.createPlaylist(systemUser.sub, newPlaylistName);
+      await musicApi.users.createPlaylist(systemUser.id, newPlaylistName);
       toast.success("Frequency Allocated", { description: `Playlist "${newPlaylistName}" created successfully.` });
       setNewPlaylistName("");
       setIsCreateModalOpen(false);
-      refetchPlaylists();
+      queryClient.invalidateQueries({ queryKey: ["library-playlists"] });
     } catch (err) {
       toast.error("Allocation Error", { description: "Failed to create frequency buffer." });
     }
@@ -53,10 +56,18 @@ export default function LibraryPage() {
     try {
       await musicApi.users.deletePlaylist(playlistId);
       toast.success("Memory Purged", { description: "User playlist deleted." });
-      refetchPlaylists();
+      queryClient.invalidateQueries({ queryKey: ["library-playlists"] });
     } catch (err) {
       toast.error("Defragmentation Failed", { description: "Failed to remove playlist memory." });
     }
+  };
+
+  const handleStreamCollection = (songs: Song[]) => {
+    if (!songs || songs.length === 0) return;
+    const playerSongs = mapListToPlayerSongs(songs);
+    playerActions.setQueue(playerSongs);
+    playerActions.play(playerSongs[0]);
+    toast.success("Collection Streamed", { description: `Syncing ${songs.length} audio transients.` });
   };
 
   if (!systemUser) {
@@ -85,17 +96,37 @@ export default function LibraryPage() {
           <h1 className="text-6xl font-black text-white italic tracking-tighter uppercase leading-none">Your Library</h1>
         </div>
 
-        {activeTab === "playlists" && (
-           <motion.button 
-             whileHover={{ scale: 1.05 }}
-             whileTap={{ scale: 0.95 }}
-             onClick={() => setIsCreateModalOpen(true)}
-             className="px-8 py-4 bg-white text-black rounded-2xl font-black text-xs uppercase tracking-widest flex items-center gap-2 shadow-2xl"
-           >
+        <div className="flex items-center gap-4">
+          {(activeTab === "favourites" && (favourites?.data?.data?.length || 0) > 0) && (
+            <button 
+              onClick={() => handleStreamCollection(favourites!.data.data)}
+              className="px-8 py-4 bg-white text-black rounded-2xl font-black text-xs uppercase tracking-widest flex items-center gap-2 shadow-2xl"
+            >
+              <Play fill="black" size={16} />
+              Stream Favs
+            </button>
+          )}
+          {(activeTab === "history" && (history?.data?.data?.length || 0) > 0) && (
+            <button 
+              onClick={() => handleStreamCollection(history!.data.data)}
+              className="px-8 py-4 bg-white text-black rounded-2xl font-black text-xs uppercase tracking-widest flex items-center gap-2 shadow-2xl"
+            >
+              <Play fill="black" size={16} />
+              Resume All
+            </button>
+          )}
+          {activeTab === "playlists" && (
+            <motion.button 
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setIsCreateModalOpen(true)}
+              className="px-8 py-4 bg-white text-black rounded-2xl font-black text-xs uppercase tracking-widest flex items-center gap-2 shadow-2xl"
+            >
               <Plus size={16} />
               New Buffer
-           </motion.button>
-        )}
+            </motion.button>
+          )}
+        </div>
       </div>
 
       {/* Tabs */}
@@ -130,14 +161,22 @@ export default function LibraryPage() {
           <div>
              {isFavLoading ? (
                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-10">
-                 {[1,2,3,4,5].map(i => <div key={i} className="aspect-square bg-zinc-900/40 rounded-[3rem] animate-pulse" />)}
+                 {[1, 2, 3, 4, 5].map(i => <div key={i} className="aspect-square bg-zinc-900/40 rounded-[3rem] animate-pulse" />)}
                </div>
-             ) : favourites?.data?.data.length === 0 ? (
+             ) : (favourites?.data?.data?.length || 0) === 0 ? (
                <div className="py-32 text-center text-zinc-600 font-bold italic border-2 border-dashed border-zinc-900 rounded-[3rem]">No captured frequencies in your repository.</div>
              ) : (
                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-10">
                  {favourites?.data?.data.map((song: Song) => (
-                   <SongCard key={song.id} song={song} />
+                   <SongCard 
+                    key={song.id} 
+                    song={song} 
+                    onRemove={() => {
+                        playerActions.toggleFavourite(song.id).then(() => {
+                           queryClient.invalidateQueries({ queryKey: ["library-favourites"] });
+                        });
+                    }}
+                    />
                  ))}
                </div>
              )}
@@ -148,9 +187,9 @@ export default function LibraryPage() {
           <div>
             {isHistLoading ? (
                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-10">
-                 {[1,2,3,4,5].map(i => <div key={i} className="aspect-square bg-zinc-900/40 rounded-[3rem] animate-pulse" />)}
+                 {[1, 2, 3, 4, 5].map(i => <div key={i} className="aspect-square bg-zinc-900/40 rounded-[3rem] animate-pulse" />)}
                </div>
-             ) : history?.data?.data.length === 0 ? (
+             ) : (history?.data?.data?.length || 0) === 0 ? (
                <div className="py-32 text-center text-zinc-600 font-bold italic border-2 border-dashed border-zinc-900 rounded-[3rem]">No playback logs found.</div>
              ) : (
                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-10">
@@ -166,32 +205,33 @@ export default function LibraryPage() {
           <div>
             {isPlaylistsLoading ? (
                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-10">
-                 {[1,2,3,4,5].map(i => <div key={i} className="aspect-square bg-zinc-900/40 rounded-[3rem] animate-pulse" />)}
+                 {[1, 2, 3, 4, 5].map(i => <div key={i} className="aspect-square bg-zinc-900/40 rounded-[3rem] animate-pulse" />)}
                </div>
-             ) : userPlaylists?.data?.data.length === 0 ? (
+             ) : (userPlaylists?.data?.data?.length || 0) === 0 ? (
                <div className="py-32 text-center text-zinc-600 font-bold italic border-2 border-dashed border-zinc-900 rounded-[3rem]">No custom frequency buffers initialized.</div>
              ) : (
                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-10">
                  {userPlaylists?.data?.data.map((playlist: Playlist) => (
-                   <motion.div 
-                     key={playlist.id} 
-                     whileHover={{ y: -4 }}
-                     className="bg-zinc-900/40 hover:bg-zinc-900/60 border border-white/5 p-8 rounded-[3rem] group relative cursor-pointer"
-                   >
-                     <div className="w-full aspect-square bg-zinc-800 rounded-[2.5rem] mb-6 flex items-center justify-center shadow-2xl relative overflow-hidden ring-1 ring-white/5">
-                        <ListMusic className="text-zinc-700 group-hover:text-indigo-500 transition-colors" size={64} />
-                        <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-all transition-pt">
-                           <button 
-                             onClick={(e) => { e.stopPropagation(); handleDeletePlaylist(playlist.id); }}
-                             className="p-3 bg-red-500/10 text-red-500 rounded-2xl hover:bg-red-500 hover:text-white transition-all backdrop-blur-md"
-                           >
-                              <Trash2 size={16} />
-                           </button>
+                    <Link key={playlist.id} href={`/playlists/${playlist.id}`}>
+                      <motion.div 
+                        whileHover={{ y: -4 }}
+                        className="bg-zinc-900/40 hover:bg-zinc-900/60 border border-white/5 p-8 rounded-[3rem] group relative cursor-pointer h-full"
+                      >
+                        <div className="w-full aspect-square bg-zinc-800 rounded-[2.5rem] mb-6 flex items-center justify-center shadow-2xl relative overflow-hidden ring-1 ring-white/5">
+                            <ListMusic className="text-zinc-700 group-hover:text-indigo-500 transition-colors" size={64} />
+                            <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-all">
+                              <button 
+                                onClick={(e) => { e.preventDefault(); e.stopPropagation(); if(confirm("Purge this memory?")) handleDeletePlaylist(playlist.id); }}
+                                className="p-3 bg-red-500/10 text-red-500 rounded-2xl hover:bg-red-500 hover:text-white transition-all backdrop-blur-md border border-red-500/20"
+                              >
+                                  <Trash2 size={16} />
+                              </button>
+                            </div>
                         </div>
-                     </div>
-                     <h3 className="text-lg font-black text-white italic tracking-tighter uppercase truncate px-2">{playlist.name}</h3>
-                     <p className="text-[10px] font-black text-zinc-500 mt-1 uppercase tracking-widest px-2 italic">User Frequency Buffer</p>
-                   </motion.div>
+                        <h3 className="text-lg font-black text-white italic tracking-tighter uppercase truncate px-2">{playlist.name}</h3>
+                        <p className="text-[10px] font-black text-zinc-500 mt-1 uppercase tracking-widest px-2 italic">User Frequency Buffer</p>
+                      </motion.div>
+                    </Link>
                  ))}
                </div>
              )}

@@ -45,7 +45,7 @@ export class UserService {
             user = await this.userRepository.create({ email });
         }
         const payload: Payload = {
-            id: user.id,
+            id: this.signatureService.signId(user.id),
             userName: userInfo.name ? userInfo.name : "",
             email: email,
             picture: userInfo.picture ? userInfo.picture : "",

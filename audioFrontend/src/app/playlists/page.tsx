@@ -1,14 +1,20 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { musicApi } from "@/lib/api";
 import Link from "next/link";
 import { ListMusic, Library, Plus, Sparkles } from "lucide-react";
 import { useStore } from "@tanstack/react-store";
 import { playerStore } from "@/store/player.store";
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { toast } from "sonner";
 
 export default function PlaylistsPage() {
   const systemUser = useStore(playerStore, (s) => s.systemUser);
+  const queryClient = useQueryClient();
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [newPlaylistName, setNewPlaylistName] = useState("");
 
   const { data: userPlaylistsResponse, isLoading: isUserLoading } = useQuery({
     queryKey: ["user-playlists", systemUser?.id],
@@ -23,6 +29,19 @@ export default function PlaylistsPage() {
 
   const userPlaylists = userPlaylistsResponse?.data?.data || [];
   const systemPlaylists = systemPlaylistsResponse?.data?.data || [];
+
+  const handleCreatePlaylist = async () => {
+    if (!newPlaylistName.trim() || !systemUser?.id) return;
+    try {
+      await musicApi.users.createPlaylist(systemUser.id, newPlaylistName);
+      toast.success("Frequency Allocated", { description: `Playlist "${newPlaylistName}" created successfully.` });
+      setNewPlaylistName("");
+      setIsCreateModalOpen(false);
+      queryClient.invalidateQueries({ queryKey: ["user-playlists"] });
+    } catch (err) {
+      toast.error("Allocation Error", { description: "Failed to create frequency buffer." });
+    }
+  };
 
   return (
     <div className="px-10 pb-20">
@@ -54,7 +73,10 @@ export default function PlaylistsPage() {
               <h2 className="text-3xl font-black italic tracking-tighter uppercase text-white">Your Transients</h2>
               <div className="h-px w-24 bg-gradient-to-r from-violet-500 to-transparent" />
            </div>
-           <button className="flex items-center gap-3 bg-white/5 hover:bg-white/10 border border-white/10 px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest italic transition-all">
+           <button 
+             onClick={() => systemUser ? setIsCreateModalOpen(true) : toast.error("Auth Required", { description: "Sign in to create playlists." })}
+             className="flex items-center gap-3 bg-white/5 hover:bg-white/10 border border-white/10 px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest italic transition-all"
+           >
               <Plus size={14} />
               <span>Initialize New Cluster</span>
            </button>
@@ -92,6 +114,45 @@ export default function PlaylistsPage() {
           ))}
         </div>
       </section>
+
+      {/* Create Playlist Modal */}
+      <AnimatePresence>
+        {isCreateModalOpen && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 backdrop-blur-3xl bg-black/40">
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="w-full max-w-md bg-zinc-950 border border-white/10 p-10 rounded-[3rem] shadow-[0_0_100px_rgba(0,0,0,0.8)]"
+            >
+              <h2 className="text-2xl font-black text-white italic uppercase tracking-tighter mb-8">Initialize Cluster</h2>
+              <input 
+                autoFocus
+                type="text" 
+                placeholder="Cluster Name..."
+                value={newPlaylistName}
+                onChange={(e) => setNewPlaylistName(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleCreatePlaylist()}
+                className="w-full bg-zinc-900 border border-white/10 p-5 rounded-2xl text-white font-bold italic tracking-tight mb-8 focus:outline-none focus:ring-2 focus:ring-violet-500 transition-all"
+              />
+              <div className="flex gap-4">
+                <button 
+                  onClick={() => setIsCreateModalOpen(false)}
+                  className="flex-1 py-4 bg-zinc-900 text-zinc-400 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-zinc-800 transition-all"
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={handleCreatePlaylist}
+                  className="flex-1 py-4 bg-violet-500 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-violet-500/20 hover:bg-violet-400 transition-all"
+                >
+                  Initialize
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

@@ -115,7 +115,7 @@ export function ShakaMusicPlayer() {
     // 1. If song changed, record the previous song's final state
     if (currentSong?.id !== last.id) {
        if (last.id && last.duration > 0) {
-         const part = Math.min(100, Math.round((last.time / last.duration) * 100));
+         const part = Math.min(100, Math.floor((last.time / last.duration) * 100)); // Ensure integer
          if (part > 1 || last.time > 5) {
            playerActions.recordListen(last.id, part);
          }
@@ -153,7 +153,7 @@ export function ShakaMusicPlayer() {
     return () => {
       const last = lastStateRef.current;
       if (last.id && last.duration > 0) {
-        const part = Math.min(100, Math.round((last.time / last.duration) * 100));
+        const part = Math.min(100, Math.floor((last.time / last.duration) * 100)); // Ensure integer
         if (part > 1 || last.time > 5) {
           playerActions.recordListen(last.id, part);
         }

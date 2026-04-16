@@ -55,13 +55,16 @@ export class ApiResponse<T = unknown> {
       });
     }
 
-    // 🌐 Browser → cookies
+    // 🌐 Browser → cookies + token in body (frontend needs it for localStorage)
     res.cookie("token", token, cookieOptions);
 
     return res.status(this.statusCode).json({
       success: this.success,
       message: this.message,
-      data: this.data,
+      data: {
+        ...this.data,
+        token,
+      },
     });
   }
 }

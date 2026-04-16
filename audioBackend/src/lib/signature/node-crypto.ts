@@ -15,13 +15,16 @@ export class NodeCryptoSignatureService implements SignatureService {
 
     generateSignedId(): string {
         const uuid = crypto.randomUUID().replace(/-/g, "");
+        return this.signId(uuid);
+    }
 
+    signId(id: string): string {
         const signature = crypto
             .createHmac(NodeCryptoSignatureService.ALGORITHM, this.SECRET)
-            .update(uuid)
+            .update(id)
             .digest('hex');
 
-        return `${uuid}.${signature}`;
+        return `${id}.${signature}`;
     }
 
     verifyId(signedId: string, ref: string = "id"): void {

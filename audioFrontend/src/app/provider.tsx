@@ -4,6 +4,7 @@ import { Auth0Provider } from "@auth0/auth0-react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState } from "react";
 import React from 'react';
+import { Toaster } from "sonner";
 
 function Provider({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(() => new QueryClient({
@@ -28,6 +29,18 @@ function Provider({ children }: { children: React.ReactNode }) {
     >
       <QueryClientProvider client={queryClient}>
         {children}
+        <Toaster 
+          theme="dark" 
+          position="bottom-left" 
+          richColors 
+          toastOptions={{
+            style: {
+              background: "#18181b",
+              border: "1px solid rgba(255,255,255,0.1)",
+              color: "#fff",
+            },
+          }}
+        />
       </QueryClientProvider>
     </Auth0Provider>
   );
