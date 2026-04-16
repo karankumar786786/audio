@@ -24,13 +24,13 @@ export function SongCard({ song, priority }: SongCardProps) {
 
   const handleToggleFavourite = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!systemUser?.sub) {
+    if (!systemUser?.id) {
       toast.error("Frequency Required", { description: "Please sign in to save transients to your library." });
       return;
     }
 
     try {
-      await musicApi.users.addFavourite(systemUser.sub, song.id);
+      await musicApi.users.addFavourite(systemUser.id, song.id);
       toast.success("Memory Captured", { description: `"${song.title}" added to your collection.` });
     } catch (err) {
       toast.error("Sync Error", { description: "Failed to persist frequency to library." });

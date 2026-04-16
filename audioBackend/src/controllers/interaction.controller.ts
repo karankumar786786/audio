@@ -16,6 +16,7 @@ export class InteractionController {
 
     recordListen = asyncHandler(async (req: Request, res: Response) => {
         const { userId, songId, part } = req.body;
+        this.logger.info(`[InteractionController] Recording listen: user=${userId}, song=${songId}, part=${part}%`);
         await this.interactionService.recordListen(userId, songId, part);
         return new ApiResponse<null>(200, "Listen recorded").send(res);
     });

@@ -11,9 +11,9 @@ export default function FavouritesPage() {
   const systemUser = useStore(playerStore, (s) => s.systemUser);
 
   const { data: favouritesResponse, isLoading } = useQuery({
-    queryKey: ["favourites", systemUser?.sub],
-    queryFn: () => musicApi.users.getFavourites(systemUser!.sub),
-    enabled: !!systemUser?.sub,
+    queryKey: ["favourites", systemUser?.id],
+    queryFn: () => musicApi.users.getFavourites(systemUser!.id),
+    enabled: !!systemUser?.id,
   });
 
   const songs = favouritesResponse?.data?.data || [];

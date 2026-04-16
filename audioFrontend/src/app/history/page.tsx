@@ -11,9 +11,9 @@ export default function HistoryPage() {
   const systemUser = useStore(playerStore, (s) => s.systemUser);
 
   const { data: historyResponse, isLoading } = useQuery({
-    queryKey: ["history", systemUser?.sub],
-    queryFn: () => musicApi.users.getHistory(systemUser!.sub),
-    enabled: !!systemUser?.sub,
+    queryKey: ["history", systemUser?.id],
+    queryFn: () => musicApi.users.getHistory(systemUser!.id),
+    enabled: !!systemUser?.id,
   });
 
   const songs = historyResponse?.data?.data || [];

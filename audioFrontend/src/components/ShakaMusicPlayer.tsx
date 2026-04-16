@@ -26,6 +26,7 @@ export function ShakaMusicPlayer() {
   const playerRef = useRef<any>(null);
   const lyricsContainerRef = useRef<HTMLDivElement>(null);
   const animFrameRef = useRef<number>(0);
+  const lastStateRef = useRef<{ id: string; time: number; duration: number }>({ id: "", time: 0, duration: 0 });
 
   const state = useStore(playerStore, (s) => s);
   const { currentSong, isPlaying, volume, isMuted, duration, repeatMode, qualityTracks, selectedQuality } = state;
@@ -107,6 +108,59 @@ export function ShakaMusicPlayer() {
     };
   }, [currentSong?.id, syncTracks]);
 
+  // Handle song recording on change
+  useEffect(() => {
+    const last = lastStateRef.current;
+    
+    // 1. If song changed, record the previous song's final state
+    if (currentSong?.id !== last.id) {
+       if (last.id && last.duration > 0) {
+         const part = Math.min(100, Math.round((last.time / last.duration) * 100));
+         if (part > 1 || last.time > 5) {
+           playerActions.recordListen(last.id, part);
+         }
+       }
+       
+       // 2. Initialize tracking for the new song
+       lastStateRef.current = { 
+         id: currentSong?.id || "", 
+         time: 0, 
+         duration: currentSong?.duration || 0 
+       };
+    }
+  }, [currentSong?.id]);
+
+  // Handle Recording on End (Ended Event)
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    const handleEnded = () => {
+      const last = lastStateRef.current;
+      if (last.id) {
+        playerActions.recordListen(last.id, 100);
+        // Clear ID to prevent double-recording on change/unmount
+        lastStateRef.current = { id: "", time: 0, duration: 0 };
+      }
+    };
+
+    audio.addEventListener("ended", handleEnded);
+    return () => audio.removeEventListener("ended", handleEnded);
+  }, [currentSong?.id]);
+
+  // Handle Recording on Unmount
+  useEffect(() => {
+    return () => {
+      const last = lastStateRef.current;
+      if (last.id && last.duration > 0) {
+        const part = Math.min(100, Math.round((last.time / last.duration) * 100));
+        if (part > 1 || last.time > 5) {
+          playerActions.recordListen(last.id, part);
+        }
+      }
+    };
+  }, []);
+
   // Load Lyrics (VTT/JSON)
   useEffect(() => {
     if (!currentSong?.captionUrl) {
@@ -168,7 +222,15 @@ export function ShakaMusicPlayer() {
     playerActions.setCurrentTime(t);
 
     if (audio.buffered.length) setBuffered(audio.buffered.end(audio.buffered.length - 1));
-    if (audio.duration && audio.duration !== duration) playerActions.setDuration(audio.duration);
+    if (audio.duration && audio.duration !== duration) {
+       playerActions.setDuration(audio.duration);
+    }
+    
+    // Update ref for recording later - ONLY if it's the same song
+    if (currentSong && lastStateRef.current.id === currentSong.id) {
+      lastStateRef.current.time = t;
+      lastStateRef.current.duration = audio.duration || duration || lastStateRef.current.duration;
+    }
 
     // Find active caption
     let active: TranscriptionEntry | null = null;

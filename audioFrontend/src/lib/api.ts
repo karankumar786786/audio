@@ -40,6 +40,21 @@ export interface Playlist {
   bannerImageKey?: string;
 }
 
+export interface Artist {
+  id: string;
+  name: string;
+  about?: string;
+  dob?: string;
+  coverImageKey?: string;
+  bannerImageKey?: string;
+}
+
+export interface UnifiedSearchResponse {
+  songs: Song[];
+  artists: Artist[];
+  playlists: Playlist[];
+}
+
 export interface PaginatedResult<T> {
   data: T[];
   pagination: {
@@ -142,7 +157,7 @@ export const musicApi = {
   /** --- SEARCH MODULE --- */
   search: {
     unified: async (query: string) => {
-      const res = await api.get(`/search?query=${query}`);
+      const res = await api.get(`/search?q=${encodeURIComponent(query)}`);
       return res.data;
     },
   },

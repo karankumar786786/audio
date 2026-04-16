@@ -62,11 +62,6 @@ export const playerActions = {
         currentTime: 0,
       };
     });
-    // Record view/listen
-    const { systemUser } = playerStore.state;
-    if (systemUser?.sub) {
-      musicApi.interactions.recordListen(systemUser.sub, song.id).catch(console.error);
-    }
   },
 
   playFromQueue: (index: number) => {
@@ -158,5 +153,20 @@ export const playerActions = {
       const nextMode = modes[(modes.indexOf(s.repeatMode) + 1) % modes.length];
       return { ...s, repeatMode: nextMode };
     });
+  },
+
+  recordListen: async (songId: string, part: number) => {
+    const { systemUser } = playerStore.state;
+    if (systemUser?.id && songId) {
+      console.log(`[PlayerStore] 🎵 Initiating recordListen: song=${songId}, part=${part}%, user=${systemUser.id}`);
+      try {
+        await musicApi.interactions.recordListen(systemUser.id, songId, part);
+        console.log(`[PlayerStore] ✅ recordListen success for ${songId}`);
+      } catch (err) {
+        console.error("[PlayerStore] ❌ Failed to record listen:", err);
+      }
+    } else {
+      console.warn("[PlayerStore] ⚠️ Cannot record listen: systemUser.id or songId missing", { userId: systemUser?.id, songId });
+    }
   },
 };

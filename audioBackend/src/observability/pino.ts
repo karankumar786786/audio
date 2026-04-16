@@ -1,6 +1,7 @@
 import pino from "pino";
 import pretty from "pino-pretty";
-
+import {config} from "dotenv"
+config();
 // ANSI colors for professional service identification
 const COLORS = {
     Artist: "\u001b[32m",      // Green
@@ -43,5 +44,5 @@ const stream = pretty({
 });
 
 export const PinoLogger = pino({
-    level: process.env.LOG_LEVEL || "info",
+    level:"debug",
 }, stream);

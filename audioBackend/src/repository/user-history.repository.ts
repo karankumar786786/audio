@@ -14,7 +14,7 @@ export class UserHistoryRepository extends BaseRepository<UserHistorySchema, Cre
         logger: Logger,
         private readonly signatureService:SignatureService,
     ) {
-        super(db, "user_histories", userHistorySchema, logger);
+        super(db, "user_history", userHistorySchema, logger);
         logMethods(this, this.logger);
     }
 
@@ -23,7 +23,7 @@ export class UserHistoryRepository extends BaseRepository<UserHistorySchema, Cre
         this.signatureService.verifyId(data.songId,"songId");
         this.signatureService.verifyId(data.userId,"userId");
         const [entry] = await this.db`
-            INSERT INTO user_histories (id, user_id, song_id, part)
+            INSERT INTO user_history (id, user_id, song_id, part)
             VALUES (${id}, ${data.userId}, ${data.songId}, ${data.part})
             RETURNING id, user_id AS "userId", song_id AS "songId", part, listened_at AS "listenedAt"
         `;
@@ -47,7 +47,7 @@ export class UserHistoryRepository extends BaseRepository<UserHistorySchema, Cre
                 s.language,
                 s.job_id AS "jobId",
                 s.created_at AS "createdAt"
-            FROM user_histories uh
+            FROM user_history uh
             JOIN songs s ON s.id = uh.song_id
             WHERE uh.user_id = ${userId}
             ORDER BY uh.listened_at DESC
@@ -59,7 +59,7 @@ export class UserHistoryRepository extends BaseRepository<UserHistorySchema, Cre
     async countByUserId(userId: string): Promise<number> {
         const [row] = await this.db`
             SELECT COUNT(*) AS count
-            FROM user_histories
+            FROM user_history
             WHERE user_id = ${userId}
         `;
         return parseInt(row?.count || "0");

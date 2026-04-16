@@ -25,9 +25,9 @@ export function LeftSidebar() {
   const systemUser = useStore(playerStore, (s) => s.systemUser);
 
   const { data: playlistsResponse, isLoading } = useQuery({
-    queryKey: ["user-playlists", systemUser?.sub],
-    queryFn: () => musicApi.users.getPlaylists(systemUser!.sub),
-    enabled: !!systemUser?.sub,
+    queryKey: ["user-playlists", systemUser?.id],
+    queryFn: () => musicApi.users.getPlaylists(systemUser!.id),
+    enabled: !!systemUser?.id,
   });
 
   const userPlaylists = playlistsResponse?.data?.data || [];

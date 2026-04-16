@@ -13,7 +13,7 @@ export class SearchController {
     }
 
     unifiedSearch = asyncHandler(async (req: Request, res: Response) => {
-        const query: string = req.query.query as string || "";
+        const query: string = req.query.q as string || "";
         const result:UnifiedSearchResponse = await this.searchService.unifiedSearch(query);
         return new ApiResponse<UnifiedSearchResponse>(200, "Search results fetched", result).send(res);
     });

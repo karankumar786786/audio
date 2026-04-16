@@ -11,7 +11,7 @@ export class InteractionRepository extends BaseRepository<SongSchema, any, any> 
         private readonly signatureService: SignatureService
     ) {
         // This repository primarily returns Songs (Trending), so we use songSchema
-        super(db, "user_histories", songSchema, logger);
+        super(db, "user_history", songSchema, logger);
         logMethods(this, this.logger);
     }
 
@@ -30,7 +30,7 @@ export class InteractionRepository extends BaseRepository<SongSchema, any, any> 
                 s.song_key AS "songKey", s.image_key AS "imageKey",
                 s.language, s.job_id AS "jobId", s.created_at AS "createdAt",
                 COUNT(h.id) as listen_count
-            FROM user_histories h
+            FROM user_history h
             JOIN songs s ON h.song_id = s.id
             GROUP BY s.id
             ORDER BY listen_count DESC
@@ -41,7 +41,7 @@ export class InteractionRepository extends BaseRepository<SongSchema, any, any> 
 
     async countTrendingSongs(): Promise<number> {
         const [row] = await this.db`
-            SELECT COUNT(DISTINCT song_id)::int as count FROM user_histories
+            SELECT COUNT(DISTINCT song_id)::int as count FROM user_history
         `;
         return row?.count || 0;
     }

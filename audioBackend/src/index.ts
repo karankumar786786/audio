@@ -15,7 +15,7 @@ export const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(cors({
-    origin: ["http://localhost:3000", "http://localhost:3001"], // Allow common dev ports
+    origin: ["http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "http://localhost:4444", "http://localhost:5173"], 
     credentials: true,
 }));
 app.use(cookieParser());
