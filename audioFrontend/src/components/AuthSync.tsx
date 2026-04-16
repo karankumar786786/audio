@@ -35,6 +35,7 @@ export function AuthSync() {
           if (response.success) {
             console.log("[AuthSync] System synchronization successful.");
             playerActions.setSystemSession(response.data.token, response.data.payload);
+            playerActions.fetchFavourites();
             toast.success("Frequency Synchronized", { 
               description: "Secure bridge established with audio-sync core." 
             });

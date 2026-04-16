@@ -23,13 +23,13 @@ export function PlaylistPickerModal({ songId, songTitle, isOpen, onClose }: Play
   const [newName, setNewName] = useState("");
 
   const { data: playlists, isLoading } = useQuery({
-    queryKey: ["user-playlists", systemUser?.sub],
-    queryFn: () => musicApi.users.getPlaylists(systemUser!.sub),
-    enabled: !!systemUser?.sub && isOpen,
+    queryKey: ["user-playlists", systemUser?.id],
+    queryFn: () => musicApi.users.getPlaylists(systemUser!.id),
+    enabled: !!systemUser?.id && isOpen,
   });
 
   const addToPlaylist = useMutation({
-    mutationFn: (playlistId: string) => musicApi.users.addSongToPlaylist(playlistId, songId, systemUser!.sub),
+    mutationFn: (playlistId: string) => musicApi.users.addSongToPlaylist(playlistId, songId, systemUser!.id),
     onSuccess: (_, playlistId) => {
       const playlist = playlists?.data?.data.find((p: Playlist) => p.id === playlistId);
       toast.success("Frequency Synced", { description: `Added "${songTitle}" to ${playlist?.name || "playlist"}.` });
@@ -40,8 +40,8 @@ export function PlaylistPickerModal({ songId, songTitle, isOpen, onClose }: Play
 
   const createAndAdd = useMutation({
     mutationFn: async () => {
-      const res = await musicApi.users.createPlaylist(systemUser!.sub, newName);
-      await musicApi.users.addSongToPlaylist(res.data.id, songId, systemUser!.sub);
+      const res = await musicApi.users.createPlaylist(systemUser!.id, newName);
+      await musicApi.users.addSongToPlaylist(res.data.id, songId, systemUser!.id);
       return res.data;
     },
     onSuccess: (playlist) => {

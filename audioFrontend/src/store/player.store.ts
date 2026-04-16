@@ -20,6 +20,7 @@ interface PlayerState {
   // System Auth
   systemToken: string | null;
   systemUser: any | null;
+  favourites: Set<string>;
 }
 
 export const playerStore = new Store<PlayerState>({
@@ -38,6 +39,7 @@ export const playerStore = new Store<PlayerState>({
   isLyricsOpen: false,
   systemToken: typeof window !== "undefined" ? localStorage.getItem("system_token") : null,
   systemUser: null,
+  favourites: new Set<string>(),
 });
 
 export const playerActions = {
@@ -167,6 +169,45 @@ export const playerActions = {
       }
     } else {
       console.warn("[PlayerStore] ⚠️ Cannot record listen: systemUser.id or songId missing", { userId: systemUser?.id, songId });
+    }
+  },
+
+  fetchFavourites: async () => {
+    const { systemUser } = playerStore.state;
+    if (!systemUser?.id) return;
+    try {
+      const res = await musicApi.users.getFavourites(systemUser.id, 100);
+      const ids = res.data.data.map((s: any) => s.id);
+      playerStore.setState((s) => ({ ...s, favourites: new Set(ids) }));
+    } catch (err) {
+      console.error("[PlayerStore] Failed to fetch favourites:", err);
+    }
+  },
+
+  toggleFavourite: async (songId: string) => {
+    const { systemUser, favourites } = playerStore.state;
+    if (!systemUser?.id) return;
+
+    const isFav = favourites.has(songId);
+    try {
+      if (isFav) {
+        await musicApi.users.removeFavourite(systemUser.id, songId);
+        playerStore.setState((s) => {
+          const next = new Set(s.favourites);
+          next.delete(songId);
+          return { ...s, favourites: next };
+        });
+      } else {
+        await musicApi.users.addFavourite(systemUser.id, songId);
+        playerStore.setState((s) => {
+          const next = new Set(s.favourites);
+          next.add(songId);
+          return { ...s, favourites: next };
+        });
+      }
+    } catch (err) {
+      console.error("[PlayerStore] Toggle favourite failed:", err);
+      throw err;
     }
   },
 };

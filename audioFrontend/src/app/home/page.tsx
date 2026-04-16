@@ -27,9 +27,9 @@ export default function HomePage() {
   });
 
   const { data: recommendations, isLoading: isRecLoading } = useQuery({
-    queryKey: ["recommendations", systemUser?.sub],
-    queryFn: () => musicApi.interactions.getRecommendations(systemUser!.sub),
-    enabled: !!systemUser?.sub,
+    queryKey: ["recommendations", systemUser?.id],
+    queryFn: () => musicApi.interactions.getRecommendations(systemUser!.id),
+    enabled: !!systemUser?.id,
   });
 
   // Infinite scroll observer

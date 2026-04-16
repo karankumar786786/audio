@@ -12,12 +12,31 @@ export default function PlaylistPage() {
 
   const { data: playlistResponse, isLoading: isPlaylistLoading } = useQuery({
     queryKey: ["playlist", id],
-    queryFn: () => musicApi.playlists.getById(id as string),
+    queryFn: async () => {
+      try {
+        const res = await musicApi.playlists.getById(id as string);
+        if (res.success) return res;
+        throw new Error("Not a system playlist");
+      } catch {
+        return await musicApi.users.getPlaylistById(id as string);
+      }
+    },
   });
 
   const { data: songsResponse, isLoading: isSongsLoading } = useQuery({
     queryKey: ["playlist-songs", id],
-    queryFn: () => musicApi.playlists.getSongs(id as string),
+    queryFn: async () => {
+      try {
+        const res = await musicApi.playlists.getSongs(id as string);
+        if (res.success && res.data?.data?.length > 0) return res;
+        // If system songs empty, try user
+        const userRes = await musicApi.users.getPlaylistSongs(id as string);
+        if (userRes.success && userRes.data?.data?.length > 0) return userRes;
+        return res; // fall back to original empty system res
+      } catch {
+        return await musicApi.users.getPlaylistSongs(id as string);
+      }
+    },
   });
 
   if (isPlaylistLoading || isSongsLoading) {
@@ -45,7 +64,7 @@ export default function PlaylistPage() {
                  <span className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-400 italic">SYSTEM PLAYLIST</span>
                  <div className="h-1 w-8 bg-indigo-500 rounded-full" />
               </div>
-              <h1 className="text-6xl font-black text-white italic tracking-tighter uppercase leading-none">{playlist?.title}</h1>
+              <h1 className="text-6xl font-black text-white italic tracking-tighter uppercase leading-none">{playlist?.title || playlist?.name}</h1>
               <p className="text-zinc-500 text-sm font-medium opacity-80 max-w-xl">{playlist?.description || "A curated frequency of synchronized audio transients."}</p>
               
               <div className="flex items-center gap-4 pt-4">

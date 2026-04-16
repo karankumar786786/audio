@@ -11,9 +11,9 @@ export default function PlaylistsPage() {
   const systemUser = useStore(playerStore, (s) => s.systemUser);
 
   const { data: userPlaylistsResponse, isLoading: isUserLoading } = useQuery({
-    queryKey: ["user-playlists", systemUser?.sub],
-    queryFn: () => musicApi.users.getPlaylists(systemUser!.sub),
-    enabled: !!systemUser?.sub,
+    queryKey: ["user-playlists", systemUser?.id],
+    queryFn: () => musicApi.users.getPlaylists(systemUser!.id),
+    enabled: !!systemUser?.id,
   });
 
   const { data: systemPlaylistsResponse, isLoading: isSystemLoading } = useQuery({

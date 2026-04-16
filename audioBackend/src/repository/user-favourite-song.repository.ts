@@ -58,7 +58,6 @@ export class UserFavouriteSongRepository extends BaseRepository<UserFavouriteSon
             FROM user_favourite_songs ufs
             JOIN songs s ON s.id = ufs.song_id
             WHERE ufs.user_id = ${userId}
-            ORDER BY ufs.created_at DESC
             LIMIT ${limit} OFFSET ${offset}
         `;
         return rows.map((row) => songSchema.parse(row));

@@ -15,7 +15,10 @@ interface SongCardProps {
 
 export function SongCard({ song, priority }: SongCardProps) {
   const systemUser = useStore(playerStore, (s) => s.systemUser);
+  const favourites = useStore(playerStore, (s) => s.favourites);
   const [isPlaylistModalOpen, setIsPlaylistModalOpen] = useState(false);
+  
+  const isFavourite = favourites.has(song.id);
 
   const handlePlay = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -30,10 +33,14 @@ export function SongCard({ song, priority }: SongCardProps) {
     }
 
     try {
-      await musicApi.users.addFavourite(systemUser.id, song.id);
-      toast.success("Memory Captured", { description: `"${song.title}" added to your collection.` });
+      await playerActions.toggleFavourite(song.id);
+      if (isFavourite) {
+        toast.success("Frequency Released", { description: `"${song.title}" removed from your collection.` });
+      } else {
+        toast.success("Memory Captured", { description: `"${song.title}" added to your collection.` });
+      }
     } catch (err) {
-      toast.error("Sync Error", { description: "Failed to persist frequency to library." });
+      toast.error("Sync Error", { description: "Failed to update your archive." });
     }
   };
 
@@ -74,9 +81,11 @@ export function SongCard({ song, priority }: SongCardProps) {
       <div className="absolute top-6 right-6 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-all translate-x-4 group-hover:translate-x-0 duration-300">
           <button 
             onClick={handleToggleFavourite}
-            className="w-8 h-8 rounded-xl bg-black/60 backdrop-blur-xl border border-white/10 flex items-center justify-center text-zinc-400 hover:text-red-500 transition-colors shadow-2xl"
+            className={`w-8 h-8 rounded-xl bg-black/60 backdrop-blur-xl border border-white/10 flex items-center justify-center transition-colors shadow-2xl ${
+              isFavourite ? "text-red-500 fill-red-500" : "text-zinc-400 hover:text-red-500"
+            }`}
           >
-            <Heart size={14} />
+            <Heart size={14} fill={isFavourite ? "currentColor" : "none"} />
           </button>
           <button 
             onClick={() => setIsPlaylistModalOpen(true)}

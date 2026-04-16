@@ -1,8 +1,5 @@
-import { type UserRepository } from "../repository/user.repository";
-import { type UserFavouriteSongRepository } from "../repository/user-favourite-song.repository";
-import { type UserHistoryRepository } from "../repository/user-history.repository";
-import { type UserSearchHistoryRepository } from "../repository/user-search-history.repository";
 import { type UserPlaylistRepository } from "../repository/user-playlist.repository";
+import { type RecommendationService } from "../lib/recommendation";
 import { type SignatureService } from "../lib/signature";
 import type { UserInfo, UserSchema } from "../schema/user.schema";
 import { type UserPlaylistSchema, type UserPlaylistSongSchema } from "../schema/userPlaylist.schema";
@@ -13,6 +10,7 @@ import { NotFoundError } from "../errors";
 import type { JWTService } from "../lib";
 import type { Payload, SongSchema, UserFavouriteSongSchema, UserSearchHistorySchema } from "../schema";
 import { buildPaginatedResult, type PaginatedResult } from "../type/pagination.type";
+import type { UserFavouriteSongRepository, UserHistoryRepository, UserRepository, UserSearchHistoryRepository } from "../repository";
 
 
 axiosRetry(axios, {
@@ -28,6 +26,7 @@ export class UserService {
         private readonly historyRepo: UserHistoryRepository,
         private readonly searchHistoryRepo: UserSearchHistoryRepository,
         private readonly userPlaylistRepo: UserPlaylistRepository,
+        private readonly recommendationService: RecommendationService,
         private readonly signatureService: SignatureService,
         private readonly logger: Logger,
         private readonly jwtService: JWTService
@@ -69,13 +68,17 @@ export class UserService {
     async addFavourite(userId: string, songId: string): Promise<UserFavouriteSongSchema> {
         this.signatureService.verifyId(userId, "userId");
         this.signatureService.verifyId(songId, "songId");
-        return await this.favouriteRepo.create({ userId, songId });
+        const entry = await this.favouriteRepo.create({ userId, songId });
+        try { await this.recommendationService.addFavorite(userId, songId); } catch (_) {}
+        return entry;
     }
 
     async removeFavourite(userId: string, songId: string): Promise<UserFavouriteSongSchema> {
         this.signatureService.verifyId(userId, "userId");
         this.signatureService.verifyId(songId, "songId");
-        return await this.favouriteRepo.deleteFavorite(userId, songId);
+        const entry = await this.favouriteRepo.deleteFavorite(userId, songId);
+        try { await this.recommendationService.removeFavorite(userId, songId); } catch (_) {}
+        return entry;
     }
 
     async getFavourites(userId: string, limit: number = 20, offset: number = 0): Promise<PaginatedResult<SongSchema>> {

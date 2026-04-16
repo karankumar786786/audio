@@ -124,6 +124,10 @@ export const musicApi = {
       const res = await api.post("/users/playlists", { userId, name });
       return res.data;
     },
+    getPlaylistById: async (playlistId: string) => {
+      const res = await api.get(`/users/playlists/${playlistId}`);
+      return res.data;
+    },
     getPlaylistSongs: async (playlistId: string, page = 1, limit = 50) => {
       const res = await api.get(`/users/playlists/${playlistId}/songs?page=${page}&limit=${limit}`);
       return res.data;

@@ -115,6 +115,7 @@ export const userService = new UserService(
     userHistoryRepository,
     userSearchHistoryRepository,
     userPlaylistRepository,
+    recommendationService,
     signatureService,
     logger.child({ service: "UserService" }),
     jwtServices
