@@ -9,6 +9,7 @@ import axiosRetry from "axios-retry";
 import { NotFoundError } from "../errors";
 import type { JWTService } from "../lib";
 import type { Payload, SongSchema, UserFavouriteSongSchema, UserSearchHistorySchema } from "../schema";
+import { type HistoryEvent } from "../schema/userHistory.schema";
 import { buildPaginatedResult, type PaginatedResult } from "../type/pagination.type";
 import type { UserFavouriteSongRepository, UserHistoryRepository, UserRepository, UserSearchHistoryRepository } from "../repository";
 
@@ -45,7 +46,7 @@ export class UserService {
             user = await this.userRepository.create({ email });
         }
         const payload: Payload = {
-            id: this.signatureService.signId(user.id),
+            id: user.id,
             userName: userInfo.name ? userInfo.name : "",
             email: email,
             picture: userInfo.picture ? userInfo.picture : "",
@@ -92,14 +93,14 @@ export class UserService {
     }
 
     // History logic
-    async getHistory(userId: string, limit: number = 20, offset: number = 0): Promise<PaginatedResult<SongSchema>> {
+    async getHistory(userId: string, limit: number = 20, offset: number = 0): Promise<PaginatedResult<HistoryEvent>> {
         this.signatureService.verifyId(userId, "userId");
         const page = Math.floor(offset / limit) + 1;
         const [data, total] = await Promise.all([
             this.historyRepo.getByUserId(userId, limit, offset),
             this.historyRepo.countByUserId(userId)
         ]);
-        return buildPaginatedResult<SongSchema>(data, total, { page, limit });
+        return buildPaginatedResult<HistoryEvent>(data, total, { page, limit });
     }
 
     // Search History logic

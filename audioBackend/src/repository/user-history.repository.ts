@@ -1,6 +1,6 @@
 import { randomUUIDv7 } from "bun";
 import type { Database } from "../infra/db";
-import { userHistorySchema, type UserHistorySchema } from "../schema/userHistory.schema";
+import { userHistorySchema, type UserHistorySchema, historyEventSchema, type HistoryEvent } from "../schema/userHistory.schema";
 import { songSchema, type SongSchema } from "../schema/songs.schema";
 import { BaseRepository } from "./base.repository";
 import { logMethods, type Logger } from "../observability";
@@ -35,9 +35,12 @@ export class UserHistoryRepository extends BaseRepository<UserHistorySchema, Cre
         throw new Error("Update not supported for history");
     }
 
-    async getByUserId(userId: string, limit: number, offset: number): Promise<SongSchema[]> {
+    async getByUserId(userId: string, limit: number, offset: number): Promise<HistoryEvent[]> {
         const rows = await this.db`
             SELECT 
+                uh.id AS "historyId",
+                uh.listened_at AS "listenedAt",
+                uh.part,
                 s.id,
                 s.title,
                 s.artist_name AS "artistName",
@@ -53,7 +56,7 @@ export class UserHistoryRepository extends BaseRepository<UserHistorySchema, Cre
             ORDER BY uh.listened_at DESC
             LIMIT ${limit} OFFSET ${offset}
         `;
-        return rows.map((row) => songSchema.parse(row));
+        return rows.map((row) => historyEventSchema.parse(row));
     }
 
     async countByUserId(userId: string): Promise<number> {

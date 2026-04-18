@@ -15,11 +15,11 @@ export interface PlayerSong extends Song {
  */
 export function mapToPlayerSong(song: Song): PlayerSong {
   const streamBase = `${S3_BASE_URL}/${song.songKey}`;
-  
+
   return {
     ...song,
     streamUrl: `${streamBase}/master.mpd`,
-    captionUrl: `${streamBase}/caption.vtt`, 
+    captionUrl: `${streamBase}/caption.vtt`,
     coverUrl: `${IMAGEKIT_BASE_URL}${song.imageKey}?tr=w-400,h-400,f-auto`,
     posterUrl: `${IMAGEKIT_BASE_URL}${song.imageKey}?tr=w-720,h-720,f-auto`,
   };

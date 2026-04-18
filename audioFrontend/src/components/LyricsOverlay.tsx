@@ -30,16 +30,21 @@ const MOCK_LYRICS: LyricLine[] = [
 ];
 
 export function LyricsOverlay() {
-  const { isLyricsOpen, currentSong, currentTime } = useStore(playerStore, (s) => s);
+  const { isLyricsOpen, currentSong, currentTime } = useStore(
+    playerStore,
+    (s) => s,
+  );
   const scrollRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(-1);
 
   useEffect(() => {
     const index = MOCK_LYRICS.findIndex((line, i) => {
       const nextLine = MOCK_LYRICS[i + 1];
-      return currentTime >= line.time && (!nextLine || currentTime < nextLine.time);
+      return (
+        currentTime >= line.time && (!nextLine || currentTime < nextLine.time)
+      );
     });
-    
+
     if (index !== activeIndex) {
       setActiveIndex(index);
       // Auto-scroll to active line
@@ -47,7 +52,7 @@ export function LyricsOverlay() {
       if (activeElement && scrollRef.current) {
         scrollRef.current.scrollTo({
           top: activeElement.offsetTop - scrollRef.current.clientHeight / 2,
-          behavior: "smooth"
+          behavior: "smooth",
         });
       }
     }
@@ -58,7 +63,7 @@ export function LyricsOverlay() {
   return (
     <AnimatePresence>
       {isLyricsOpen && (
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: "100%" }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: "100%" }}
@@ -67,72 +72,72 @@ export function LyricsOverlay() {
         >
           {/* Immersive Background */}
           <div className="absolute inset-0 pointer-events-none overflow-hidden -z-10">
-             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-indigo-900/30 blur-[150px] animate-pulse" />
-             <div className="absolute top-1/4 right-0 w-[400px] h-[400px] bg-purple-900/20 blur-[100px]" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-indigo-900/30 blur-[150px] animate-pulse" />
+            <div className="absolute top-1/4 right-0 w-[400px] h-[400px] bg-purple-900/20 blur-[100px]" />
           </div>
 
           {/* Left Side: Art & Title */}
           <div className="lg:w-1/2 w-full flex flex-col items-center justify-center p-12 text-center">
-             <motion.div 
+            <motion.div
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: 0.2 }}
               className="w-full max-w-[400px] aspect-square rounded-3xl shadow-[0_40px_100px_rgba(0,0,0,0.5)] border border-white/5 overflow-hidden mb-8"
-             >
-                <img 
-                  src={`https://ik.imagekit.io/zaa6pbi9f${currentSong.imageKey}`} 
-                  className="w-full h-full object-cover"
-                  alt="Artwork"
-                />
-             </motion.div>
-             <motion.h2 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.3 }}
-                className="text-4xl font-black mb-2"
-             >
-                {currentSong.title}
-             </motion.h2>
-             <motion.p 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.4 }}
-                className="text-xl text-zinc-500 font-medium"
-             >
-                {currentSong.artistName}
-             </motion.p>
+            >
+              <img
+                src={`https://ik.imagekit.io/zaa6pbi9f${currentSong.imageKey}`}
+                className="w-full h-full object-cover"
+                alt="Artwork"
+              />
+            </motion.div>
+            <motion.h2
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.3 }}
+              className="text-4xl font-black mb-2"
+            >
+              {currentSong.title}
+            </motion.h2>
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.4 }}
+              className="text-xl text-zinc-500 font-medium"
+            >
+              {currentSong.artistName}
+            </motion.p>
           </div>
 
           {/* Right Side: Scrollable Lyrics */}
           <div className="lg:w-1/2 w-full flex flex-col items-center relative py-20 pr-10">
-             <div className="absolute top-10 right-10 flex gap-4">
-                <button 
-                  onClick={() => playerActions.toggleLyrics()}
-                  className="w-12 h-12 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-white transition-all backdrop-blur-md"
-                >
-                  <X size={24} />
-                </button>
-             </div>
-             
-             <div 
+            <div className="absolute top-10 right-10 flex gap-4">
+              <button
+                onClick={() => playerActions.toggleLyrics()}
+                className="w-12 h-12 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-white transition-all backdrop-blur-md"
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            <div
               ref={scrollRef}
               className="w-full flex flex-col gap-8 overflow-y-auto px-12 py-32 scrollbar-none mask-fade-edges"
-             >
-                {MOCK_LYRICS.map((line, i) => (
-                  <motion.div 
-                    key={i}
-                    id={`lyric-${i}`}
-                    animate={{ 
-                      opacity: activeIndex === i ? 1 : 0.3,
-                      scale: activeIndex === i ? 1.05 : 1,
-                      x: activeIndex === i ? 10 : 0
-                    }}
-                    className={`text-3xl md:text-5xl font-black leading-tight transition-all cursor-pointer hover:opacity-100 ${activeIndex === i ? 'text-white' : 'text-zinc-600'}`}
-                  >
-                    {line.text}
-                  </motion.div>
-                ))}
-             </div>
+            >
+              {MOCK_LYRICS.map((line, i) => (
+                <motion.div
+                  key={i}
+                  id={`lyric-${i}`}
+                  animate={{
+                    opacity: activeIndex === i ? 1 : 0.3,
+                    scale: activeIndex === i ? 1.05 : 1,
+                    x: activeIndex === i ? 10 : 0,
+                  }}
+                  className={`text-3xl md:text-5xl font-black leading-tight transition-all cursor-pointer hover:opacity-100 ${activeIndex === i ? "text-white" : "text-zinc-600"}`}
+                >
+                  {line.text}
+                </motion.div>
+              ))}
+            </div>
           </div>
         </motion.div>
       )}

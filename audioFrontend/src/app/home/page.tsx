@@ -13,19 +13,17 @@ export default function HomePage() {
   const systemUser = useStore(playerStore, (s) => s.systemUser);
 
   // Discover Feed (Infinite Scroll)
-  const {
-    data,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-    status,
-  } = useInfiniteQuery({
-    queryKey: ["discover-songs"],
-    queryFn: ({ pageParam }) => musicApi.songs.getFeed(pageParam as number, 15),
-    initialPageParam: 1,
-    getNextPageParam: (lastPage) => 
-      lastPage.data.pagination.hasNext ? lastPage.data.pagination.page + 1 : undefined,
-  });
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, status } =
+    useInfiniteQuery({
+      queryKey: ["discover-songs"],
+      queryFn: ({ pageParam }) =>
+        musicApi.songs.getFeed(pageParam as number, 15),
+      initialPageParam: 1,
+      getNextPageParam: (lastPage) =>
+        lastPage.data.pagination.hasNext
+          ? lastPage.data.pagination.page + 1
+          : undefined,
+    });
 
   // Trending Songs
   const { data: trending, isLoading: isTrendingLoading } = useQuery({
@@ -36,7 +34,7 @@ export default function HomePage() {
   // Recommendations
   const { data: recommendations, isLoading: isRecLoading } = useQuery({
     queryKey: ["recommendations", systemUser?.id],
-    queryFn: () => musicApi.interactions.getRecommendations(systemUser!.id),
+    queryFn: () => musicApi.interactions.getRecommendations(),
     enabled: !!systemUser?.id,
   });
 
@@ -54,7 +52,7 @@ export default function HomePage() {
           fetchNextPage();
         }
       },
-      { threshold: 0.1 }
+      { threshold: 0.1 },
     );
 
     const target = document.getElementById("infinite-scroll-trigger");
@@ -65,7 +63,7 @@ export default function HomePage() {
   return (
     <div className="px-10 pb-20">
       {/* Hero Section */}
-      <motion.section 
+      <motion.section
         initial={{ opacity: 0, scale: 0.98 }}
         animate={{ opacity: 1, scale: 1 }}
         className="mb-20 relative rounded-[3rem] overflow-hidden group shadow-2xl"
@@ -74,17 +72,22 @@ export default function HomePage() {
           <div className="relative z-10 max-w-3xl py-10">
             <div className="flex items-center gap-3 mb-6 bg-white/10 backdrop-blur-md w-fit px-4 py-1.5 rounded-full border border-white/10">
               <Sparkles className="text-indigo-300" size={14} />
-              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white italic">Synthetic Frequency</span>
+              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white italic">
+                Synthetic Frequency
+              </span>
             </div>
             <h1 className="text-6xl md:text-8xl font-black text-white italic tracking-tighter mb-8 leading-[0.85] uppercase">
-              Immerse In<br/><span className="text-indigo-300">New Dimensions.</span>
+              Immerse In
+              <br />
+              <span className="text-indigo-300">New Dimensions.</span>
             </h1>
             <p className="text-xl text-indigo-100 opacity-80 mb-12 font-medium leading-relaxed max-w-xl">
-              Sync your soul with word-level high fidelity audio. 
-              Discover deep-cuts and trending transients curated by your listening frequency.
+              Sync your soul with word-level high fidelity audio. Discover
+              deep-cuts and trending transients curated by your listening
+              frequency.
             </p>
             <div className="flex items-center gap-6">
-              <button 
+              <button
                 onClick={scrollToTrending}
                 className="px-10 py-5 bg-white text-indigo-700 rounded-3xl font-black text-xs uppercase tracking-widest shadow-2xl hover:bg-indigo-50 transition-all flex items-center gap-3"
               >
@@ -105,32 +108,41 @@ export default function HomePage() {
 
       {/* Trending Section */}
       <section ref={trendingRef} className="mb-20">
-         <div className="flex items-center gap-6 mb-12 px-2">
-           <h2 className="text-3xl font-black italic tracking-tighter uppercase text-white flex items-center gap-3">
-             <TrendingUp className="text-indigo-400" size={28} />
-             Trending Transients
-           </h2>
-           <div className="h-px flex-1 bg-gradient-to-r from-indigo-500/30 to-transparent" />
-         </div>
+        <div className="flex items-center gap-6 mb-12 px-2">
+          <h2 className="text-3xl font-black italic tracking-tighter uppercase text-white flex items-center gap-3">
+            <TrendingUp className="text-indigo-400" size={28} />
+            Trending Transients
+          </h2>
+          <div className="h-px flex-1 bg-gradient-to-r from-indigo-500/30 to-transparent" />
+        </div>
 
-         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-10">
-           {isTrendingLoading ? (
-              [1, 2, 3, 4, 5].map(i => <div key={i} className="aspect-square bg-zinc-900/40 rounded-[3rem] animate-pulse" />)
-           ) : trending?.data?.data && trending.data.data.length > 0 ? (
-             trending.data.data.slice(0, 5).map((song: Song) => (
-               <SongCard key={`trend-${song.id}`} song={song} />
-             ))
-           ) : (
-             <div className="col-span-full py-10 text-center text-zinc-600 font-bold italic tracking-tight uppercase border border-dashed border-zinc-900 rounded-[3rem]">
-                No Trending Data Synchronized
-             </div>
-           )}
-         </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-10">
+          {isTrendingLoading ? (
+            [1, 2, 3, 4, 5].map((i) => (
+              <div
+                key={i}
+                className="aspect-square bg-zinc-900/40 rounded-[3rem] animate-pulse"
+              />
+            ))
+          ) : trending?.data?.data && trending.data.data.length > 0 ? (
+            trending.data.data
+              .slice(0, 5)
+              .map((song: Song) => (
+                <SongCard key={`trend-${song.id}`} song={song} />
+              ))
+          ) : (
+            <div className="col-span-full py-10 text-center text-zinc-600 font-bold italic tracking-tight uppercase border border-dashed border-zinc-900 rounded-[3rem]">
+              No Trending Data Synchronized
+            </div>
+          )}
+        </div>
       </section>
 
       {/* Recommended Section (Conditional) */}
-      {systemUser && recommendations?.data?.data && recommendations.data.data.length > 0 && (
-         <section className="mb-20">
+      {systemUser &&
+        recommendations?.data?.data &&
+        recommendations.data.data.length > 0 && (
+          <section className="mb-20">
             <div className="flex items-center gap-6 mb-12 px-2">
               <h2 className="text-3xl font-black italic tracking-tighter uppercase text-white flex items-center gap-3">
                 <Zap className="text-indigo-500 fill-indigo-500" size={28} />
@@ -144,14 +156,16 @@ export default function HomePage() {
                 <SongCard key={`rec-${song.id}`} song={song} />
               ))}
             </div>
-         </section>
-      )}
+          </section>
+        )}
 
       {/* Discovery Feed */}
       <section>
         <div className="flex items-center justify-between mb-12 px-2">
           <div className="flex items-center gap-6">
-            <h2 className="text-3xl font-black italic tracking-tighter uppercase text-white">Discovery Stream</h2>
+            <h2 className="text-3xl font-black italic tracking-tighter uppercase text-white">
+              Discovery Stream
+            </h2>
             <div className="h-px w-24 bg-gradient-to-r from-indigo-500 to-transparent" />
           </div>
           <div className="flex items-center gap-3 text-zinc-500 text-[10px] font-black uppercase tracking-widest italic group cursor-pointer hover:text-white transition-colors">
@@ -162,8 +176,11 @@ export default function HomePage() {
 
         {status === "pending" ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-10">
-            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(i => (
-              <div key={i} className="aspect-square bg-zinc-900/40 border border-white/5 rounded-[3rem] animate-pulse" />
+            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((i) => (
+              <div
+                key={i}
+                className="aspect-square bg-zinc-900/40 border border-white/5 rounded-[3rem] animate-pulse"
+              />
             ))}
           </div>
         ) : status === "error" ? (
@@ -172,20 +189,23 @@ export default function HomePage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-10">
-            {data?.pages.map((page, i) => (
+            {data?.pages.map((page, i) =>
               page.data.data.map((song: Song, songIdx: number) => (
-                <SongCard 
-                  key={`${song.id}-${i}-${songIdx}`} 
-                  song={song} 
+                <SongCard
+                  key={`${song.id}-${i}-${songIdx}`}
+                  song={song}
                   priority={i === 0 && songIdx < 6}
                 />
-              ))
-            ))}
+              )),
+            )}
           </div>
         )}
 
         {/* Loader/Trigger */}
-        <div id="infinite-scroll-trigger" className="h-40 flex items-center justify-center mt-20">
+        <div
+          id="infinite-scroll-trigger"
+          className="h-40 flex items-center justify-center mt-20"
+        >
           {isFetchingNextPage && (
             <div className="relative w-12 h-12 flex items-center justify-center">
               <div className="absolute inset-0 border-4 border-indigo-500/10 rounded-full" />

@@ -1,6 +1,15 @@
 "use client";
 
-import { Home, Library, Heart, History, PlusSquare, Mic2, ListMusic, Users2 } from "lucide-react";
+import {
+  Home,
+  Library,
+  Heart,
+  History,
+  PlusSquare,
+  Mic2,
+  ListMusic,
+  Users2,
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -31,7 +40,7 @@ export function LeftSidebar() {
 
   const { data: playlistsResponse, isLoading } = useQuery({
     queryKey: ["user-playlists", systemUser?.id],
-    queryFn: () => musicApi.users.getPlaylists(systemUser!.id),
+    queryFn: () => musicApi.users.getPlaylists(),
     enabled: !!systemUser?.id && hasMounted,
   });
 
@@ -45,13 +54,17 @@ export function LeftSidebar() {
           <div className="w-10 h-10 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-500/20 group-hover:scale-110 transition-transform">
             <Mic2 className="text-white fill-white" size={24} />
           </div>
-          <span className="text-xl font-black tracking-tight italic text-white uppercase">AudioSync</span>
+          <span className="text-xl font-black tracking-tight italic text-white uppercase">
+            AudioSync
+          </span>
         </div>
 
         <div className="space-y-8 flex-1 overflow-y-auto no-scrollbar pb-10">
           {/* Main Menu */}
           <section>
-            <h3 className="px-4 text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-4 italic">Pulse</h3>
+            <h3 className="px-4 text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-4 italic">
+              Pulse
+            </h3>
             <nav className="space-y-1">
               {menuItems.map((item) => (
                 <Link
@@ -72,7 +85,9 @@ export function LeftSidebar() {
 
           {/* Library Section */}
           <section>
-            <h3 className="px-4 text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-4 italic">Collection</h3>
+            <h3 className="px-4 text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-4 italic">
+              Collection
+            </h3>
             <nav className="space-y-1">
               {libraryItems.map((item) => (
                 <Link
@@ -92,45 +107,51 @@ export function LeftSidebar() {
           </section>
 
           {/* User Playlists (Dynamic Content with Hydration Guard) */}
-          <section>
+          <section suppressHydrationWarning>
             <div className="flex items-center justify-between px-4 mb-4">
-              <h3 className="text-[10px] font-black text-zinc-500 uppercase tracking-widest italic">Playlists</h3>
+              <h3 className="text-[10px] font-black text-zinc-500 uppercase tracking-widest italic">
+                Playlists
+              </h3>
               <Link href="/library?tab=playlists">
-                <PlusSquare size={14} className="text-zinc-500 hover:text-white cursor-pointer transition-colors" />
+                <PlusSquare
+                  size={14}
+                  className="text-zinc-500 hover:text-white cursor-pointer transition-colors"
+                />
               </Link>
             </div>
-            
+
             <nav className="space-y-1">
-               {/* 
+              {/* 
                   HYDRATION GUARD: 
-                  We intentionally render the skeleton on both server AND initial client pass 
-                  if hasMounted is false. This prevents the mismatch where server renders nothing 
-                  and client renders skeleton.
+                  If we haven't mounted yet, we render a STATIC set of skeletons.
+                  The server always renders this. The client always renders this first.
                */}
-               {(!hasMounted || isLoading) ? (
-                  [1, 2, 3].map(i => (
-                    <div key={i} className="h-10 mx-4 bg-zinc-900/50 rounded-xl animate-pulse" />
-                  ))
-               ) : userPlaylists.length > 0 ? (
-                  userPlaylists.map((playlist: any) => (
-                    <Link
-                      key={playlist.id}
-                      href={`/playlists/${playlist.id}`}
-                      className={`flex items-center gap-4 px-4 py-3 rounded-2xl text-xs font-bold transition-all truncate ${
-                        pathname === `/playlists/${playlist.id}`
-                          ? "text-indigo-400"
-                          : "text-zinc-500 hover:text-zinc-200"
-                      }`}
-                    >
-                      <ListMusic size={16} className="flex-shrink-0" />
-                      <span className="truncate">{playlist.name}</span>
-                    </Link>
-                  ))
-               ) : (
-                  <div className="px-4 py-3 text-[10px] text-zinc-600 font-bold italic uppercase tracking-wider">
-                    No Transients Found
-                  </div>
-               )}
+              {!hasMounted || isLoading ? (
+                <div className="space-y-3">
+                  <div className="h-10 mx-4 bg-zinc-900/50 rounded-xl animate-pulse" />
+                  <div className="h-10 mx-4 bg-zinc-900/50 rounded-xl animate-pulse" />
+                  <div className="h-10 mx-4 bg-zinc-900/50 rounded-xl animate-pulse" />
+                </div>
+              ) : userPlaylists.length > 0 ? (
+                userPlaylists.map((playlist: any) => (
+                  <Link
+                    key={playlist.id}
+                    href={`/playlists/${playlist.id}`}
+                    className={`flex items-center gap-4 px-4 py-3 rounded-2xl text-xs font-bold transition-all truncate ${
+                      pathname === `/playlists/${playlist.id}`
+                        ? "text-indigo-400"
+                        : "text-zinc-500 hover:text-zinc-200"
+                    }`}
+                  >
+                    <ListMusic size={16} className="flex-shrink-0" />
+                    <span className="truncate">{playlist.name}</span>
+                  </Link>
+                ))
+              ) : (
+                <div className="px-4 py-3 text-[10px] text-zinc-600 font-bold italic uppercase tracking-wider">
+                  No Transients Found
+                </div>
+              )}
             </nav>
           </section>
         </div>

@@ -39,13 +39,30 @@ export class InteractionService {
     }
 
     async getRecommendations(userId: string, limit: number): Promise<PaginatedResult<SongSchema>> {
-        this.signatureService.verifyId(userId,"userId");
+        this.signatureService.verifyId(userId, "userId");
         const recommendations = await this.recommendationService.recommendUser(userId, limit);
-        const songIds = recommendations.map(r => r.id).filter((id): id is string => !!id);
-        if (songIds.length === 0) return buildPaginatedResult([], 0, { page: 1, limit });
+        let songIds = recommendations.map(r => r.id).filter((id): id is string => !!id);
+
+        // Fallback to Trending if Recombee has no data (Cold Start)
+        if (songIds.length === 0) {
+            this.logger.info(`[InteractionService] No recommendations for ${userId}, falling back to Trending.`);
+            const trending = await this.interactionRepository.getTrendingSongs(limit, 0);
+            return buildPaginatedResult<SongSchema>(trending, trending.length, { page: 1, limit });
+        }
+
         const songs = await this.songRepository.getByIds(songIds);
         const songMap = new Map(songs.map(s => [s.id, s]));
         const result = songIds.map(id => songMap.get(id)).filter((song): song is SongSchema => !!song);
+
+        // If after filtering we have too few results, complement with Trending
+        if (result.length < limit / 2) {
+            const trending = await this.interactionRepository.getTrendingSongs(limit, 0);
+            for (const t of trending) {
+                if (result.length >= limit) break;
+                if (!result.find(r => r.id === t.id)) result.push(t);
+            }
+        }
+
         return buildPaginatedResult<SongSchema>(result, result.length, { page: 1, limit });
     }
 }

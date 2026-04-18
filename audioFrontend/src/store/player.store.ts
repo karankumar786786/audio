@@ -24,12 +24,30 @@ interface PlayerState {
 }
 
 // Restore systemUser from localStorage on init
+// Only accept users with valid signed IDs (format: uuid.hmac-signature)
 const _initSystemUser = (() => {
   if (typeof window === "undefined") return null;
   try {
     const saved = localStorage.getItem("system_user");
-    return saved ? JSON.parse(saved) : null;
-  } catch { return null; }
+    if (!saved) return null;
+    const parsed = JSON.parse(saved);
+    // Validate: signed IDs must contain exactly one dot separating uuid from signature
+    if (parsed && parsed.id && typeof parsed.id === "string") {
+      const parts = parsed.id.split(".");
+      if (parts.length === 2 && parts[0] && parts[1]) {
+        return parsed;
+      }
+    }
+    // Clear stale/invalid data to prevent 400 errors
+    console.warn(
+      "[PlayerStore] Clearing stale system_user (unsigned ID detected).",
+    );
+    localStorage.removeItem("system_user");
+    localStorage.removeItem("system_token");
+    return null;
+  } catch {
+    return null;
+  }
 })();
 
 export const playerStore = new Store<PlayerState>({
@@ -46,7 +64,8 @@ export const playerStore = new Store<PlayerState>({
   qualityTracks: [],
   selectedQuality: "auto",
   isLyricsOpen: false,
-  systemToken: typeof window !== "undefined" ? localStorage.getItem("system_token") : null,
+  systemToken:
+    typeof window !== "undefined" ? localStorage.getItem("system_token") : null,
   systemUser: _initSystemUser,
   favourites: new Set<string>(),
 });
@@ -55,13 +74,22 @@ export const playerActions = {
   setSystemSession: (token: string, user: any) => {
     localStorage.setItem("system_token", token);
     localStorage.setItem("system_user", JSON.stringify(user));
-    playerStore.setState((s) => ({ ...s, systemToken: token, systemUser: user }));
+    playerStore.setState((s) => ({
+      ...s,
+      systemToken: token,
+      systemUser: user,
+    }));
   },
 
   clearSystemSession: () => {
     localStorage.removeItem("system_token");
     localStorage.removeItem("system_user");
-    playerStore.setState((s) => ({ ...s, systemToken: null, systemUser: null, favourites: new Set() }));
+    playerStore.setState((s) => ({
+      ...s,
+      systemToken: null,
+      systemUser: null,
+      favourites: new Set(),
+    }));
   },
 
   play: (song: PlayerSong) => {
@@ -89,7 +117,8 @@ export const playerActions = {
   },
 
   next: () => {
-    const { queue, lastQueueIndex, isShuffle, repeatMode, currentSong } = playerStore.state;
+    const { queue, lastQueueIndex, isShuffle, repeatMode, currentSong } =
+      playerStore.state;
     if (queue.length === 0) return;
 
     if (repeatMode === "one" && currentSong) {
@@ -171,15 +200,20 @@ export const playerActions = {
   recordListen: async (songId: string, part: number) => {
     const { systemUser } = playerStore.state;
     if (systemUser?.id && songId) {
-      console.log(`[PlayerStore] 🎵 Initiating recordListen: song=${songId}, part=${part}%, user=${systemUser.id}`);
+      console.log(
+        `[PlayerStore] 🎵 Initiating recordListen: song=${songId}, part=${part}%, user=${systemUser.id}`,
+      );
       try {
-        await musicApi.interactions.recordListen(systemUser.id, songId, part);
+        await musicApi.interactions.recordListen(songId, part);
         console.log(`[PlayerStore] ✅ recordListen success for ${songId}`);
       } catch (err) {
         console.error("[PlayerStore] ❌ Failed to record listen:", err);
       }
     } else {
-      console.warn("[PlayerStore] ⚠️ Cannot record listen: systemUser.id or songId missing", { userId: systemUser?.id, songId });
+      console.warn(
+        "[PlayerStore] ⚠️ Cannot record listen: systemUser.id or songId missing",
+        { userId: systemUser?.id, songId },
+      );
     }
   },
 
@@ -187,11 +221,16 @@ export const playerActions = {
     const { systemUser } = playerStore.state;
     if (!systemUser?.id) return;
     try {
-      const res = await musicApi.users.getFavourites(systemUser.id, 1, 100);
+      const res = await musicApi.users.getFavourites(1, 100);
       const ids = res.data.data.map((s: any) => s.id);
       playerStore.setState((s) => ({ ...s, favourites: new Set(ids) }));
-    } catch (err) {
+    } catch (err: any) {
       console.error("[PlayerStore] Failed to fetch favourites:", err);
+      // Auto-heal session if backend rejects signature
+      if (err?.response?.status === 400 || err?.response?.status === 401) {
+        console.warn("[PlayerStore] Invalid signature detected. Purging session.");
+        playerActions.clearSystemSession();
+      }
     }
   },
 
@@ -202,22 +241,26 @@ export const playerActions = {
     const isFav = favourites.has(songId);
     try {
       if (isFav) {
-        await musicApi.users.removeFavourite(systemUser.id, songId);
+        await musicApi.users.removeFavourite(songId);
         playerStore.setState((s) => {
           const next = new Set(s.favourites);
           next.delete(songId);
           return { ...s, favourites: next };
         });
       } else {
-        await musicApi.users.addFavourite(systemUser.id, songId);
+        await musicApi.users.addFavourite(songId);
         playerStore.setState((s) => {
           const next = new Set(s.favourites);
           next.add(songId);
           return { ...s, favourites: next };
         });
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("[PlayerStore] Toggle favourite failed:", err);
+      if (err?.response?.status === 400 || err?.response?.status === 401) {
+        console.warn("[PlayerStore] Invalid signature detected. Purging session.");
+        playerActions.clearSystemSession();
+      }
       throw err;
     }
   },

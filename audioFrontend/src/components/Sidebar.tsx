@@ -1,6 +1,15 @@
 "use client";
 
-import { Home, Compass, Library, Search, PlusSquare, Heart, Mic2, Disc } from "lucide-react";
+import {
+  Home,
+  Compass,
+  Library,
+  Search,
+  PlusSquare,
+  Heart,
+  Mic2,
+  Disc,
+} from "lucide-react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -27,52 +36,62 @@ export function Sidebar() {
           <div className="w-10 h-10 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-500/20 group-hover:scale-110 transition-transform">
             <Mic2 className="text-white" size={24} />
           </div>
-          <span className="text-xl font-black tracking-tight italic">AudioSync</span>
+          <span className="text-xl font-black tracking-tight italic">
+            AudioSync
+          </span>
         </div>
 
         <div className="space-y-8">
           <section>
-             <h3 className="px-3 text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-4">Menu</h3>
-             <nav className="space-y-1">
-                {menuItems.map((item) => (
-                  <Link 
-                    key={item.label} 
-                    href={item.href}
-                    className={`w-full flex items-center gap-4 px-4 py-3 rounded-2xl text-sm font-bold transition-all ${pathname === item.href ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/20' : 'text-zinc-500 hover:text-white hover:bg-white/5'}`}
-                  >
-                    <item.icon size={20} />
-                    {item.label}
-                  </Link>
-                ))}
-             </nav>
+            <h3 className="px-3 text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-4">
+              Menu
+            </h3>
+            <nav className="space-y-1">
+              {menuItems.map((item) => (
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  className={`w-full flex items-center gap-4 px-4 py-3 rounded-2xl text-sm font-bold transition-all ${pathname === item.href ? "bg-indigo-600 text-white shadow-lg shadow-indigo-600/20" : "text-zinc-500 hover:text-white hover:bg-white/5"}`}
+                >
+                  <item.icon size={20} />
+                  {item.label}
+                </Link>
+              ))}
+            </nav>
           </section>
 
           <section>
-             <h3 className="px-3 text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-4">Library</h3>
-             <nav className="space-y-1">
-                {libraryItems.map((item) => (
-                  <button 
-                    key={item.label} 
-                    className="w-full flex items-center gap-4 px-4 py-3 rounded-2xl text-sm font-bold text-zinc-500 hover:text-white hover:bg-white/5 transition-all"
-                  >
-                    <item.icon size={20} />
-                    {item.label}
-                  </button>
-                ))}
-             </nav>
+            <h3 className="px-3 text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-4">
+              Library
+            </h3>
+            <nav className="space-y-1">
+              {libraryItems.map((item) => (
+                <button
+                  key={item.label}
+                  className="w-full flex items-center gap-4 px-4 py-3 rounded-2xl text-sm font-bold text-zinc-500 hover:text-white hover:bg-white/5 transition-all"
+                >
+                  <item.icon size={20} />
+                  {item.label}
+                </button>
+              ))}
+            </nav>
           </section>
         </div>
       </div>
 
       <div className="mt-auto p-8">
-         <div className="bg-gradient-to-br from-indigo-600 to-purple-700 rounded-3xl p-6 text-white overflow-hidden relative group">
-            <div className="relative z-10">
-               <h4 className="font-bold mb-2">Sync Everywhere</h4>
-               <p className="text-[10px] text-indigo-100 mb-4 font-medium opacity-80">Upgrade to Pro for seamless multi-device playback.</p>
-               <button className="w-full py-2 bg-white text-indigo-600 rounded-xl text-xs font-black shadow-lg hover:scale-105 transition-transform">Get Pro</button>
-            </div>
-            <div className="absolute top-0 right-0 -mr-4 -mt-4 w-24 h-24 bg-white/10 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-1000" />
-         </div>
+        <div className="bg-gradient-to-br from-indigo-600 to-purple-700 rounded-3xl p-6 text-white overflow-hidden relative group">
+          <div className="relative z-10">
+            <h4 className="font-bold mb-2">Sync Everywhere</h4>
+            <p className="text-[10px] text-indigo-100 mb-4 font-medium opacity-80">
+              Upgrade to Pro for seamless multi-device playback.
+            </p>
+            <button className="w-full py-2 bg-white text-indigo-600 rounded-xl text-xs font-black shadow-lg hover:scale-105 transition-transform">
+              Get Pro
+            </button>
+          </div>
+          <div className="absolute top-0 right-0 -mr-4 -mt-4 w-24 h-24 bg-white/10 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-1000" />
+        </div>
       </div>
     </aside>
   );

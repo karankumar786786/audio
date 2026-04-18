@@ -49,16 +49,17 @@ export class NodeCryptoSignatureService implements SignatureService {
             .digest('hex');
 
         try {
-            const isValid = crypto.timingSafeEqual(
-                Buffer.from(providedSignature, 'hex'),
-                Buffer.from(expectedSignature, 'hex')
-            );
+            const buf1 = Buffer.from(providedSignature, 'hex');
+            const buf2 = Buffer.from(expectedSignature, 'hex');
+
+            const isValid = crypto.timingSafeEqual(buf1, buf2);
 
             if (!isValid) {
                 throw new ApiError(400, `Invalid ${ref} signature`);
             }
 
-        } catch {
+        } catch (err: any) {
+            if (err instanceof ApiError) throw err;
             throw new ApiError(400, `Invalid ${ref} received`);
         }
     }

@@ -13,26 +13,14 @@ import { toast } from "sonner";
  * Also restores systemUser from localStorage on page reload.
  */
 export function AuthSync() {
-  const { isAuthenticated, getAccessTokenSilently, user, isLoading } = useAuth0();
+  const { isAuthenticated, getAccessTokenSilently, user, isLoading } =
+    useAuth0();
   const systemToken = useStore(playerStore, (s) => s.systemToken);
   const systemUser = useStore(playerStore, (s) => s.systemUser);
   const syncRef = useRef(false);
 
-  // Restore systemUser from localStorage on mount (survives page reload)
-  useEffect(() => {
-    if (systemToken && !systemUser) {
-      try {
-        const saved = localStorage.getItem("system_user");
-        if (saved) {
-          const parsed = JSON.parse(saved);
-          playerStore.setState((s) => ({ ...s, systemUser: parsed }));
-          playerActions.fetchFavourites();
-        }
-      } catch (e) {
-        console.error("[AuthSync] Failed to restore systemUser from localStorage:", e);
-      }
-    }
-  }, [systemToken, systemUser]);
+  // The store (player.store.ts) already handles initial restoration from localStorage
+  // with correct signed ID validation. We don't need a redundant useEffect here.
 
   useEffect(() => {
     const sync = async () => {
@@ -44,28 +32,28 @@ export function AuthSync() {
             authorizationParams: {
               audience: `https://${process.env.NEXT_PUBLIC_AUTH0_DOMAIN}/userinfo`,
               scope: "openid profile email",
-            }
+            },
           });
-          
+
           // 2. Exchange for System JWT
           const response = await musicApi.users.register(token);
-          
+
           if (response.success) {
             console.log("[AuthSync] System synchronization successful.");
-            
+
             // Extract token from response body (backend now always includes it)
             const systemJwt = response.data.token;
-            
+
             // Extract payload — the token field is mixed in with the payload fields
             const { token: _t, ...payload } = response.data;
-            
+
             // Persist systemUser to localStorage for page reload survival
             localStorage.setItem("system_user", JSON.stringify(payload));
-            
+
             playerActions.setSystemSession(systemJwt, payload);
             playerActions.fetchFavourites();
-            toast.success("Frequency Synchronized", { 
-              description: "Secure bridge established with audio-sync core." 
+            toast.success("Frequency Synchronized", {
+              description: "Secure bridge established with audio-sync core.",
             });
           } else {
             console.error("[AuthSync] Registration failed:", response.message);
@@ -73,8 +61,9 @@ export function AuthSync() {
           }
         } catch (err: any) {
           console.error("[AuthSync] Critical handshake failure:", err);
-          toast.error("System Desync", { 
-            description: err.message || "Failed to establish secure frequency bridge." 
+          toast.error("System Desync", {
+            description:
+              err.message || "Failed to establish secure frequency bridge.",
           });
         } finally {
           syncRef.current = false;
