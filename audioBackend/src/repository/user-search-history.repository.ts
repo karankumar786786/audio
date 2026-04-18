@@ -17,6 +17,11 @@ export class UserSearchHistoryRepository extends BaseRepository<UserSearchHistor
     }
 
     async create(data: CreateSearchHistoryData): Promise<UserSearchHistorySchema> {
+        // We deduplicate by deleting existing entry for same user/text and inserting new
+        await this.db`
+            DELETE FROM user_search_history 
+            WHERE user_id = ${data.userId} AND searched_text = ${data.searchedText}
+        `;
         const id = this.signatureService.generateSignedId();
         const [entry] = await this.db`
             INSERT INTO user_search_history (id, user_id, searched_text)

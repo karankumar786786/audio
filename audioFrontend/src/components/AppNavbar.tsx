@@ -78,6 +78,19 @@ export function AppNavbar() {
 
   const handlePlaySong = (song: any) => {
     playerActions.play(mapToPlayerSong(song));
+    if (systemUser?.id) saveHistory.mutate(song.title);
+    setIsFocused(false);
+  };
+
+  const handleArtistClick = (artist: any) => {
+    router.push(`/artists/${artist.id}`);
+    if (systemUser?.id) saveHistory.mutate(artist.name);
+    setIsFocused(false);
+  };
+
+  const handlePlaylistClick = (playlist: any) => {
+    router.push(`/playlists/${playlist.id}`);
+    if (systemUser?.id) saveHistory.mutate(playlist.name);
     setIsFocused(false);
   };
 
@@ -228,10 +241,7 @@ export function AppNavbar() {
                         {searchResults.data.artists.map((artist: any) => (
                           <button
                             key={artist.id}
-                            onClick={() => {
-                              router.push(`/artists/${artist.id}`);
-                              setIsFocused(false);
-                            }}
+                            onClick={() => handleArtistClick(artist)}
                             className="w-full flex items-center gap-3 p-2 hover:bg-white/5 rounded-xl transition-all text-left group"
                           >
                             <div className="w-10 h-10 rounded-full bg-zinc-900 overflow-hidden flex-shrink-0 border border-white/5 flex items-center justify-center">
@@ -271,10 +281,7 @@ export function AppNavbar() {
                         {searchResults.data.playlists.map((playlist: any) => (
                           <button
                             key={playlist.id}
-                            onClick={() => {
-                              router.push(`/playlists/${playlist.id}`);
-                              setIsFocused(false);
-                            }}
+                            onClick={() => handlePlaylistClick(playlist)}
                             className="w-full flex items-center gap-3 p-2 hover:bg-white/5 rounded-xl transition-all text-left group"
                           >
                             <div className="w-10 h-10 rounded-lg bg-zinc-900 overflow-hidden flex-shrink-0 border border-white/5 flex items-center justify-center">
