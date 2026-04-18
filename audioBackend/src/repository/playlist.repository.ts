@@ -134,4 +134,15 @@ export class PlaylistRepository extends BaseRepository<PlaylistSchema, CreatePla
         `;
         return rows.map((row) => songSchema.parse(row));
     }
+
+    override async delete(id: string): Promise<PlaylistSchema> {
+        this.signatureService.verifyId(id, "playlistId");
+        this.logger.info({ playlistId: id }, `[PlaylistRepository] Deleting playlist and its associations`);
+        
+        // 1. Clear song associations first
+        await this.db`DELETE FROM playlist_songs WHERE playlist_id = ${id}`;
+        
+        // 2. Delete the playlist record
+        return await super.delete(id);
+    }
 }

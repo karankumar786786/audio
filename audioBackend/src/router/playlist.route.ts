@@ -7,3 +7,5 @@ export const playlistRouter = Router();
 playlistRouter.get("/", playlistController.getPlaylists);
 playlistRouter.get("/:id", playlistController.getPlaylistById);
 playlistRouter.get("/:id/songs", playlistController.getSongsOfPlaylist);
+playlistRouter.delete("/:id", playlistController.deletePlaylist);
+

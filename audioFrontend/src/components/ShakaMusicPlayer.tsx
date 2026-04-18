@@ -147,6 +147,7 @@ export function ShakaMusicPlayer() {
           await player.load(currentSong.streamUrl);
           if (!isMounted) return;
           setIsLoading(false);
+          syncTracks(); // Sync tracks immediately after load
           if (isPlaying) audio.play().catch(console.error);
         }
       } catch (e) {
@@ -310,6 +311,23 @@ export function ShakaMusicPlayer() {
     audioRef.current.volume = isMuted ? 0 : volume;
   }, [volume, isMuted]);
 
+  // Handle Quality switching
+  useEffect(() => {
+    if (!playerRef.current) return;
+    const player = playerRef.current;
+
+    if (selectedQuality === "auto") {
+      player.configure({ abr: { enabled: true } });
+    } else {
+      player.configure({ abr: { enabled: false } });
+      const tracks = player.getVariantTracks();
+      const track = tracks.find((t: any) => t.bandwidth === selectedQuality);
+      if (track) {
+        player.selectVariantTrack(track, true); // true = clear existing buffer to switch immediately
+      }
+    }
+  }, [selectedQuality, currentSong?.id]);
+
   // Seek on progress click
   const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!progressRef.current || !audioRef.current || !duration) return;
@@ -327,16 +345,31 @@ export function ShakaMusicPlayer() {
   };
 
   // Toggle favourite
+  // Sync Favourites on mount
+  useEffect(() => {
+    if (systemUser?.id) {
+      playerActions.fetchFavourites();
+    }
+  }, [systemUser?.id]);
+
+  const [isTogglingFav, setIsTogglingFav] = useState(false);
+
   const handleToggleFavourite = async () => {
     if (!systemUser?.id || !currentSong) {
       toast.error("Sign in required");
       return;
     }
+    if (isTogglingFav) return;
+
+    setIsTogglingFav(true);
     try {
+      const wasFav = isFavourite;
       await playerActions.toggleFavourite(currentSong.id);
-      toast.success(isFavourite ? "Removed from favourites" : "Added to favourites");
+      toast.success(wasFav ? "Removed from favourites" : "Added to favourites");
     } catch {
       toast.error("Failed to update favourites");
+    } finally {
+      setIsTogglingFav(false);
     }
   };
 
@@ -609,14 +642,19 @@ export function ShakaMusicPlayer() {
             <div
               ref={volumeRef}
               onClick={handleVolumeClick}
-              className="flex-1 h-[3px] bg-white/[0.08] rounded-full relative cursor-pointer group"
+              className="flex-1 h-[3px] bg-white/[0.04] rounded-full relative cursor-pointer group"
             >
+              {/* Fill background */}
               <div
-                className="absolute top-0 left-0 h-full bg-white/40 rounded-full"
-                style={{ width: `${volumePct}%` }}
+                className="absolute top-0 left-0 h-full rounded-full"
+                style={{ 
+                  width: `${volumePct}%`,
+                  background: "linear-gradient(90deg, #6366f1, #818cf8)"
+                }}
               />
+              {/* Subtle track handle */}
               <div
-                className="absolute top-1/2 -translate-y-1/2 w-0 h-0 group-hover:w-[10px] group-hover:h-[10px] bg-white rounded-full transition-all shadow-sm"
+                className="absolute top-1/2 -translate-y-1/2 w-[10px] h-[10px] bg-white rounded-full opacity-0 group-hover:opacity-100 transition-all shadow-[0_0_10px_rgba(255,255,255,0.5)]"
                 style={{ left: `calc(${volumePct}% - 5px)` }}
               />
             </div>

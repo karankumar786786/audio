@@ -32,4 +32,10 @@ export class PlaylistController {
         const result:PaginatedResult<SongSchema> = await this.playlistService.getPlaylistSongs(id, params);
         return new ApiResponse<PaginatedResult<SongSchema>>(200, "Songs of playlist fetched", result).send(res);
     });
+
+    deletePlaylist = asyncHandler(async (req: Request, res: Response) => {
+        const id: string = req.params.id as string;
+        await this.playlistService.deletePlaylist(id);
+        return new ApiResponse(200, "Playlist deleted successfully").send(res);
+    });
 }

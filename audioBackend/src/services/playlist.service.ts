@@ -40,4 +40,9 @@ export class PlaylistService {
         
         return buildPaginatedResult<SongSchema>(data, total, params);
     }
+
+    async deletePlaylist(id: string): Promise<PlaylistSchema> {
+        this.signatureService.verifyId(id, "playlistId");
+        return await this.playlistRepository.delete(id);
+    }
 }
