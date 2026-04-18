@@ -282,7 +282,7 @@ export default function LibraryPage() {
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-10">
                 {userPlaylists?.data?.data.map((playlist: Playlist) => (
-                  <Link key={playlist.id} href={`/playlists/${playlist.id}`}>
+                  <Link key={playlist.id} href={`/playlists/${playlist.id}?type=user`}>
                     <motion.div
                       whileHover={{ y: -4 }}
                       className="bg-zinc-900/40 hover:bg-zinc-900/60 border border-white/5 p-8 rounded-[3rem] group relative cursor-pointer h-full"

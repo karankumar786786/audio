@@ -3,7 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { musicApi } from "@/lib/api";
 import { SongCard } from "@/components/SongCard";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { ListMusic, Play, Heart, Trash2, Clock, Music } from "lucide-react";
 import { playerActions, playerStore } from "@/store/player.store";
@@ -13,32 +13,51 @@ import { toast } from "sonner";
 
 export default function PlaylistPage() {
   const { id } = useParams();
+  const searchParams = useSearchParams();
   const router = useRouter();
   const queryClient = useQueryClient();
   const systemUser = useStore(playerStore, (s) => s.systemUser);
 
-  // 1. Fetch Playlist Info
-  const isUserPlaylistId = (id as string).includes(".");
+  const playlistType = searchParams.get("type");
 
+  // 1. Fetch Playlist Info
   const { data: playlistResponse, isLoading: isPlaylistLoading } = useQuery({
-    queryKey: ["playlist", id],
+    queryKey: ["playlist", id, playlistType],
     queryFn: async () => {
-      if (isUserPlaylistId) {
+      if (playlistType === "user") {
         return await musicApi.users.getPlaylistById(id as string);
-      } else {
+      } else if (playlistType === "system") {
         return await musicApi.playlists.getById(id as string);
+      } else {
+        // Fallback: try system first, then user
+        try {
+          return await musicApi.playlists.getById(id as string);
+        } catch (err) {
+          return await musicApi.users.getPlaylistById(id as string);
+        }
       }
     },
   });
 
   // 2. Fetch Playlist Songs
   const { data: songsResponse, isLoading: isSongsLoading } = useQuery({
-    queryKey: ["playlist-songs", id],
+    queryKey: ["playlist-songs", id, playlistType],
     queryFn: async () => {
-      if (isUserPlaylistId) {
+      if (playlistType === "user") {
         return await musicApi.users.getPlaylistSongs(id as string);
-      } else {
+      } else if (playlistType === "system") {
         return await musicApi.playlists.getSongs(id as string);
+      } else {
+        // Fallback logic
+        try {
+          const res = await musicApi.playlists.getSongs(id as string);
+          if (res.success && res.data.data.length > 0) return res;
+          // If success but empty, we still returned it. 
+          // But if we want to be sure, we could try the other one if this one is 404.
+          return res;
+        } catch (err) {
+          return await musicApi.users.getPlaylistSongs(id as string);
+        }
       }
     },
   });
@@ -78,7 +97,7 @@ export default function PlaylistPage() {
 
   const playlist = playlistResponse?.data;
   const songs = songsResponse?.data?.data || [];
-  const isUserPlaylist = isUserPlaylistId;
+  const isUserPlaylist = playlistType === "user" || (playlist && "userId" in playlist);
 
   const handleStreamAll = () => {
     if (songs.length === 0) return;

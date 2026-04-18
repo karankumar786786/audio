@@ -201,7 +201,7 @@ function PlaylistCard({
   isSystem?: boolean;
 }) {
   return (
-    <Link href={`/playlists/${playlist.id}`} className="group relative">
+    <Link href={`/playlists/${playlist.id}${isSystem ? "?type=system" : "?type=user"}`} className="group relative">
       <div className="aspect-square bg-zinc-900 rounded-[3rem] border border-white/5 overflow-hidden mb-6 group-hover:border-violet-500/50 transition-all duration-500 shadow-xl group-hover:shadow-violet-500/10">
         <div className="w-full h-full bg-gradient-to-br from-zinc-800 to-zinc-950 flex items-center justify-center group-hover:from-violet-900/40 group-hover:to-zinc-950 transition-colors duration-700">
           <ListMusic
