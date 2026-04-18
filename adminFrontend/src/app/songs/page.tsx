@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { getImageUrl } from "@/lib/image-utils";
 
 interface Song {
   id: string;
@@ -223,7 +224,7 @@ export default function SongsPage() {
                       <div className="w-12 h-12 rounded-xl bg-zinc-200 dark:bg-zinc-800 shadow-lg shadow-indigo-500/10 flex items-center justify-center text-white shrink-0 overflow-hidden">
                         {song.imageKey ? (
                           <img 
-                            src={`https://ik.imagekit.io/zaa6pbi9f${song.imageKey}`} 
+                            src={getImageUrl(song.imageKey, { width: 100, height: 100, focus: "auto", aspectRatio: "1-1" })} 
                             alt={song.title}
                             className="w-full h-full object-cover"
                           />

@@ -8,6 +8,10 @@ import {
   Sparkles,
   X,
   History,
+  Loader2,
+  Mic2,
+  ListMusic,
+  Play,
 } from "lucide-react";
 import { useAuth0 } from "@auth0/auth0-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -17,9 +21,9 @@ import { playerStore } from "@/store/player.store";
 import { useStore } from "@tanstack/react-store";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { Mic2, Play, Music, ListMusic, Loader2 } from "lucide-react";
 import { playerActions } from "@/store/player.store";
 import { mapToPlayerSong } from "@/lib/player-utils";
+import { getImageUrl } from "@/lib/image-utils";
 
 export function AppNavbar() {
   const { user, loginWithRedirect, logout, isAuthenticated } = useAuth0();
@@ -210,7 +214,12 @@ export function AppNavbar() {
                           >
                             <div className="w-10 h-10 rounded-lg bg-zinc-900 overflow-hidden flex-shrink-0 border border-white/5">
                               <img
-                                src={`https://ik.imagekit.io/zaa6pbi9f${song.imageKey}?tr=w-100,h-100`}
+                                src={getImageUrl(song.imageKey, { 
+                                  width: 100, 
+                                  height: 100, 
+                                  focus: "auto",
+                                  aspectRatio: "1-1"
+                                })}
                                 className="w-full h-full object-cover"
                                 alt=""
                               />
@@ -247,7 +256,12 @@ export function AppNavbar() {
                             <div className="w-10 h-10 rounded-full bg-zinc-900 overflow-hidden flex-shrink-0 border border-white/5 flex items-center justify-center">
                               {artist.coverImageKey ? (
                                 <img
-                                  src={`https://ik.imagekit.io/zaa6pbi9f${artist.coverImageKey}?tr=w-100,h-100`}
+                                  src={getImageUrl(artist.coverImageKey, {
+                                    width: 100,
+                                    height: 100,
+                                    focus: "face",
+                                    aspectRatio: "1-1"
+                                  })}
                                   className="w-full h-full object-cover"
                                   alt=""
                                 />
@@ -287,7 +301,12 @@ export function AppNavbar() {
                             <div className="w-10 h-10 rounded-lg bg-zinc-900 overflow-hidden flex-shrink-0 border border-white/5 flex items-center justify-center">
                               {playlist.coverImageKey ? (
                                 <img
-                                  src={`https://ik.imagekit.io/zaa6pbi9f${playlist.coverImageKey}?tr=w-100,h-100`}
+                                  src={getImageUrl(playlist.coverImageKey, {
+                                    width: 100,
+                                    height: 100,
+                                    focus: "auto",
+                                    aspectRatio: "1-1"
+                                  })}
                                   className="w-full h-full object-cover"
                                   alt=""
                                 />

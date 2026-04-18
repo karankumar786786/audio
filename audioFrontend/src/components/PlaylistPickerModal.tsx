@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ListMusic, X, Plus, ChevronRight, Check } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
+import { getImageUrl } from "@/lib/image-utils";
 
 interface PlaylistPickerModalProps {
   songId: string;
@@ -165,8 +166,21 @@ export function PlaylistPickerModal({
                     className="w-full flex items-center justify-between p-5 rounded-2xl border border-white/5 hover:bg-zinc-900 transition-all group"
                   >
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-zinc-900 rounded-xl flex items-center justify-center text-zinc-600 group-hover:text-white group-hover:bg-indigo-500/20 transition-all">
-                        <ListMusic size={20} />
+                      <div className="w-12 h-12 bg-zinc-900 rounded-xl overflow-hidden flex items-center justify-center text-zinc-600 group-hover:text-white group-hover:bg-indigo-500/20 shadow-lg transition-all">
+                        {playlist.coverImageKey ? (
+                           <img 
+                            src={getImageUrl(playlist.coverImageKey, { 
+                              width: 100, 
+                              height: 100, 
+                              focus: "auto", 
+                              aspectRatio: "1-1" 
+                            })} 
+                            className="w-full h-full object-cover"
+                            alt="" 
+                          />
+                        ) : (
+                          <ListMusic size={20} />
+                        )}
                       </div>
                       <span className="text-sm font-black text-white italic uppercase tracking-tighter">
                         {playlist.name}

@@ -202,7 +202,12 @@ function PlaylistCard({
   playlist: any;
   isSystem?: boolean;
 }) {
-  const coverUrl = getImageUrl(playlist.coverImageKey, { width: 400, height: 400 });
+  const coverUrl = getImageUrl(playlist.coverImageKey, { 
+    width: 400, 
+    height: 400, 
+    focus: "auto",
+    aspectRatio: "1-1"
+  });
 
   return (
     <Link href={`/playlists/${playlist.id}${isSystem ? "?type=system" : "?type=user"}`} className="group relative">

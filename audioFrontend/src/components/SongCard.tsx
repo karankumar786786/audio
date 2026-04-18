@@ -64,7 +64,12 @@ export function SongCard({ song, priority, onRemove }: SongCardProps) {
     >
       <div className="aspect-square bg-zinc-800 rounded-3xl mb-4 relative shadow-2xl overflow-hidden ring-1 ring-white/5">
         <img
-          src={getImageUrl(song.imageKey, { width: 400, height: 400 })}
+          src={getImageUrl(song.imageKey, { 
+            width: 400, 
+            height: 400, 
+            focus: "auto",
+            aspectRatio: "1-1" 
+          })}
           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
           alt={song.title}
           loading={priority ? "eager" : "lazy"}

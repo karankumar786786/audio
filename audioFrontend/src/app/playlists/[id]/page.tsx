@@ -111,8 +111,18 @@ export default function PlaylistPage() {
     });
   };
 
-  const bannerUrl = getImageUrl(playlist?.bannerImageKey, { width: 1200, height: 400 });
-  const coverUrl = getImageUrl(playlist?.coverImageKey, { width: 400, height: 400 });
+  const bannerUrl = getImageUrl(playlist?.bannerImageKey, { 
+    width: 1200, 
+    height: 400, 
+    focus: "auto",
+    aspectRatio: "3-1" 
+  });
+  const coverUrl = getImageUrl(playlist?.coverImageKey, { 
+    width: 400, 
+    height: 400, 
+    focus: "auto",
+    aspectRatio: "1-1" 
+  });
 
   return (
     <div className="px-10 pb-20">

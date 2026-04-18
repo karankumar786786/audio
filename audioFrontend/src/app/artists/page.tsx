@@ -79,7 +79,12 @@ export default function ArtistsPage() {
                   <div className="w-full h-full bg-gradient-to-br from-zinc-800 to-zinc-950 flex items-center justify-center group-hover:from-indigo-900 group-hover:to-zinc-950 transition-colors duration-700">
                     {artist.coverImageKey ? (
                       <img 
-                        src={getImageUrl(artist.coverImageKey, { width: 400, height: 400 })} 
+                        src={getImageUrl(artist.coverImageKey, { 
+                          width: 400, 
+                          height: 400, 
+                          focus: "face",
+                          aspectRatio: "1-1" 
+                        })} 
                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                         alt={artist.name}
                       />

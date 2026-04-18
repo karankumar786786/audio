@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
+import { getImageUrl } from "@/lib/image-utils";
 
 interface Playlist {
   id: string;
@@ -232,9 +233,13 @@ export default function PlaylistsPage() {
                     : "bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white hover:border-indigo-400 shadow-sm"
                 }`}
               >
-                <div className="w-16 h-16 rounded-2xl bg-zinc-100 dark:bg-zinc-800 shrink-0 overflow-hidden shadow-inner">
+                <div className="w-16 h-16 rounded-2xl bg-zinc-100 dark:bg-zinc-800 shrink-0 overflow-hidden shadow-inner flex items-center justify-center">
                   {pl.coverImageKey && (
-                    <img src={`https://ik.imagekit.io/zaa6pbi9f${pl.coverImageKey}`} alt={pl.name} className="w-full h-full object-cover" />
+                    <img 
+                      src={getImageUrl(pl.coverImageKey, { width: 200, height: 200, focus: "auto", aspectRatio: "1-1" })} 
+                      alt={pl.name} 
+                      className="w-full h-full object-cover" 
+                    />
                   )}
                 </div>
                 <div className="flex-1 min-w-0">

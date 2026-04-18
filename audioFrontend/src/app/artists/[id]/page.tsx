@@ -31,8 +31,18 @@ export default function ArtistPage() {
 
   const artist = artistResponse?.data;
   const songs = songsResponse?.data?.data || [];
-  const bannerUrl = getImageUrl(artist?.bannerImageKey, { width: 1200, height: 600 });
-  const coverUrl = getImageUrl(artist?.coverImageKey, { width: 400, height: 400 });
+  const bannerUrl = getImageUrl(artist?.bannerImageKey, { 
+    width: 1200, 
+    height: 600, 
+    focus: "auto",
+    aspectRatio: "2-1" 
+  });
+  const coverUrl = getImageUrl(artist?.coverImageKey, { 
+    width: 400, 
+    height: 400, 
+    focus: "face",
+    aspectRatio: "1-1" 
+  });
 
   return (
     <div className="px-10 pb-20">

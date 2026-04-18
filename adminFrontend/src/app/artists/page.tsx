@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { getImageUrl } from "@/lib/image-utils";
 import Link from "next/link";
 
 interface Artist {
@@ -164,7 +165,11 @@ export default function ArtistsPage() {
             >
               <div className="aspect-[4/5] bg-zinc-100 dark:bg-zinc-800 relative">
                 {artist.coverImageKey ? (
-                  <img src={`https://ik.imagekit.io/zaa6pbi9f${artist.coverImageKey}`} alt={artist.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                  <img 
+                    src={getImageUrl(artist.coverImageKey, { width: 400, height: 500, focus: "face", aspectRatio: "4-5" })} 
+                    alt={artist.name} 
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
+                  />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-zinc-500 italic">No Image</div>
                 )}
