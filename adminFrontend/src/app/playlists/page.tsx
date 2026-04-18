@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 
 interface Playlist {
   id: string;
@@ -29,28 +29,40 @@ export default function PlaylistsPage() {
     bannerImage: null as File | null,
   });
   const [creating, setCreating] = useState(false);
+  const hasFetchedRef = useRef(false);
+
+  console.log("PlaylistsPage rendering. Current playlists count:", playlists.length);
+  console.log("NEXT_PUBLIC_API_URL:", process.env.NEXT_PUBLIC_API_URL);
 
   const fetchPlaylists = async () => {
+    console.log("fetchPlaylists called");
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/playlists`);
+      const url = `${process.env.NEXT_PUBLIC_API_URL}/playlists`;
+      console.log("Fetching from:", url);
+      const res = await fetch(url);
       const data = await res.json();
+      console.log("fetchPlaylists result success:", data.success);
       if (data.success) {
         setPlaylists(data.data.data || []);
       }
     } catch (err) {
-      console.error(err);
+      console.error("fetchPlaylists error:", err);
     } finally {
       setLoading(false);
     }
   };
 
   const fetchPlaylistSongs = async (id: string) => {
+    console.log("fetchPlaylistSongs called for ID:", id);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/playlists/${id}/songs`);
+      const url = `${process.env.NEXT_PUBLIC_API_URL}/playlists/${id}/songs`;
+      console.log("Fetching songs from:", url);
+      const res = await fetch(url);
       const data = await res.json();
       if (data.success) {
         // Handle both paginated and non-paginated structures for resilience
         const songs = Array.isArray(data.data) ? data.data : (data.data?.data || []);
+        console.log("fetchPlaylistSongs result songs count:", songs.length);
         setPlaylistSongs(songs);
       }
     } catch (err) {
@@ -59,6 +71,7 @@ export default function PlaylistsPage() {
   };
 
   const fetchAllSongs = async () => {
+    console.log("fetchAllSongs called");
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/songs?limit=100`);
       const data = await res.json();
@@ -68,10 +81,11 @@ export default function PlaylistsPage() {
     }
   };
 
-  useEffect(() => {
-    fetchPlaylists();
-    fetchAllSongs();
-  }, []);
+  // useEffect(() => {
+  //   console.log("PlaylistsPage mounted (useEffect [])");
+  //   fetchPlaylists();
+  //   fetchAllSongs();
+  // }, []);
 
   const handleCreatePlaylist = async () => {
     if (!newPlaylist.name) return alert("Please enter a name");

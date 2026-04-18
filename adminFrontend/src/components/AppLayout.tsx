@@ -4,6 +4,7 @@ import { Sidebar } from "./Sidebar";
 import { GlobalSearch } from "./GlobalSearch";
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
+  console.log("AppLayout rendering");
   return (
     <div className="flex min-h-screen bg-zinc-50 dark:bg-zinc-950">
       <Sidebar />
