@@ -14,3 +14,10 @@ export const getPreSignedUrlForImage = asyncHandler(async (req:Request,res:Respo
     return new ApiResponse<{ token: string, expire: number, signature: string, tempKey: string }>(200, "URL generated successfully", data).send(res);
 })
 
+export const getYtInfo = asyncHandler(async (req: Request, res: Response) => {
+    const url = req.query.url as string;
+    if (!url) return new ApiResponse(400, "URL is required").send(res);
+    const info = await miscService.getYoutubeInfo(url);
+    return new ApiResponse(200, "YouTube info fetched", info).send(res);
+});
+

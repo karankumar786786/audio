@@ -75,7 +75,17 @@ const inngest = new Inngest({ id: "test-music" });
 // Services
 export const artistService = new ArtistService(artistRepository, songRepository, signatureService, algoliaSearchService, logger.child({ service: "ArtistService" }));
 export const playlistService = new PlaylistService(playlistRepository, signatureService, algoliaSearchService, logger.child({ service: "PlaylistService" }));
-export const songService = new SongService(songRepository, songProcessingJobRepository, signatureService, algoliaSearchService, recommendationService, logger.child({ service: "SongService" }), inngest);
+export const songService = new SongService(
+    songRepository, 
+    songProcessingJobRepository, 
+    signatureService, 
+    algoliaSearchService, 
+    recommendationService, 
+    storageService,
+    imagekitClient,
+    logger.child({ service: "SongService" }), 
+    inngest
+);
 export const miscService = new MiscService(logger.child({ service: "MiscService" }), storageService, imagekitClient, signatureService);
 export const searchService = new SearchService(algoliaSearchService, logger.child({ service: "UnifiedSearchService" }));
 

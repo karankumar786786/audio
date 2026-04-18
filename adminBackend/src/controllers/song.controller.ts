@@ -10,6 +10,12 @@ export const createSong = asyncHandler(async (req: Request, res: Response) => {
     return new ApiResponse<{ id: string, jobId: string, status: string }>(202, "Song processing initiated", result).send(res);
 });
 
+export const createSongFromYoutube = asyncHandler(async (req: Request, res: Response) => {
+    const { ytUrl, title, artistName } = req.body;
+    const result = await songService.createSongFromYoutube({ ytUrl, title, artistName });
+    return new ApiResponse(202, "YouTube song import initiated", result).send(res);
+});
+
 export const updateSong = asyncHandler(async (req: Request, res: Response) => {
     const id: string = req.params.id as string;
     const song: SongSchema = await songService.updateSong(id, req.body);

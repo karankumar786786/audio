@@ -8,8 +8,14 @@ import type { SongProcessingJobRepository, SongRepository } from "../repository"
 import type { CreateSongInput, SongSchema, UpdateSongInput } from "../schema/songs.schema";
 import type { PaginationParams, PaginatedResult } from "../types/pagination.type";
 import { buildPaginatedResult } from "../types/pagination.type";
+import type { StorageService } from "../lib/storage";
+import type ImageKit from "imagekit";
+import { spawn } from "child_process";
+import path from "path";
+import axios from "axios";
 
 export class SongService {
+    private readonly ytDlpPath: string;
 
     constructor(
         private readonly songRepository: SongRepository,
@@ -17,11 +23,29 @@ export class SongService {
         private readonly signatureService: SignatureService,
         private readonly searchService: SearchService,
         private readonly recommendationService: RecommendationService,
+        private readonly storageService: StorageService,
+        private readonly imageKitClient: ImageKit,
         private readonly logger: Logger,
         private readonly inngest: Inngest,
     ) {
         logMethods(this, this.logger);
+        this.ytDlpPath = path.resolve(process.cwd(), "bin/yt-dlp");
     }
+
+    private async getYoutubeMetadata(url: string): Promise<any> {
+        return new Promise((resolve, reject) => {
+            const child = spawn(this.ytDlpPath, [url, "--dump-single-json", "--no-check-certificates", "--no-warnings"]);
+            let stdout = "";
+            let stderr = "";
+            child.stdout.on("data", (data) => { stdout += data; });
+            child.stderr.on("data", (data) => { stderr += data; });
+            child.on("close", (code) => {
+                if (code !== 0) return reject(new Error(`yt-dlp metadata failed with code ${code}`));
+                try { resolve(JSON.parse(stdout)); } catch (e) { reject(new Error("Failed to parse metadata")); }
+            });
+        });
+    }
+
     async createSong(input: CreateSongInput): Promise<{ id: string, jobId: string, status: string }> {
         this.logger.debug({ input }, "createSong starting");
         const jobId: string = this.signatureService.generateSignedId();
@@ -54,6 +78,72 @@ export class SongService {
             status: "pending"
         };
     }
+
+    async createSongFromYoutube(data: { ytUrl: string, title: string, artistName: string }): Promise<{ id: string, jobId: string, status: string }> {
+        this.logger.info({ ytUrl: data.ytUrl }, "createSongFromYoutube starting");
+
+        try {
+            // 1. Get YouTube Metadata
+            this.logger.debug("Fetching yt-dlp metadata");
+            const metadata = await this.getYoutubeMetadata(data.ytUrl);
+            const thumbnailUrl = metadata.thumbnail;
+            this.logger.debug({ thumbnailUrl }, "YouTube metadata fetched");
+
+            // 2. Start yt-dlp stream process
+            this.logger.debug("Starting yt-dlp audio stream");
+            const ytDlpProcess = spawn(this.ytDlpPath, [
+                data.ytUrl,
+                "-f", "bestaudio",
+                "-o", "-",
+                "--no-check-certificates",
+                "--no-warnings"
+            ]);
+
+            // 3. Upload to S3 (TEMP_BUCKET_NAME) via stream
+            const tempSongKey = `songs/raw/${this.signatureService.generateSignedId()}.webm`;
+            this.logger.debug({ tempSongKey }, "piping yt-dlp stream to S3 temp bucket");
+            
+            // Note: S3 upload returns a promise but we pass the stdout stream
+            await this.storageService.uploadObject(
+                process.env.TEMP_BUCKET_NAME || "videotranscodetemp",
+                tempSongKey,
+                ytDlpProcess.stdout,
+                "audio/webm" // Defaulting to webm as yt-dlp bestaudio usually returns webm or m4a
+            );
+            this.logger.debug("Audio stream uploaded successfully");
+
+            // 4. Download and Upload Thumbnail to ImageKit
+            let imageKey = "";
+            if (thumbnailUrl) {
+                this.logger.debug({ thumbnailUrl }, "fetching YouTube thumbnail via axios");
+                const response = await axios.get(thumbnailUrl, { responseType: "arraybuffer" });
+                const buffer = Buffer.from(response.data, "binary");
+                
+                this.logger.debug("Uploading thumbnail to ImageKit");
+                const uploadRes = await this.imageKitClient.upload({
+                    file: buffer,
+                    fileName: `yt-thumb-${Date.now()}.jpg`,
+                    folder: "/songs/images"
+                });
+                imageKey = uploadRes.filePath;
+                this.logger.debug({ imageKey }, "Thumbnail uploaded successfully");
+            }
+
+            // 5. Delegate to existing createSong to trigger pipeline
+            this.logger.debug("Finalizing song creation and triggering Inngest");
+            return await this.createSong({
+                title: data.title,
+                artistName: data.artistName,
+                tempSongKey: tempSongKey,
+                imageKey: imageKey
+            });
+
+        } catch (error: any) {
+            this.logger.error({ error: error.message, stack: error.stack }, `Failed to process YouTube upload for URL: ${data.ytUrl}`);
+            throw error;
+        }
+    }
+
     async getSongs(params: PaginationParams): Promise<PaginatedResult<SongSchema>> {
         this.logger.debug({ params }, "getSongs starting");
         const offset: number = (params.page - 1) * params.limit;
