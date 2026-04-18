@@ -81,11 +81,13 @@ export default function PlaylistsPage() {
     }
   };
 
-  // useEffect(() => {
-  //   console.log("PlaylistsPage mounted (useEffect [])");
-  //   fetchPlaylists();
-  //   fetchAllSongs();
-  // }, []);
+  useEffect(() => {
+    if (hasFetchedRef.current) return;
+    hasFetchedRef.current = true;
+    console.log("PlaylistsPage mounted (useEffect) - triggering fetch");
+    fetchPlaylists();
+    fetchAllSongs();
+  }, []);
 
   const handleCreatePlaylist = async () => {
     if (!newPlaylist.name) return alert("Please enter a name");
