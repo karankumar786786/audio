@@ -14,15 +14,16 @@ import {
   VolumeX,
   Volume1,
   Music,
-  ChevronDown,
-  Activity,
   Repeat1,
   Layers,
-  Clock,
   Mic2,
+  Heart,
+  Plus,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getImageUrl } from "../lib/image-utils";
+import { PlaylistPickerModal } from "./PlaylistPickerModal";
+import { toast } from "sonner";
 
 interface WordEntry {
   text: string;
@@ -43,6 +44,7 @@ export function ShakaMusicPlayer() {
   const lyricsContainerRef = useRef<HTMLDivElement>(null);
   const animFrameRef = useRef<number>(0);
   const progressRef = useRef<HTMLDivElement>(null);
+  const volumeRef = useRef<HTMLDivElement>(null);
   const lastStateRef = useRef<{ id: string; time: number; duration: number }>({
     id: "",
     time: 0,
@@ -59,6 +61,8 @@ export function ShakaMusicPlayer() {
     repeatMode,
     qualityTracks,
     selectedQuality,
+    favourites,
+    systemUser,
   } = state;
 
   const [localTime, setLocalTime] = useState(0);
@@ -70,6 +74,9 @@ export function ShakaMusicPlayer() {
     useState<TranscriptionEntry | null>(null);
   const [showQualityMenu, setShowQualityMenu] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isPlaylistModalOpen, setIsPlaylistModalOpen] = useState(false);
+
+  const isFavourite = currentSong ? favourites.has(currentSong.id) : false;
 
   // Sync Shaka Quality Tracks to Store
   const syncTracks = useCallback(() => {
@@ -159,18 +166,13 @@ export function ShakaMusicPlayer() {
   // Handle song recording on change
   useEffect(() => {
     const last = lastStateRef.current;
-
     if (currentSong?.id !== last.id) {
       if (last.id && last.duration > 0) {
-        const part = Math.min(
-          100,
-          Math.floor((last.time / last.duration) * 100),
-        );
+        const part = Math.min(100, Math.floor((last.time / last.duration) * 100));
         if (part > 1 || last.time > 5) {
           playerActions.recordListen(last.id, part);
         }
       }
-
       lastStateRef.current = {
         id: currentSong?.id || "",
         time: 0,
@@ -183,7 +185,6 @@ export function ShakaMusicPlayer() {
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
-
     const handleEnded = () => {
       const last = lastStateRef.current;
       if (last.id) {
@@ -191,7 +192,6 @@ export function ShakaMusicPlayer() {
         lastStateRef.current = { id: "", time: 0, duration: 0 };
       }
     };
-
     audio.addEventListener("ended", handleEnded);
     return () => audio.removeEventListener("ended", handleEnded);
   }, [currentSong?.id]);
@@ -201,10 +201,7 @@ export function ShakaMusicPlayer() {
     return () => {
       const last = lastStateRef.current;
       if (last.id && last.duration > 0) {
-        const part = Math.min(
-          100,
-          Math.floor((last.time / last.duration) * 100),
-        );
+        const part = Math.min(100, Math.floor((last.time / last.duration) * 100));
         if (part > 1 || last.time > 5) {
           playerActions.recordListen(last.id, part);
         }
@@ -218,25 +215,21 @@ export function ShakaMusicPlayer() {
       setTranscriptions([]);
       return;
     }
-
     fetch(currentSong.captionUrl)
       .then(async (r) => {
         const text = await r.text();
         const lines = text.split("\n");
         const chunks: TranscriptionEntry[] = [];
         let currentChunk: TranscriptionEntry | null = null;
-
         const timeToSec = (t: string) => {
           const p = t.split(":");
           return p.length === 3
             ? parseInt(p[0]) * 3600 + parseInt(p[1]) * 60 + parseFloat(p[2])
             : parseInt(p[0]) * 60 + parseFloat(p[1]);
         };
-
         for (const line of lines) {
           const l = line.trim();
           if (!l || l.startsWith("WEBVTT")) continue;
-
           if (l.includes("-->")) {
             const [s, e] = l.split("-->").map((x) => x.trim());
             currentChunk = {
@@ -247,26 +240,18 @@ export function ShakaMusicPlayer() {
             };
             chunks.push(currentChunk);
           } else if (currentChunk) {
-            const wordMatches = Array.from(
-              l.matchAll(/<([\d:.]+)>\s*([^<]+)/g),
-            );
+            const wordMatches = Array.from(l.matchAll(/<([\d:.]+)>\s*([^<]+)/g));
             if (wordMatches.length > 0) {
               wordMatches.forEach((m, idx) => {
                 const wStart = timeToSec(m[1]);
                 const wText = m[2].trim();
                 let wEnd = currentChunk!.end_time_seconds;
-                if (idx < wordMatches.length - 1)
-                  wEnd = timeToSec(wordMatches[idx + 1][1]);
-                currentChunk!.words.push({
-                  text: wText,
-                  start: wStart,
-                  end: wEnd,
-                });
+                if (idx < wordMatches.length - 1) wEnd = timeToSec(wordMatches[idx + 1][1]);
+                currentChunk!.words.push({ text: wText, start: wStart, end: wEnd });
               });
               currentChunk.transcript += l.replace(/<[^>]+>/g, "").trim();
             } else {
-              currentChunk.transcript +=
-                (currentChunk.transcript ? " " : "") + l;
+              currentChunk.transcript += (currentChunk.transcript ? " " : "") + l;
             }
           }
         }
@@ -282,25 +267,17 @@ export function ShakaMusicPlayer() {
       animFrameRef.current = requestAnimationFrame(syncTime);
       return;
     }
-
     const t = audio.currentTime;
     setLocalTime(t);
     playerActions.setCurrentTime(t);
-
-    if (audio.buffered.length)
-      setBuffered(audio.buffered.end(audio.buffered.length - 1));
+    if (audio.buffered.length) setBuffered(audio.buffered.end(audio.buffered.length - 1));
     if (audio.duration && audio.duration !== duration) {
       playerActions.setDuration(audio.duration);
     }
-
-    // Update ref for recording later
     if (currentSong && lastStateRef.current.id === currentSong.id) {
       lastStateRef.current.time = t;
-      lastStateRef.current.duration =
-        audio.duration || duration || lastStateRef.current.duration;
+      lastStateRef.current.duration = audio.duration || duration || lastStateRef.current.duration;
     }
-
-    // Find active caption
     let active: TranscriptionEntry | null = null;
     for (let i = transcriptions.length - 1; i >= 0; i--) {
       const e = transcriptions[i];
@@ -309,11 +286,7 @@ export function ShakaMusicPlayer() {
         break;
       }
     }
-
-    if (active !== currentCaption) {
-      setCurrentCaption(active);
-    }
-
+    if (active !== currentCaption) setCurrentCaption(active);
     animFrameRef.current = requestAnimationFrame(syncTime);
   }, [transcriptions, currentCaption, duration]);
 
@@ -345,6 +318,28 @@ export function ShakaMusicPlayer() {
     audioRef.current.currentTime = pct * duration;
   };
 
+  // Volume click handler
+  const handleVolumeClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!volumeRef.current) return;
+    const rect = volumeRef.current.getBoundingClientRect();
+    const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    playerActions.setVolume(pct);
+  };
+
+  // Toggle favourite
+  const handleToggleFavourite = async () => {
+    if (!systemUser?.id || !currentSong) {
+      toast.error("Sign in required");
+      return;
+    }
+    try {
+      await playerActions.toggleFavourite(currentSong.id);
+      toast.success(isFavourite ? "Removed from favourites" : "Added to favourites");
+    } catch {
+      toast.error("Failed to update favourites");
+    }
+  };
+
   // Get the optimized poster URL via ImageKit
   const optimizedPosterUrl = currentSong?.imageKey
     ? getImageUrl(currentSong.imageKey, {
@@ -364,7 +359,7 @@ export function ShakaMusicPlayer() {
           <Music className="h-8 w-8 text-zinc-700" />
         </div>
         <p className="text-zinc-600 text-[10px] font-black uppercase tracking-[0.2em] italic leading-relaxed">
-          Select a frequency<br />to synchronize
+          Select a track<br />to start playing
         </p>
       </div>
     );
@@ -378,270 +373,316 @@ export function ShakaMusicPlayer() {
 
   const progressPct = duration > 0 ? (localTime / duration) * 100 : 0;
   const bufferedPct = duration > 0 ? (buffered / duration) * 100 : 0;
-
+  const volumePct = isMuted ? 0 : volume * 100;
   const VolumeIcon = isMuted || volume === 0 ? VolumeX : volume < 0.5 ? Volume1 : Volume2;
 
   return (
-    <div className="w-[380px] bg-zinc-950/95 backdrop-blur-2xl border-l border-white/[0.04] flex flex-col h-screen overflow-hidden flex-none relative z-50">
-      {/* ─── Ambient Glow Background ─── */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div
-          className="absolute -inset-20 blur-[100px] opacity-20 ambient-drift"
-          style={{
-            backgroundImage: `url(${optimizedPosterUrl})`,
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-          }}
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-zinc-950/40 via-zinc-950/80 to-zinc-950" />
-      </div>
-
-      <audio ref={audioRef} className="hidden" crossOrigin="anonymous" />
-
-      {/* ─── Album Art ─── */}
-      <div className="flex-none px-8 pt-10 pb-4 relative z-10">
-        <motion.div
-          key={currentSong.id}
-          initial={{ scale: 0.92, opacity: 0, y: 10 }}
-          animate={{ scale: 1, opacity: 1, y: 0 }}
-          transition={{ type: "spring", damping: 20, stiffness: 200 }}
-          className="aspect-square w-full rounded-[2rem] overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.6)] border border-white/[0.06] ring-1 ring-white/[0.03]"
-        >
-          <img
-            src={optimizedPosterUrl}
-            className="w-full h-full object-cover"
-            alt={currentSong.title}
+    <>
+      <div className="w-[380px] bg-zinc-950/95 backdrop-blur-2xl border-l border-white/[0.04] flex flex-col h-screen overflow-hidden flex-none relative z-50">
+        {/* ─── Ambient Glow ─── */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          <div
+            className="absolute -inset-20 blur-[100px] opacity-20 ambient-drift"
+            style={{
+              backgroundImage: `url(${optimizedPosterUrl})`,
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+            }}
           />
-        </motion.div>
-      </div>
+          <div className="absolute inset-0 bg-gradient-to-b from-zinc-950/40 via-zinc-950/80 to-zinc-950" />
+        </div>
 
-      {/* ─── Track Info ─── */}
-      <div className="flex-none px-8 py-3 relative z-10">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0 flex-1">
-            <h2 className="text-lg font-black text-white italic uppercase tracking-tight truncate leading-tight">
-              {currentSong.title}
-            </h2>
-            <p className="text-[10px] font-bold text-indigo-400/80 uppercase tracking-[0.15em] italic mt-1 truncate">
-              {currentSong.artistName}
-            </p>
+        <audio ref={audioRef} className="hidden" crossOrigin="anonymous" />
+
+        {/* ─── Album Art (compact) ─── */}
+        <div className="flex-none px-6 pt-6 pb-2 relative z-10">
+          <motion.div
+            key={currentSong.id}
+            initial={{ scale: 0.92, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: "spring", damping: 20, stiffness: 200 }}
+            className="aspect-square w-full rounded-[1.5rem] overflow-hidden shadow-[0_16px_50px_rgba(0,0,0,0.5)] border border-white/[0.06]"
+          >
+            <img
+              src={optimizedPosterUrl}
+              className="w-full h-full object-cover"
+              alt={currentSong.title}
+            />
+          </motion.div>
+        </div>
+
+        {/* ─── Track Info + Actions ─── */}
+        <div className="flex-none px-6 py-2 relative z-10">
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0 flex-1">
+              <h2 className="text-base font-black text-white italic uppercase tracking-tight truncate leading-tight">
+                {currentSong.title}
+              </h2>
+              <p className="text-[10px] font-bold text-indigo-400/70 uppercase tracking-[0.12em] italic mt-0.5 truncate">
+                {currentSong.artistName}
+              </p>
+            </div>
+            <div className="flex items-center gap-0.5 mt-0.5 flex-shrink-0">
+              <button
+                onClick={handleToggleFavourite}
+                className={`p-2 rounded-xl transition-all ${
+                  isFavourite
+                    ? "text-red-500"
+                    : "text-zinc-600 hover:text-red-400 hover:bg-white/5"
+                }`}
+                title={isFavourite ? "Remove from favourites" : "Add to favourites"}
+              >
+                <Heart size={15} fill={isFavourite ? "currentColor" : "none"} />
+              </button>
+              <button
+                onClick={() => {
+                  if (!systemUser?.id) {
+                    toast.error("Sign in required");
+                    return;
+                  }
+                  setIsPlaylistModalOpen(true);
+                }}
+                className="p-2 text-zinc-600 hover:text-indigo-400 hover:bg-white/5 rounded-xl transition-all"
+                title="Add to playlist"
+              >
+                <Plus size={15} />
+              </button>
+            </div>
           </div>
-          <div className="flex items-center gap-1 mt-1">
+        </div>
+
+        {/* ─── Word-Level Lyrics (more space) ─── */}
+        <div className="flex-1 overflow-hidden relative z-10 px-6 flex flex-col justify-center lyrics-mask min-h-0">
+          <div className="flex-1 flex flex-col items-center justify-center py-4">
+            <AnimatePresence mode="wait">
+              {currentCaption ? (
+                <motion.div
+                  key={currentCaption.start_time_seconds}
+                  initial={{ opacity: 0, y: 12, filter: "blur(4px)" }}
+                  animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                  exit={{ opacity: 0, y: -12, filter: "blur(4px)" }}
+                  transition={{ duration: 0.3, ease: "easeOut" }}
+                  className="text-center px-2 w-full"
+                >
+                  {currentCaption.words.length > 0 ? (
+                    <div className="flex flex-wrap justify-center gap-x-[5px] gap-y-1.5">
+                      {currentCaption.words.map((word, idx) => {
+                        const isActive = localTime >= word.start && localTime <= word.end;
+                        const isPast = localTime > word.end;
+                        return (
+                          <motion.span
+                            key={idx}
+                            animate={{
+                              color: isActive
+                                ? "#ffffff"
+                                : isPast
+                                  ? "rgba(255,255,255,0.4)"
+                                  : "rgba(255,255,255,0.12)",
+                              scale: isActive ? 1.06 : 1,
+                            }}
+                            transition={{ duration: 0.12 }}
+                            className={`text-lg font-black italic tracking-tight leading-relaxed ${
+                              isActive ? "text-glow" : ""
+                            }`}
+                          >
+                            {word.text}
+                          </motion.span>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <p className="text-lg font-black italic tracking-tight text-white/80 leading-relaxed text-glow">
+                      {currentCaption.transcript}
+                    </p>
+                  )}
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="idle"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="flex flex-col items-center gap-2"
+                >
+                  <Mic2 className="text-zinc-800" size={20} />
+                  <p className="text-[9px] font-bold text-zinc-800 uppercase tracking-[0.15em]">
+                    Lyrics
+                  </p>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </div>
+
+        {/* ─── Controls ─── */}
+        <div className="flex-none px-6 pb-6 pt-2 space-y-4 relative z-10">
+          {/* Progress */}
+          <div className="space-y-1.5">
+            <div
+              ref={progressRef}
+              onClick={handleSeek}
+              className="progress-track relative h-[3px] bg-white/[0.06] rounded-full overflow-visible group cursor-pointer"
+            >
+              <div
+                className="absolute top-0 left-0 h-full bg-white/[0.06] rounded-full"
+                style={{ width: `${bufferedPct}%` }}
+              />
+              <div
+                className="absolute top-0 left-0 h-full rounded-full"
+                style={{
+                  width: `${progressPct}%`,
+                  background: "linear-gradient(90deg, #6366f1, #818cf8)",
+                }}
+              />
+              <div
+                className="progress-thumb"
+                style={{ left: `calc(${progressPct}% - 6px)` }}
+              />
+            </div>
+            <div className="flex justify-between text-[9px] font-bold text-zinc-600 tabular-nums">
+              <span>{formatTime(localTime)}</span>
+              <span>{formatTime(duration)}</span>
+            </div>
+          </div>
+
+          {/* Playback Buttons */}
+          <div className="flex items-center justify-center gap-7">
             <button
               onClick={() => playerActions.toggleRepeat()}
-              className={`p-2 rounded-xl transition-all ${
+              className={`p-1.5 rounded-lg transition-all ${
                 repeatMode !== "none"
-                  ? "text-indigo-400 bg-indigo-500/10"
-                  : "text-zinc-600 hover:text-zinc-300 hover:bg-white/5"
+                  ? "text-indigo-400"
+                  : "text-zinc-700 hover:text-zinc-400"
               }`}
             >
               <Repeat1 size={16} />
             </button>
+
+            <button
+              onClick={() => playerActions.previous()}
+              className="text-zinc-500 hover:text-white transition-colors active:scale-90"
+            >
+              <SkipBack size={20} fill="currentColor" />
+            </button>
+
+            <motion.button
+              whileTap={{ scale: 0.88 }}
+              onClick={() => playerActions.setIsPlaying(!isPlaying)}
+              className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-black shadow-[0_4px_20px_rgba(255,255,255,0.12)] hover:shadow-[0_4px_30px_rgba(255,255,255,0.2)] transition-shadow"
+            >
+              {isLoading ? (
+                <div className="w-4 h-4 border-2 border-black/10 border-t-black rounded-full animate-spin" />
+              ) : isPlaying ? (
+                <Pause size={20} fill="black" />
+              ) : (
+                <Play size={20} fill="black" className="ml-0.5" />
+              )}
+            </motion.button>
+
+            <button
+              onClick={() => playerActions.next()}
+              className="text-zinc-500 hover:text-white transition-colors active:scale-90"
+            >
+              <SkipForward size={20} fill="currentColor" />
+            </button>
+
             <button
               onClick={() => setShowQualityMenu(!showQualityMenu)}
-              className="p-2 text-zinc-600 hover:text-zinc-300 hover:bg-white/5 rounded-xl transition-all"
+              className={`p-1.5 rounded-lg transition-all ${
+                showQualityMenu
+                  ? "text-indigo-400"
+                  : "text-zinc-700 hover:text-zinc-400"
+              }`}
             >
               <Layers size={16} />
             </button>
           </div>
-        </div>
-      </div>
 
-      {/* ─── Word-Level Lyrics ─── */}
-      <div className="flex-1 overflow-hidden relative z-10 px-8 flex flex-col justify-center lyrics-mask">
-        <div className="min-h-[140px] flex flex-col items-center justify-center">
-          <AnimatePresence mode="wait">
-            {currentCaption ? (
+          {/* Volume - Custom div-based slider */}
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => playerActions.setIsMuted(!isMuted)}
+              className="text-zinc-600 hover:text-zinc-300 transition-colors flex-none"
+            >
+              <VolumeIcon size={14} />
+            </button>
+            <div
+              ref={volumeRef}
+              onClick={handleVolumeClick}
+              className="flex-1 h-[3px] bg-white/[0.08] rounded-full relative cursor-pointer group"
+            >
+              <div
+                className="absolute top-0 left-0 h-full bg-white/40 rounded-full"
+                style={{ width: `${volumePct}%` }}
+              />
+              <div
+                className="absolute top-1/2 -translate-y-1/2 w-0 h-0 group-hover:w-[10px] group-hover:h-[10px] bg-white rounded-full transition-all shadow-sm"
+                style={{ left: `calc(${volumePct}% - 5px)` }}
+              />
+            </div>
+            <span className="text-[9px] font-bold text-zinc-700 tabular-nums w-7 text-right">
+              {Math.round(volumePct)}
+            </span>
+          </div>
+
+          {/* Quality Selector */}
+          <AnimatePresence>
+            {showQualityMenu && (
               <motion.div
-                key={currentCaption.start_time_seconds}
-                initial={{ opacity: 0, y: 12, filter: "blur(4px)" }}
-                animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                exit={{ opacity: 0, y: -12, filter: "blur(4px)" }}
-                transition={{ duration: 0.35, ease: "easeOut" }}
-                className="text-center px-2"
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="overflow-hidden"
               >
-                {currentCaption.words.length > 0 ? (
-                  <div className="flex flex-wrap justify-center gap-x-[6px] gap-y-1">
-                    {currentCaption.words.map((word, idx) => {
-                      const isActive =
-                        localTime >= word.start && localTime <= word.end;
-                      const isPast = localTime > word.end;
-                      return (
-                        <motion.span
-                          key={idx}
-                          animate={{
-                            color: isActive
-                              ? "#ffffff"
-                              : isPast
-                                ? "rgba(255,255,255,0.45)"
-                                : "rgba(255,255,255,0.15)",
-                            scale: isActive ? 1.08 : 1,
-                          }}
-                          transition={{ duration: 0.15 }}
-                          className={`text-xl font-black italic tracking-tight leading-relaxed ${
-                            isActive ? "text-glow" : ""
-                          }`}
-                        >
-                          {word.text}
-                        </motion.span>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <p className="text-xl font-black italic tracking-tight text-white/80 leading-relaxed text-glow">
-                    {currentCaption.transcript}
+                <div className="bg-white/[0.03] border border-white/[0.06] rounded-xl p-2 space-y-0.5">
+                  <p className="text-[9px] font-black text-zinc-600 uppercase tracking-widest px-2 py-1 border-b border-white/[0.04] mb-1">
+                    Quality
                   </p>
-                )}
-              </motion.div>
-            ) : (
-              <motion.div
-                key="idle"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="flex flex-col items-center gap-3"
-              >
-                <div className="w-10 h-10 rounded-xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-center">
-                  <Mic2 className="text-zinc-700" size={18} />
+                  <button
+                    onClick={() => {
+                      playerActions.setSelectedQuality("auto");
+                      setShowQualityMenu(false);
+                    }}
+                    className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold transition-all ${
+                      selectedQuality === "auto"
+                        ? "bg-indigo-500/15 text-indigo-400"
+                        : "text-zinc-500 hover:text-white hover:bg-white/5"
+                    }`}
+                  >
+                    Auto
+                  </button>
+                  {qualityTracks.map((t: any) => (
+                    <button
+                      key={t.bandwidth}
+                      onClick={() => {
+                        playerActions.setSelectedQuality(t.bandwidth);
+                        setShowQualityMenu(false);
+                      }}
+                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold transition-all ${
+                        selectedQuality === t.bandwidth
+                          ? "bg-indigo-500/15 text-indigo-400"
+                          : "text-zinc-500 hover:text-white hover:bg-white/5"
+                      }`}
+                    >
+                      {Math.round(t.bandwidth / 1000)} kbps
+                    </button>
+                  ))}
                 </div>
-                <p className="text-[9px] font-bold text-zinc-700 uppercase tracking-[0.2em] italic">
-                  Awaiting Lyrics
-                </p>
               </motion.div>
             )}
           </AnimatePresence>
         </div>
       </div>
 
-      {/* ─── Controls Panel ─── */}
-      <div className="flex-none px-8 pb-8 pt-4 space-y-5 relative z-10">
-        {/* Progress Bar */}
-        <div className="space-y-2">
-          <div
-            ref={progressRef}
-            onClick={handleSeek}
-            className="progress-track relative h-[3px] bg-white/[0.06] rounded-full overflow-visible group"
-          >
-            {/* Buffered */}
-            <div
-              className="absolute top-0 left-0 h-full bg-white/[0.08] rounded-full"
-              style={{ width: `${bufferedPct}%` }}
-            />
-            {/* Progress */}
-            <div
-              className="absolute top-0 left-0 h-full rounded-full transition-[width] duration-75"
-              style={{
-                width: `${progressPct}%`,
-                background: "linear-gradient(90deg, #6366f1, #818cf8)",
-              }}
-            />
-            {/* Thumb */}
-            <div
-              className="progress-thumb"
-              style={{ left: `calc(${progressPct}% - 6px)` }}
-            />
-          </div>
-          <div className="flex justify-between text-[10px] font-bold text-zinc-600 tabular-nums">
-            <span>{formatTime(localTime)}</span>
-            <span>{formatTime(duration)}</span>
-          </div>
-        </div>
-
-        {/* Core Buttons */}
-        <div className="flex items-center justify-center gap-8">
-          <button
-            onClick={() => playerActions.previous()}
-            className="text-zinc-500 hover:text-white transition-colors active:scale-90"
-          >
-            <SkipBack size={22} fill="currentColor" />
-          </button>
-
-          <motion.button
-            whileTap={{ scale: 0.88 }}
-            onClick={() => playerActions.setIsPlaying(!isPlaying)}
-            className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-black shadow-[0_4px_20px_rgba(255,255,255,0.15)] hover:shadow-[0_4px_30px_rgba(255,255,255,0.25)] transition-shadow"
-          >
-            {isLoading ? (
-              <div className="w-5 h-5 border-[3px] border-black/10 border-t-black rounded-full animate-spin" />
-            ) : isPlaying ? (
-              <Pause size={22} fill="black" />
-            ) : (
-              <Play size={22} fill="black" className="ml-0.5" />
-            )}
-          </motion.button>
-
-          <button
-            onClick={() => playerActions.next()}
-            className="text-zinc-500 hover:text-white transition-colors active:scale-90"
-          >
-            <SkipForward size={22} fill="currentColor" />
-          </button>
-        </div>
-
-        {/* Volume */}
-        <div className="flex items-center gap-3 px-1">
-          <button
-            onClick={() => playerActions.setIsMuted(!isMuted)}
-            className="text-zinc-600 hover:text-zinc-300 transition-colors flex-none"
-          >
-            <VolumeIcon size={15} />
-          </button>
-          <input
-            type="range"
-            min="0"
-            max="1"
-            step="0.01"
-            value={isMuted ? 0 : volume}
-            onChange={(e) => playerActions.setVolume(parseFloat(e.target.value))}
-            className="volume-slider flex-1"
-          />
-        </div>
-
-        {/* Quality Selector */}
-        <AnimatePresence>
-          {showQualityMenu && qualityTracks.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: 10, height: 0 }}
-              animate={{ opacity: 1, y: 0, height: "auto" }}
-              exit={{ opacity: 0, y: 10, height: 0 }}
-              className="bg-white/[0.03] border border-white/[0.06] rounded-2xl p-3 space-y-1 overflow-hidden"
-            >
-              <p className="text-[9px] font-black text-zinc-600 uppercase tracking-widest px-2 pb-1 mb-1 border-b border-white/5">
-                Stream Quality
-              </p>
-              <button
-                onClick={() => {
-                  playerActions.setSelectedQuality("auto");
-                  setShowQualityMenu(false);
-                }}
-                className={`w-full text-left px-3 py-2 rounded-xl text-xs font-bold transition-all ${
-                  selectedQuality === "auto"
-                    ? "bg-indigo-500/15 text-indigo-400"
-                    : "text-zinc-500 hover:text-white hover:bg-white/5"
-                }`}
-              >
-                Auto
-              </button>
-              {qualityTracks.map((t: any) => (
-                <button
-                  key={t.bandwidth}
-                  onClick={() => {
-                    playerActions.setSelectedQuality(t.bandwidth);
-                    setShowQualityMenu(false);
-                  }}
-                  className={`w-full text-left px-3 py-2 rounded-xl text-xs font-bold transition-all ${
-                    selectedQuality === t.bandwidth
-                      ? "bg-indigo-500/15 text-indigo-400"
-                      : "text-zinc-500 hover:text-white hover:bg-white/5"
-                  }`}
-                >
-                  {Math.round(t.bandwidth / 1000)} kbps
-                </button>
-              ))}
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-    </div>
+      {/* Playlist Picker Portal */}
+      {currentSong && (
+        <PlaylistPickerModal
+          isOpen={isPlaylistModalOpen}
+          onClose={() => setIsPlaylistModalOpen(false)}
+          songId={currentSong.id}
+          songTitle={currentSong.title}
+        />
+      )}
+    </>
   );
 }
