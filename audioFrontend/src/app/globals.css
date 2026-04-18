@@ -4,6 +4,7 @@
   --background: #000000;
   --foreground: #ffffff;
   --indigo-glow: 79, 70, 229;
+  --purple-glow: 147, 51, 234;
 }
 
 @theme inline {
@@ -18,7 +19,7 @@ body {
   overflow: hidden;
 }
 
-/* Immersive Utilities */
+/* ─── Scrollbar Utilities ─── */
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
@@ -27,17 +28,147 @@ body {
   scrollbar-width: none;
 }
 
+/* Thin elegant scrollbar for lyrics panels */
+.lyrics-scrollbar::-webkit-scrollbar {
+  width: 3px;
+}
+.lyrics-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.lyrics-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+}
+.lyrics-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* ─── Glassmorphism ─── */
 .glass-effect {
   background: rgba(255, 255, 255, 0.03);
   backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
+.glass-heavy {
+  background: rgba(9, 9, 11, 0.85);
+  backdrop-filter: blur(40px) saturate(1.5);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* ─── Glow Effects ─── */
 .indigo-glow {
   box-shadow: 0 0 40px rgba(var(--indigo-glow), 0.2);
 }
 
+.player-glow {
+  box-shadow:
+    0 -20px 60px -10px rgba(var(--indigo-glow), 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+/* ─── Lyrics Fade Mask ─── */
+.lyrics-mask {
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    black 15%,
+    black 85%,
+    transparent 100%
+  );
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    black 15%,
+    black 85%,
+    transparent 100%
+  );
+}
+
+/* ─── Progress Bar ─── */
+.progress-track {
+  position: relative;
+  cursor: pointer;
+  transition: height 0.2s ease;
+}
+.progress-track:hover {
+  height: 6px;
+}
+.progress-track::after {
+  content: "";
+  position: absolute;
+  top: -8px;
+  bottom: -8px;
+  left: 0;
+  right: 0;
+}
+
+/* Progress thumb on hover */
+.progress-thumb {
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: white;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  transition: all 0.2s ease;
+  box-shadow: 0 0 8px rgba(var(--indigo-glow), 0.6);
+}
+.progress-track:hover .progress-thumb {
+  width: 12px;
+  height: 12px;
+}
+
+/* ─── Text Glow for active lyrics ─── */
+.text-glow {
+  text-shadow:
+    0 0 20px rgba(255, 255, 255, 0.3),
+    0 0 40px rgba(var(--indigo-glow), 0.2);
+}
+
+/* ─── Selection ─── */
 ::selection {
   background: rgba(79, 70, 229, 0.3);
   color: white;
+}
+
+/* ─── Smooth ambient background animation ─── */
+@keyframes ambient-drift {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  25% { transform: translate(5px, -10px) scale(1.02); }
+  50% { transform: translate(-5px, 5px) scale(0.98); }
+  75% { transform: translate(10px, 5px) scale(1.01); }
+}
+
+.ambient-drift {
+  animation: ambient-drift 20s ease-in-out infinite;
+}
+
+/* ─── Volume slider ─── */
+input[type="range"].volume-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  outline: none;
+}
+input[type="range"].volume-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 10px;
+  height: 10px;
+  background: white;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 0 6px rgba(var(--indigo-glow), 0.5);
+}
+input[type="range"].volume-slider::-moz-range-thumb {
+  width: 10px;
+  height: 10px;
+  background: white;
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
 }

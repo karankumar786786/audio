@@ -3,8 +3,9 @@
 import { useStore } from "@tanstack/react-store";
 import { playerStore, playerActions } from "../store/player.store";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, ChevronDown } from "lucide-react";
+import { X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { getImageUrl } from "../lib/image-utils";
 
 interface LyricLine {
   time: number;
@@ -60,6 +61,14 @@ export function LyricsOverlay() {
 
   if (!currentSong) return null;
 
+  const artworkUrl = getImageUrl(currentSong.imageKey, {
+    width: 600,
+    height: 600,
+    focus: "auto",
+    aspectRatio: "1-1",
+    quality: 90,
+  });
+
   return (
     <AnimatePresence>
       {isLyricsOpen && (
@@ -72,8 +81,15 @@ export function LyricsOverlay() {
         >
           {/* Immersive Background */}
           <div className="absolute inset-0 pointer-events-none overflow-hidden -z-10">
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-indigo-900/30 blur-[150px] animate-pulse" />
-            <div className="absolute top-1/4 right-0 w-[400px] h-[400px] bg-purple-900/20 blur-[100px]" />
+            <div
+              className="absolute inset-0 blur-[120px] opacity-25 ambient-drift"
+              style={{
+                backgroundImage: `url(${artworkUrl})`,
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+              }}
+            />
+            <div className="absolute inset-0 bg-black/60" />
           </div>
 
           {/* Left Side: Art & Title */}
@@ -82,27 +98,27 @@ export function LyricsOverlay() {
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: 0.2 }}
-              className="w-full max-w-[400px] aspect-square rounded-3xl shadow-[0_40px_100px_rgba(0,0,0,0.5)] border border-white/5 overflow-hidden mb-8"
+              className="w-full max-w-[400px] aspect-square rounded-[2rem] shadow-[0_40px_100px_rgba(0,0,0,0.5)] border border-white/[0.06] overflow-hidden mb-8 ring-1 ring-white/[0.03]"
             >
               <img
-                src={`https://ik.imagekit.io/zaa6pbi9f${currentSong.imageKey}`}
+                src={artworkUrl}
                 className="w-full h-full object-cover"
                 alt="Artwork"
               />
             </motion.div>
             <motion.h2
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
-              className="text-4xl font-black mb-2"
+              className="text-4xl font-black mb-2 italic uppercase tracking-tighter"
             >
               {currentSong.title}
             </motion.h2>
             <motion.p
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
-              className="text-xl text-zinc-500 font-medium"
+              className="text-lg text-indigo-400/70 font-bold uppercase tracking-[0.1em] italic"
             >
               {currentSong.artistName}
             </motion.p>
@@ -110,29 +126,32 @@ export function LyricsOverlay() {
 
           {/* Right Side: Scrollable Lyrics */}
           <div className="lg:w-1/2 w-full flex flex-col items-center relative py-20 pr-10">
-            <div className="absolute top-10 right-10 flex gap-4">
+            <div className="absolute top-10 right-10 flex gap-4 z-20">
               <button
                 onClick={() => playerActions.toggleLyrics()}
-                className="w-12 h-12 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-white transition-all backdrop-blur-md"
+                className="w-12 h-12 rounded-2xl bg-white/[0.05] hover:bg-white/10 flex items-center justify-center text-white transition-all backdrop-blur-md border border-white/[0.06]"
               >
-                <X size={24} />
+                <X size={22} />
               </button>
             </div>
 
             <div
               ref={scrollRef}
-              className="w-full flex flex-col gap-8 overflow-y-auto px-12 py-32 scrollbar-none mask-fade-edges"
+              className="w-full flex flex-col gap-8 overflow-y-auto px-12 py-32 lyrics-scrollbar lyrics-mask"
             >
               {MOCK_LYRICS.map((line, i) => (
                 <motion.div
                   key={i}
                   id={`lyric-${i}`}
                   animate={{
-                    opacity: activeIndex === i ? 1 : 0.3,
-                    scale: activeIndex === i ? 1.05 : 1,
-                    x: activeIndex === i ? 10 : 0,
+                    opacity: activeIndex === i ? 1 : 0.2,
+                    scale: activeIndex === i ? 1.04 : 1,
+                    x: activeIndex === i ? 8 : 0,
                   }}
-                  className={`text-3xl md:text-5xl font-black leading-tight transition-all cursor-pointer hover:opacity-100 ${activeIndex === i ? "text-white" : "text-zinc-600"}`}
+                  transition={{ duration: 0.4, ease: "easeOut" }}
+                  className={`text-3xl md:text-5xl font-black leading-tight cursor-pointer hover:opacity-60 transition-opacity ${
+                    activeIndex === i ? "text-white text-glow" : "text-zinc-700"
+                  }`}
                 >
                   {line.text}
                 </motion.div>
