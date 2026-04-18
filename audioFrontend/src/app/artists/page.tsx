@@ -2,6 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { musicApi } from "@/lib/api";
+import { getImageUrl } from "@/lib/image-utils";
 import Link from "next/link";
 import { Mic2, Users2, Sparkles } from "lucide-react";
 
@@ -76,10 +77,18 @@ export default function ArtistsPage() {
               >
                 <div className="aspect-square bg-zinc-900 rounded-[3rem] border border-white/5 overflow-hidden mb-4 group-hover:border-indigo-500/50 transition-all duration-500 group-hover:scale-[1.02] shadow-xl group-hover:shadow-indigo-500/10">
                   <div className="w-full h-full bg-gradient-to-br from-zinc-800 to-zinc-950 flex items-center justify-center group-hover:from-indigo-900 group-hover:to-zinc-950 transition-colors duration-700">
-                    <Mic2
-                      className="text-zinc-800 group-hover:text-indigo-400/30 transition-colors"
-                      size={80}
-                    />
+                    {artist.coverImageKey ? (
+                      <img 
+                        src={getImageUrl(artist.coverImageKey, { width: 400, height: 400 })} 
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                        alt={artist.name}
+                      />
+                    ) : (
+                      <Mic2
+                        className="text-zinc-800 group-hover:text-indigo-400/30 transition-colors"
+                        size={80}
+                      />
+                    )}
                   </div>
 
                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[2px]">

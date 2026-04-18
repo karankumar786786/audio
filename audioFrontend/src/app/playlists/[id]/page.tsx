@@ -11,6 +11,8 @@ import { mapListToPlayerSongs, mapToPlayerSong } from "@/lib/player-utils";
 import { useStore } from "@tanstack/react-store";
 import { toast } from "sonner";
 
+import { getImageUrl } from "@/lib/image-utils";
+
 export default function PlaylistPage() {
   const { id } = useParams();
   const searchParams = useSearchParams();
@@ -109,17 +111,31 @@ export default function PlaylistPage() {
     });
   };
 
+  const bannerUrl = getImageUrl(playlist?.bannerImageKey, { width: 1200, height: 400 });
+  const coverUrl = getImageUrl(playlist?.coverImageKey, { width: 400, height: 400 });
+
   return (
     <div className="px-10 pb-20">
       {/* Playlist Hero */}
       <header className="relative h-[300px] rounded-[3rem] overflow-hidden mb-12 shadow-2xl flex items-end">
         <div className="absolute inset-0 bg-gradient-to-br from-purple-900 via-zinc-950 to-black">
+          {playlist?.bannerImageKey && (
+            <img 
+              src={bannerUrl} 
+              className="w-full h-full object-cover opacity-60" 
+              alt=""
+            />
+          )}
           <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent z-10" />
         </div>
 
         <div className="relative z-20 p-12 flex items-center gap-10">
           <div className="w-48 h-48 bg-zinc-900 rounded-[2.5rem] shadow-2xl border border-white/5 overflow-hidden flex items-center justify-center">
-            <ListMusic className="text-zinc-700" size={64} />
+            {playlist?.coverImageKey ? (
+              <img src={coverUrl} className="w-full h-full object-cover" alt="" />
+            ) : (
+              <ListMusic className="text-zinc-700" size={64} />
+            )}
           </div>
 
           <div className="space-y-4">

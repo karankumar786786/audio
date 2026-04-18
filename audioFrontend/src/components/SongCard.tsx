@@ -8,6 +8,8 @@ import { toast } from "sonner";
 import { useState } from "react";
 import { PlaylistPickerModal } from "./PlaylistPickerModal";
 
+import { getImageUrl } from "../lib/image-utils";
+
 interface SongCardProps {
   song: Song;
   priority?: boolean;
@@ -62,7 +64,7 @@ export function SongCard({ song, priority, onRemove }: SongCardProps) {
     >
       <div className="aspect-square bg-zinc-800 rounded-3xl mb-4 relative shadow-2xl overflow-hidden ring-1 ring-white/5">
         <img
-          src={`https://ik.imagekit.io/zaa6pbi9f${song.imageKey}?tr=w-400,h-400,f-auto`}
+          src={getImageUrl(song.imageKey, { width: 400, height: 400 })}
           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
           alt={song.title}
           loading={priority ? "eager" : "lazy"}
