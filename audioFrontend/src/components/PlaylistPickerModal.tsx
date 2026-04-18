@@ -5,9 +5,10 @@ import { musicApi, type Playlist } from "@/lib/api";
 import { playerStore } from "@/store/player.store";
 import { useStore } from "@tanstack/react-store";
 import { motion, AnimatePresence } from "framer-motion";
-import { ListMusic, X, Plus, ChevronRight, Check } from "lucide-react";
+import { ListMusic, X, Plus, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { getImageUrl } from "@/lib/image-utils";
 
 interface PlaylistPickerModalProps {
@@ -27,6 +28,19 @@ export function PlaylistPickerModal({
   const queryClient = useQueryClient();
   const [isCreating, setIsCreating] = useState(false);
   const [newName, setNewName] = useState("");
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Reset state when modal closes
+  useEffect(() => {
+    if (!isOpen) {
+      setIsCreating(false);
+      setNewName("");
+    }
+  }, [isOpen]);
 
   const { data: playlists, isLoading } = useQuery({
     queryKey: ["user-playlists", systemUser?.id],
@@ -41,162 +55,203 @@ export function PlaylistPickerModal({
       const playlist = playlists?.data?.data.find(
         (p: Playlist) => p.id === playlistId,
       );
-      toast.success("Frequency Synced", {
-        description: `Added "${songTitle}" to ${playlist?.name || "playlist"}.`,
+      toast.success("Added to playlist", {
+        description: `"${songTitle}" added to ${playlist?.name || "playlist"}.`,
       });
       onClose();
     },
     onError: () =>
-      toast.error("Sync Conflict", {
-        description: "Song already exists in this buffer or connection failed.",
+      toast.error("Failed", {
+        description: "Song may already exist in this playlist.",
       }),
   });
 
   const createAndAdd = useMutation({
     mutationFn: async () => {
       const res = await musicApi.users.createPlaylist(newName);
-      await musicApi.users.addSongToPlaylist(
-        res.data.id,
-        songId,
-      );
+      await musicApi.users.addSongToPlaylist(res.data.id, songId);
       return res.data;
     },
     onSuccess: (playlist) => {
-      toast.success("Buffer Initialized", {
-        description: `Created ${playlist.name} and synced "${songTitle}".`,
+      toast.success("Playlist created", {
+        description: `Created "${playlist.name}" and added "${songTitle}".`,
       });
       queryClient.invalidateQueries({ queryKey: ["user-playlists"] });
       onClose();
     },
+    onError: () =>
+      toast.error("Failed to create playlist."),
   });
 
-  if (!isOpen) return null;
+  if (!isOpen || !mounted) return null;
 
-  return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 backdrop-blur-3xl bg-black/40">
-      <motion.div
-        initial={{ scale: 0.9, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 0.9, opacity: 0 }}
-        className="w-full max-w-md bg-zinc-950 border border-white/10 rounded-[3.5rem] shadow-[0_0_100px_rgba(0,0,0,0.8)] overflow-hidden"
-      >
-        <div className="p-8 border-b border-white/5 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-indigo-500/10 text-indigo-500 rounded-2xl">
-              <ListMusic size={20} />
-            </div>
-            <div>
-              <h2 className="text-xl font-black text-white italic uppercase tracking-tighter leading-tight">
-                Sync to Buffer
-              </h2>
-              <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest italic truncate max-w-[200px]">
-                {songTitle}
-              </p>
-            </div>
-          </div>
-          <button
-            onClick={onClose}
-            className="p-2 text-zinc-600 hover:text-white transition-colors"
+  const modalContent = (
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-[200] flex items-center justify-center p-6"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) onClose();
+          }}
+        >
+          {/* Backdrop */}
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-md" />
+
+          {/* Modal */}
+          <motion.div
+            initial={{ scale: 0.92, opacity: 0, y: 20 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0.92, opacity: 0, y: 20 }}
+            transition={{ type: "spring", damping: 25, stiffness: 300 }}
+            className="relative w-full max-w-sm bg-zinc-950 border border-white/[0.08] rounded-[2rem] shadow-[0_25px_80px_rgba(0,0,0,0.8)] overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
           >
-            <X size={20} />
-          </button>
-        </div>
-
-        <div className="max-h-[360px] overflow-y-auto no-scrollbar p-6 space-y-3">
-          {isCreating ? (
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="space-y-4"
-            >
-              <input
-                autoFocus
-                placeholder="New Buffer Name..."
-                value={newName}
-                onChange={(e) => setNewName(e.target.value)}
-                className="w-full bg-zinc-900 border border-white/10 p-5 rounded-2xl text-white font-bold italic tracking-tight outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
-              />
-              <div className="flex gap-4">
-                <button
-                  onClick={() => setIsCreating(false)}
-                  className="flex-1 py-4 bg-zinc-900 text-zinc-500 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-zinc-800 transition-all"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={() => createAndAdd.mutate()}
-                  className="flex-1 py-4 bg-indigo-500 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-400 transition-all shadow-lg shadow-indigo-500/20"
-                >
-                  Initialize
-                </button>
+            {/* Header */}
+            <div className="p-6 pb-4 border-b border-white/[0.04] flex items-center justify-between">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="p-2.5 bg-indigo-500/10 text-indigo-400 rounded-xl flex-shrink-0">
+                  <ListMusic size={18} />
+                </div>
+                <div className="min-w-0">
+                  <h2 className="text-base font-black text-white italic uppercase tracking-tight leading-tight">
+                    Add to Playlist
+                  </h2>
+                  <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-wider truncate mt-0.5">
+                    {songTitle}
+                  </p>
+                </div>
               </div>
-            </motion.div>
-          ) : (
-            <>
               <button
-                onClick={() => setIsCreating(true)}
-                className="w-full flex items-center gap-4 p-5 rounded-2xl bg-white/5 hover:bg-white/10 transition-all group"
+                onClick={onClose}
+                className="p-2 text-zinc-600 hover:text-white hover:bg-white/5 rounded-xl transition-all flex-shrink-0"
               >
-                <div className="w-12 h-12 bg-indigo-500 rounded-xl flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform">
-                  <Plus size={20} />
-                </div>
-                <span className="text-sm font-black text-white italic uppercase tracking-tighter">
-                  Create New Buffer
-                </span>
+                <X size={18} />
               </button>
+            </div>
 
-              <div className="h-4" />
-
-              {isLoading ? (
-                [1, 2, 3].map((i) => (
-                  <div
-                    key={i}
-                    className="h-20 bg-zinc-900/40 rounded-2xl animate-pulse"
+            {/* Body */}
+            <div className="max-h-[320px] overflow-y-auto lyrics-scrollbar p-4 space-y-2">
+              {isCreating ? (
+                <motion.div
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="space-y-3 p-2"
+                >
+                  <input
+                    autoFocus
+                    placeholder="Playlist name..."
+                    value={newName}
+                    onChange={(e) => setNewName(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && newName.trim()) createAndAdd.mutate();
+                      if (e.key === "Escape") setIsCreating(false);
+                    }}
+                    className="w-full bg-zinc-900 border border-white/[0.06] p-4 rounded-xl text-white text-sm font-bold outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/30 transition-all placeholder-zinc-600"
                   />
-                ))
-              ) : playlists?.data?.data.length === 0 ? (
-                <div className="py-10 text-center text-zinc-600 font-bold italic text-xs">
-                  No existing buffers found.
-                </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setIsCreating(false)}
+                      className="flex-1 py-3 bg-zinc-900 text-zinc-500 rounded-xl font-bold text-[11px] uppercase tracking-wider hover:bg-zinc-800 transition-all"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={() => newName.trim() && createAndAdd.mutate()}
+                      disabled={!newName.trim() || createAndAdd.isPending}
+                      className="flex-1 py-3 bg-indigo-500 text-white rounded-xl font-bold text-[11px] uppercase tracking-wider hover:bg-indigo-400 transition-all shadow-lg shadow-indigo-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {createAndAdd.isPending ? "Creating..." : "Create & Add"}
+                    </button>
+                  </div>
+                </motion.div>
               ) : (
-                playlists?.data?.data.map((playlist: Playlist) => (
+                <>
+                  {/* Create New Button */}
                   <button
-                    key={playlist.id}
-                    onClick={() => addToPlaylist.mutate(playlist.id)}
-                    className="w-full flex items-center justify-between p-5 rounded-2xl border border-white/5 hover:bg-zinc-900 transition-all group"
+                    onClick={() => setIsCreating(true)}
+                    className="w-full flex items-center gap-3 p-3.5 rounded-xl bg-white/[0.03] hover:bg-white/[0.06] border border-white/[0.04] hover:border-indigo-500/20 transition-all group"
                   >
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-zinc-900 rounded-xl overflow-hidden flex items-center justify-center text-zinc-600 group-hover:text-white group-hover:bg-indigo-500/20 shadow-lg transition-all">
-                        {playlist.coverImageKey ? (
-                           <img 
-                            src={getImageUrl(playlist.coverImageKey, { 
-                              width: 100, 
-                              height: 100, 
-                              focus: "auto", 
-                              aspectRatio: "1-1" 
-                            })} 
-                            className="w-full h-full object-cover"
-                            alt="" 
-                          />
-                        ) : (
-                          <ListMusic size={20} />
-                        )}
-                      </div>
-                      <span className="text-sm font-black text-white italic uppercase tracking-tighter">
-                        {playlist.name}
-                      </span>
+                    <div className="w-10 h-10 bg-indigo-500 rounded-lg flex items-center justify-center text-white shadow group-hover:scale-105 transition-transform flex-shrink-0">
+                      <Plus size={18} />
                     </div>
-                    <ChevronRight
-                      size={16}
-                      className="text-zinc-700 group-hover:text-white transition-colors"
-                    />
+                    <span className="text-sm font-bold text-white">
+                      Create New Playlist
+                    </span>
                   </button>
-                ))
+
+                  {/* Divider */}
+                  {(playlists?.data?.data?.length ?? 0) > 0 && (
+                    <div className="flex items-center gap-3 py-2 px-1">
+                      <div className="h-px flex-1 bg-white/[0.04]" />
+                      <span className="text-[9px] font-bold text-zinc-700 uppercase tracking-widest">
+                        Your Playlists
+                      </span>
+                      <div className="h-px flex-1 bg-white/[0.04]" />
+                    </div>
+                  )}
+
+                  {/* Playlists List */}
+                  {isLoading ? (
+                    <div className="space-y-2">
+                      {[1, 2, 3].map((i) => (
+                        <div
+                          key={i}
+                          className="h-14 bg-zinc-900/30 rounded-xl animate-pulse"
+                        />
+                      ))}
+                    </div>
+                  ) : (playlists?.data?.data?.length ?? 0) === 0 ? (
+                    <div className="py-8 text-center text-zinc-700 font-bold italic text-xs">
+                      No playlists found
+                    </div>
+                  ) : (
+                    playlists?.data?.data.map((playlist: Playlist) => (
+                      <button
+                        key={playlist.id}
+                        onClick={() => addToPlaylist.mutate(playlist.id)}
+                        disabled={addToPlaylist.isPending}
+                        className="w-full flex items-center justify-between p-3.5 rounded-xl hover:bg-white/[0.03] border border-transparent hover:border-white/[0.04] transition-all group disabled:opacity-50"
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="w-10 h-10 bg-zinc-900 rounded-lg overflow-hidden flex items-center justify-center text-zinc-700 group-hover:text-indigo-400 transition-colors flex-shrink-0">
+                            {playlist.coverImageKey ? (
+                              <img
+                                src={getImageUrl(playlist.coverImageKey, {
+                                  width: 80,
+                                  height: 80,
+                                  focus: "auto",
+                                  aspectRatio: "1-1",
+                                })}
+                                className="w-full h-full object-cover"
+                                alt=""
+                              />
+                            ) : (
+                              <ListMusic size={16} />
+                            )}
+                          </div>
+                          <span className="text-sm font-bold text-zinc-300 group-hover:text-white truncate transition-colors">
+                            {playlist.name}
+                          </span>
+                        </div>
+                        <ChevronRight
+                          size={14}
+                          className="text-zinc-800 group-hover:text-zinc-400 transition-colors flex-shrink-0"
+                        />
+                      </button>
+                    ))
+                  )}
+                </>
               )}
-            </>
-          )}
-        </div>
-      </motion.div>
-    </div>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
+
+  // Use portal to render at document.body level, breaking out of any transform context
+  return createPortal(modalContent, document.body);
 }
