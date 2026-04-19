@@ -54,10 +54,11 @@ export class InteractionService {
         const songMap = new Map(songs.map(s => [s.id, s]));
         const result = songIds.map(id => songMap.get(id)).filter((song): song is SongSchema => !!song);
 
-        // If after filtering we have too few results, complement with Trending
-        if (result.length < limit / 2) {
-            const trending = await this.interactionRepository.getTrendingSongs(limit, 0);
-            for (const t of trending) {
+        // If after filtering we have too few results, complement with Trending (shuffled for variety)
+        if (result.length < limit) {
+            const trending = await this.interactionRepository.getTrendingSongs(limit * 2, 0);
+            const shuffledTrending = trending.sort(() => Math.random() - 0.5);
+            for (const t of shuffledTrending) {
                 if (result.length >= limit) break;
                 if (!result.find(r => r.id === t.id)) result.push(t);
             }

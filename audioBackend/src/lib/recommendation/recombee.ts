@@ -53,6 +53,15 @@ export class RecommbeeRecommendationService implements RecommendationService<Rec
     return (await this.client.send(req as any)) as T;
   }
 
+  /**
+   * Recombee IDs should be the base UUID, not the signed ID.
+   * This ensures consistency even if we rotate our signing keys.
+   */
+  private stripId(signedId: string): string {
+    if (!signedId) return "";
+    return signedId.split(".")[0] || "" ;
+  }
+
   // ---------------------------------------------------------------------------
   // Schema / catalogue setup
   // ---------------------------------------------------------------------------
@@ -90,17 +99,15 @@ export class RecommbeeRecommendationService implements RecommendationService<Rec
    */
   async create(schema: RecommendationSchema): Promise<void> {
     const { id, ...properties } = schema;
-    const req = new requests.SetItemValues(id, properties, {
+    const baseId = this.stripId(id);
+    const req = new requests.SetItemValues(baseId, properties, {
       cascadeCreate: true,
     });
     await this.send(req);
   }
 
-  /**
-   * Deletes an item and all associated interaction data from the catalogue.
-   */
   async delete(id: string): Promise<void> {
-    const req = new requests.DeleteItem(id);
+    const req = new requests.DeleteItem(this.stripId(id));
     await this.send(req);
   }
 
@@ -112,7 +119,7 @@ export class RecommbeeRecommendationService implements RecommendationService<Rec
    * Ensures a user exists in Recombee (no-op if already present).
    */
   async addUser(userId: string): Promise<void> {
-    const req = new requests.AddUser(userId);
+    const req = new requests.AddUser(this.stripId(userId));
     // cascadeCreate is the default for AddUser – no extra option needed.
     await this.send(req);
   }
@@ -130,7 +137,7 @@ export class RecommbeeRecommendationService implements RecommendationService<Rec
    *                 Maps to Recombee's `portion` field on DetailView.
    */
   async addListen(userId: string, id: string, portion: number): Promise<void> {
-    const req = new requests.SetViewPortion(userId, id, Math.min(1, Math.max(0, portion)), {
+    const req = new requests.SetViewPortion(this.stripId(userId), this.stripId(id), Math.min(1, Math.max(0, portion)), {
       cascadeCreate: true,
     });
     await this.send(req);
@@ -143,17 +150,14 @@ export class RecommbeeRecommendationService implements RecommendationService<Rec
    * @param id      Item (track) identifier.
    */
   async addLike(userId: string, id: string): Promise<void> {
-    const req = new requests.AddBookmark(userId, id, {
+    const req = new requests.AddBookmark(this.stripId(userId), this.stripId(id), {
       cascadeCreate: true,
     });
     await this.send(req);
   }
 
-  /**
-   * Records a "favorite" interaction (alias for Bookmark).
-   */
   async addFavorite(userId: string, id: string): Promise<void> {
-    const req = new requests.AddBookmark(userId, id, {
+    const req = new requests.AddBookmark(this.stripId(userId), this.stripId(id), {
       cascadeCreate: true,
     });
     await this.send(req);
@@ -163,7 +167,7 @@ export class RecommbeeRecommendationService implements RecommendationService<Rec
    * Removes a "favorite" interaction.
    */
   async removeFavorite(userId: string, id: string): Promise<void> {
-    const req = new requests.DeleteBookmark(userId, id);
+    const req = new requests.DeleteBookmark(this.stripId(userId), this.stripId(id));
     await this.send(req);
   }
 
@@ -171,17 +175,14 @@ export class RecommbeeRecommendationService implements RecommendationService<Rec
    * Records an "add to playlist" interaction (mapped to CartAddition).
    */
   async addToPlaylist(userId: string, id: string): Promise<void> {
-    const req = new requests.AddCartAddition(userId, id, {
+    const req = new requests.AddCartAddition(this.stripId(userId), this.stripId(id), {
       cascadeCreate: true,
     });
     await this.send(req);
   }
 
-  /**
-   * Removes an "add to playlist" interaction.
-   */
   async removeFromPlaylist(userId: string, id: string): Promise<void> {
-    const req = new requests.DeleteCartAddition(userId, id);
+    const req = new requests.DeleteCartAddition(this.stripId(userId), this.stripId(id));
     await this.send(req);
   }
 
@@ -201,9 +202,12 @@ export class RecommbeeRecommendationService implements RecommendationService<Rec
     userId: string,
     limit: number
   ): Promise<Partial<RecommendationSchema>[]> {
-    const req = new requests.RecommendItemsToUser(userId, limit, {
+    const req = new requests.RecommendItemsToUser(this.stripId(userId), limit, {
       cascadeCreate: true,
       returnProperties: true,
+      rotationRate: 0.8,     // Strongly penalize recently recommended items
+      rotationTime: 86400,   // Window for "recently recommended" (24 hours)
+      diversity: 0.8,        // Encourage varied artists/styles
       includedProperties: [
         "title",
         "artistName",

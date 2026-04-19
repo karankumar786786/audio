@@ -28,7 +28,7 @@ export default function Home() {
         <div className="absolute top-1/4 right-1/4 w-[300px] h-[300px] bg-purple-600/10 rounded-full blur-[100px] -z-10"></div>
 
         <div className="max-w-4xl w-full text-center space-y-8 animate-in fade-in slide-in-from-bottom-5 duration-1000">
-          <h1 className="text-6xl md:text-8xl font-black tracking-tighter leading-tight bg-gradient-to-b from-white to-white/40 bg-clip-text text-transparent italic">
+          <h1 className="text-6xl md:text-8xl font-black tracking-tighter leading-tight bg-linear-to-b from-white to-white/40 bg-clip-text text-transparent italic">
             YOUR MUSIC.
             <br />
             EVERYWHERE.
