@@ -1,16 +1,38 @@
 "use client";
 
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
-import { musicApi, type Song } from "../../lib/api";
+import { musicApi, type Song, type Artist, type Playlist } from "../../lib/api";
 import { SongCard } from "../../components/SongCard";
-import { useEffect, useRef } from "react";
+import { HeroSection } from "../../components/HeroSection";
+import { ArtistCard } from "../../components/ArtistCard";
+import { PlaylistCard } from "../../components/PlaylistCard";
+import { useEffect, useState, useRef } from "react";
 import { motion } from "framer-motion";
-import { Sparkles, TrendingUp, Clock, Compass, Zap } from "lucide-react";
+import { Sparkles, TrendingUp, Clock, Users2, ListMusic, Zap } from "lucide-react";
 import { useStore } from "@tanstack/react-store";
 import { playerStore } from "../../store/player.store";
 
 export default function HomePage() {
   const systemUser = useStore(playerStore, (s) => s.systemUser);
+  const [heroIndex, setHeroIndex] = useState(0);
+
+  // Trending Songs (Featured)
+  const { data: trending, isLoading: isTrendingLoading } = useQuery({
+    queryKey: ["trending-songs"],
+    queryFn: () => musicApi.interactions.getTrending(),
+  });
+
+  // Top Artists
+  const { data: artists, isLoading: isArtistsLoading } = useQuery({
+    queryKey: ["home-artists"],
+    queryFn: () => musicApi.artists.list(1, 15),
+  });
+
+  // Featured Playlists
+  const { data: playlists, isLoading: isPlaylistsLoading } = useQuery({
+    queryKey: ["home-playlists"],
+    queryFn: () => musicApi.playlists.list(1, 15),
+  });
 
   // Discover Feed (Infinite Scroll)
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, status } =
@@ -25,26 +47,23 @@ export default function HomePage() {
           : undefined,
     });
 
-  // Trending Songs
-  const { data: trending, isLoading: isTrendingLoading } = useQuery({
-    queryKey: ["trending-songs"],
-    queryFn: () => musicApi.interactions.getTrending(),
-  });
-
   const systemToken = useStore(playerStore, (s) => s.systemToken);
 
   // Recommendations
-  const { data: recommendations, isLoading: isRecLoading } = useQuery({
+  const { data: recommendations } = useQuery({
     queryKey: ["recommendations", systemUser?.id],
     queryFn: () => musicApi.interactions.getRecommendations(),
     enabled: !!systemUser?.id && !!systemToken,
   });
 
-  const trendingRef = useRef<HTMLDivElement>(null);
-
-  const scrollToTrending = () => {
-    trendingRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
+  // Auto-switch hero if trending data exists
+  useEffect(() => {
+    if (!trending?.data?.data || trending.data.data.length <= 1) return;
+    const interval = setInterval(() => {
+      setHeroIndex((prev) => (prev + 1) % Math.min(trending.data.data.length, 5));
+    }, 8000);
+    return () => clearInterval(interval);
+  }, [trending?.data?.data]);
 
   // Infinite scroll observer
   useEffect(() => {
@@ -63,49 +82,81 @@ export default function HomePage() {
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   return (
-    <div className="px-10 pb-20">
+    <div className="px-10 pb-20 space-y-20">
+      
+      {/* 1. Hero Section (Featured/Trending) */}
+      <HeroSection 
+        songs={trending?.data?.data?.slice(0, 5) || []}
+        index={heroIndex}
+        setIndex={setHeroIndex}
+        isLoading={isTrendingLoading}
+      />
 
-      {/* Trending Section */}
-      <section ref={trendingRef} className="mb-16">
-        <div className="flex items-center gap-4 mb-8 px-1">
+      {/* 2. Top Artists Section */}
+      <section>
+        <div className="flex items-center justify-between mb-8 px-1">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-indigo-500/10 rounded-xl border border-indigo-500/20">
-              <TrendingUp className="text-indigo-400" size={18} />
+              <Users2 className="text-indigo-400" size={18} />
             </div>
             <h2 className="text-2xl font-black italic tracking-tight uppercase text-white">
-              Trending
+              Top Artists
             </h2>
           </div>
-          <div className="h-px flex-1 bg-gradient-to-r from-white/[0.06] to-transparent" />
+          <div className="h-px flex-1 mx-8 bg-gradient-to-r from-white/[0.06] to-transparent" />
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
-          {isTrendingLoading ? (
-            [1, 2, 3, 4, 5].map((i) => (
-              <div
-                key={i}
-                className="aspect-square bg-zinc-900/30 rounded-[2rem] animate-pulse border border-white/[0.03]"
-              />
+        <div className="flex flex-row overflow-x-auto gap-12 pb-6 no-scrollbar mask-fade-right">
+          {isArtistsLoading ? (
+            [1, 2, 3, 4, 5, 6].map((i) => (
+              <div key={i} className="flex-none w-[160px] space-y-4">
+                <div className="aspect-square rounded-full bg-zinc-900 animate-pulse border border-white/[0.03]" />
+                <div className="h-3 w-3/4 bg-zinc-900 rounded mx-auto animate-pulse" />
+              </div>
             ))
-          ) : trending?.data?.data && trending.data.data.length > 0 ? (
-            trending.data.data
-              .slice(0, 5)
-              .map((song: Song) => (
-                <SongCard key={`trend-${song.id}`} song={song} />
-              ))
           ) : (
-            <div className="col-span-full py-10 text-center text-zinc-700 font-bold italic tracking-tight uppercase border border-dashed border-zinc-900 rounded-[2rem]">
-              No trending data yet
-            </div>
+            artists?.data?.data?.map((artist: Artist) => (
+              <ArtistCard key={artist.id} artist={artist} />
+            ))
           )}
         </div>
       </section>
 
-      {/* Recommended Section (Conditional) */}
+      {/* 3. Featured Playlists Section */}
+      <section>
+        <div className="flex items-center justify-between mb-8 px-1">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-emerald-500/10 rounded-xl border border-emerald-500/20">
+              <ListMusic className="text-emerald-400" size={18} />
+            </div>
+            <h2 className="text-2xl font-black italic tracking-tight uppercase text-white">
+              Featured Playlists
+            </h2>
+          </div>
+          <div className="h-px flex-1 mx-8 bg-gradient-to-r from-white/[0.06] to-transparent" />
+        </div>
+
+        <div className="flex flex-row overflow-x-auto gap-8 pb-6 no-scrollbar mask-fade-right">
+          {isPlaylistsLoading ? (
+            [1, 2, 3, 4, 5, 6].map((i) => (
+              <div key={i} className="flex-none w-[180px] space-y-4">
+                <div className="aspect-square rounded-[2.5rem] bg-zinc-900 animate-pulse border border-white/[0.03]" />
+                <div className="h-3 w-1/2 bg-zinc-900 rounded animate-pulse" />
+              </div>
+            ))
+          ) : (
+            playlists?.data?.data?.map((playlist: Playlist) => (
+              <PlaylistCard key={playlist.id} playlist={playlist} />
+            ))
+          )}
+        </div>
+      </section>
+
+      {/* 4. Recommendations (Conditional) */}
       {systemUser &&
         recommendations?.data?.data &&
         recommendations.data.data.length > 0 && (
-          <section className="mb-16">
+          <section>
             <div className="flex items-center gap-4 mb-8 px-1">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-purple-500/10 rounded-xl border border-purple-500/20">
@@ -126,7 +177,7 @@ export default function HomePage() {
           </section>
         )}
 
-      {/* Discovery Feed */}
+      {/* 5. Discovery Feed */}
       <section>
         <div className="flex items-center justify-between mb-8 px-1">
           <div className="flex items-center gap-4">

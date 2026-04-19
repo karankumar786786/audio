@@ -69,10 +69,10 @@ export function LeftSidebar() {
   };
 
   return (
-    <aside className="w-64 glass-effect border-r border-white/[0.04] flex flex-col h-screen fixed left-0 top-0 z-50 overflow-hidden">
+    <aside className="w-64 glass-effect border-r border-white/4 flex flex-col h-screen fixed left-0 top-0 z-50 overflow-hidden">
       <div className="p-8 flex flex-col h-full bg-black/20">
         {/* Logo */}
-        <div className="flex items-center gap-3 mb-12 group cursor-pointer flex-shrink-0">
+        <div className="flex items-center gap-3 mb-12 group cursor-pointer shrink-0">
           <div className="w-10 h-10 bg-primary rounded-2xl flex items-center justify-center shadow-2xl shadow-primary/30 group-hover:scale-110 transition-transform duration-500">
             <Mic2 className="text-black fill-black" size={24} />
           </div>
@@ -95,10 +95,10 @@ export function LeftSidebar() {
                   className={`flex items-center gap-4 px-4 py-3 rounded-2xl text-xs font-black uppercase tracking-widest transition-all duration-300 ${
                     pathname === item.href
                       ? "bg-primary text-black shadow-2xl shadow-primary/20 scale-[1.02]"
-                      : "text-zinc-500 hover:text-white hover:bg-white/[0.04] border border-transparent"
+                      : "text-zinc-500 hover:text-white hover:bg-white/4 border border-transparent"
                   }`}
                 >
-                  <item.icon size={18} className={pathname === item.href ? "fill-black" : ""} />
+                  <item.icon size={18} />
                   {item.label}
                 </Link>
               ))}
@@ -118,10 +118,10 @@ export function LeftSidebar() {
                   className={`flex items-center gap-4 px-4 py-3 rounded-2xl text-xs font-black uppercase tracking-widest transition-all duration-300 ${
                     pathname === item.href
                       ? "bg-primary text-black shadow-2xl shadow-primary/20 scale-[1.02]"
-                      : "text-zinc-500 hover:text-white hover:bg-white/[0.04] border border-transparent"
+                      : "text-zinc-500 hover:text-white hover:bg-white/4 border border-transparent"
                   }`}
                 >
-                  <item.icon size={18} className={pathname === item.href ? "fill-black" : ""} />
+                  <item.icon size={18} />
                   {item.label}
                 </Link>
               ))}
@@ -153,7 +153,7 @@ export function LeftSidebar() {
                   exit={{ opacity: 0, scale: 0.95 }}
                   className="px-3 mb-4"
                 >
-                  <div className="flex items-center gap-2 bg-zinc-900/80 border border-white/[0.1] rounded-xl p-2 shadow-2xl">
+                  <div className="flex items-center gap-2 bg-zinc-900/80 border border-white/10 rounded-xl p-2 shadow-2xl">
                     <input
                       autoFocus
                       type="text"
@@ -171,7 +171,7 @@ export function LeftSidebar() {
                     />
                     <button
                       onClick={handleCreatePlaylist}
-                      className="p-1.5 bg-primary text-black rounded-lg hover:brightness-110 transition-all flex-shrink-0"
+                      className="p-1.5 bg-primary text-black rounded-lg hover:brightness-110 transition-all shrink-0"
                     >
                       <Plus size={12} strokeWidth={3} />
                     </button>
@@ -194,10 +194,10 @@ export function LeftSidebar() {
                     className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-tight transition-all truncate ${
                       pathname === `/playlists/${playlist.id}`
                         ? "text-primary bg-primary/5 shadow-inner"
-                        : "text-zinc-500 hover:text-white hover:bg-white/[0.03]"
+                        : "text-zinc-500 hover:text-white hover:bg-white/3"
                     }`}
                   >
-                    <ListMusic size={14} className={`flex-shrink-0 ${pathname === `/playlists/${playlist.id}` ? "opacity-100" : "opacity-30"}`} />
+                    <ListMusic size={14} className={`shrink-0 ${pathname === `/playlists/${playlist.id}` ? "opacity-100" : "opacity-30"}`} />
                     <span className="truncate">{playlist.name}</span>
                   </Link>
                 ))
