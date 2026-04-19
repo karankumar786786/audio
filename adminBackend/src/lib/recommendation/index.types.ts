@@ -17,6 +17,7 @@ export interface RecommendationSchema {
   id: string;
   fullId: string;
   jobId: string;
+  createdAt?: string;
   title: string;
   artistName: string;
   duration: number;

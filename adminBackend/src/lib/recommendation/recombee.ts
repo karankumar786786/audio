@@ -17,6 +17,7 @@ const SCHEMA_FIELDS: Record<
 > = {
   fullId: "string",
   jobId: "string",
+  createdAt: "string",
   title: "string",
   artistName: "string",
   duration: "double",
@@ -163,6 +164,7 @@ export class RecommbeeRecommendationService implements RecommendationService<Rec
       includedProperties: [
         "fullId",
         "jobId",
+        "createdAt",
         "title",
         "artistName",
         "duration",
