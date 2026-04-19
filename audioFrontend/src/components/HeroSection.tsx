@@ -62,13 +62,6 @@ export function HeroSection({
             key={`meta-${currentSong.id}`}
             transition={{ delay: 0.2 }}
           >
-            <div className="flex items-center gap-3 mb-6">
-              <div className="px-4 py-1.5 bg-primary/20 border border-primary/30 rounded-full backdrop-blur-xl">
-                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary italic">
-                  Featured Release
-                </span>
-              </div>
-            </div>
 
             <h1 className="text-6xl md:text-7xl font-black text-white italic tracking-tighter uppercase leading-none drop-shadow-2xl max-w-3xl line-clamp-2">
               {currentSong.title}
@@ -86,7 +79,7 @@ export function HeroSection({
           >
             <button
               onClick={() => playerActions.play(mapToPlayerSong(currentSong))}
-              className="px-10 py-5 bg-primary text-black rounded-2xl font-black text-sm uppercase tracking-widest flex items-center gap-3 shadow-2xl shadow-primary/20 hover:scale-105 active:scale-95 transition-all duration-300"
+              className="px-10 py-5 bg-primary text-black rounded-full font-black text-sm uppercase tracking-widest flex items-center gap-3 shadow-2xl shadow-primary/20 hover:scale-105 active:scale-95 transition-all duration-300"
             >
               <Play fill="black" size={24} />
               Play Now
@@ -101,7 +94,7 @@ export function HeroSection({
                     onClick={() => setIndex(i)}
                     className={`h-2.5 transition-all duration-500 rounded-full ${
                       i === index
-                        ? "w-10 bg-primary shadow-[0_0_15px_rgba(74,222,128,0.5)]"
+                        ? "w-10 bg-primary"
                         : "w-2.5 bg-white/20 hover:bg-white/40"
                     }`}
                   />
