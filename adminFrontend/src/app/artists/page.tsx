@@ -49,10 +49,15 @@ export default function ArtistsPage() {
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure? This will delete the artist and potentially affect associated songs.")) return;
     try {
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/artists/${id}`, { method: "DELETE" });
-      setArtists(artists.filter(a => a.id !== id));
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/artists/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        setArtists(artists.filter(a => a.id !== id));
+      } else {
+        const data = await res.json();
+        alert(data.message || "Delete failed");
+      }
     } catch (err) {
-      alert("Delete failed");
+      alert("Delete failed due to a network error");
     }
   };
 

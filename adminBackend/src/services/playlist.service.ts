@@ -1,3 +1,5 @@
+import type ImageKit from "imagekit";
+import path from "path";
 import type { SearchRecord, SearchService } from "../lib/search";
 import type { SignatureService } from "../lib/signature";
 import { logMethods, type Logger } from "../observablity";
@@ -13,6 +15,7 @@ export class PlaylistService {
         private readonly playlistRepository:PlaylistRepository,
         private readonly signatureService:SignatureService,
         private readonly searchService:SearchService,
+        private readonly imageKitClient: ImageKit,
         private readonly logger:Logger,
     ) {
         logMethods(this, this.logger);
@@ -66,13 +69,42 @@ export class PlaylistService {
         this.signatureService.verifyId(id,"playlistId");
         const playlist = await this.playlistRepository.delete(id);
         this.logger.info({ id }, "playlist deleted from repository");
+
+        // Best effort cleanup
         try { 
             await this.searchService.delete(id); 
             this.logger.info({ id }, "playlist deleted from search index");
         } catch (err) { 
             this.logger.error({ err, id }, "failed to delete playlist from search service");
         }
+
+        if (playlist.coverImageKey) {
+            this.deleteImageFromIK(playlist.coverImageKey);
+        }
+        if (playlist.bannerImageKey) {
+            this.deleteImageFromIK(playlist.bannerImageKey);
+        }
+
         return playlist;
+    }
+
+    private async deleteImageFromIK(filePath: string): Promise<void> {
+        try {
+            const result = await this.imageKitClient.listFiles({
+                path: path.dirname(filePath),
+                name: path.basename(filePath),
+            });
+
+            if (result && result.length > 0) {
+                const file = result[0] as any;
+                if (file.fileId) {
+                    await this.imageKitClient.deleteFile(file.fileId);
+                    this.logger.info({ filePath, fileId: file.fileId }, "image deleted from ImageKit");
+                }
+            }
+        } catch (error) {
+            this.logger.error({ error, filePath }, "failed to cleanup image from ImageKit");
+        }
     }
 
     async addSongToPlaylist(data:PlaylistSongSchema): Promise<PlaylistSongSchema> {

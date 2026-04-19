@@ -65,6 +65,7 @@ export class MiscService {
             url: url
         }
     }
+
     async getPresignedUrlImage(): Promise<{ token: string, expire: number, signature: string, tempKey: string }> {
         this.logger.debug("getPresignedUrlImage starting");
         const tempKey: string = this.signatureService.generateSignedId();
@@ -73,6 +74,33 @@ export class MiscService {
         return {
             tempKey,
             ...authParams
+        }
+    }
+
+    async deleteImage(filePath: string): Promise<void> {
+        this.logger.debug({ filePath }, "deleteImage starting");
+        if (!filePath) return;
+
+        try {
+            // ImageKit SDK requires fileId for deletion. 
+            // We search for the file using its path to retrieve its fileId.
+            const result = await this.imageKitClient.listFiles({
+                path: path.dirname(filePath),
+                name: path.basename(filePath),
+            });
+
+            if (result && result.length > 0) {
+                const file = result[0] as any;
+                if (file.fileId) {
+                    await this.imageKitClient.deleteFile(file.fileId);
+                    this.logger.info({ filePath, fileId: file.fileId }, "image deleted from ImageKit");
+                }
+            } else {
+                this.logger.warn({ filePath }, "image not found in ImageKit for deletion");
+            }
+        } catch (error: any) {
+            this.logger.error({ error, filePath }, "failed to delete image from ImageKit");
+            // Non-blocking catch: we don't want to fail the whole delete operation if image cleanup fails
         }
     }
 }

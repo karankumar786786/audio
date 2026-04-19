@@ -6,6 +6,8 @@ import {
     GetObjectCommand,
     DeleteObjectCommand,
     HeadObjectCommand,
+    ListObjectsV2Command,
+    DeleteObjectsCommand,
 } from "@aws-sdk/client-s3";
 import { Upload } from "@aws-sdk/lib-storage";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
@@ -107,6 +109,41 @@ export class S3StorageService implements StorageService {
 
     async deleteObject(bucket: string, key: string): Promise<void> {
         await this.client.send(new DeleteObjectCommand({ Bucket: bucket, Key: key }));
+    }
+
+    async deleteFolder(bucket: string, prefix: string): Promise<void> {
+        this.logger.debug({ bucket, prefix }, "deleteFolder starting");
+        
+        let isTruncated = true;
+        let continuationToken: string | undefined;
+
+        while (isTruncated) {
+            const listCommand: ListObjectsV2Command = new ListObjectsV2Command({
+                Bucket: bucket,
+                Prefix: prefix,
+                ContinuationToken: continuationToken,
+            });
+
+            const listResponse = await this.client.send(listCommand);
+            const objects = listResponse.Contents;
+
+            if (objects && objects.length > 0) {
+                const deleteCommand = new DeleteObjectsCommand({
+                    Bucket: bucket,
+                    Delete: {
+                        Objects: objects.map((obj) => ({ Key: obj.Key })),
+                        Quiet: true,
+                    },
+                });
+
+                await this.client.send(deleteCommand);
+                this.logger.info({ count: objects.length }, "deleted batch of objects from S3");
+            }
+
+            isTruncated = listResponse.IsTruncated || false;
+            continuationToken = listResponse.NextContinuationToken;
+        }
+        this.logger.info({ bucket, prefix }, "deleteFolder completed");
     }
 
     getClient(): S3Client {

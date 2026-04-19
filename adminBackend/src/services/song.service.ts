@@ -135,21 +135,73 @@ export class SongService {
     async deleteSong(id: string): Promise<SongSchema> {
         this.logger.debug({ id }, "deleteSong starting");
         this.signatureService.verifyId(id, "songId");
+        
+        // 1. Delete from main repository
         const song: SongSchema = await this.songRepository.delete(id);
         this.logger.info({ id }, "song deleted from repository");
+
+        // 2. Best-effort cleanup of associated records and assets
+        
+        // 2.1 Delete from search index
         try {
             await this.searchService.delete(id);
             this.logger.info({ id }, "song deleted from search index");
         } catch (err) {
             this.logger.error({ err, id }, "failed to delete song from search index");
         }
+
+        // 2.2 Delete from recommendation engine
         try {
             await this.recommendationService.delete(id);
             this.logger.info({ id }, "song deleted from recommendation engine");
         } catch (err) {
             this.logger.error({ err, id }, "failed to delete song from recommendation engine");
         }
+
+        // 2.3 Delete processing job record
+        try {
+            await this.songProcessingJobRepository.delete(id);
+            this.logger.info({ id }, "song processing job deleted");
+        } catch (err) {
+            this.logger.warn({ err, id }, "failed to delete song processing job (might not exist)");
+        }
+
+        // 2.4 Delete Image from ImageKit
+        if (song.imageKey) {
+            this.deleteImageFromIK(song.imageKey);
+        }
+
+        // 2.5 Delete Audio assets from S3
+        if (song.songKey) {
+            // Delete the HLS folder (the songKey is typically the manifest path)
+            const hlsFolder = path.dirname(song.songKey);
+            this.storageService.deleteFolder(process.env.BUCKET_NAME!, hlsFolder)
+                .catch(err => this.logger.error({ err, hlsFolder }, "failed to cleanup HLS folder in S3"));
+            
+            // Delete the raw file if it's different or exists
+            // Assuming songKey is under an HLS folder, we might need more logic or just trust deleteFolder
+        }
+
         return song;
+    }
+
+    private async deleteImageFromIK(filePath: string): Promise<void> {
+        try {
+            const result = await this.imageKitClient.listFiles({
+                path: path.dirname(filePath),
+                name: path.basename(filePath),
+            });
+
+            if (result && result.length > 0) {
+                const file = result[0] as any;
+                if (file.fileId) {
+                    await this.imageKitClient.deleteFile(file.fileId);
+                    this.logger.info({ filePath, fileId: file.fileId }, "image deleted from ImageKit");
+                }
+            }
+        } catch (error) {
+            this.logger.error({ error, filePath }, "failed to cleanup image from ImageKit");
+        }
     }
 
     async getJobStatus(id: string): Promise<any> {

@@ -73,8 +73,8 @@ const songProcessingJobRepository = new SongProcessingJobRepository(db, logger.c
 const inngest = new Inngest({ id: "test-music" });
 
 // Services
-export const artistService = new ArtistService(artistRepository, songRepository, signatureService, algoliaSearchService, logger.child({ service: "ArtistService" }));
-export const playlistService = new PlaylistService(playlistRepository, signatureService, algoliaSearchService, logger.child({ service: "PlaylistService" }));
+export const artistService = new ArtistService(artistRepository, songRepository, signatureService, algoliaSearchService, imagekitClient, logger.child({ service: "ArtistService" }));
+export const playlistService = new PlaylistService(playlistRepository, signatureService, algoliaSearchService, imagekitClient, logger.child({ service: "PlaylistService" }));
 export const songService = new SongService(
     songRepository, 
     songProcessingJobRepository, 

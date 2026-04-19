@@ -15,6 +15,7 @@ export interface StorageService {
     ): Promise<void>;
 
     deleteObject(bucket: string, key: string): Promise<void>;
+    deleteFolder(bucket: string, prefix: string): Promise<void>;
 
     headObject(bucket: string, key: string): Promise<void>;
 

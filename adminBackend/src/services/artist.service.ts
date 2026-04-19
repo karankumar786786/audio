@@ -1,3 +1,5 @@
+import type ImageKit from "imagekit";
+import path from "path";
 import type { SearchRecord, SearchService } from "../lib/search";
 import type { SignatureService } from "../lib/signature";
 import { logMethods, type Logger } from "../observablity";
@@ -14,6 +16,7 @@ export class ArtistService {
         private readonly songRepository: SongRepository,
         private readonly signatureService: SignatureService,
         private readonly searchService: SearchService,
+        private readonly imageKitClient: ImageKit,
         private readonly logger: Logger
     ) {
         logMethods(this, this.logger);
@@ -70,13 +73,42 @@ export class ArtistService {
         this.signatureService.verifyId(id, "artistId");
         const artist = await this.artistRepository.delete(id);
         this.logger.info({ id }, "artist deleted from repository");
+
+        // Best effort cleanup
         try {
             await this.searchService.delete(id);
             this.logger.info({ id }, "artist deleted from search index");
         } catch (err) {
             this.logger.error({ err, id }, "failed to delete artist from search index");
         }
+
+        if (artist.coverImageKey) {
+            this.deleteImageFromIK(artist.coverImageKey);
+        }
+        if (artist.bannerImageKey) {
+            this.deleteImageFromIK(artist.bannerImageKey);
+        }
+
         return artist;
+    }
+
+    private async deleteImageFromIK(filePath: string): Promise<void> {
+        try {
+            const result = await this.imageKitClient.listFiles({
+                path: path.dirname(filePath),
+                name: path.basename(filePath),
+            });
+
+            if (result && result.length > 0) {
+                const file = result[0] as any;
+                if (file.fileId) {
+                    await this.imageKitClient.deleteFile(file.fileId);
+                    this.logger.info({ filePath, fileId: file.fileId }, "image deleted from ImageKit");
+                }
+            }
+        } catch (error) {
+            this.logger.error({ error, filePath }, "failed to cleanup image from ImageKit");
+        }
     }
 
     async getArtistSongs(artistId: string, params: PaginationParams): Promise<PaginatedResult<SongSchema>> {
