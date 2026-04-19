@@ -129,7 +129,7 @@ export function LyricsOverlay() {
             <div className="absolute top-10 right-10 flex gap-4 z-20">
               <button
                 onClick={() => playerActions.toggleLyrics()}
-                className="w-12 h-12 rounded-2xl bg-white/5 hover:bg-white/10 flex items-center justify-center text-white transition-all backdrop-blur-md border border-white/[0.06]"
+                className="w-12 h-12 rounded-2xl bg-white/5 hover:bg-white/10 flex items-center justify-center text-white transition-all backdrop-blur-md border border-white/6"
               >
                 <X size={22} />
               </button>
