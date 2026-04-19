@@ -112,6 +112,8 @@ export const playerActions = {
     });
   },
 
+  playSong: (song: PlayerSong) => playerActions.play(song),
+
   playFromQueue: (index: number) => {
     const { queue } = playerStore.state;
     if (index >= 0 && index < queue.length) {
@@ -121,6 +123,12 @@ export const playerActions = {
 
   setQueue: (songs: PlayerSong[]) => {
     playerStore.setState((s) => ({ ...s, queue: songs, lastQueueIndex: -1 }));
+  },
+
+  playAll: (songs: PlayerSong[]) => {
+    if (songs.length === 0) return;
+    playerActions.setQueue(songs);
+    playerActions.play(songs[0]);
   },
 
   next: () => {

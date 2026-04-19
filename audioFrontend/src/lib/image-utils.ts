@@ -17,8 +17,8 @@ export type ImageTransformation = {
 export function getImageUrl(
   key: string | undefined | null,
   transformations: ImageTransformation = {},
-) {
-  if (!key) return "";
+): string | undefined {
+  if (!key) return undefined;
 
   // If key is already a full URL, return it
   if (key.startsWith("http")) return key;

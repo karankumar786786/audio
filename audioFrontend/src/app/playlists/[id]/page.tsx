@@ -2,15 +2,14 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { musicApi } from "@/lib/api";
-import { SongCard } from "@/components/SongCard";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { motion } from "framer-motion";
-import { ListMusic, Play, Heart, Trash2, Clock, Music } from "lucide-react";
+import { ListMusic, Play, Heart, Trash2, Clock, Music, ArrowLeft, Calendar, Share2, Sparkles } from "lucide-react";
 import { playerActions, playerStore } from "@/store/player.store";
 import { mapListToPlayerSongs, mapToPlayerSong } from "@/lib/player-utils";
 import { useStore } from "@tanstack/react-store";
 import { toast } from "sonner";
-
 import { getImageUrl } from "@/lib/image-utils";
 
 export default function PlaylistPage() {
@@ -22,7 +21,6 @@ export default function PlaylistPage() {
 
   const playlistType = searchParams.get("type");
 
-  // 1. Fetch Playlist Info
   const { data: playlistResponse, isLoading: isPlaylistLoading } = useQuery({
     queryKey: ["playlist", id, playlistType],
     queryFn: async () => {
@@ -31,7 +29,6 @@ export default function PlaylistPage() {
       } else if (playlistType === "system") {
         return await musicApi.playlists.getById(id as string);
       } else {
-        // Fallback: try system first, then user
         try {
           return await musicApi.playlists.getById(id as string);
         } catch (err) {
@@ -41,7 +38,6 @@ export default function PlaylistPage() {
     },
   });
 
-  // 2. Fetch Playlist Songs
   const { data: songsResponse, isLoading: isSongsLoading } = useQuery({
     queryKey: ["playlist-songs", id, playlistType],
     queryFn: async () => {
@@ -50,12 +46,9 @@ export default function PlaylistPage() {
       } else if (playlistType === "system") {
         return await musicApi.playlists.getSongs(id as string);
       } else {
-        // Fallback logic
         try {
           const res = await musicApi.playlists.getSongs(id as string);
           if (res.success && res.data.data.length > 0) return res;
-          // If success but empty, we still returned it. 
-          // But if we want to be sure, we could try the other one if this one is 404.
           return res;
         } catch (err) {
           return await musicApi.users.getPlaylistSongs(id as string);
@@ -89,10 +82,19 @@ export default function PlaylistPage() {
     },
   });
 
+  const formatDuration = (ms: number) => {
+    const totalSeconds = Math.floor(ms / 1000);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+  };
+
+  
+
   if (isPlaylistLoading || isSongsLoading) {
     return (
-      <div className="p-20 text-center animate-pulse text-zinc-500 uppercase font-black text-xs">
-        Accessing Playlist Memory...
+      <div className="p-20 text-center animate-pulse text-zinc-500 uppercase font-black text-xs italic tracking-widest">
+        Accessing Playlist Memory Cluster...
       </div>
     );
   }
@@ -104,18 +106,17 @@ export default function PlaylistPage() {
   const handleStreamAll = () => {
     if (songs.length === 0) return;
     const playerSongs = mapListToPlayerSongs(songs);
-    playerActions.setQueue(playerSongs);
-    playerActions.play(playerSongs[0]);
+    playerActions.playAll(playerSongs);
     toast.success("Stream Initialized", {
       description: `Now playing all ${songs.length} tracks.`,
     });
   };
 
   const bannerUrl = getImageUrl(playlist?.bannerImageKey, { 
-    width: 1200, 
-    height: 400, 
+    width: 1600, 
+    height: 800, 
     focus: "auto",
-    aspectRatio: "3-1" 
+    aspectRatio: "2-1" 
   });
   const coverUrl = getImageUrl(playlist?.coverImageKey, { 
     width: 400, 
@@ -125,102 +126,191 @@ export default function PlaylistPage() {
   });
 
   return (
-    <div className="px-10 pb-20">
+    <div className="px-10 pb-20 space-y-12">
+      {/* Navigation */}
+      <div className="flex items-center gap-6">
+        <Link 
+          href="/playlists"
+          className="w-12 h-12 rounded-full border border-white/5 bg-white/5 flex items-center justify-center hover:bg-white/10 transition-all group"
+        >
+          <ArrowLeft size={20} className="text-zinc-400 group-hover:text-white transition-colors" />
+        </Link>
+        <h2 className="text-xl font-black italic uppercase tracking-tighter text-white">
+          Cluster Info <span className="text-violet-500">/</span> {playlist?.title || playlist?.name}
+        </h2>
+      </div>
+
       {/* Playlist Hero */}
-      <header className="relative h-[300px] rounded-[3rem] overflow-hidden mb-12 shadow-2xl flex items-end">
-        <div className="absolute inset-0 bg-linear-to-br from-purple-900 via-zinc-950 to-black">
-          {playlist?.bannerImageKey && (
+       <section className="relative h-[450px] w-full overflow-hidden rounded-[4rem] border border-white/5 shadow-2xl group">
+        <div className="absolute inset-0 bg-zinc-950">
+          {playlist?.bannerImageKey ? (
             <img 
               src={bannerUrl} 
-              className="w-full h-full object-cover opacity-60" 
               alt=""
+              className="h-full w-full object-cover opacity-40 blur-sm group-hover:scale-110 group-hover:opacity-60 transition-all duration-[2s]"
             />
+          ) : (
+            <div className="h-full w-full bg-linear-to-br from-violet-950 via-zinc-950 to-black" />
           )}
-          <div className="absolute inset-0 bg-linear-to-t from-black via-transparent to-transparent z-10" />
+          <div className="absolute inset-0 bg-linear-to-t from-black via-black/20 to-transparent" />
         </div>
 
-        <div className="relative z-20 p-12 flex items-center gap-10">
-          <div className="w-48 h-48 bg-zinc-900 rounded-[2.5rem] shadow-2xl border border-white/5 overflow-hidden flex items-center justify-center">
-            {playlist?.coverImageKey ? (
-              <img src={coverUrl} className="w-full h-full object-cover" alt="" />
-            ) : (
-              <ListMusic className="text-zinc-700" size={64} />
-            )}
+        <div className="absolute inset-0 flex items-end p-12 gap-10 z-20">
+          {/* Cover Art */}
+          <div className="h-56 w-56 shrink-0 overflow-hidden rounded-[3.5rem] border-8 border-black shadow-[0_0_50px_rgba(0,0,0,0.5)] hidden md:block group-hover:scale-105 transition-transform duration-700 relative bg-zinc-900 flex items-center justify-center">
+             {playlist?.coverImageKey ? (
+               <img src={coverUrl} alt="" className="h-full w-full object-cover" />
+             ) : (
+               <ListMusic className="text-zinc-800" size={80} />
+             )}
           </div>
 
-          <div className="space-y-4">
-            <div className="flex items-center gap-3">
-              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-400 italic">
-                {isUserPlaylist ? "USER BUFFER" : "SYSTEM PLAYLIST"}
-              </span>
-              <div className="h-1 w-8 bg-indigo-500 rounded-full" />
+          <div className="flex-1 space-y-4">
+            <div className="flex items-center gap-4">
+               <div className="px-4 py-1.5 rounded-full bg-white/5 border border-white/10 backdrop-blur-xl flex items-center gap-2">
+                 <Sparkles size={12} className="text-violet-400 fill-violet-400" />
+                 <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white italic">
+                   {isUserPlaylist ? "Personal Buffer" : "System Algorithm"}
+                 </span>
+               </div>
+               <span className="text-zinc-400 font-bold text-xs italic">
+                 {songs.length} Synchronized Frequencies
+               </span>
             </div>
-            <h1 className="text-6xl font-black text-white italic tracking-tighter uppercase leading-none">
+            
+            <h1 className="text-7xl md:text-8xl font-black text-white italic tracking-tighter uppercase drop-shadow-2xl">
               {playlist?.title || playlist?.name}
             </h1>
-            <p className="text-zinc-500 text-sm font-medium opacity-80 max-w-xl">
-              {playlist?.description ||
-                "A curated frequency of synchronized audio transients."}
+
+            <p className="max-w-2xl text-zinc-500 font-medium italic text-sm opacity-80 line-clamp-2">
+               {playlist?.description || "A synchronized frequency of audio transients organized by the network algorithm for optimal acoustic resonance."}
             </p>
 
-            <div className="flex items-center gap-4 pt-4">
-              <button
+            <div className="pt-6 flex items-center gap-4">
+              <button 
                 onClick={handleStreamAll}
                 disabled={songs.length === 0}
-                className="px-10 py-4 bg-white text-black rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-50 transition-all flex items-center gap-2 disabled:opacity-50"
+                className="px-12 h-16 bg-white text-black rounded-[2rem] font-black text-xs uppercase tracking-widest hover:scale-105 active:scale-95 transition-all flex items-center gap-3 shadow-2xl shadow-white/10 disabled:opacity-50"
               >
-                <Play fill="black" size={14} />
-                Stream All
+                <Play fill="black" size={18} />
+                Initialize Cluster
               </button>
-
-              {isUserPlaylist && (
-                <button
-                  onClick={() => {
-                    if (confirm("Delete this cluster permanently?"))
-                      deletePlaylist.mutate();
-                  }}
-                  className="p-4 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-500 hover:bg-red-500 hover:text-white transition-all"
-                >
-                  <Trash2 size={20} />
+              
+              <div className="flex items-center gap-3">
+                <button className="h-16 w-16 rounded-[2rem] bg-zinc-900/40 backdrop-blur-xl border border-white/10 flex items-center justify-center text-white hover:bg-white hover:text-black transition-all group">
+                  <Heart size={20} className="group-hover:fill-current" />
                 </button>
-              )}
+                <button className="h-16 w-16 rounded-[2rem] bg-zinc-900/40 backdrop-blur-xl border border-white/10 flex items-center justify-center text-white hover:bg-white hover:text-black transition-all">
+                  <Share2 size={20} />
+                </button>
+                {isUserPlaylist && (
+                  <button 
+                    onClick={() => confirm("Release this buffer from memory?") && deletePlaylist.mutate()}
+                    className="h-16 w-16 rounded-[2rem] bg-red-500/10 border border-red-500/10 flex items-center justify-center text-red-500 hover:bg-red-500 hover:text-white transition-all shadow-xl shadow-red-500/10"
+                  >
+                    <Trash2 size={20} />
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </div>
-      </header>
+      </section>
 
-      {/* Playlist Grid */}
-      <section>
-        <div className="flex items-center justify-between mb-12 px-2">
-          <div className="flex items-center gap-6">
-            <h2 className="text-3xl font-black italic tracking-tighter uppercase text-white">
-              Tracklist
-            </h2>
-            <div className="h-px w-24 bg-linear-to-r from-purple-500 to-transparent" />
-          </div>
-          <div className="flex items-center gap-3 text-zinc-500 text-[10px] font-black uppercase tracking-widest italic group cursor-pointer hover:text-white transition-colors">
-            <Clock size={14} />
-            <span>{songs.length} Synchronized Tracks</span>
+      {/* Tracks Section */}
+      <section className="space-y-8">
+        <div className="flex items-center justify-between border-b border-white/5 pb-6 px-4">
+           <div className="grid grid-cols-12 w-full text-zinc-600 text-[10px] font-black uppercase tracking-[0.3em] italic">
+            <div className="col-span-1 text-center">#</div>
+            <div className="col-span-6 md:col-span-5">Spectral Identifier</div>
+            <div className="col-span-3 hidden md:block">Acoustic Node</div>
+            <div className="col-span-2 hidden lg:block uppercase">Sync Date</div>
+            <div className="col-span-5 md:col-span-1 text-right pr-6">
+              <Clock className="h-3 w-3 inline mb-0.5" />
+            </div>
           </div>
         </div>
 
-        {songs.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-10">
-            {songs.map((song: any) => (
-              <SongCard
+        <div className="flex flex-col gap-2">
+          {songs.length > 0 ? (
+            songs.map((song: any, index: number) => (
+              <div
                 key={song.id}
-                song={song}
-                onRemove={
-                  isUserPlaylist ? () => removeSong.mutate(song.id) : undefined
-                }
-              />
-            ))}
-          </div>
-        ) : (
-          <div className="py-20 text-center border-2 border-dashed border-zinc-900 rounded-[3rem] text-zinc-600 font-black uppercase italic tracking-widest">
-            No Frequencies Uploaded to this Cluster
-          </div>
-        )}
+                onClick={() => playerActions.playSong(mapToPlayerSong(song))}
+                className="group grid grid-cols-12 items-center gap-4 p-5 rounded-[2.5rem] hover:bg-white/[0.03] border border-transparent hover:border-white/[0.05] transition-all duration-300 text-left cursor-pointer"
+              >
+                {/* Index */}
+                <div className="col-span-1 text-center text-zinc-600 font-black text-xs group-hover:text-violet-400 transition-colors italic">
+                  {(index + 1).toString().padStart(2, "0")}
+                </div>
+
+                {/* Title & Image */}
+                <div className="col-span-11 md:col-span-5 flex items-center gap-6">
+                  <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-2xl border border-white/5 shadow-2xl">
+                    {getImageUrl(song.coverImageKey, { width: 100, height: 100, aspectRatio: "1-1" }) ? (
+                      <img
+                        src={getImageUrl(song.coverImageKey, { width: 100, height: 100, aspectRatio: "1-1" })!}
+                        alt={song.title}
+                        className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-500"
+                      />
+                    ) : (
+                      <div className="h-full w-full flex items-center justify-center bg-zinc-900 text-zinc-700">
+                        <Music size={20} />
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <Play fill="white" size={16} className="text-white" />
+                    </div>
+                  </div>
+                  <div className="min-w-0">
+                    <h4 className="font-black italic uppercase tracking-tighter text-white group-hover:text-violet-400 transition-colors truncate text-lg">
+                      {song.title}
+                    </h4>
+                    <div className="flex items-center gap-2">
+                       {song.language && (
+                         <span className="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[8px] text-violet-400 font-black uppercase tracking-widest">
+                           {song.language}
+                         </span>
+                       )}
+                       <p className="text-[9px] font-black uppercase tracking-widest text-zinc-400 italic group-hover:text-zinc-300 transition-colors block md:hidden">
+                          {song.artistName}
+                       </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Artist */}
+                <div className="col-span-3 hidden md:block">
+                  <span className="text-zinc-400 font-black uppercase italic tracking-widest text-[11px] group-hover:text-white transition-colors truncate block">
+                    {song.artistName}
+                  </span>
+                </div>
+                {/* Actions & Duration */}
+                <div className="col-span-5 md:col-span-1 flex items-center justify-end gap-6 pr-4">
+                  <div className="text-zinc-400 font-black text-xs italic group-hover:text-white transition-colors w-14 text-right">
+                    {formatDuration(song.duration || song.durationMs || 0)}
+                  </div>
+                  {isUserPlaylist && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        removeSong.mutate(song.id);
+                      }}
+                      className="p-3 rounded-xl bg-red-500/5 text-red-500/40 hover:bg-red-500 hover:text-white opacity-0 group-hover:opacity-100 transition-all scale-75 group-hover:scale-100"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="py-28 text-center border-2 border-dashed border-zinc-900 rounded-[4rem]">
+              <Music className="mx-auto text-zinc-800 mb-6" size={56} />
+              <p className="text-zinc-600 font-black uppercase italic tracking-[0.3em]">No Frequencies Initialized</p>
+            </div>
+          )}
+        </div>
       </section>
     </div>
   );

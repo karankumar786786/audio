@@ -3,12 +3,13 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { musicApi } from "@/lib/api";
 import Link from "next/link";
-import { ListMusic, Library, Plus, Sparkles } from "lucide-react";
+import { ListMusic, Library, Plus, Sparkles, ChevronRight, Music } from "lucide-react";
 import { useStore } from "@tanstack/react-store";
 import { playerStore } from "@/store/player.store";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
+import { getImageUrl } from "@/lib/image-utils";
 
 export default function PlaylistsPage() {
   const systemUser = useStore(playerStore, (s) => s.systemUser);
@@ -70,16 +71,15 @@ export default function PlaylistsPage() {
           <div className="space-y-4">
             <div className="flex items-center gap-3">
               <span className="text-[10px] font-black uppercase tracking-[0.2em] text-violet-400 italic">
-                Curated Clusters
+                Synchronized Clusters
               </span>
               <div className="h-1 w-8 bg-violet-500 rounded-full" />
             </div>
             <h1 className="text-6xl font-black text-white italic tracking-tighter uppercase leading-none">
               Playlists
             </h1>
-            <p className="text-zinc-500 text-sm font-medium opacity-80 max-w-xl">
-              Synchronized collections of audio transients organized by mood,
-              genre, and frequency.
+            <p className="text-zinc-500 text-sm font-medium opacity-80 max-w-xl italic">
+              Access the curated frequency buffers and personal transients stored in the network.
             </p>
           </div>
         </div>
@@ -87,7 +87,7 @@ export default function PlaylistsPage() {
 
       {/* User Playlists */}
       <section className="mb-20">
-        <div className="flex items-center justify-between mb-12 px-2">
+        <div className="flex items-center justify-between mb-8 px-2">
           <div className="flex items-center gap-6">
             <h2 className="text-3xl font-black italic tracking-tighter uppercase text-white">
               Your Transients
@@ -102,50 +102,57 @@ export default function PlaylistsPage() {
                     description: "Sign in to create playlists.",
                   })
             }
-            className="flex items-center gap-3 bg-white/5 hover:bg-white/10 border border-white/10 px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest italic transition-all"
+            className="flex items-center gap-3 bg-white/5 hover:bg-white/10 border border-white/10 px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] italic transition-all shadow-xl shadow-black/50"
           >
-            <Plus size={14} />
+            <Plus size={14} strokeWidth={3} />
             <span>Initialize New Cluster</span>
           </button>
         </div>
 
-        {isUserLoading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-10">
-            {[1, 2, 3].map((i) => (
+        <div className="flex flex-col gap-2">
+          {isUserLoading ? (
+            [1, 2].map((i) => (
               <div
                 key={i}
-                className="aspect-square bg-zinc-900/40 border border-white/5 rounded-[3rem] animate-pulse"
+                className="h-28 bg-zinc-900/40 border border-white/5 rounded-3xl animate-pulse"
               />
-            ))}
-          </div>
-        ) : userPlaylists.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-10">
-            {userPlaylists.map((playlist: any) => (
-              <PlaylistCard key={playlist.id} playlist={playlist} />
-            ))}
-          </div>
-        ) : (
-          <div className="py-20 text-center text-zinc-600 border-2 border-dashed border-zinc-900 rounded-[4rem] font-bold italic tracking-tight uppercase">
-            {systemUser
-              ? "NO PERSONAL CLUSTERS INITIALIZED"
-              : "LOGIN TO ACCESS PERSONAL CLUSTERS"}
-          </div>
-        )}
+            ))
+          ) : userPlaylists.length > 0 ? (
+            userPlaylists.map((playlist: any) => (
+              <PlaylistRow key={playlist.id} playlist={playlist} />
+            ))
+          ) : (
+            <div className="py-20 text-center text-zinc-600 border-2 border-dashed border-zinc-900 rounded-[4rem] font-bold italic tracking-tight uppercase">
+              {systemUser
+                ? "NO PERSONAL CLUSTERS INITIALIZED"
+                : "LOGIN TO ACCESS PERSONAL CLUSTERS"}
+            </div>
+          )}
+        </div>
       </section>
 
       {/* System Playlists */}
       <section>
-        <div className="flex items-center gap-6 mb-12 px-2">
+        <div className="flex items-center gap-6 mb-8 px-2">
           <h2 className="text-3xl font-black italic tracking-tighter uppercase text-white">
             System Algorithms
           </h2>
           <div className="h-px flex-1 bg-linear-to-r from-violet-500/50 to-transparent" />
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-10">
-          {systemPlaylists.map((playlist: any) => (
-            <PlaylistCard key={playlist.id} playlist={playlist} isSystem />
-          ))}
+        <div className="flex flex-col gap-2">
+          {isSystemLoading ? (
+            [1, 2, 3].map((i) => (
+              <div
+                key={i}
+                className="h-28 bg-zinc-900/40 border border-white/5 rounded-3xl animate-pulse"
+              />
+            ))
+          ) : (
+            systemPlaylists.map((playlist: any) => (
+              <PlaylistRow key={playlist.id} playlist={playlist} isSystem />
+            ))
+          )}
         </div>
       </section>
 
@@ -193,9 +200,7 @@ export default function PlaylistsPage() {
   );
 }
 
-import { getImageUrl } from "@/lib/image-utils";
-
-function PlaylistCard({
+function PlaylistRow({
   playlist,
   isSystem = false,
 }: {
@@ -203,45 +208,58 @@ function PlaylistCard({
   isSystem?: boolean;
 }) {
   const coverUrl = getImageUrl(playlist.coverImageKey, { 
-    width: 400, 
-    height: 400, 
+    width: 300, 
+    height: 300, 
     focus: "auto",
     aspectRatio: "1-1"
   });
 
   return (
-    <Link href={`/playlists/${playlist.id}${isSystem ? "?type=system" : "?type=user"}`} className="group relative">
-      <div className="aspect-square bg-zinc-900 rounded-[3rem] border border-white/5 overflow-hidden mb-6 group-hover:border-violet-500/50 transition-all duration-500 shadow-xl group-hover:shadow-violet-500/10 relative">
-        <div className="w-full h-full bg-linear-to-br from-zinc-800 to-zinc-950 flex items-center justify-center group-hover:from-violet-900/40 group-hover:to-zinc-950 transition-colors duration-700">
-          {playlist.coverImageKey ? (
-            <img 
-              src={coverUrl} 
-              alt={playlist.name || playlist.title}
-              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-            />
-          ) : (
-            <ListMusic
-              className="text-zinc-800 group-hover:text-violet-400/30 transition-colors"
-              size={100}
-            />
-          )}
-        </div>
-
-        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[2px]">
-          <div className="w-16 h-16 bg-white rounded-4xl flex items-center justify-center text-black shadow-2xl scale-90 group-hover:scale-100 transition-transform">
-            <Sparkles size={24} className="fill-black" />
+    <Link 
+      href={`/playlists/${playlist.id}${isSystem ? "?type=system" : "?type=user"}`} 
+      className="group flex items-center gap-8 p-5 rounded-[2.5rem] hover:bg-white/[0.03] border border-transparent hover:border-white/[0.05] transition-all duration-500"
+    >
+      <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-3xl border border-white/5 shadow-2xl">
+        {playlist.coverImageKey ? (
+          <img 
+            src={coverUrl} 
+            alt={playlist.name || playlist.title}
+            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center bg-violet-500/10 text-violet-400">
+            <ListMusic className="opacity-40" size={32} />
           </div>
+        )}
+        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+            <Sparkles size={20} className="text-white fill-white" />
         </div>
       </div>
-      <div className="px-2">
-        <div className="flex items-center gap-2 mb-1">
-          <h3 className="font-black italic uppercase tracking-tighter text-zinc-200 group-hover:text-white transition-colors truncate">
+
+      <div className="flex-1 min-w-0 space-y-1.5">
+        <div className="flex items-center gap-4">
+          <h3 className="text-xl font-black italic uppercase tracking-tighter text-white group-hover:text-primary transition-colors truncate">
             {playlist.name || playlist.title}
           </h3>
+          <div className="px-3 py-0.5 bg-zinc-900/50 rounded-full border border-white/5">
+            <span className="text-[9px] font-black uppercase tracking-[0.15em] text-zinc-500">
+              {isSystem ? "Algorithm" : "Personal"}
+            </span>
+          </div>
         </div>
-        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500 italic">
-          {isSystem ? "System Curated" : "User Frequency"}
+        <p className="text-zinc-500 text-xs font-medium italic opacity-60 group-hover:opacity-100 transition-opacity line-clamp-1 max-w-2xl">
+          {playlist.description || "A synchronized frequency of audio transients organized by mood and genre."}
         </p>
+      </div>
+
+      <div className="shrink-0 flex items-center gap-6 pr-4">
+        <div className="hidden sm:flex flex-col items-end gap-1">
+          <span className="text-[10px] font-black uppercase tracking-widest text-zinc-600 italic group-hover:text-zinc-400">Playlist Buffer</span>
+          <span className="text-[10px] font-black uppercase tracking-widest text-violet-500/50">Verified Spectral</span>
+        </div>
+        <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/5 flex items-center justify-center text-zinc-500 group-hover:bg-primary group-hover:text-black group-hover:shadow-2xl group-hover:shadow-primary/20 transition-all duration-300">
+           <ChevronRight size={24} strokeWidth={3} />
+        </div>
       </div>
     </Link>
   );
