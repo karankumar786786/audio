@@ -58,39 +58,13 @@ export default function PlaylistsPage() {
 
   return (
     <div className="px-10 pb-20">
-      <header className="relative h-[300px] rounded-[3rem] overflow-hidden mb-12 shadow-2xl flex items-end">
-        <div className="absolute inset-0 bg-linear-to-br from-violet-950 via-zinc-950 to-black">
-          <div className="absolute inset-0 bg-linear-to-t from-black via-transparent to-transparent z-10" />
-        </div>
-
-        <div className="relative z-20 p-12 flex items-center gap-10">
-          <div className="w-48 h-48 bg-violet-600 rounded-[2.5rem] shadow-2xl shadow-violet-500/20 border border-white/10 flex items-center justify-center">
-            <Library className="text-white" size={64} />
-          </div>
-
-          <div className="space-y-4">
-            <div className="flex items-center gap-3">
-              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-violet-400 italic">
-                Synchronized Clusters
-              </span>
-              <div className="h-1 w-8 bg-violet-500 rounded-full" />
-            </div>
-            <h1 className="text-6xl font-black text-white italic tracking-tighter uppercase leading-none">
-              Playlists
-            </h1>
-            <p className="text-zinc-500 text-sm font-medium opacity-80 max-w-xl italic">
-              Access the curated frequency buffers and personal transients stored in the network.
-            </p>
-          </div>
-        </div>
-      </header>
 
       {/* User Playlists */}
       <section className="mb-20">
         <div className="flex items-center justify-between mb-8 px-2">
           <div className="flex items-center gap-6">
             <h2 className="text-3xl font-black italic tracking-tighter uppercase text-white">
-              Your Transients
+              Your Playlists
             </h2>
             <div className="h-px w-24 bg-linear-to-r from-violet-500 to-transparent" />
           </div>
@@ -105,7 +79,7 @@ export default function PlaylistsPage() {
             className="flex items-center gap-3 bg-white/5 hover:bg-white/10 border border-white/10 px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] italic transition-all shadow-xl shadow-black/50"
           >
             <Plus size={14} strokeWidth={3} />
-            <span>Initialize New Cluster</span>
+            <span>Create</span>
           </button>
         </div>
 
@@ -135,7 +109,7 @@ export default function PlaylistsPage() {
       <section>
         <div className="flex items-center gap-6 mb-8 px-2">
           <h2 className="text-3xl font-black italic tracking-tighter uppercase text-white">
-            System Algorithms
+            Playlists
           </h2>
           <div className="h-px flex-1 bg-linear-to-r from-violet-500/50 to-transparent" />
         </div>
@@ -167,7 +141,7 @@ export default function PlaylistsPage() {
               className="w-full max-w-md bg-zinc-950 border border-white/10 p-10 rounded-[3rem] shadow-[0_0_100px_rgba(0,0,0,0.8)]"
             >
               <h2 className="text-2xl font-black text-white italic uppercase tracking-tighter mb-8">
-                Initialize Cluster
+                Create Playlist
               </h2>
               <input
                 autoFocus
@@ -217,7 +191,7 @@ function PlaylistRow({
   return (
     <Link 
       href={`/playlists/${playlist.id}${isSystem ? "?type=system" : "?type=user"}`} 
-      className="group flex items-center gap-8 p-5 rounded-[2.5rem] hover:bg-white/[0.03] border border-transparent hover:border-white/[0.05] transition-all duration-500"
+      className="group flex items-center gap-8 p-5 rounded-[2.5rem] border-2 border-white/3 hover:bg-white/[0.03] border border-transparent hover:border-white/[0.05] transition-all duration-500"
     >
       <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-3xl border border-white/5 shadow-2xl">
         {playlist.coverImageKey ? (
@@ -241,22 +215,13 @@ function PlaylistRow({
           <h3 className="text-xl font-black italic uppercase tracking-tighter text-white group-hover:text-primary transition-colors truncate">
             {playlist.name || playlist.title}
           </h3>
-          <div className="px-3 py-0.5 bg-zinc-900/50 rounded-full border border-white/5">
-            <span className="text-[9px] font-black uppercase tracking-[0.15em] text-zinc-500">
-              {isSystem ? "Algorithm" : "Personal"}
-            </span>
-          </div>
         </div>
         <p className="text-zinc-500 text-xs font-medium italic opacity-60 group-hover:opacity-100 transition-opacity line-clamp-1 max-w-2xl">
-          {playlist.description || "A synchronized frequency of audio transients organized by mood and genre."}
+          {playlist.description || ""}
         </p>
       </div>
 
       <div className="shrink-0 flex items-center gap-6 pr-4">
-        <div className="hidden sm:flex flex-col items-end gap-1">
-          <span className="text-[10px] font-black uppercase tracking-widest text-zinc-600 italic group-hover:text-zinc-400">Playlist Buffer</span>
-          <span className="text-[10px] font-black uppercase tracking-widest text-violet-500/50">Verified Spectral</span>
-        </div>
         <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/5 flex items-center justify-center text-zinc-500 group-hover:bg-primary group-hover:text-black group-hover:shadow-2xl group-hover:shadow-primary/20 transition-all duration-300">
            <ChevronRight size={24} strokeWidth={3} />
         </div>

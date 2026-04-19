@@ -5,7 +5,7 @@ import { musicApi } from "@/lib/api";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { ListMusic, Play, Heart, Trash2, Clock, Music, ArrowLeft, Calendar, Share2, Sparkles } from "lucide-react";
+import { ListMusic, Play,  Trash2, Clock, Music, ArrowLeft, Calendar, Share2, Sparkles } from "lucide-react";
 import { playerActions, playerStore } from "@/store/player.store";
 import { mapListToPlayerSongs, mapToPlayerSong } from "@/lib/player-utils";
 import { useStore } from "@tanstack/react-store";
@@ -89,7 +89,7 @@ export default function PlaylistPage() {
     return `${minutes}:${seconds.toString().padStart(2, "0")}`;
   };
 
-  
+
 
   if (isPlaylistLoading || isSongsLoading) {
     return (
@@ -112,24 +112,24 @@ export default function PlaylistPage() {
     });
   };
 
-  const bannerUrl = getImageUrl(playlist?.bannerImageKey, { 
-    width: 1600, 
-    height: 800, 
+  const bannerUrl = getImageUrl(playlist?.bannerImageKey, {
+    width: 1600,
+    height: 800,
     focus: "auto",
-    aspectRatio: "2-1" 
+    aspectRatio: "2-1"
   });
-  const coverUrl = getImageUrl(playlist?.coverImageKey, { 
-    width: 400, 
-    height: 400, 
+  const coverUrl = getImageUrl(playlist?.coverImageKey, {
+    width: 400,
+    height: 400,
     focus: "auto",
-    aspectRatio: "1-1" 
+    aspectRatio: "1-1"
   });
 
   return (
     <div className="px-10 pb-20 space-y-12">
       {/* Navigation */}
       <div className="flex items-center gap-6">
-        <Link 
+        <Link
           href="/playlists"
           className="w-12 h-12 rounded-full border border-white/5 bg-white/5 flex items-center justify-center hover:bg-white/10 transition-all group"
         >
@@ -141,11 +141,11 @@ export default function PlaylistPage() {
       </div>
 
       {/* Playlist Hero */}
-       <section className="relative h-[450px] w-full overflow-hidden rounded-[4rem] border border-white/5 shadow-2xl group">
+      <section className="relative h-[450px] w-full overflow-hidden rounded-[4rem] border border-white/5 shadow-2xl group">
         <div className="absolute inset-0 bg-zinc-950">
           {playlist?.bannerImageKey ? (
-            <img 
-              src={bannerUrl} 
+            <img
+              src={bannerUrl}
               alt=""
               className="h-full w-full object-cover opacity-40 blur-sm group-hover:scale-110 group-hover:opacity-60 transition-all duration-[2s]"
             />
@@ -158,55 +158,37 @@ export default function PlaylistPage() {
         <div className="absolute inset-0 flex items-end p-12 gap-10 z-20">
           {/* Cover Art */}
           <div className="h-56 w-56 shrink-0 overflow-hidden rounded-[3.5rem] border-8 border-black shadow-[0_0_50px_rgba(0,0,0,0.5)] hidden md:block group-hover:scale-105 transition-transform duration-700 relative bg-zinc-900 flex items-center justify-center">
-             {playlist?.coverImageKey ? (
-               <img src={coverUrl} alt="" className="h-full w-full object-cover" />
-             ) : (
-               <ListMusic className="text-zinc-800" size={80} />
-             )}
+            {playlist?.coverImageKey ? (
+              <img src={coverUrl} alt="" className="h-full w-full object-cover" />
+            ) : (
+              <ListMusic className="text-zinc-800" size={80} />
+            )}
           </div>
 
           <div className="flex-1 space-y-4">
-            <div className="flex items-center gap-4">
-               <div className="px-4 py-1.5 rounded-full bg-white/5 border border-white/10 backdrop-blur-xl flex items-center gap-2">
-                 <Sparkles size={12} className="text-violet-400 fill-violet-400" />
-                 <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white italic">
-                   {isUserPlaylist ? "Personal Buffer" : "System Algorithm"}
-                 </span>
-               </div>
-               <span className="text-zinc-400 font-bold text-xs italic">
-                 {songs.length} Synchronized Frequencies
-               </span>
-            </div>
-            
             <h1 className="text-7xl md:text-8xl font-black text-white italic tracking-tighter uppercase drop-shadow-2xl">
               {playlist?.title || playlist?.name}
             </h1>
 
             <p className="max-w-2xl text-zinc-500 font-medium italic text-sm opacity-80 line-clamp-2">
-               {playlist?.description || "A synchronized frequency of audio transients organized by the network algorithm for optimal acoustic resonance."}
+              {playlist?.description || "A synchronized frequency of audio transients organized by the network algorithm for optimal acoustic resonance."}
             </p>
 
             <div className="pt-6 flex items-center gap-4">
-              <button 
+              <button
                 onClick={handleStreamAll}
                 disabled={songs.length === 0}
-                className="px-12 h-16 bg-white text-black rounded-[2rem] font-black text-xs uppercase tracking-widest hover:scale-105 active:scale-95 transition-all flex items-center gap-3 shadow-2xl shadow-white/10 disabled:opacity-50"
+                className="px-12 h-16 bg-white text-black rounded-4xl font-black text-xs uppercase tracking-widest hover:scale-105 active:scale-95 transition-all flex items-center gap-3 shadow-2xl shadow-white/10 disabled:opacity-50"
               >
                 <Play fill="black" size={18} />
-                Initialize Cluster
+                Play all
               </button>
-              
+
               <div className="flex items-center gap-3">
-                <button className="h-16 w-16 rounded-[2rem] bg-zinc-900/40 backdrop-blur-xl border border-white/10 flex items-center justify-center text-white hover:bg-white hover:text-black transition-all group">
-                  <Heart size={20} className="group-hover:fill-current" />
-                </button>
-                <button className="h-16 w-16 rounded-[2rem] bg-zinc-900/40 backdrop-blur-xl border border-white/10 flex items-center justify-center text-white hover:bg-white hover:text-black transition-all">
-                  <Share2 size={20} />
-                </button>
                 {isUserPlaylist && (
-                  <button 
+                  <button
                     onClick={() => confirm("Release this buffer from memory?") && deletePlaylist.mutate()}
-                    className="h-16 w-16 rounded-[2rem] bg-red-500/10 border border-red-500/10 flex items-center justify-center text-red-500 hover:bg-red-500 hover:text-white transition-all shadow-xl shadow-red-500/10"
+                    className="h-16 w-16 rounded-4xl bg-red-500/10 border border-red-500/10 flex items-center justify-center text-red-500 hover:bg-red-500 hover:text-white transition-all shadow-xl shadow-red-500/10"
                   >
                     <Trash2 size={20} />
                   </button>
@@ -220,11 +202,10 @@ export default function PlaylistPage() {
       {/* Tracks Section */}
       <section className="space-y-8">
         <div className="flex items-center justify-between border-b border-white/5 pb-6 px-4">
-           <div className="grid grid-cols-12 w-full text-zinc-600 text-[10px] font-black uppercase tracking-[0.3em] italic">
+          <div className="grid grid-cols-12 w-full text-zinc-600 text-[10px] font-black uppercase tracking-[0.3em] italic">
             <div className="col-span-1 text-center">#</div>
-            <div className="col-span-6 md:col-span-5">Spectral Identifier</div>
-            <div className="col-span-3 hidden md:block">Acoustic Node</div>
-            <div className="col-span-2 hidden lg:block uppercase">Sync Date</div>
+            <div className="col-span-6 md:col-span-5">Song Title</div>
+            <div className="col-span-3 hidden md:block">Artist Name</div>
             <div className="col-span-5 md:col-span-1 text-right pr-6">
               <Clock className="h-3 w-3 inline mb-0.5" />
             </div>
@@ -245,11 +226,11 @@ export default function PlaylistPage() {
                 </div>
 
                 {/* Title & Image */}
-                <div className="col-span-11 md:col-span-5 flex items-center gap-6">
+                <div className="col-span-6 md:col-span-5 flex items-center gap-6">
                   <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-2xl border border-white/5 shadow-2xl">
-                    {getImageUrl(song.coverImageKey, { width: 100, height: 100, aspectRatio: "1-1" }) ? (
+                    {(song.imageKey || song.coverImageKey) ? (
                       <img
-                        src={getImageUrl(song.coverImageKey, { width: 100, height: 100, aspectRatio: "1-1" })!}
+                        src={getImageUrl(song.imageKey || song.coverImageKey, { width: 100, height: 100, aspectRatio: "1-1" })!}
                         alt={song.title}
                         className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-500"
                       />
@@ -267,14 +248,14 @@ export default function PlaylistPage() {
                       {song.title}
                     </h4>
                     <div className="flex items-center gap-2">
-                       {song.language && (
-                         <span className="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[8px] text-violet-400 font-black uppercase tracking-widest">
-                           {song.language}
-                         </span>
-                       )}
-                       <p className="text-[9px] font-black uppercase tracking-widest text-zinc-400 italic group-hover:text-zinc-300 transition-colors block md:hidden">
-                          {song.artistName}
-                       </p>
+                      {song.language && (
+                        <span className="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[8px] text-violet-400 font-black uppercase tracking-widest">
+                          {song.language}
+                        </span>
+                      )}
+                      <p className="text-[9px] font-black uppercase tracking-widest text-zinc-400 italic group-hover:text-zinc-300 transition-colors block md:hidden">
+                        {song.artistName}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -286,7 +267,7 @@ export default function PlaylistPage() {
                   </span>
                 </div>
                 {/* Actions & Duration */}
-                <div className="col-span-5 md:col-span-1 flex items-center justify-end gap-6 pr-4">
+                <div className="col-span-5 md:col-span-1 lg:col-span-3 flex items-center justify-end gap-6 pr-4">
                   <div className="text-zinc-400 font-black text-xs italic group-hover:text-white transition-colors w-14 text-right">
                     {formatDuration(song.duration || song.durationMs || 0)}
                   </div>

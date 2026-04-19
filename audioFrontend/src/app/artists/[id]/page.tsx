@@ -6,7 +6,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { getImageUrl } from "@/lib/image-utils";
-import { Heart, Mic2, Play, Share2, ArrowLeft, Clock, Calendar, Music } from "lucide-react";
+import {   Play,  ArrowLeft, Clock, Calendar, Music } from "lucide-react";
 import { playerActions } from "@/store/player.store";
 import { mapToPlayerSong, mapListToPlayerSongs } from "@/lib/player-utils";
 
@@ -73,9 +73,6 @@ export default function ArtistPage() {
         >
           <ArrowLeft size={20} className="text-zinc-400 group-hover:text-white transition-colors" />
         </Link>
-        <h2 className="text-xl font-black italic uppercase tracking-tighter text-white">
-          Node Profile <span className="text-indigo-500">/</span> {artist?.name}
-        </h2>
       </div>
 
       {/* Hero Banner */}
@@ -106,16 +103,8 @@ export default function ArtistPage() {
           </div>
 
           <div className="flex-1 space-y-4">
-            <div className="flex items-center gap-3">
-              <span className="px-4 py-1.5 rounded-full bg-indigo-500 text-white text-[10px] font-black uppercase tracking-[0.2em] shadow-xl shadow-indigo-500/20">
-                Verified Artist
-              </span>
-              <span className="text-zinc-400 font-bold text-xs italic">
-                {songs.length} Synchronized Tracks
-              </span>
-            </div>
             
-            <h1 className="text-7xl md:text-8xl font-black text-white italic tracking-tighter uppercase drop-shadow-2xl">
+            <h1 className="text-7xl md:text-6xl font-black text-white italic tracking-tighter uppercase drop-shadow-2xl">
               {artist?.name}
             </h1>
 
@@ -126,30 +115,50 @@ export default function ArtistPage() {
                 className="px-12 h-16 bg-white text-black rounded-3xl font-black text-xs uppercase tracking-widest hover:scale-105 active:scale-95 transition-all flex items-center gap-3 shadow-2xl shadow-white/10 disabled:opacity-50"
               >
                 <Play fill="black" size={18} />
-                Initialize Stream
-              </button>
-              <button className="h-16 w-16 rounded-3xl bg-zinc-900/40 backdrop-blur-xl border border-white/10 flex items-center justify-center text-white hover:bg-white hover:text-black transition-all group">
-                <Heart size={20} className="group-hover:fill-current" />
-              </button>
-              <button className="h-16 w-16 rounded-3xl bg-zinc-900/40 backdrop-blur-xl border border-white/10 flex items-center justify-center text-white hover:bg-white hover:text-black transition-all">
-                <Share2 size={20} />
+                Play All
               </button>
             </div>
           </div>
         </div>
       </section>
+              {/* Right: Sidebar Info */}
+        <div className="space-y-8">
+           <div className="flex items-center gap-4 mb-8">
+            <h3 className="text-2xl font-black italic uppercase tracking-tighter text-white">
+              About Node
+            </h3>
+            <div className="h-px flex-1 bg-linear-to-r from-indigo-500/30 to-transparent" />
+          </div>
 
+          <div className="p-8 rounded-[3rem] bg-zinc-900/40 border border-white/5 space-y-6 backdrop-blur-3xl shadow-2xl">
+            <p className="text-zinc-400 text-sm font-medium leading-relaxed italic opacity-80">
+              {artist?.about || "This vocal node has not yet submitted a synchronization dossier to the network. Their frequency remains purely acoustic."}
+            </p>
+
+            <div className="pt-6 border-t border-white/5 space-y-4">
+              <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest italic">
+                <span className="text-zinc-500">Date of Birth</span>
+                <span className="text-indigo-400">{formatDate(artist?.createdAt)}</span>
+              </div>
+              <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest italic">
+                <span className="text-zinc-500">Verified</span>
+                <span className="text-white">Yes</span>
+              </div>
+               <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest italic">
+                <span className="text-zinc-500">Total songs</span>
+                <span className="text-white">4</span>
+              </div>
+            </div>
+          </div>
+        </div>
       {/* Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
         {/* Left: Tracks */}
         <div className="lg:col-span-2 space-y-8">
           <div className="flex items-center justify-between border-b border-white/5 pb-4">
             <h3 className="text-2xl font-black italic uppercase tracking-tighter text-white">
-              Popular Transients
+            Popular songs
             </h3>
-            <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500 italic">
-              Bitrate Verified
-            </span>
           </div>
 
           <div className="flex flex-col gap-2">
@@ -165,9 +174,9 @@ export default function ArtistPage() {
                   </div>
 
                   <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-2xl border border-white/5 shadow-2xl">
-                    {getImageUrl(song.coverImageKey, { width: 100, height: 100, aspectRatio: "1-1" }) ? (
+                    {getImageUrl(song.imageKey, { width: 100, height: 100, aspectRatio: "1-1" }) ? (
                       <img
-                        src={getImageUrl(song.coverImageKey, { width: 100, height: 100, aspectRatio: "1-1" })!}
+                        src={getImageUrl(song.imageKey, { width: 100, height: 100, aspectRatio: "1-1" })!}
                         alt={song.title}
                         className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-500"
                       />
@@ -213,40 +222,7 @@ export default function ArtistPage() {
           </div>
         </div>
 
-        {/* Right: Sidebar Info */}
-        <div className="space-y-8">
-           <div className="flex items-center gap-4 mb-8">
-            <h3 className="text-2xl font-black italic uppercase tracking-tighter text-white">
-              About Node
-            </h3>
-            <div className="h-px flex-1 bg-linear-to-r from-indigo-500/30 to-transparent" />
-          </div>
-
-          <div className="p-8 rounded-[3rem] bg-zinc-900/40 border border-white/5 space-y-6 backdrop-blur-3xl shadow-2xl">
-            <p className="text-zinc-400 text-sm font-medium leading-relaxed italic opacity-80">
-              {artist?.about || "This vocal node has not yet submitted a synchronization dossier to the network. Their frequency remains purely acoustic."}
-            </p>
-
-            <div className="pt-6 border-t border-white/5 space-y-4">
-              <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest italic">
-                <span className="text-zinc-500">Synchronization Date</span>
-                <span className="text-indigo-400">{formatDate(artist?.createdAt)}</span>
-              </div>
-              <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest italic">
-                <span className="text-zinc-500">Spectral Verified</span>
-                <span className="text-white">Yes</span>
-              </div>
-               <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest italic">
-                <span className="text-zinc-500">Active Clusters</span>
-                <span className="text-white">4</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="aspect-square rounded-[3rem] overflow-hidden border border-white/5 shadow-2xl">
-             <img src={coverUrl} className="w-full h-full object-cover grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition-all duration-1000" alt="" />
-          </div>
-        </div>
+       
       </div>
     </div>
   );

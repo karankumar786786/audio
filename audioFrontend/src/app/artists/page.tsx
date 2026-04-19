@@ -17,44 +17,13 @@ export default function ArtistsPage() {
 
   return (
     <div className="px-10 pb-20">
-      <header className="relative h-[300px] rounded-[3rem] overflow-hidden mb-12 shadow-2xl flex items-end">
-        <div className="absolute inset-0 bg-linear-to-br from-indigo-950 via-zinc-950 to-black">
-          <div className="absolute inset-0 bg-linear-to-t from-black via-transparent to-transparent z-10" />
-        </div>
-
-        <div className="relative z-20 p-12 flex items-center gap-10">
-          <div className="w-48 h-48 bg-indigo-600 rounded-[2.5rem] shadow-2xl shadow-indigo-500/20 border border-white/10 flex items-center justify-center">
-            <Users2 className="text-white" size={64} />
-          </div>
-
-          <div className="space-y-4">
-            <div className="flex items-center gap-3">
-              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-400 italic">
-                Verified Sources
-              </span>
-              <div className="h-1 w-8 bg-indigo-500 rounded-full" />
-            </div>
-            <h1 className="text-6xl font-black text-white italic tracking-tighter uppercase leading-none">
-              Artists
-            </h1>
-            <p className="text-zinc-500 text-sm font-medium opacity-80 max-w-xl italic">
-              Discover the localized acoustic nodes within the synchronized network.
-            </p>
-          </div>
-        </div>
-      </header>
-
       <section>
         <div className="flex items-center justify-between mb-12 px-2">
           <div className="flex items-center gap-6">
             <h2 className="text-3xl font-black italic tracking-tighter uppercase text-white">
-              Vocal Nodes
+              Artists
             </h2>
             <div className="h-px w-24 bg-linear-to-r from-indigo-500 to-transparent" />
-          </div>
-          <div className="flex items-center gap-3 text-zinc-500 text-[10px] font-black uppercase tracking-widest italic">
-            <Users2 size={14} />
-            <span>{artists.length} Nodes Active</span>
           </div>
         </div>
 
@@ -71,7 +40,7 @@ export default function ArtistsPage() {
               <Link
                 key={artist.id}
                 href={`/artists/${artist.id}`}
-                className="group flex items-center gap-8 p-6 rounded-[2rem] hover:bg-white/[0.03] border border-transparent hover:border-white/[0.05] transition-all duration-500"
+                className="group flex items-center gap-8 p-6 rounded-[2rem] border-2 border-white/3 hover:bg-white/[0.03] border border-transparent hover:border-white/[0.05] transition-all duration-500"
               >
                 {/* Artist Avatar */}
                 <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-full ring-2 ring-white/5 group-hover:ring-primary/40 transition-all duration-700 shadow-2xl">
@@ -99,9 +68,6 @@ export default function ArtistsPage() {
                     <h3 className="text-2xl font-black italic uppercase tracking-tighter text-white group-hover:text-primary transition-colors">
                       {artist.name}
                     </h3>
-                    <div className="px-3 py-1 bg-zinc-900/50 rounded-full border border-white/5">
-                      <span className="text-[9px] font-black uppercase tracking-[0.15em] text-zinc-500">Artist</span>
-                    </div>
                   </div>
                   <p className="text-zinc-500 text-xs font-medium line-clamp-1 max-w-3xl italic opacity-60 group-hover:opacity-100 transition-opacity">
                     {artist.about || "A verified acoustic node within the synchronization matrix."}
@@ -118,7 +84,7 @@ export default function ArtistsPage() {
             ))
           ) : (
             <div className="py-32 text-center text-zinc-700 border-2 border-dashed border-zinc-900 rounded-[4rem] font-bold italic tracking-tight uppercase">
-              No Vocal Nodes Detected
+              No Artists founfd
             </div>
           )}
         </div>
