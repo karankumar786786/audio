@@ -123,4 +123,17 @@ export class SongRepository extends BaseRepository<SongSchema, CreateSongData, U
         `;
         return rows.map((row) => this.mapRow(row));
     }
+
+    async getRandom(limit: number): Promise<SongSchema[]> {
+        const rows = await this.db`
+            SELECT 
+                id, title, artist_name AS "artistName", duration, 
+                song_key AS "songKey", image_key AS "imageKey", 
+                language, job_id AS "jobId", created_at AS "createdAt"
+            FROM songs 
+            ORDER BY RANDOM()
+            LIMIT ${limit}
+        `;
+        return rows.map((row) => this.mapRow(row));
+    }
 }

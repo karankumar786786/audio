@@ -205,12 +205,10 @@ export class RecommbeeRecommendationService implements RecommendationService<Rec
     userId: string,
     limit: number
   ): Promise<Partial<RecommendationSchema>[]> {
-    const req = new requests.RecommendItemsToUser(this.stripId(userId), limit, {
+    const strippedId = this.stripId(userId);
+    const req = new requests.RecommendItemsToUser(strippedId, limit, {
       cascadeCreate: true,
       returnProperties: true,
-      rotationRate: 0.2,     // Loosen penalty to ensure results in small catalogues
-      rotationTime: 86400,   // Window for "recently recommended" (24 hours)
-      diversity: 0.8,        // Encourage varied artists/styles
       includedProperties: [
         "fullId",
         "jobId",
@@ -227,6 +225,8 @@ export class RecommbeeRecommendationService implements RecommendationService<Rec
     const result = await this.send<{
       recomms: Array<{ id: string; values?: Record<string, unknown> }>;
     }>(req);
+
+    this.logger.info(`[RECOMBEE] Recommendation for ${strippedId} returned ${result.recomms?.length ?? 0} items`);
 
     return (result.recomms || []).map((r) => ({
       id: r.id,
