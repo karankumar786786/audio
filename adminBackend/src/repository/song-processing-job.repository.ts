@@ -3,7 +3,7 @@ import { SongProcessingJobSchema, type SongProcessingJob } from "../schema/songP
 import { BaseRepository } from "./base.repository";
 import { logMethods, type Logger } from "../observablity";
 
-type CreateJobData = Omit<SongProcessingJob, "transcodingAttempt" | "transcribingAttempt" | "status">;
+type CreateJobData = Omit<SongProcessingJob, "transcodingAttempt" | "transcribingAttempt">;
 type UpdateJobData = Partial<SongProcessingJob>;
 
 export class SongProcessingJobRepository extends BaseRepository<SongProcessingJob, CreateJobData, UpdateJobData> {
@@ -19,13 +19,13 @@ export class SongProcessingJobRepository extends BaseRepository<SongProcessingJo
         const [job] = await this.db`
             INSERT INTO song_processing_job (
                 id, job_id, title, artist_name, temp_song_key, image_key,
-                transcoded, transcribed, extracted_features, saved_in_search, saved_in_recommendation
+                transcoded, transcribed, extracted_features, saved_in_search, saved_in_recommendation, status
             )
             VALUES (
                 ${data.id}, ${data.jobId}, ${data.title}, ${data.artistName}, 
                 ${data.tempSongKey}, ${data.imageKey},
                 ${data.transcoded}, ${data.transcribed}, ${data.extractedFeatures}, 
-                ${data.savedInSearch}, ${data.savedInRecommendation}
+                ${data.savedInSearch}, ${data.savedInRecommendation}, ${data.status}
             )
             RETURNING 
                 id, job_id AS "jobId", title, artist_name AS "artistName", 

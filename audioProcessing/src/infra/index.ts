@@ -1,6 +1,7 @@
 import { config } from "dotenv";
 import { neon, type NeonQueryFunction } from "@neondatabase/serverless";
 import {Inngest} from "inngest";
+import ImageKit from "imagekit";
 config();
 
 export type Database = NeonQueryFunction<false, false>;
@@ -72,6 +73,12 @@ export const songProcessingJobRepository = new SongProcessingJobRepository(db, l
 
 import { AudioProcessingService } from "../services";
 
+export const imagekitClient = new ImageKit({
+    publicKey: process.env.IMAGEKIT_PUBLIC_KEY || "",
+    privateKey: process.env.IMAGEKIT_PRIVATE_KEY || "",
+    urlEndpoint: process.env.IMAGEKIT_URL_ENDPOINT || ""
+});
+
 // Main Service
 export const audioProcessingService = new AudioProcessingService(
     songRepository,
@@ -81,6 +88,7 @@ export const audioProcessingService = new AudioProcessingService(
     searchService,
     recommendationService,
     storageService,
+    imagekitClient,
     signatureService,
     logger
 );

@@ -14,6 +14,8 @@ describe("SongService", () => {
     let mockSignature: any;
     let mockSearch: any;
     let mockRecommendation: any;
+    let mockStorage: any;
+    let mockImageKit: any;
     let mockLogger: any;
     let mockInngest: any;
 
@@ -33,6 +35,8 @@ describe("SongService", () => {
         };
         mockSearch = { save: vi.fn(), delete: vi.fn() };
         mockRecommendation = { delete: vi.fn() };
+        mockStorage = { uploadObject: vi.fn(), deleteObject: vi.fn() };
+        mockImageKit = { upload: vi.fn() };
         mockLogger = {
             debug: vi.fn(),
             info: vi.fn(),
@@ -42,13 +46,15 @@ describe("SongService", () => {
         mockInngest = { send: vi.fn() };
 
         service = new SongService(
-            mockSongRepo as unknown as SongRepository,
-            mockJobRepo as unknown as SongProcessingJobRepository,
-            mockSignature as unknown as SignatureService,
-            mockSearch as unknown as SearchService,
-            mockRecommendation as unknown as RecommendationService,
-            mockLogger as unknown as Logger,
-            mockInngest as unknown as Inngest
+            mockSongRepo as unknown as any,
+            mockJobRepo as unknown as any,
+            mockSignature as unknown as any,
+            mockSearch as unknown as any,
+            mockRecommendation as unknown as any,
+            mockStorage as unknown as any,
+            mockImageKit as unknown as any,
+            mockLogger as unknown as any,
+            mockInngest as unknown as any
         );
     });
 

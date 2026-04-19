@@ -17,6 +17,8 @@ describe("Entity Discovery Integration", () => {
     let mockSearch: any;
     let mockRec: any;
     let mockSig: any;
+    let mockStorage: any;
+    let mockImageKit: any;
 
     beforeEach(() => {
         mockDb = vi.fn() as any;
@@ -34,6 +36,8 @@ describe("Entity Discovery Integration", () => {
             generateSignedId: vi.fn().mockReturnValue("signed-id"), 
             verifyId: vi.fn() 
         };
+        mockStorage = { uploadObject: vi.fn(), deleteObject: vi.fn() };
+        mockImageKit = { upload: vi.fn() };
 
         songRepo = new SongRepository(mockDb, mockLogger);
         jobRepo = new SongProcessingJobRepository(mockDb, mockLogger);
@@ -44,6 +48,8 @@ describe("Entity Discovery Integration", () => {
             mockSig, 
             mockSearch, 
             mockRec, 
+            mockStorage,
+            mockImageKit,
             mockLogger, 
             mockInngest
         );

@@ -2,7 +2,7 @@ import { z } from "zod";
 
 import { registry } from "../docs/openapi-registry";
 
-export const SongProcessingJobStatusSchema = z.enum(['pending', 'processing', 'completed', 'failed', 'cancelled']).openapi("JobStatus");
+export const SongProcessingJobStatusSchema = z.enum(['pending', 'processing', 'completed', 'failed', 'cancelled', 'importing']).openapi("JobStatus");
 
 export const SongProcessingJobSchema = z.object({
   id: z.string().openapi({ description: "Track ID", example: "track_123" }),
@@ -10,9 +10,9 @@ export const SongProcessingJobSchema = z.object({
   title: z.string().min(1, "Title is required").openapi({ description: "Track title", example: "High Rated Gabru" }),
   artistName: z.string().min(1, "Artist name is required").openapi({ description: "Artist name", example: "Guru Randhawa" }),
   duration: z.number().optional().nullable().openapi({ description: "Duration in seconds", example: 214 }),
-  tempSongKey: z.string().min(1, "Temporary song key is required").openapi({ description: "S3 key for raw upload", example: "temp/123.mp3" }),
+  tempSongKey: z.string().openapi({ description: "S3 key for raw upload", example: "temp/123.mp3" }),
   songKey: z.string().optional().nullable().openapi({ description: "S3 key for finished audio", example: "songs/audio/123.m4a" }),
-  imageKey: z.string().min(1, "Image key is required").openapi({ description: "S3 key for artwork", example: "songs/images/123.jpg" }),
+  imageKey: z.string().openapi({ description: "S3 key for artwork", example: "songs/images/123.jpg" }),
   language: z.string().optional().nullable().openapi({ description: "Detected language code", example: "pa" }),
   sampleRate: z.number().optional().nullable().openapi({ description: "Audio sample rate", example: 44100 }),
   loudness: z.number().optional().nullable().openapi({ description: "Integrated loudness (LUFS)", example: -12.5 }),

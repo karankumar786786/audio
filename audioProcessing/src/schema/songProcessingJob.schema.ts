@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const SongProcessingJobStatusSchema = z.enum(['pending', 'processing', 'completed', 'failed', 'cancelled']);
+export const SongProcessingJobStatusSchema = z.enum(['pending', 'processing', 'completed', 'failed', 'cancelled', 'importing']);
 
 export const SongProcessingJobSchema = z.object({
   id: z.string(),
@@ -8,9 +8,9 @@ export const SongProcessingJobSchema = z.object({
   title: z.string().min(1, "Title is required"),
   artistName: z.string().min(1, "Artist name is required"),
   duration: z.number().optional().nullable(),
-  tempSongKey: z.string().min(1, "Temporary song key is required"),
+  tempSongKey: z.string(),
   songKey: z.string().optional().nullable(),
-  imageKey: z.string().min(1, "Image key is required"),
+  imageKey: z.string(),
   language: z.string().optional().nullable(),
   sampleRate: z.number().optional().nullable(),
   loudness: z.number().optional().nullable(),

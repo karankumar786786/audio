@@ -4,6 +4,9 @@ import { type SongProcessingJob } from "../schema/songProcessingJob.schema";
 import { type SignatureUtility } from "../lib/signature";
 import * as path from "node:path";
 import * as fs from "node:fs";
+import { spawn } from "node:child_process";
+import axios from "axios";
+import type ImageKit from "imagekit";
 
 export class AudioProcessingService {
     constructor(
@@ -14,6 +17,7 @@ export class AudioProcessingService {
         private readonly searchService: any, // AlgoliaService
         private readonly recommendationService: any, // RecommendationServiceImpl
         private readonly storageService: any, // S3Service
+        private readonly imageKitClient: ImageKit,
         private readonly signatureUtility: SignatureUtility,
         private readonly logger: Logger
     ) {}
@@ -187,5 +191,79 @@ export class AudioProcessingService {
             ...features,
             extractedFeatures: true
         });
+    }
+
+    async importFromYoutube(songId: string, data: { ytUrl: string, title: string, artistName: string }, stepLogger: Logger): Promise<void> {
+        this.signatureUtility.verifyId(songId);
+        const ytDlpPath = path.resolve(process.cwd(), "bin/yt-dlp");
+        const tempBucket = process.env.TEMP_BUCKET_NAME || "videotranscodetemp";
+
+        try {
+            // 1. Get YouTube Metadata
+            stepLogger.info({ ytUrl: data.ytUrl }, "Fetching YouTube metadata");
+            const metadata = await new Promise<any>((resolve, reject) => {
+                const child = spawn(ytDlpPath, [data.ytUrl, "--dump-single-json", "--no-check-certificates", "--no-warnings"]);
+                let stdout = "";
+                let stderr = "";
+                child.stdout.on("data", (data) => { stdout += data; });
+                child.stderr.on("data", (data) => { stderr += data; });
+                child.on("close", (code) => {
+                    if (code !== 0) return reject(new Error(`yt-dlp metadata failed with code ${code}: ${stderr}`));
+                    try { resolve(JSON.parse(stdout)); } catch (e) { reject(new Error("Failed to parse metadata")); }
+                });
+            });
+
+            const thumbnailUrl = metadata.thumbnail;
+            const duration = metadata.duration; // duration in seconds
+
+            // 2. Start yt-dlp stream process
+            stepLogger.info("Starting YouTube audio stream");
+            const ytDlpProcess = spawn(ytDlpPath, [
+                data.ytUrl,
+                "-f", "bestaudio",
+                "-o", "-",
+                "--no-check-certificates",
+                "--no-warnings"
+            ]);
+
+            // 3. Upload to S3
+            const tempSongKey = `songs/raw/${songId}.webm`;
+            stepLogger.info({ tempSongKey }, "Piping YouTube stream to S3");
+            await this.storageService.uploadObject(
+                tempBucket,
+                tempSongKey,
+                ytDlpProcess.stdout,
+                "audio/webm"
+            );
+
+            // 4. Process Thumbnail
+            let imageKey = "";
+            if (thumbnailUrl) {
+                stepLogger.info({ thumbnailUrl }, "Fetching YouTube thumbnail");
+                const response = await axios.get(thumbnailUrl, { responseType: "arraybuffer" });
+                const buffer = Buffer.from(response.data, "binary");
+                
+                stepLogger.info("Uploading thumbnail to ImageKit");
+                const uploadRes = await this.imageKitClient.upload({
+                    file: buffer,
+                    fileName: `yt-thumb-${songId}.jpg`,
+                    folder: "/songs/images"
+                });
+                imageKey = uploadRes.filePath;
+            }
+
+            // 5. Update Job
+            stepLogger.info("Updating job record with imported details");
+            await this.jobRepository.update(songId, {
+                tempSongKey,
+                imageKey,
+                duration,
+                status: "processing"
+            });
+
+        } catch (error: any) {
+            stepLogger.error({ error: error.message }, "Failed to import from YouTube");
+            throw error;
+        }
     }
 }

@@ -4,6 +4,7 @@ import { processExtractedFeatures } from "./extractFeatures.function";
 import { finalizeSong } from "./createSongInTable.function";
 import { indexRecombee } from "./saveInRecombee.function";
 import { indexAlgolia } from "./saveInAlgolia.function";
+import { importFromYoutube } from "./importFromYoutube.function";
 
 export const functions = [
     transcodeSong,
@@ -11,5 +12,6 @@ export const functions = [
     processExtractedFeatures,
     finalizeSong,
     indexRecombee,
-    indexAlgolia
+    indexAlgolia,
+    importFromYoutube
 ];

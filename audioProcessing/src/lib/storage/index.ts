@@ -7,6 +7,7 @@ import {
     DeleteObjectCommand,
     HeadObjectCommand,
 } from "@aws-sdk/client-s3";
+import { Upload } from "@aws-sdk/lib-storage";
 import {getSignedUrl} from "@aws-sdk/s3-request-presigner";
 
 export class S3Service {
@@ -36,13 +37,19 @@ export class S3Service {
 
         for (let i = 0; i < maxRetries; i++) {
             try {
-                await this.client.send(new PutObjectCommand({
-                    Bucket: bucket,
-                    Key: key,
-                    Body: uploadBody as any,
-                    ContentType: contentType,
-                    CacheControl: "no-transform"
-                }));
+                const parallelUploads3 = new Upload({
+                    client: this.client,
+                    params: {
+                        Bucket: bucket,
+                        Key: key,
+                        Body: uploadBody as any,
+                        ContentType: contentType,
+                        CacheControl: "no-transform"
+                    },
+                    leavePartsOnError: false,
+                });
+
+                await parallelUploads3.done();
                 return;
             } catch (err: any) {
                 lastError = err;
