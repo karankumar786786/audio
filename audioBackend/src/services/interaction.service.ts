@@ -1,7 +1,7 @@
 import { type UserHistoryRepository } from "../repository/user-history.repository";
 import { type InteractionRepository } from "../repository/interaction.repository";
 import { type SongRepository } from "../repository/song.repository";
-import { type RecommendationService } from "../lib/recommendation";
+import { type RecommendationSchema, type RecommendationService } from "../lib/recommendation";
 import { type SignatureService } from "../lib/signature";
 import type { PaginationParams, PaginatedResult } from "../type/pagination.type";
 import { buildPaginatedResult } from "../type/pagination.type";
@@ -41,27 +41,38 @@ export class InteractionService {
     async getRecommendations(userId: string, limit: number): Promise<PaginatedResult<SongSchema>> {
         this.signatureService.verifyId(userId, "userId");
         const recommendations = await this.recommendationService.recommendUser(userId, limit);
-        let songIds = recommendations.map(r => r.id).filter((id): id is string => !!id);
+        const songIds: string[] = [];
+        for (const r of recommendations) {
+            if (r.id && typeof r.id === "string") {
+                songIds.push(r.id.split(".")[0]!);
+            } 
+        }
+        
+        this.logger.info(`[InteractionService] Recombee returned ${songIds.length} IDs for ${userId}: ${JSON.stringify(songIds)}`);
 
-        // Fallback to Trending if Recombee has no data (Cold Start)
         if (songIds.length === 0) {
-            this.logger.info(`[InteractionService] No recommendations for ${userId}, falling back to Trending.`);
-            const trending = await this.interactionRepository.getTrendingSongs(limit, 0);
-            return buildPaginatedResult<SongSchema>(trending, trending.length, { page: 1, limit });
+            this.logger.info(`[InteractionService] Zero recommendations from Recombee for ${userId}, falling back to Trending.`);
+            return this.getTrendingSongs({ page: 1, limit });
         }
 
-        const songs = await this.songRepository.getByIds(songIds);
-        const songMap = new Map(songs.map(s => [s.id, s]));
-        const result = songIds.map(id => songMap.get(id)).filter((song): song is SongSchema => !!song);
+        // Use getByBaseIds because Recombee returns raw UUIDs, but DB has uuid.signature
+        const songs = await this.songRepository.getByBaseIds(songIds as string[]);
+        this.logger.info(`[InteractionService] Found ${songs.length} / ${songIds.length} songs in DB for recommendations.`);
 
-        // If after filtering we have too few results, complement with Trending (shuffled for variety)
+        const songMap = new Map<string, SongSchema>(songs.map(s => [s.id.split('.')[0] as string, s]));
+        const result = (songIds as string[]).map(id => songMap.get(id)).filter((song): song is SongSchema => !!song);
+
+        // If after filtering we have too few results, complement with Trending
         if (result.length < limit) {
-            const trending = await this.interactionRepository.getTrendingSongs(limit * 2, 0);
-            const shuffledTrending = trending.sort(() => Math.random() - 0.5);
-            for (const t of shuffledTrending) {
-                if (result.length >= limit) break;
-                if (!result.find(r => r.id === t.id)) result.push(t);
+            const trending = await this.getTrendingSongs({ page: 1, limit });
+            const combined = [...result];
+            for (const s of trending.data) {
+                if (combined.length >= limit) break;
+                if (!combined.some(c => c.id === s.id)) {
+                    combined.push(s);
+                }
             }
+            return buildPaginatedResult<SongSchema>(combined, combined.length, { page: 1, limit });
         }
 
         return buildPaginatedResult<SongSchema>(result, result.length, { page: 1, limit });

@@ -110,4 +110,17 @@ export class SongRepository extends BaseRepository<SongSchema, CreateSongData, U
         `;
         return rows.map((row) => this.mapRow(row));
     }
+
+    async getByBaseIds(baseIds: string[]): Promise<SongSchema[]> {
+        if (baseIds.length === 0) return [];
+        const rows = await this.db`
+            SELECT 
+                id, title, artist_name AS "artistName", duration, 
+                song_key AS "songKey", image_key AS "imageKey", 
+                language, job_id AS "jobId", created_at AS "createdAt"
+            FROM songs 
+            WHERE split_part(id, '.', 1) = ANY(${baseIds})
+        `;
+        return rows.map((row) => this.mapRow(row));
+    }
 }

@@ -205,7 +205,7 @@ export class RecommbeeRecommendationService implements RecommendationService<Rec
     const req = new requests.RecommendItemsToUser(this.stripId(userId), limit, {
       cascadeCreate: true,
       returnProperties: true,
-      rotationRate: 0.8,     // Strongly penalize recently recommended items
+      rotationRate: 0.2,     // Loosen penalty to ensure results in small catalogues
       rotationTime: 86400,   // Window for "recently recommended" (24 hours)
       diversity: 0.8,        // Encourage varied artists/styles
       includedProperties: [
