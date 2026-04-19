@@ -212,7 +212,7 @@ export function AppNavbar() {
                             onClick={() => handlePlaySong(song)}
                             className="w-full flex items-center gap-3 p-2 hover:bg-white/5 rounded-xl transition-all text-left group"
                           >
-                            <div className="w-10 h-10 rounded-lg bg-zinc-900 overflow-hidden flex-shrink-0 border border-white/5">
+                            <div className="w-10 h-10 rounded-lg bg-zinc-900 overflow-hidden shrink-0 border border-white/5">
                               <img
                                 src={getImageUrl(song.imageKey, { 
                                   width: 100, 
@@ -253,7 +253,7 @@ export function AppNavbar() {
                             onClick={() => handleArtistClick(artist)}
                             className="w-full flex items-center gap-3 p-2 hover:bg-white/5 rounded-xl transition-all text-left group"
                           >
-                            <div className="w-10 h-10 rounded-full bg-zinc-900 overflow-hidden flex-shrink-0 border border-white/5 flex items-center justify-center">
+                            <div className="w-10 h-10 rounded-full bg-zinc-900 overflow-hidden shrink-0 border border-white/5 flex items-center justify-center">
                               {artist.coverImageKey ? (
                                 <img
                                   src={getImageUrl(artist.coverImageKey, {
@@ -273,7 +273,7 @@ export function AppNavbar() {
                               <p className="text-xs font-bold text-white truncate">
                                 {artist.name}
                               </p>
-                              <p className="text-[10px] text-zinc-500 font-black uppercase tracking-widest italic tracking-wider">
+                              <p className="text-[10px] text-zinc-500 font-black uppercase tracking-wider italic">
                                 Artist
                               </p>
                             </div>
@@ -298,7 +298,7 @@ export function AppNavbar() {
                             onClick={() => handlePlaylistClick(playlist)}
                             className="w-full flex items-center gap-3 p-2 hover:bg-white/5 rounded-xl transition-all text-left group"
                           >
-                            <div className="w-10 h-10 rounded-lg bg-zinc-900 overflow-hidden flex-shrink-0 border border-white/5 flex items-center justify-center">
+                            <div className="w-10 h-10 rounded-lg bg-zinc-900 overflow-hidden shrink-0 border border-white/5 flex items-center justify-center">
                               {playlist.coverImageKey ? (
                                 <img
                                   src={getImageUrl(playlist.coverImageKey, {

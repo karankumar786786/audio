@@ -324,7 +324,7 @@ export default function LibraryPage() {
       {/* Create Modal */}
       <AnimatePresence>
         {isCreateModalOpen && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 backdrop-blur-3xl bg-black/40">
+          <div className="fixed inset-0 z-100 flex items-center justify-center p-6 backdrop-blur-3xl bg-black/40">
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}

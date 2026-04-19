@@ -58,8 +58,8 @@ export default function PlaylistsPage() {
   return (
     <div className="px-10 pb-20">
       <header className="relative h-[300px] rounded-[3rem] overflow-hidden mb-12 shadow-2xl flex items-end">
-        <div className="absolute inset-0 bg-gradient-to-br from-violet-950 via-zinc-950 to-black">
-          <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent z-10" />
+        <div className="absolute inset-0 bg-linear-to-br from-violet-950 via-zinc-950 to-black">
+          <div className="absolute inset-0 bg-linear-to-t from-black via-transparent to-transparent z-10" />
         </div>
 
         <div className="relative z-20 p-12 flex items-center gap-10">
@@ -92,7 +92,7 @@ export default function PlaylistsPage() {
             <h2 className="text-3xl font-black italic tracking-tighter uppercase text-white">
               Your Transients
             </h2>
-            <div className="h-px w-24 bg-gradient-to-r from-violet-500 to-transparent" />
+            <div className="h-px w-24 bg-linear-to-r from-violet-500 to-transparent" />
           </div>
           <button
             onClick={() =>
@@ -139,7 +139,7 @@ export default function PlaylistsPage() {
           <h2 className="text-3xl font-black italic tracking-tighter uppercase text-white">
             System Algorithms
           </h2>
-          <div className="h-px flex-1 bg-gradient-to-r from-violet-500/50 to-transparent" />
+          <div className="h-px flex-1 bg-linear-to-r from-violet-500/50 to-transparent" />
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-10">
@@ -152,7 +152,7 @@ export default function PlaylistsPage() {
       {/* Create Playlist Modal */}
       <AnimatePresence>
         {isCreateModalOpen && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 backdrop-blur-3xl bg-black/40">
+          <div className="fixed inset-0 z-100 flex items-center justify-center p-6 backdrop-blur-3xl bg-black/40">
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
@@ -212,7 +212,7 @@ function PlaylistCard({
   return (
     <Link href={`/playlists/${playlist.id}${isSystem ? "?type=system" : "?type=user"}`} className="group relative">
       <div className="aspect-square bg-zinc-900 rounded-[3rem] border border-white/5 overflow-hidden mb-6 group-hover:border-violet-500/50 transition-all duration-500 shadow-xl group-hover:shadow-violet-500/10 relative">
-        <div className="w-full h-full bg-gradient-to-br from-zinc-800 to-zinc-950 flex items-center justify-center group-hover:from-violet-900/40 group-hover:to-zinc-950 transition-colors duration-700">
+        <div className="w-full h-full bg-linear-to-br from-zinc-800 to-zinc-950 flex items-center justify-center group-hover:from-violet-900/40 group-hover:to-zinc-950 transition-colors duration-700">
           {playlist.coverImageKey ? (
             <img 
               src={coverUrl} 
@@ -228,7 +228,7 @@ function PlaylistCard({
         </div>
 
         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[2px]">
-          <div className="w-16 h-16 bg-white rounded-[2rem] flex items-center justify-center text-black shadow-2xl scale-90 group-hover:scale-100 transition-transform">
+          <div className="w-16 h-16 bg-white rounded-4xl flex items-center justify-center text-black shadow-2xl scale-90 group-hover:scale-100 transition-transform">
             <Sparkles size={24} className="fill-black" />
           </div>
         </div>
