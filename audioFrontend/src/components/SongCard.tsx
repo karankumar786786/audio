@@ -69,12 +69,11 @@ export function SongCard({ song, priority, onRemove }: SongCardProps) {
   return (
     <>
       <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        whileHover={{ y: -3 }}
-        className="bg-zinc-900/20 hover:bg-zinc-900/50 border border-white/[0.04] hover:border-white/[0.08] transition-all p-3.5 rounded-[1.5rem] group cursor-pointer relative"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="glass-effect hover-scale p-3.5 rounded-[1.8rem] group cursor-pointer relative overflow-hidden"
       >
-        <div className="aspect-square bg-zinc-800 rounded-[1.2rem] mb-3.5 relative shadow-xl overflow-hidden ring-1 ring-white/[0.04]">
+        <div className="aspect-square bg-zinc-900 rounded-[1.4rem] mb-4 relative shadow-2xl overflow-hidden ring-1 ring-white/[0.04]">
           <img
             src={getImageUrl(song.imageKey, {
               width: 400,
@@ -88,56 +87,56 @@ export function SongCard({ song, priority, onRemove }: SongCardProps) {
           />
 
           {/* Play Overlay */}
-          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center backdrop-blur-[2px]">
+          <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center backdrop-blur-[4px]">
             <motion.button
-              whileHover={{ scale: 1.1 }}
+              whileHover={{ scale: 1.15 }}
               whileTap={{ scale: 0.9 }}
               onClick={handlePlay}
-              className="w-12 h-12 bg-indigo-500 hover:bg-white hover:text-black rounded-full shadow-2xl flex items-center justify-center text-white transition-colors"
+              className="w-14 h-14 bg-primary text-black rounded-full shadow-2xl flex items-center justify-center hover:brightness-110 transition-all"
             >
-              <Play fill="currentColor" size={20} className="ml-0.5" />
+              <Play fill="black" size={24} className="ml-1" />
             </motion.button>
           </div>
         </div>
 
-        <div className="space-y-1 px-1">
-          <h3 className="font-black text-zinc-100 truncate text-[0.85rem] uppercase italic tracking-tight">
+        <div className="space-y-1.5 px-1.5 pb-1">
+          <h3 className="font-black text-white truncate text-[0.9rem] uppercase italic tracking-tighter text-glow-green">
             {song.title}
           </h3>
-          <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest truncate group-hover:text-indigo-400 transition-colors italic">
+          <p className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.15em] truncate group-hover:text-primary transition-colors italic">
             {song.artistName}
           </p>
         </div>
 
         {/* Quick Actions */}
-        <div className="absolute top-5 right-5 flex flex-col gap-1.5 opacity-0 group-hover:opacity-100 transition-all translate-x-2 group-hover:translate-x-0 duration-300">
+        <div className="absolute top-5 right-5 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-all translate-x-3 group-hover:translate-x-0 duration-300">
           {onRemove && (
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 onRemove();
               }}
-              className="w-8 h-8 rounded-xl bg-red-500/80 backdrop-blur-xl border border-white/10 flex items-center justify-center text-white hover:bg-red-600 transition-all shadow-lg"
+              className="w-9 h-9 rounded-xl bg-red-500 text-white flex items-center justify-center hover:brightness-110 transition-all shadow-2xl"
               title="Remove"
             >
-              <X size={14} />
+              <X size={15} />
             </button>
           )}
           <button
             onClick={handleToggleFavourite}
-            className={`w-8 h-8 rounded-xl bg-black/60 backdrop-blur-xl border border-white/10 flex items-center justify-center transition-colors shadow-lg ${
+            className={`w-9 h-9 rounded-xl bg-black/60 backdrop-blur-xl border border-white/10 flex items-center justify-center transition-all shadow-2xl ${
               isFavourite
-                ? "text-red-500"
-                : "text-zinc-400 hover:text-red-500"
+                ? "text-primary border-primary/20"
+                : "text-zinc-400 hover:text-primary"
             }`}
           >
-            <Heart size={14} fill={isFavourite ? "currentColor" : "none"} />
+            <Heart size={15} fill={isFavourite ? "currentColor" : "none"} />
           </button>
           <button
             onClick={handleOpenPlaylistPicker}
-            className="w-8 h-8 rounded-xl bg-black/60 backdrop-blur-xl border border-white/10 flex items-center justify-center text-zinc-400 hover:text-white transition-all shadow-lg"
+            className="w-9 h-9 rounded-xl bg-black/60 backdrop-blur-xl border border-white/10 flex items-center justify-center text-zinc-400 hover:text-primary transition-all shadow-2xl"
           >
-            <Plus size={14} />
+            <Plus size={15} />
           </button>
         </div>
       </motion.div>

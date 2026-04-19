@@ -106,19 +106,19 @@ export function LyricsOverlay() {
                 alt="Artwork"
               />
             </motion.div>
-            <motion.h2
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-              className="text-4xl font-black mb-2 italic uppercase tracking-tighter"
-            >
-              {currentSong.title}
-            </motion.h2>
+              <motion.h2
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                className="text-4xl font-black mb-2 italic uppercase tracking-tighter text-glow-green"
+              >
+                {currentSong.title}
+              </motion.h2>
             <motion.p
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
-              className="text-lg text-indigo-400/70 font-bold uppercase tracking-[0.1em] italic"
+              className="text-lg text-primary/70 font-bold uppercase tracking-[0.2em] italic"
             >
               {currentSong.artistName}
             </motion.p>
@@ -150,7 +150,7 @@ export function LyricsOverlay() {
                   }}
                   transition={{ duration: 0.4, ease: "easeOut" }}
                   className={`text-3xl md:text-5xl font-black leading-tight cursor-pointer hover:opacity-60 transition-opacity ${
-                    activeIndex === i ? "text-white text-glow" : "text-zinc-700"
+                    activeIndex === i ? "text-primary text-glow-green" : "text-zinc-700"
                   }`}
                 >
                   {line.text}

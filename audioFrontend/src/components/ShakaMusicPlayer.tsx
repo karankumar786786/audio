@@ -504,7 +504,7 @@ export function ShakaMusicPlayer() {
 
   return (
     <>
-      <div className="w-[380px] bg-zinc-950/95 backdrop-blur-2xl border-l border-white/[0.04] flex flex-col h-screen overflow-hidden flex-none relative z-50">
+      <div className="w-[380px] glass-effect-strong border-l border-white/[0.04] flex flex-col h-screen overflow-hidden flex-none relative z-50">
         {/* ─── Ambient Glow ─── */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
           <div
@@ -541,10 +541,10 @@ export function ShakaMusicPlayer() {
         <div className="flex-none px-6 py-2 relative z-10">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0 flex-1">
-              <h2 className="text-base font-black text-white italic uppercase tracking-tight truncate leading-tight">
+              <h2 className="text-base font-black text-white italic uppercase tracking-tight truncate leading-tight text-glow-green">
                 {currentSong.title}
               </h2>
-              <p className="text-[10px] font-bold text-indigo-400/70 uppercase tracking-[0.12em] italic mt-0.5 truncate">
+              <p className="text-[10px] font-black text-primary/70 uppercase tracking-[0.15em] italic mt-0.5 truncate">
                 {currentSong.artistName}
               </p>
             </div>
@@ -552,8 +552,8 @@ export function ShakaMusicPlayer() {
               <button
                 onClick={handleToggleFavourite}
                 className={`p-2 rounded-xl transition-all ${isFavourite
-                    ? "text-red-500"
-                    : "text-zinc-600 hover:text-red-400 hover:bg-white/5"
+                    ? "text-primary shadow-2xl shadow-primary/20"
+                    : "text-zinc-600 hover:text-primary hover:bg-white/5"
                   }`}
                 title={isFavourite ? "Remove from favourites" : "Add to favourites"}
               >
@@ -567,7 +567,7 @@ export function ShakaMusicPlayer() {
                   }
                   setIsPlaylistModalOpen(true);
                 }}
-                className="p-2 text-zinc-600 hover:text-indigo-400 hover:bg-white/5 rounded-xl transition-all"
+                className="p-2 text-zinc-600 hover:text-primary hover:bg-white/5 rounded-xl transition-all"
                 title="Add to playlist"
               >
                 <Plus size={15} />
@@ -599,14 +599,14 @@ export function ShakaMusicPlayer() {
                             key={idx}
                             animate={{
                               color: isActive
-                                ? "#ffffff"
+                                ? "var(--primary)"
                                 : isPast
                                   ? "rgba(255,255,255,0.4)"
                                   : "rgba(255,255,255,0.12)",
                               scale: isActive ? 1.06 : 1,
                             }}
                             transition={{ duration: 0.12 }}
-                            className={`text-lg font-black italic tracking-tight leading-relaxed ${isActive ? "text-glow" : ""
+                            className={`text-lg font-black italic tracking-tight leading-relaxed ${isActive ? "text-glow-green" : ""
                               }`}
                           >
                             {word.text}
@@ -615,7 +615,7 @@ export function ShakaMusicPlayer() {
                       })}
                     </div>
                   ) : (
-                    <p className="text-lg font-black italic tracking-tight text-white/80 leading-relaxed text-glow">
+                    <p className="text-lg font-black italic tracking-tight text-white/80 leading-relaxed text-glow-green">
                       {currentCaption.transcript}
                     </p>
                   )}
@@ -655,7 +655,7 @@ export function ShakaMusicPlayer() {
                 className="absolute top-0 left-0 h-full rounded-full"
                 style={{
                   width: `${progressPct}%`,
-                  background: "linear-gradient(90deg, #6366f1, #818cf8)",
+                  background: "linear-gradient(90deg, oklch(0.77 0.17 142), oklch(0.5 0.13 142))",
                 }}
               />
               <div
@@ -674,7 +674,7 @@ export function ShakaMusicPlayer() {
             <button
               onClick={() => playerActions.toggleRepeat()}
               className={`p-1.5 rounded-lg transition-all ${repeatMode !== "none"
-                  ? "text-indigo-400"
+                  ? "text-primary"
                   : "text-zinc-700 hover:text-zinc-400"
                 }`}
             >
@@ -694,7 +694,7 @@ export function ShakaMusicPlayer() {
               className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-black shadow-[0_4px_20px_rgba(255,255,255,0.12)] hover:shadow-[0_4px_30px_rgba(255,255,255,0.2)] transition-shadow"
             >
               {isLoading ? (
-                <div className="w-4 h-4 border-2 border-black/10 border-t-black rounded-full animate-spin" />
+                <div className="w-4 h-4 border-2 border-black/10 border-t-primary rounded-full animate-spin" />
               ) : isPlaying ? (
                 <Pause size={20} fill="black" />
               ) : (
@@ -712,7 +712,7 @@ export function ShakaMusicPlayer() {
             <button
               onClick={() => setShowQualityMenu(!showQualityMenu)}
               className={`p-1.5 rounded-lg transition-all ${showQualityMenu
-                  ? "text-indigo-400"
+                  ? "text-primary"
                   : "text-zinc-700 hover:text-zinc-400"
                 }`}
             >
@@ -738,7 +738,7 @@ export function ShakaMusicPlayer() {
                 className="absolute top-0 left-0 h-full rounded-full"
                 style={{
                   width: `${volumePct}%`,
-                  background: "linear-gradient(90deg, #6366f1, #818cf8)"
+                  background: "linear-gradient(90deg, oklch(0.77 0.17 142), oklch(0.5 0.13 142))"
                 }}
               />
               {/* Subtle track handle */}
@@ -784,10 +784,10 @@ export function ShakaMusicPlayer() {
                         playerActions.setSelectedQuality(t.bandwidth);
                         setShowQualityMenu(false);
                       }}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold transition-all ${selectedQuality === t.bandwidth
-                          ? "bg-indigo-500/15 text-indigo-400"
-                          : "text-zinc-500 hover:text-white hover:bg-white/5"
-                        }`}
+                    className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold transition-all ${selectedQuality === t.bandwidth
+                        ? "bg-primary/15 text-primary"
+                        : "text-zinc-500 hover:text-white hover:bg-white/5"
+                      }`}
                     >
                       {Math.round(t.bandwidth / 1000)} kbps
                     </button>

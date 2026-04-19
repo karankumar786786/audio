@@ -69,22 +69,22 @@ export function LeftSidebar() {
   };
 
   return (
-    <aside className="w-64 bg-zinc-950 border-r border-white/[0.04] flex flex-col h-screen fixed left-0 top-0 z-50 overflow-hidden">
-      <div className="p-8 flex flex-col h-full">
+    <aside className="w-64 glass-effect border-r border-white/[0.04] flex flex-col h-screen fixed left-0 top-0 z-50 overflow-hidden">
+      <div className="p-8 flex flex-col h-full bg-black/20">
         {/* Logo */}
-        <div className="flex items-center gap-3 mb-10 group cursor-pointer flex-shrink-0">
-          <div className="w-10 h-10 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-500/20 group-hover:scale-110 transition-transform">
-            <Mic2 className="text-white fill-white" size={24} />
+        <div className="flex items-center gap-3 mb-12 group cursor-pointer flex-shrink-0">
+          <div className="w-10 h-10 bg-primary rounded-2xl flex items-center justify-center shadow-2xl shadow-primary/30 group-hover:scale-110 transition-transform duration-500">
+            <Mic2 className="text-black fill-black" size={24} />
           </div>
-          <span className="text-xl font-black tracking-tight italic text-white uppercase">
+          <span className="text-xl font-black tracking-tighter italic text-white uppercase text-glow-green">
             AudioSync
           </span>
         </div>
 
-        <div className="space-y-8 flex-1 overflow-y-auto no-scrollbar pb-10">
+        <div className="space-y-10 flex-1 overflow-y-auto no-scrollbar pb-10">
           {/* Main Menu */}
           <section>
-            <h3 className="px-4 text-[10px] font-black text-zinc-600 uppercase tracking-widest mb-4 italic">
+            <h3 className="px-4 text-[10px] font-black text-zinc-600 uppercase tracking-[0.2em] mb-4 italic">
               Discover
             </h3>
             <nav className="space-y-1">
@@ -92,13 +92,13 @@ export function LeftSidebar() {
                 <Link
                   key={item.label}
                   href={item.href}
-                  className={`flex items-center gap-4 px-4 py-3 rounded-2xl text-xs font-black uppercase tracking-widest transition-all ${
+                  className={`flex items-center gap-4 px-4 py-3 rounded-2xl text-xs font-black uppercase tracking-widest transition-all duration-300 ${
                     pathname === item.href
-                      ? "bg-indigo-600/10 text-indigo-400 border border-indigo-500/20 shadow-lg shadow-indigo-500/5"
-                      : "text-zinc-500 hover:text-white hover:bg-white/[0.03] border border-transparent"
+                      ? "bg-primary text-black shadow-2xl shadow-primary/20 scale-[1.02]"
+                      : "text-zinc-500 hover:text-white hover:bg-white/[0.04] border border-transparent"
                   }`}
                 >
-                  <item.icon size={18} />
+                  <item.icon size={18} className={pathname === item.href ? "fill-black" : ""} />
                   {item.label}
                 </Link>
               ))}
@@ -107,21 +107,21 @@ export function LeftSidebar() {
 
           {/* Library Section */}
           <section>
-            <h3 className="px-4 text-[10px] font-black text-zinc-600 uppercase tracking-widest mb-4 italic">
-              Library
+            <h3 className="px-4 text-[10px] font-black text-zinc-600 uppercase tracking-[0.2em] mb-4 italic">
+              Collection
             </h3>
             <nav className="space-y-1">
               {libraryItems.map((item) => (
                 <Link
                   key={item.label}
                   href={item.href}
-                  className={`flex items-center gap-4 px-4 py-3 rounded-2xl text-xs font-black uppercase tracking-widest transition-all ${
+                  className={`flex items-center gap-4 px-4 py-3 rounded-2xl text-xs font-black uppercase tracking-widest transition-all duration-300 ${
                     pathname === item.href
-                      ? "bg-indigo-600/10 text-indigo-400 border border-indigo-500/20 shadow-lg shadow-indigo-500/5"
-                      : "text-zinc-500 hover:text-white hover:bg-white/[0.03] border border-transparent"
+                      ? "bg-primary text-black shadow-2xl shadow-primary/20 scale-[1.02]"
+                      : "text-zinc-500 hover:text-white hover:bg-white/[0.04] border border-transparent"
                   }`}
                 >
-                  <item.icon size={18} />
+                  <item.icon size={18} className={pathname === item.href ? "fill-black" : ""} />
                   {item.label}
                 </Link>
               ))}
@@ -131,13 +131,13 @@ export function LeftSidebar() {
           {/* User Playlists */}
           <section suppressHydrationWarning>
             <div className="flex items-center justify-between px-4 mb-4">
-              <h3 className="text-[10px] font-black text-zinc-600 uppercase tracking-widest italic">
-                Your Playlists
+              <h3 className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.2em] italic">
+                Your Lists
               </h3>
               {hasMounted && systemUser && (
                 <button
                   onClick={() => setIsCreating(true)}
-                  className="text-zinc-600 hover:text-indigo-400 transition-colors"
+                  className="text-zinc-600 hover:text-primary transition-colors"
                 >
                   <Plus size={14} />
                 </button>
@@ -145,19 +145,19 @@ export function LeftSidebar() {
             </div>
 
             {/* Inline Create Input */}
-            <AnimatePresence>
+            <AnimatePresence mode="wait">
               {isCreating && (
                 <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: "auto" }}
-                  exit={{ opacity: 0, height: 0 }}
-                  className="px-3 mb-3 overflow-hidden"
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  className="px-3 mb-4"
                 >
-                  <div className="flex items-center gap-2 bg-zinc-900/80 border border-white/[0.06] rounded-xl p-1.5">
+                  <div className="flex items-center gap-2 bg-zinc-900/80 border border-white/[0.1] rounded-xl p-2 shadow-2xl">
                     <input
                       autoFocus
                       type="text"
-                      placeholder="Playlist name..."
+                      placeholder="Name..."
                       value={newName}
                       onChange={(e) => setNewName(e.target.value)}
                       onKeyDown={(e) => {
@@ -167,19 +167,13 @@ export function LeftSidebar() {
                           setNewName("");
                         }
                       }}
-                      className="flex-1 bg-transparent text-xs text-white font-bold px-2 py-1.5 outline-none placeholder-zinc-600"
+                      className="flex-1 bg-transparent text-xs text-white font-black px-2 py-1.5 outline-none placeholder-zinc-700"
                     />
                     <button
                       onClick={handleCreatePlaylist}
-                      className="p-1.5 bg-indigo-500 text-white rounded-lg hover:bg-indigo-400 transition-colors"
+                      className="p-1.5 bg-primary text-black rounded-lg hover:brightness-110 transition-all flex-shrink-0"
                     >
-                      <Plus size={12} />
-                    </button>
-                    <button
-                      onClick={() => { setIsCreating(false); setNewName(""); }}
-                      className="p-1.5 text-zinc-600 hover:text-zinc-300 transition-colors"
-                    >
-                      <X size={12} />
+                      <Plus size={12} strokeWidth={3} />
                     </button>
                   </div>
                 </motion.div>
@@ -188,33 +182,28 @@ export function LeftSidebar() {
 
             <nav className="space-y-0.5">
               {!hasMounted || isLoading ? (
-                <div className="space-y-2 px-2">
-                  <div className="h-9 bg-zinc-900/30 rounded-xl animate-pulse" />
-                  <div className="h-9 bg-zinc-900/30 rounded-xl animate-pulse" />
-                  <div className="h-9 bg-zinc-900/30 rounded-xl animate-pulse" />
+                <div className="space-y-2 px-2 opacity-20">
+                  <div className="h-9 bg-zinc-800 rounded-xl animate-pulse" />
+                  <div className="h-9 bg-zinc-800 rounded-xl animate-pulse" />
                 </div>
               ) : userPlaylists.length > 0 ? (
                 userPlaylists.map((playlist: any) => (
                   <Link
                     key={playlist.id}
                     href={`/playlists/${playlist.id}?type=user`}
-                    className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-[11px] font-bold transition-all truncate ${
+                    className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-tight transition-all truncate ${
                       pathname === `/playlists/${playlist.id}`
-                        ? "text-indigo-400 bg-indigo-500/[0.06]"
-                        : "text-zinc-500 hover:text-zinc-200 hover:bg-white/[0.02]"
+                        ? "text-primary bg-primary/5 shadow-inner"
+                        : "text-zinc-500 hover:text-white hover:bg-white/[0.03]"
                     }`}
                   >
-                    <ListMusic size={14} className="flex-shrink-0 opacity-50" />
+                    <ListMusic size={14} className={`flex-shrink-0 ${pathname === `/playlists/${playlist.id}` ? "opacity-100" : "opacity-30"}`} />
                     <span className="truncate">{playlist.name}</span>
                   </Link>
                 ))
-              ) : systemUser ? (
-                <div className="px-4 py-3 text-[10px] text-zinc-700 font-bold italic">
-                  No playlists yet
-                </div>
               ) : (
-                <div className="px-4 py-3 text-[10px] text-zinc-700 font-bold italic">
-                  Sign in to see playlists
+                <div className="px-4 py-3 text-[9px] text-zinc-700 font-black uppercase tracking-widest italic opacity-50">
+                  {systemUser ? "No playlists" : "Sign in required"}
                 </div>
               )}
             </nav>

@@ -119,7 +119,7 @@ export function AppNavbar() {
           onSubmit={handleSearch}
           className="relative group overflow-hidden rounded-2xl w-96"
         >
-          <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none text-zinc-500 group-focus-within:text-indigo-400 transition-colors">
+          <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none text-zinc-500 group-focus-within:text-primary transition-colors">
             <Search size={18} />
           </div>
           <input
@@ -128,7 +128,7 @@ export function AppNavbar() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onFocus={() => setIsFocused(true)}
-            className="bg-zinc-900/60 backdrop-blur-xl border border-white/5 rounded-2xl py-3 pl-14 pr-8 text-xs font-bold focus:ring-2 focus:ring-indigo-500/50 transition-all outline-none w-full text-white placeholder-zinc-500 shadow-2xl"
+            className="bg-black/60 backdrop-blur-3xl border border-white/10 rounded-2xl py-3 pl-14 pr-8 text-xs font-black focus:ring-2 focus:ring-primary/50 transition-all outline-none w-full text-white placeholder-zinc-700 shadow-2xl"
           />
         </form>
 
@@ -138,7 +138,7 @@ export function AppNavbar() {
               initial={{ opacity: 0, y: 10, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 10, scale: 0.95 }}
-              className="absolute top-full left-0 mt-4 w-[480px] bg-zinc-950/90 backdrop-blur-3xl border border-white/10 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden pointer-events-auto"
+              className="absolute top-full left-0 mt-4 w-[480px] glass-effect-strong rounded-3xl shadow-[0_40px_100px_rgba(0,0,0,0.8)] overflow-hidden pointer-events-auto"
             >
               {!query.trim() ? (
                 /* RECENT SEARCHES */
@@ -150,7 +150,7 @@ export function AppNavbar() {
                     {systemUser && (
                       <button
                         onClick={() => clearHistory.mutate()}
-                        className="text-[10px] font-black text-indigo-400 hover:text-white transition-colors"
+                        className="text-[10px] font-black text-primary hover:text-white transition-colors"
                       >
                         CLEAR ALL
                       </button>
@@ -174,9 +174,9 @@ export function AppNavbar() {
                         >
                           <History
                             size={14}
-                            className="text-zinc-600 group-hover:text-indigo-400"
+                            className="text-zinc-600 group-hover:text-primary"
                           />
-                          <span className="text-xs font-medium text-zinc-300 group-hover:text-white truncate">
+                          <span className="text-xs font-black text-zinc-300 group-hover:text-white truncate">
                             {item.searchedText}
                           </span>
                         </button>
@@ -194,7 +194,7 @@ export function AppNavbar() {
                     {isSearching && (
                       <Loader2
                         size={12}
-                        className="text-indigo-400 animate-spin"
+                        className="text-primary animate-spin"
                       />
                     )}
                   </div>
@@ -225,7 +225,7 @@ export function AppNavbar() {
                               />
                             </div>
                             <div className="flex-1 min-w-0">
-                              <p className="text-xs font-bold text-white truncate">
+                              <p className="text-xs font-black text-white truncate">
                                 {song.title}
                               </p>
                               <p className="text-[10px] text-zinc-500 font-medium truncate uppercase tracking-wider">
@@ -234,7 +234,7 @@ export function AppNavbar() {
                             </div>
                             <Play
                               size={14}
-                              className="text-zinc-600 opacity-0 group-hover:opacity-100 group-hover:text-indigo-400 transition-all mr-2"
+                              className="text-zinc-600 opacity-0 group-hover:opacity-100 group-hover:text-primary transition-all mr-2"
                             />
                           </button>
                         ))}
@@ -279,7 +279,7 @@ export function AppNavbar() {
                             </div>
                             <Sparkles
                               size={12}
-                              className="text-indigo-400 mr-2"
+                              className="text-primary mr-2"
                             />
                           </button>
                         ))}
@@ -361,22 +361,22 @@ export function AppNavbar() {
             <motion.div
               whileHover={{ scale: 1.05 }}
               onClick={() => logout()}
-              className="w-12 h-12 rounded-2xl overflow-hidden border-2 border-transparent hover:border-red-500 transition-all cursor-pointer shadow-2xl ring-4 ring-black group relative"
+              className="w-12 h-12 rounded-2xl overflow-hidden border-2 border-transparent hover:border-primary transition-all cursor-pointer shadow-2xl ring-4 ring-black group relative"
             >
               <img
                 src={user?.picture || "https://avatar.vercel.sh/me"}
                 className="w-full h-full object-cover"
                 alt="Profile"
               />
-              <div className="absolute inset-0 bg-red-500/80 items-center justify-center hidden group-hover:flex">
-                <X size={20} className="text-white" />
+              <div className="absolute inset-0 bg-primary/80 items-center justify-center hidden group-hover:flex">
+                <X size={20} className="text-black" />
               </div>
             </motion.div>
           </div>
         ) : (
           <button
             onClick={() => loginWithRedirect()}
-            className="px-6 py-3 bg-white text-black rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-50 transition-all shadow-2xl flex items-center gap-2"
+            className="px-6 py-3 bg-primary text-black rounded-2xl text-[10px] font-black uppercase tracking-widest hover:brightness-110 transition-all shadow-2xl flex items-center gap-2"
           >
             <User size={14} />
             Sign In
