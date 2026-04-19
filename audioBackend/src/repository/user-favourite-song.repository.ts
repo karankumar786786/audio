@@ -19,14 +19,15 @@ export class UserFavouriteSongRepository extends BaseRepository<UserFavouriteSon
     }
 
     async create(data: CreateFavData): Promise<UserFavouriteSongSchema> {
-        const id:string = this.signatureService.generateSignedId();
+        const id: string = this.signatureService.generateSignedId();
         const [entry] = await this.db`
             INSERT INTO user_favourite_songs (id, user_id, song_id)
             VALUES (${id}, ${data.userId}, ${data.songId})
-            ON CONFLICT (user_id, song_id) DO NOTHING
+            ON CONFLICT (user_id, song_id) 
+            DO UPDATE SET user_id = EXCLUDED.user_id 
             RETURNING id, user_id AS "userId", song_id AS "songId"
         `;
-        if (!entry) throw new Error("Already favourited or failed to create");
+        if (!entry) throw new Error("Failed to create favourite");
         return this.mapRow(entry);
     }
 

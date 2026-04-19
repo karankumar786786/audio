@@ -21,62 +21,6 @@ export default function Home() {
 
   return (
     <div className="flex flex-col min-h-screen bg-zinc-950 text-white selection:bg-indigo-500/30">
-      {/* Navigation */}
-      <nav className="flex items-center justify-between px-8 py-6 border-b border-white/5">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/20">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M9 18V5l12-2v13" />
-              <circle cx="6" cy="18" r="3" />
-              <circle cx="18" cy="16" r="3" />
-            </svg>
-          </div>
-          <span className="text-xl font-bold tracking-tight">AudioSync</span>
-        </div>
-
-        <div className="flex items-center gap-4">
-          {isAuthenticated ? (
-            <div className="flex items-center gap-4">
-              <div className="flex flex-col items-end hidden sm:flex">
-                <span className="text-sm font-medium">{user?.name}</span>
-                <span className="text-xs text-zinc-500">{user?.email}</span>
-              </div>
-              <button
-                onClick={() =>
-                  logout({
-                    logoutParams: {
-                      returnTo:
-                        typeof window !== "undefined"
-                          ? window.location.origin
-                          : "",
-                    },
-                  })
-                }
-                className="px-5 py-2 rounded-full border border-white/10 hover:bg-white/5 transition-all text-sm font-medium"
-              >
-                Log out
-              </button>
-            </div>
-          ) : (
-            <button
-              onClick={() => loginWithRedirect()}
-              className="px-6 py-2.5 bg-white text-black rounded-full hover:bg-zinc-200 transition-all text-sm font-bold shadow-lg active:scale-95"
-            >
-              Log in
-            </button>
-          )}
-        </div>
-      </nav>
 
       <main className="flex-1 flex flex-col items-center justify-center px-4 relative overflow-hidden">
         {/* Background Gradients */}

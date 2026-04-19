@@ -64,11 +64,18 @@ export const playerStore = new Store<PlayerState>({
   qualityTracks: [],
   selectedQuality: "auto",
   isLyricsOpen: false,
-  systemToken:
-    typeof window !== "undefined" ? localStorage.getItem("system_token") : null,
+  systemToken: null,
   systemUser: _initSystemUser,
   favourites: new Set<string>(),
 });
+
+// Hydrate token on client side only
+if (typeof window !== "undefined") {
+  const token = localStorage.getItem("system_token");
+  if (token) {
+    playerStore.setState((s) => ({ ...s, systemToken: token }));
+  }
+}
 
 export const playerActions = {
   setSystemSession: (token: string, user: any) => {

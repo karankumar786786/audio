@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 // @ts-ignore
 import shaka from "shaka-player";
+console.log("[Player] 🧬 ShakaMusicPlayer module execution started");
 import { useStore } from "@tanstack/react-store";
 import { playerStore, playerActions } from "../store/player.store";
 import {
@@ -50,6 +51,7 @@ export function ShakaMusicPlayer() {
     time: 0,
     duration: 0,
   });
+  const isInternalChange = useRef(false);
 
   const state = useStore(playerStore, (s) => s);
   const {
@@ -57,10 +59,13 @@ export function ShakaMusicPlayer() {
     isPlaying,
     volume,
     isMuted,
+    currentTime,
     duration,
     repeatMode,
+    isShuffle,
     qualityTracks,
     selectedQuality,
+    isLyricsOpen,
     favourites,
     systemUser,
   } = state;
@@ -75,6 +80,18 @@ export function ShakaMusicPlayer() {
   const [showQualityMenu, setShowQualityMenu] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isPlaylistModalOpen, setIsPlaylistModalOpen] = useState(false);
+  const [isPlayerReady, setIsPlayerReady] = useState(false);
+
+  // Diagnostic: Log state changes (only on significant updates)
+  useEffect(() => {
+    console.log("[Player] 📊 State/Song Change:", { 
+      hasSong: !!currentSong, 
+      songId: currentSong?.id,
+      isPlaying, 
+      isPlayerReady, 
+      isLoading 
+    });
+  }, [isPlaying, isLoading, isPlayerReady, currentSong?.id]);
 
   const isFavourite = currentSong ? favourites.has(currentSong.id) : false;
 
@@ -91,76 +108,141 @@ export function ShakaMusicPlayer() {
     playerActions.setQualityTracks(unique);
   }, []);
 
-  // Initialize & Load Shaka
+  // Synchronize store state with actual audio state to fix UI glitches
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
 
-    shaka.polyfill.installAll();
-    if (!shaka.Player.isBrowserSupported()) {
-      console.warn("[Shaka] Not supported, falling back to native src");
-      if (currentSong) {
-        audio.src = currentSong.streamUrl;
-        audio.load();
-      }
-      return;
-    }
+    const onPlay = () => {
+      console.log("[Audio] 🔈 Native PLAY detected");
+      if (isInternalChange.current || audio.readyState === 0) return;
+      playerActions.setIsPlaying(true);
+    };
+    const onPause = () => {
+      console.log("[Audio] 🔈 Native PAUSE detected");
+      if (isInternalChange.current || audio.readyState === 0) return;
+      playerActions.setIsPlaying(false);
+    };
 
-    const player = new shaka.Player();
-    playerRef.current = player;
+    audio.addEventListener("play", onPlay);
+    audio.addEventListener("playing", onPlay);
+    audio.addEventListener("pause", onPause);
+    
+    // Intense Debugging: native status events
+    const onWaiting = () => console.log("[Audio] ⏳ WAITING (buffering)...");
+    const onStalled = () => console.log("[Audio] ⚠️ STALLED");
+    const onCanPlay = () => console.log("[Audio] ✅ CANPLAY (ready)");
+    const onError = () => console.error("[Audio] ❌ ERROR:", audio.error);
 
-    player.configure({
-      streaming: {
-        retryParameters: {
-          maxAttempts: 4,
-          baseDelay: 1000,
-          backoffFactor: 2,
-          fuzzFactor: 0.5,
-          timeout: 30000,
-        },
-      },
-      manifest: {
-        retryParameters: {
-          maxAttempts: 4,
-          baseDelay: 1000,
-          backoffFactor: 2,
-          fuzzFactor: 0.5,
-          timeout: 30000,
-        },
-      },
-    });
+    audio.addEventListener("waiting", onWaiting);
+    audio.addEventListener("stalled", onStalled);
+    audio.addEventListener("canplay", onCanPlay);
+    audio.addEventListener("error", onError);
 
-    player.addEventListener("error", (e: any) =>
-      console.error("[Shaka] Error event:", e.detail),
-    );
-    player.addEventListener("trackschanged", syncTracks);
+    return () => {
+      audio.removeEventListener("play", onPlay);
+      audio.removeEventListener("playing", onPlay);
+      audio.removeEventListener("pause", onPause);
+      audio.removeEventListener("waiting", onWaiting);
+      audio.removeEventListener("stalled", onStalled);
+      audio.removeEventListener("canplay", onCanPlay);
+      audio.removeEventListener("error", onError);
+    };
+  }, []);
+
+  // ─── UNIFIED PLAYER LIFECYCLE ───
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
 
     let isMounted = true;
 
-    const init = async () => {
+    const runLifecycle = async () => {
       try {
-        await player.attach(audio);
-        if (!isMounted) return;
+        console.log("[Player] 🧬 Unified Lifecycle Triggered", { 
+          songId: currentSong?.id, 
+          hasPlayer: !!playerRef.current 
+        });
 
+        // 1. Initialize Player Instance if missing
+        if (!playerRef.current) {
+          console.log("[Player] 🛠️ Creating and configuring Shaka engine...");
+          shaka.polyfill.installAll();
+          const player = new shaka.Player();
+          playerRef.current = player;
+
+          player.configure({
+            streaming: {
+              retryParameters: { maxAttempts: 4, baseDelay: 1000, backoffFactor: 2, fuzzFactor: 0.5, timeout: 30000 },
+            },
+            manifest: {
+              retryParameters: { maxAttempts: 4, baseDelay: 1000, backoffFactor: 2, fuzzFactor: 0.5, timeout: 30000 },
+            },
+          });
+
+          player.addEventListener("error", (e: any) => {
+            console.error("[Shaka] ❌ Engine error:", e.detail);
+            const code = e.detail.code;
+            let message = "Playback error";
+            if (code === 1001) message = "Manifest fetch failed (Network/CORS)";
+            if (code === 403) message = "Access denied (Invalid token)";
+            toast.error(message, { description: `Error code: ${code}. Check backend logs.` });
+          });
+
+          player.addEventListener("trackschanged", syncTracks);
+
+          console.log("[Player] 🔌 Attaching audio element...");
+          await player.attach(audio);
+          console.log("[Player] ✅ Engine attached and ready");
+        }
+
+        const player = playerRef.current;
+
+        // 2. Load and Play Track if URL is present
         if (currentSong?.streamUrl) {
+          console.log(`[Player] 💿 Loading Track: ${currentSong.title}`, { url: currentSong.streamUrl });
+          isInternalChange.current = true;
           setIsLoading(true);
+
           await player.load(currentSong.streamUrl);
           if (!isMounted) return;
+
+          console.log("[Player] ✅ Track Loaded successfully");
           setIsLoading(false);
-          syncTracks(); // Sync tracks immediately after load
-          if (isPlaying) audio.play().catch(console.error);
+          syncTracks();
+
+          if (playerStore.state.isPlaying) {
+            console.log("[Player] ▶️ Triggering playback...");
+            try {
+              await audio.play();
+              console.log("[Player] 🎶 Playback started successfully");
+            } catch (err) {
+              console.warn("[Player] ⚠️ Playback start failed:", err);
+            }
+          }
+
+          setTimeout(() => {
+            if (isMounted) {
+              console.log("[Player] 🛡️ Guard cleared");
+              isInternalChange.current = false;
+            }
+          }, 500);
         }
       } catch (e) {
-        console.error("[Shaka] Initialization/Load failed:", e);
-        setIsLoading(false);
+        console.error("[Player] ❌ Unified Lifecycle Error:", e);
+        if (isMounted) {
+          setIsLoading(false);
+          isInternalChange.current = false;
+        }
       }
     };
 
-    init();
+    runLifecycle();
 
     return () => {
       isMounted = false;
-      player.destroy();
+      // We keep the player instance alive between track changes for speed.
+      // Destruction only happens on full component unmount (rare in layout).
     };
   }, [currentSong?.id, syncTracks]);
 
@@ -298,13 +380,24 @@ export function ShakaMusicPlayer() {
 
   // Playback Control Sync
   useEffect(() => {
-    if (!audioRef.current) return;
+    if (!audioRef.current || isLoading) return;
+    const audio = audioRef.current;
+
     if (isPlaying) {
-      audioRef.current.play().catch(() => playerActions.setIsPlaying(false));
+      if (audio.paused) {
+        audio.play().catch((err) => {
+          if (err.name !== "AbortError") {
+            console.warn("[Player] Play failed:", err);
+          }
+        });
+      }
     } else {
-      audioRef.current.pause();
+      // Only pause if we aren't in the middle of a requested song start
+      if (!audio.paused && !isInternalChange.current) {
+        audio.pause();
+      }
     }
-  }, [isPlaying, currentSong?.id]);
+  }, [isPlaying, isLoading, currentSong?.id || "none"]);
 
   useEffect(() => {
     if (!audioRef.current) return;
@@ -376,12 +469,12 @@ export function ShakaMusicPlayer() {
   // Get the optimized poster URL via ImageKit
   const optimizedPosterUrl = currentSong?.imageKey
     ? getImageUrl(currentSong.imageKey, {
-        width: 720,
-        height: 720,
-        focus: "auto",
-        aspectRatio: "1-1",
-        quality: 90,
-      })
+      width: 720,
+      height: 720,
+      focus: "auto",
+      aspectRatio: "1-1",
+      quality: 90,
+    })
     : currentSong?.posterUrl || "";
 
   // ─── Empty State ───
@@ -458,11 +551,10 @@ export function ShakaMusicPlayer() {
             <div className="flex items-center gap-0.5 mt-0.5 flex-shrink-0">
               <button
                 onClick={handleToggleFavourite}
-                className={`p-2 rounded-xl transition-all ${
-                  isFavourite
+                className={`p-2 rounded-xl transition-all ${isFavourite
                     ? "text-red-500"
                     : "text-zinc-600 hover:text-red-400 hover:bg-white/5"
-                }`}
+                  }`}
                 title={isFavourite ? "Remove from favourites" : "Add to favourites"}
               >
                 <Heart size={15} fill={isFavourite ? "currentColor" : "none"} />
@@ -514,9 +606,8 @@ export function ShakaMusicPlayer() {
                               scale: isActive ? 1.06 : 1,
                             }}
                             transition={{ duration: 0.12 }}
-                            className={`text-lg font-black italic tracking-tight leading-relaxed ${
-                              isActive ? "text-glow" : ""
-                            }`}
+                            className={`text-lg font-black italic tracking-tight leading-relaxed ${isActive ? "text-glow" : ""
+                              }`}
                           >
                             {word.text}
                           </motion.span>
@@ -582,11 +673,10 @@ export function ShakaMusicPlayer() {
           <div className="flex items-center justify-center gap-7">
             <button
               onClick={() => playerActions.toggleRepeat()}
-              className={`p-1.5 rounded-lg transition-all ${
-                repeatMode !== "none"
+              className={`p-1.5 rounded-lg transition-all ${repeatMode !== "none"
                   ? "text-indigo-400"
                   : "text-zinc-700 hover:text-zinc-400"
-              }`}
+                }`}
             >
               <Repeat1 size={16} />
             </button>
@@ -621,11 +711,10 @@ export function ShakaMusicPlayer() {
 
             <button
               onClick={() => setShowQualityMenu(!showQualityMenu)}
-              className={`p-1.5 rounded-lg transition-all ${
-                showQualityMenu
+              className={`p-1.5 rounded-lg transition-all ${showQualityMenu
                   ? "text-indigo-400"
                   : "text-zinc-700 hover:text-zinc-400"
-              }`}
+                }`}
             >
               <Layers size={16} />
             </button>
@@ -647,7 +736,7 @@ export function ShakaMusicPlayer() {
               {/* Fill background */}
               <div
                 className="absolute top-0 left-0 h-full rounded-full"
-                style={{ 
+                style={{
                   width: `${volumePct}%`,
                   background: "linear-gradient(90deg, #6366f1, #818cf8)"
                 }}
@@ -681,11 +770,10 @@ export function ShakaMusicPlayer() {
                       playerActions.setSelectedQuality("auto");
                       setShowQualityMenu(false);
                     }}
-                    className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold transition-all ${
-                      selectedQuality === "auto"
+                    className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold transition-all ${selectedQuality === "auto"
                         ? "bg-indigo-500/15 text-indigo-400"
                         : "text-zinc-500 hover:text-white hover:bg-white/5"
-                    }`}
+                      }`}
                   >
                     Auto
                   </button>
@@ -696,11 +784,10 @@ export function ShakaMusicPlayer() {
                         playerActions.setSelectedQuality(t.bandwidth);
                         setShowQualityMenu(false);
                       }}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold transition-all ${
-                        selectedQuality === t.bandwidth
+                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold transition-all ${selectedQuality === t.bandwidth
                           ? "bg-indigo-500/15 text-indigo-400"
                           : "text-zinc-500 hover:text-white hover:bg-white/5"
-                      }`}
+                        }`}
                     >
                       {Math.round(t.bandwidth / 1000)} kbps
                     </button>

@@ -355,19 +355,6 @@ export function AppNavbar() {
 
       {/* User & Actions */}
       <div className="flex items-center gap-4 pointer-events-auto">
-        <motion.div
-          whileHover={{ scale: 1.05 }}
-          className="hidden md:flex items-center gap-2 bg-zinc-900/60 backdrop-blur-xl border border-white/5 rounded-2xl px-5 py-3 shadow-2xl cursor-pointer"
-        >
-          <Sparkles className="text-indigo-400" size={14} />
-          <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400 italic">
-            High Fidelity Enabled
-          </span>
-        </motion.div>
-
-        <button className="w-12 h-12 rounded-2xl bg-zinc-900/60 backdrop-blur-xl border border-white/5 flex items-center justify-center text-zinc-400 hover:text-white transition-all shadow-2xl">
-          <Bell size={20} />
-        </button>
 
         {isAuthenticated ? (
           <div className="flex items-center gap-4">

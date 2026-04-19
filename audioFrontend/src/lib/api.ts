@@ -29,13 +29,17 @@ api.interceptors.response.use(
   (error) => {
     if (typeof window !== "undefined") {
       const status = error.response ? error.response.status : null;
-      if (status === 400 || status === 401) {
-        console.warn(
-          "[API] Security interceptor triggered (400/401). Purging stale session.",
-        );
-        localStorage.removeItem("system_token");
-        localStorage.removeItem("system_user");
-        // We don't force reload here to allow AuthSync to catch the state change gracefully
+      if (status === 401) {
+        // Only purge session if it's a critical auth-required endpoint,
+        // not background interactions which might fail due to stale tokens/timing.
+        const isBackgroundRequest = error.config.url.includes("/interactions/");
+        if (!isBackgroundRequest) {
+          console.warn(
+            "[API] Security interceptor triggered (401). Purging stale session.",
+          );
+          localStorage.removeItem("system_token");
+          localStorage.removeItem("system_user");
+        }
       }
     }
     return Promise.reject(error);

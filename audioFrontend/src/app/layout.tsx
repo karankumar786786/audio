@@ -2,6 +2,10 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Provider from "./provider";
+import { AuthSync } from "@/components/AuthSync";
+import { LeftSidebar } from "@/components/LeftSidebar";
+import { AppNavbar } from "@/components/AppNavbar";
+import { ShakaMusicPlayer } from "@/components/ShakaMusicPlayer";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -18,16 +22,14 @@ export const metadata: Metadata = {
   description: "Your music, everywhere.",
 };
 
-import { LeftSidebar } from "@/components/LeftSidebar";
-import { AppNavbar } from "@/components/AppNavbar";
-import { ShakaMusicPlayer } from "@/components/ShakaMusicPlayer";
-import { AuthSync } from "@/components/AuthSync";
+console.log("[Layout] 🧬 RootLayout module loaded");
 
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  console.log("[Layout] 🏗️ Rendering RootLayout shell");
   return (
     <html
       lang="en"

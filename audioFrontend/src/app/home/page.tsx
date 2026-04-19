@@ -31,11 +31,13 @@ export default function HomePage() {
     queryFn: () => musicApi.interactions.getTrending(),
   });
 
+  const systemToken = useStore(playerStore, (s) => s.systemToken);
+
   // Recommendations
   const { data: recommendations, isLoading: isRecLoading } = useQuery({
     queryKey: ["recommendations", systemUser?.id],
     queryFn: () => musicApi.interactions.getRecommendations(),
-    enabled: !!systemUser?.id,
+    enabled: !!systemUser?.id && !!systemToken,
   });
 
   const trendingRef = useRef<HTMLDivElement>(null);
@@ -62,45 +64,6 @@ export default function HomePage() {
 
   return (
     <div className="px-10 pb-20">
-      {/* Hero Section */}
-      <motion.section
-        initial={{ opacity: 0, scale: 0.98 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="mb-16 relative rounded-[2.5rem] overflow-hidden group shadow-2xl"
-      >
-        <div className="bg-gradient-to-br from-indigo-950 via-indigo-700 to-purple-900 p-16 md:p-20 relative overflow-hidden ring-1 ring-white/10">
-          <div className="relative z-10 max-w-3xl py-8">
-            <div className="flex items-center gap-3 mb-6 bg-white/10 backdrop-blur-md w-fit px-4 py-1.5 rounded-full border border-white/10">
-              <Sparkles className="text-indigo-300" size={14} />
-              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white italic">
-                High Fidelity Audio
-              </span>
-            </div>
-            <h1 className="text-5xl md:text-7xl font-black text-white italic tracking-tighter mb-6 leading-[0.9] uppercase">
-              Immerse In
-              <br />
-              <span className="text-indigo-300">Sound.</span>
-            </h1>
-            <p className="text-lg text-indigo-100/70 mb-10 font-medium leading-relaxed max-w-lg">
-              Word-level synced lyrics, adaptive streaming, and personalized
-              recommendations — all in one place.
-            </p>
-            <div className="flex items-center gap-4">
-              <button
-                onClick={scrollToTrending}
-                className="px-8 py-4 bg-white text-indigo-700 rounded-2xl font-black text-xs uppercase tracking-widest shadow-2xl hover:bg-indigo-50 transition-all flex items-center gap-3"
-              >
-                <TrendingUp size={16} />
-                Explore Trends
-              </button>
-            </div>
-          </div>
-
-          <div className="absolute top-0 right-0 -mr-40 -mt-40 w-[700px] h-[700px] bg-indigo-500/20 rounded-full blur-[120px] animate-pulse" />
-          <div className="absolute -bottom-20 -right-20 w-80 h-80 bg-purple-500/20 rounded-full blur-[100px]" />
-          <Compass className="absolute top-20 right-20 text-white/[0.03] w-72 h-72 -rotate-12 pointer-events-none" />
-        </div>
-      </motion.section>
 
       {/* Trending Section */}
       <section ref={trendingRef} className="mb-16">
