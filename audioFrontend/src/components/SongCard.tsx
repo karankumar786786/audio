@@ -71,6 +71,7 @@ export function SongCard({ song, priority, onRemove }: SongCardProps) {
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
+        onClick={handlePlay}
         className="glass-effect hover-scale p-3.5 rounded-[1.8rem] group cursor-pointer relative overflow-hidden"
       >
         <div className="aspect-square bg-zinc-900 rounded-[1.4rem] mb-4 relative shadow-2xl overflow-hidden ring-1 ring-white/[0.04]">
@@ -86,16 +87,7 @@ export function SongCard({ song, priority, onRemove }: SongCardProps) {
             loading={priority ? "eager" : "lazy"}
           />
 
-          {/* Play Overlay */}
-          <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center backdrop-blur-[4px]">
-            <motion.button
-              whileHover={{ scale: 1.15 }}
-              whileTap={{ scale: 0.9 }}
-              onClick={handlePlay}
-              className="w-14 h-14 bg-primary text-black rounded-full shadow-2xl flex items-center justify-center hover:brightness-110 transition-all"
-            >
-              <Play fill="black" size={24} className="ml-1" />
-            </motion.button>
+          <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-all duration-500 flex items-center justify-center backdrop-blur-[2px]">
           </div>
         </div>
 
