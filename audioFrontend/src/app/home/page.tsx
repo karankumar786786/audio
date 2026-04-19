@@ -130,7 +130,7 @@ export default function HomePage() {
               <ListMusic className="text-emerald-400" size={18} />
             </div>
             <h2 className="text-2xl font-black italic tracking-tight uppercase text-white">
-              Featured Playlists
+              Playlists
             </h2>
           </div>
           <div className="h-px flex-1 mx-8 bg-linear-to-r from-white/6 to-transparent" />
@@ -163,7 +163,7 @@ export default function HomePage() {
                   <Zap className="text-purple-400 fill-purple-400" size={18} />
                 </div>
                 <h2 className="text-2xl font-black italic tracking-tight uppercase text-white">
-                  For You
+                  Recommendation
                 </h2>
               </div>
               <div className="h-px flex-1 bg-linear-to-r from-white/6 to-transparent" />

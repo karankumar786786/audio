@@ -15,7 +15,7 @@ export function ArtistCard({ artist }: ArtistCardProps) {
       href={`/artists/${artist.id}`}
       className="flex-none w-[160px] group space-y-4 cursor-pointer text-center"
     >
-      <div className="relative aspect-square overflow-hidden rounded-full bg-zinc-900 border border-white/5 mx-auto ring-offset-8 ring-offset-black ring-0 group-hover:ring-4 ring-primary/40 transition-all duration-700 shadow-2xl">
+      <div className="relative aspect-square overflow-hidden rounded-full bg-zinc-900 border border-white/5 mx-auto  transition-all duration-700 ">
         <img
           src={getImageUrl(artist.coverImageKey || artist.bannerImageKey, {
             width: 300,
