@@ -164,6 +164,9 @@ export class AudioProcessingService {
         stepLogger.info({ songId }, "Saving to Recombee");
         await this.recommendationService.create({
             id: job.id,
+            fullId: job.id, // Explicitly store the signed ID
+            jobId: job.jobId,
+            createdAt: new Date().toISOString(),
             title: job.title,
             artistName: job.artistName,
             duration: job.duration || 0,

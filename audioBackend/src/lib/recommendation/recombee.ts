@@ -15,6 +15,9 @@ const SCHEMA_FIELDS: Record<
   Exclude<keyof RecommendationSchema, "id">,
   "string" | "int" | "double"
 > = {
+  fullId: "string",
+  jobId: "string",
+  createdAt: "string",
   title: "string",
   artistName: "string",
   duration: "double",
@@ -209,6 +212,9 @@ export class RecommbeeRecommendationService implements RecommendationService<Rec
       rotationTime: 86400,   // Window for "recently recommended" (24 hours)
       diversity: 0.8,        // Encourage varied artists/styles
       includedProperties: [
+        "fullId",
+        "jobId",
+        "createdAt",
         "title",
         "artistName",
         "duration",

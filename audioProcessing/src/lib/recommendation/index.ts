@@ -19,6 +19,9 @@ interface RecommendationService<T> {
 
 export interface RecommendationSchema {
   id: string;
+  fullId: string;
+  jobId: string;
+  createdAt?: string;
   title: string;
   artistName: string;
   duration: number;
@@ -42,6 +45,9 @@ const SCHEMA_FIELDS: Record<
   Exclude<keyof RecommendationSchema, "id">,
   "string" | "int" | "double"
 > = {
+  fullId: "string",
+  jobId: "string",
+  createdAt: "string",
   title: "string",
   artistName: "string",
   duration: "double",
@@ -226,6 +232,9 @@ export class RecommendationServiceImpl implements RecommendationService<Recommen
       cascadeCreate: true,
       returnProperties: true,
       includedProperties: [
+        "fullId",
+        "jobId",
+        "createdAt",
         "title",
         "artistName",
         "duration",

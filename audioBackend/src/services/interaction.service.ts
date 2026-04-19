@@ -41,26 +41,24 @@ export class InteractionService {
     async getRecommendations(userId: string, limit: number): Promise<PaginatedResult<SongSchema>> {
         this.signatureService.verifyId(userId, "userId");
         const recommendations = await this.recommendationService.recommendUser(userId, limit);
-        const songIds: string[] = [];
-        for (const r of recommendations) {
-            if (r.id && typeof r.id === "string") {
-                songIds.push(r.id.split(".")[0]!);
-            } 
-        }
         
-        this.logger.info(`[InteractionService] Recombee returned ${songIds.length} IDs for ${userId}: ${JSON.stringify(songIds)}`);
+        // Build SongSchema objects directly from Recombee values
+        const result: SongSchema[] = recommendations.flatMap(r => {
+            if (!r.fullId) return [];
+            return [{
+                id: r.fullId,
+                jobId: r.jobId || "",
+                createdAt: r.createdAt || new Date().toISOString(),
+                title: r.title || "Unknown",
+                artistName: r.artistName || "Unknown Artist",
+                duration: r.duration || 0,
+                songKey: r.songKey || "",
+                imageKey: r.imageKey || "",
+                language: r.language || "en"
+            } as SongSchema];
+        });
 
-        if (songIds.length === 0) {
-            this.logger.info(`[InteractionService] Zero recommendations from Recombee for ${userId}, falling back to Trending.`);
-            return this.getTrendingSongs({ page: 1, limit });
-        }
-
-        // Use getByBaseIds because Recombee returns raw UUIDs, but DB has uuid.signature
-        const songs = await this.songRepository.getByBaseIds(songIds as string[]);
-        this.logger.info(`[InteractionService] Found ${songs.length} / ${songIds.length} songs in DB for recommendations.`);
-
-        const songMap = new Map<string, SongSchema>(songs.map(s => [s.id.split('.')[0] as string, s]));
-        const result = (songIds as string[]).map(id => songMap.get(id)).filter((song): song is SongSchema => !!song);
+        this.logger.info(`[InteractionService] Recombee returned ${result.length} complete song objects for ${userId}.`);
 
         // If after filtering we have too few results, complement with Trending
         if (result.length < limit) {
