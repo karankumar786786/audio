@@ -56,9 +56,9 @@ export default function ArtistPage() {
               alt={artist.name}
             />
           ) : (
-            <div className="w-full h-full bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-indigo-900/40 via-zinc-950 to-black" />
+            <div className="w-full h-full bg-[radial-gradient(circle_at_center,var(--tw-gradient-stops))] from-indigo-900/40 via-zinc-950 to-black" />
           )}
-          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent z-10" />
+          <div className="absolute inset-0 bg-linear-to-t from-black via-black/40 to-transparent z-10" />
         </div>
 
         <div className="absolute bottom-0 left-0 p-16 z-20 flex items-end gap-8">
@@ -102,7 +102,7 @@ export default function ArtistPage() {
           <h2 className="text-3xl font-black italic tracking-tighter uppercase text-white">
             Full Discography
           </h2>
-          <div className="h-px w-24 bg-gradient-to-r from-indigo-500 to-transparent" />
+          <div className="h-px w-24 bg-linear-to-r from-indigo-500 to-transparent" />
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-10">

@@ -103,14 +103,14 @@ export default function HomePage() {
               Top Artists
             </h2>
           </div>
-          <div className="h-px flex-1 mx-8 bg-gradient-to-r from-white/[0.06] to-transparent" />
+          <div className="h-px flex-1 mx-8 bg-linear-to-r from-white/6 to-transparent" />
         </div>
 
         <div className="flex flex-row overflow-x-auto gap-12 pb-6 no-scrollbar mask-fade-right">
           {isArtistsLoading ? (
             [1, 2, 3, 4, 5, 6].map((i) => (
               <div key={i} className="flex-none w-[160px] space-y-4">
-                <div className="aspect-square rounded-full bg-zinc-900 animate-pulse border border-white/[0.03]" />
+                <div className="aspect-square rounded-full bg-zinc-900 animate-pulse border border-white/3" />
                 <div className="h-3 w-3/4 bg-zinc-900 rounded mx-auto animate-pulse" />
               </div>
             ))
@@ -133,14 +133,14 @@ export default function HomePage() {
               Featured Playlists
             </h2>
           </div>
-          <div className="h-px flex-1 mx-8 bg-gradient-to-r from-white/[0.06] to-transparent" />
+          <div className="h-px flex-1 mx-8 bg-linear-to-r from-white/6 to-transparent" />
         </div>
 
         <div className="flex flex-row overflow-x-auto gap-8 pb-6 no-scrollbar mask-fade-right">
           {isPlaylistsLoading ? (
             [1, 2, 3, 4, 5, 6].map((i) => (
               <div key={i} className="flex-none w-[180px] space-y-4">
-                <div className="aspect-square rounded-[2.5rem] bg-zinc-900 animate-pulse border border-white/[0.03]" />
+                <div className="aspect-square rounded-[2.5rem] bg-zinc-900 animate-pulse border border-white/3" />
                 <div className="h-3 w-1/2 bg-zinc-900 rounded animate-pulse" />
               </div>
             ))
@@ -166,7 +166,7 @@ export default function HomePage() {
                   For You
                 </h2>
               </div>
-              <div className="h-px flex-1 bg-gradient-to-r from-white/[0.06] to-transparent" />
+              <div className="h-px flex-1 bg-linear-to-r from-white/6 to-transparent" />
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
@@ -182,14 +182,14 @@ export default function HomePage() {
         <div className="flex items-center justify-between mb-8 px-1">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-zinc-800/60 rounded-xl border border-white/[0.04]">
+              <div className="p-2 bg-zinc-800/60 rounded-xl border border-white/4">
                 <Clock className="text-zinc-400" size={18} />
               </div>
               <h2 className="text-2xl font-black italic tracking-tight uppercase text-white">
                 All Tracks
               </h2>
             </div>
-            <div className="h-px w-16 bg-gradient-to-r from-white/[0.06] to-transparent" />
+            <div className="h-px w-16 bg-linear-to-r from-white/6 to-transparent" />
           </div>
         </div>
 
@@ -198,12 +198,12 @@ export default function HomePage() {
             {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((i) => (
               <div
                 key={i}
-                className="aspect-square bg-zinc-900/30 border border-white/[0.03] rounded-[2rem] animate-pulse"
+                className="aspect-square bg-zinc-900/30 border border-white/3 rounded-4xl animate-pulse"
               />
             ))}
           </div>
         ) : status === "error" ? (
-          <div className="p-20 text-center text-zinc-600 border border-dashed border-zinc-800 rounded-[2rem] font-bold italic tracking-tight uppercase">
+          <div className="p-20 text-center text-zinc-600 border border-dashed border-zinc-800 rounded-4xl font-bold italic tracking-tight uppercase">
             Failed to load tracks
           </div>
         ) : (

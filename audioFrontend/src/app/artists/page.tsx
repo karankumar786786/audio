@@ -17,8 +17,8 @@ export default function ArtistsPage() {
   return (
     <div className="px-10 pb-20">
       <header className="relative h-[300px] rounded-[3rem] overflow-hidden mb-12 shadow-2xl flex items-end">
-        <div className="absolute inset-0 bg-gradient-to-br from-indigo-950 via-zinc-950 to-black">
-          <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent z-10" />
+        <div className="absolute inset-0 bg-linear-to-br from-indigo-950 via-zinc-950 to-black">
+          <div className="absolute inset-0 bg-linear-to-t from-black via-transparent to-transparent z-10" />
         </div>
 
         <div className="relative z-20 p-12 flex items-center gap-10">
@@ -50,7 +50,7 @@ export default function ArtistsPage() {
             <h2 className="text-3xl font-black italic tracking-tighter uppercase text-white">
               Verified Frequencies
             </h2>
-            <div className="h-px w-24 bg-gradient-to-r from-indigo-500 to-transparent" />
+            <div className="h-px w-24 bg-linear-to-r from-indigo-500 to-transparent" />
           </div>
           <div className="flex items-center gap-3 text-zinc-500 text-[10px] font-black uppercase tracking-widest italic">
             <Users2 size={14} />
@@ -76,7 +76,7 @@ export default function ArtistsPage() {
                 className="group relative"
               >
                 <div className="aspect-square bg-zinc-900 rounded-[3rem] border border-white/5 overflow-hidden mb-4 group-hover:border-indigo-500/50 transition-all duration-500 group-hover:scale-[1.02] shadow-xl group-hover:shadow-indigo-500/10">
-                  <div className="w-full h-full bg-gradient-to-br from-zinc-800 to-zinc-950 flex items-center justify-center group-hover:from-indigo-900 group-hover:to-zinc-950 transition-colors duration-700">
+                  <div className="w-full h-full bg-linear-to-br from-zinc-800 to-zinc-950 flex items-center justify-center group-hover:from-indigo-900 group-hover:to-zinc-950 transition-colors duration-700">
                     {artist.coverImageKey ? (
                       <img 
                         src={getImageUrl(artist.coverImageKey, { 

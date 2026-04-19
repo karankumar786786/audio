@@ -29,8 +29,8 @@ export default function HistoryPage() {
   return (
     <div className="px-10 pb-20">
       <header className="relative h-[300px] rounded-[3rem] overflow-hidden mb-12 shadow-2xl flex items-end">
-        <div className="absolute inset-0 bg-gradient-to-br from-indigo-900 via-zinc-950 to-black">
-          <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent z-10" />
+        <div className="absolute inset-0 bg-linear-to-br from-indigo-900 via-zinc-950 to-black">
+          <div className="absolute inset-0 bg-linear-to-t from-black via-transparent to-transparent z-10" />
         </div>
 
         <div className="relative z-20 p-12 flex items-center gap-10">
@@ -61,7 +61,7 @@ export default function HistoryPage() {
             <h2 className="text-3xl font-black italic tracking-tighter uppercase text-white">
               Recent Echoes
             </h2>
-            <div className="h-px w-24 bg-gradient-to-r from-indigo-500 to-transparent" />
+            <div className="h-px w-24 bg-linear-to-r from-indigo-500 to-transparent" />
           </div>
           <div className="flex items-center gap-3 text-zinc-500 text-[10px] font-black uppercase tracking-widest italic">
             <Clock size={14} />
