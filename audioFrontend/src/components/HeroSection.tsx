@@ -23,14 +23,14 @@ export function HeroSection({
 
   if (isLoading) {
     return (
-      <div className="w-full h-[450px] rounded-[3rem] bg-zinc-900/50 animate-pulse border border-white/[0.05]" />
+      <div className="w-full h-[450px] rounded-[3rem] bg-zinc-900/50 animate-pulse border border-white/5" />
     );
   }
 
   if (!currentSong) return null;
 
   return (
-    <section className="relative w-full h-[450px] rounded-[3rem] overflow-hidden group shadow-2xl border border-white/[0.05]">
+    <section className="relative w-full h-[450px] rounded-[3rem] overflow-hidden group shadow-2xl border border-white/5">
       {/* Background with Blur & Gradient */}
       <div className="absolute inset-0 z-0 bg-black">
         <AnimatePresence mode="wait">
@@ -50,7 +50,7 @@ export function HeroSection({
             alt=""
           />
         </AnimatePresence>
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
+        <div className="absolute inset-0 bg-linear-to-t from-black via-black/20 to-transparent" />
       </div>
 
       {/* Content */}

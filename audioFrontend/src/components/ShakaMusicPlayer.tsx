@@ -504,7 +504,7 @@ export function ShakaMusicPlayer() {
 
   return (
     <>
-      <div className="w-[380px] glass-effect-strong border-l border-white/[0.04] flex flex-col h-screen overflow-hidden flex-none relative z-50">
+      <div className="w-[380px] glass-effect-strong border-l border-white/4 flex flex-col h-screen overflow-hidden flex-none relative z-50">
         {/* ─── Ambient Glow ─── */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
           <div
@@ -515,7 +515,7 @@ export function ShakaMusicPlayer() {
               backgroundPosition: "center",
             }}
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-zinc-950/40 via-zinc-950/80 to-zinc-950" />
+          <div className="absolute inset-0 bg-linear-to-b from-zinc-950/40 via-zinc-950/80 to-zinc-950" />
         </div>
 
         <audio ref={audioRef} className="hidden" crossOrigin="anonymous" />
@@ -527,7 +527,7 @@ export function ShakaMusicPlayer() {
             initial={{ scale: 0.92, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ type: "spring", damping: 20, stiffness: 200 }}
-            className="aspect-square w-full rounded-[1.5rem] overflow-hidden shadow-[0_16px_50px_rgba(0,0,0,0.5)] border border-white/[0.06]"
+            className="aspect-square w-full rounded-3xl overflow-hidden shadow-[0_16px_50px_rgba(0,0,0,0.5)] border border-white/6"
           >
             <img
               src={optimizedPosterUrl}
@@ -548,7 +548,7 @@ export function ShakaMusicPlayer() {
                 {currentSong.artistName}
               </p>
             </div>
-            <div className="flex items-center gap-0.5 mt-0.5 flex-shrink-0">
+            <div className="flex items-center gap-0.5 mt-0.5 shrink-0">
               <button
                 onClick={handleToggleFavourite}
                 className={`p-2 rounded-xl transition-all ${isFavourite
@@ -645,10 +645,10 @@ export function ShakaMusicPlayer() {
             <div
               ref={progressRef}
               onClick={handleSeek}
-              className="progress-track relative h-[3px] bg-white/[0.06] rounded-full overflow-visible group cursor-pointer"
+              className="progress-track relative h-[3px] bg-white/6 rounded-full overflow-visible group cursor-pointer"
             >
               <div
-                className="absolute top-0 left-0 h-full bg-white/[0.06] rounded-full"
+                className="absolute top-0 left-0 h-full bg-white/6 rounded-full"
                 style={{ width: `${bufferedPct}%` }}
               />
               <div
@@ -731,7 +731,7 @@ export function ShakaMusicPlayer() {
             <div
               ref={volumeRef}
               onClick={handleVolumeClick}
-              className="flex-1 h-[3px] bg-white/[0.04] rounded-full relative cursor-pointer group"
+              className="flex-1 h-[3px] bg-white/4 rounded-full relative cursor-pointer group"
             >
               {/* Fill background */}
               <div
@@ -761,8 +761,8 @@ export function ShakaMusicPlayer() {
                 exit={{ opacity: 0, height: 0 }}
                 className="overflow-hidden"
               >
-                <div className="bg-white/[0.03] border border-white/[0.06] rounded-xl p-2 space-y-0.5">
-                  <p className="text-[9px] font-black text-zinc-600 uppercase tracking-widest px-2 py-1 border-b border-white/[0.04] mb-1">
+                <div className="bg-white/3 border border-white/6 rounded-xl p-2 space-y-0.5">
+                  <p className="text-[9px] font-black text-zinc-600 uppercase tracking-widest px-2 py-1 border-b border-white/4 mb-1">
                     Quality
                   </p>
                   <button

@@ -74,7 +74,7 @@ export function SongCard({ song, priority, onRemove }: SongCardProps) {
         onClick={handlePlay}
         className="glass-effect hover-scale p-3.5 rounded-[1.8rem] group cursor-pointer relative overflow-hidden"
       >
-        <div className="aspect-square bg-zinc-900 rounded-[1.4rem] mb-4 relative shadow-2xl overflow-hidden ring-1 ring-white/[0.04]">
+        <div className="aspect-square bg-zinc-900 rounded-[1.4rem] mb-4 relative shadow-2xl overflow-hidden ring-1 ring-white/4">
           <img
             src={getImageUrl(song.imageKey, {
               width: 400,

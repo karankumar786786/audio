@@ -92,7 +92,7 @@ export function PlaylistPickerModal({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[200] flex items-center justify-center p-6"
+          className="fixed inset-0 z-200 flex items-center justify-center p-6"
           onClick={(e) => {
             if (e.target === e.currentTarget) onClose();
           }}
@@ -106,13 +106,13 @@ export function PlaylistPickerModal({
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.92, opacity: 0, y: 20 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="relative w-full max-w-sm bg-zinc-950 border border-white/[0.08] rounded-[2rem] shadow-[0_25px_80px_rgba(0,0,0,0.8)] overflow-hidden"
+            className="relative w-full max-w-sm bg-zinc-950 border  rounded-4xlshadow-[0_25px_80px_rgba(0,0,0,0.8)] overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="p-6 pb-4 border-b border-white/[0.04] flex items-center justify-between">
+            <div className="p-6 pb-4 border-b bg-white/4 flex items-center justify-between">
               <div className="flex items-center gap-3 min-w-0">
-                <div className="p-2.5 bg-indigo-500/10 text-indigo-400 rounded-xl flex-shrink-0">
+                <div className="p-2.5 bg-indigo-500/10 text-indigo-400 rounded-xl shrink-0">
                   <ListMusic size={18} />
                 </div>
                 <div className="min-w-0">
@@ -126,7 +126,7 @@ export function PlaylistPickerModal({
               </div>
               <button
                 onClick={onClose}
-                className="p-2 text-zinc-600 hover:text-white hover:bg-white/5 rounded-xl transition-all flex-shrink-0"
+                className="p-2 text-zinc-600 hover:text-white hover:bg-white/5 rounded-xl transition-all shrink-0"
               >
                 <X size={18} />
               </button>
@@ -149,7 +149,7 @@ export function PlaylistPickerModal({
                       if (e.key === "Enter" && newName.trim()) createAndAdd.mutate();
                       if (e.key === "Escape") setIsCreating(false);
                     }}
-                    className="w-full bg-zinc-900 border border-white/[0.06] p-4 rounded-xl text-white text-sm font-bold outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/30 transition-all placeholder-zinc-600"
+                    className="w-full bg-zinc-900 border border-white/6 p-4 rounded-xl text-white text-sm font-bold outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/30 transition-all placeholder-zinc-600"
                   />
                   <div className="flex gap-2">
                     <button
@@ -172,9 +172,9 @@ export function PlaylistPickerModal({
                   {/* Create New Button */}
                   <button
                     onClick={() => setIsCreating(true)}
-                    className="w-full flex items-center gap-3 p-3.5 rounded-xl bg-white/[0.03] hover:bg-white/[0.06] border border-white/[0.04] hover:border-indigo-500/20 transition-all group"
+                    className="w-full flex items-center gap-3 p-3.5 rounded-xl bg-white/3 hover:bg-white/6 border  hover:border-indigo-500/20 transition-all group"
                   >
-                    <div className="w-10 h-10 bg-indigo-500 rounded-lg flex items-center justify-center text-white shadow group-hover:scale-105 transition-transform flex-shrink-0">
+                    <div className="w-10 h-10 bg-indigo-500 rounded-lg flex items-center justify-center text-white shadow group-hover:scale-105 transition-transform shrink-0">
                       <Plus size={18} />
                     </div>
                     <span className="text-sm font-bold text-white">
@@ -185,11 +185,11 @@ export function PlaylistPickerModal({
                   {/* Divider */}
                   {(playlists?.data?.data?.length ?? 0) > 0 && (
                     <div className="flex items-center gap-3 py-2 px-1">
-                      <div className="h-px flex-1 bg-white/[0.04]" />
+                      <div className="h-px flex-1 bg-white/4" />
                       <span className="text-[9px] font-bold text-zinc-700 uppercase tracking-widest">
                         Your Playlists
                       </span>
-                      <div className="h-px flex-1 bg-white/[0.04]" />
+                      <div className="h-px flex-1 bg-white/4" />
                     </div>
                   )}
 
@@ -213,10 +213,10 @@ export function PlaylistPickerModal({
                         key={playlist.id}
                         onClick={() => addToPlaylist.mutate(playlist.id)}
                         disabled={addToPlaylist.isPending}
-                        className="w-full flex items-center justify-between p-3.5 rounded-xl hover:bg-white/[0.03] border border-transparent hover:border-white/[0.04] transition-all group disabled:opacity-50"
+                        className="w-full flex items-center justify-between p-3.5 rounded-xl  border border-transparent hover:bg-white/4 transition-all group disabled:opacity-50"
                       >
                         <div className="flex items-center gap-3 min-w-0">
-                          <div className="w-10 h-10 bg-zinc-900 rounded-lg overflow-hidden flex items-center justify-center text-zinc-700 group-hover:text-indigo-400 transition-colors flex-shrink-0">
+                          <div className="w-10 h-10 bg-zinc-900 rounded-lg overflow-hidden flex items-center justify-center text-zinc-700 group-hover:text-indigo-400 transition-colors shrink-0">
                             {playlist.coverImageKey ? (
                               <img
                                 src={getImageUrl(playlist.coverImageKey, {
@@ -238,7 +238,7 @@ export function PlaylistPickerModal({
                         </div>
                         <ChevronRight
                           size={14}
-                          className="text-zinc-800 group-hover:text-zinc-400 transition-colors flex-shrink-0"
+                          className="text-zinc-800 group-hover:text-zinc-400 transition-colors shrink-0"
                         />
                       </button>
                     ))

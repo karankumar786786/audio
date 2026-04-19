@@ -77,7 +77,7 @@ export function LyricsOverlay() {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: "100%" }}
           transition={{ type: "spring", damping: 25, stiffness: 120 }}
-          className="fixed inset-0 z-[150] bg-black flex overflow-hidden lg:flex-row flex-col"
+          className="fixed inset-0 z-150 bg-black flex overflow-hidden lg:flex-row flex-col"
         >
           {/* Immersive Background */}
           <div className="absolute inset-0 pointer-events-none overflow-hidden -z-10">
@@ -98,7 +98,7 @@ export function LyricsOverlay() {
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: 0.2 }}
-              className="w-full max-w-[400px] aspect-square rounded-[2rem] shadow-[0_40px_100px_rgba(0,0,0,0.5)] border border-white/[0.06] overflow-hidden mb-8 ring-1 ring-white/[0.03]"
+              className="w-full max-w-[400px] aspect-square rounded-4xl shadow-[0_40px_100px_rgba(0,0,0,0.5)] border border-white/6 overflow-hidden mb-8 ring-1 ring-white/3"
             >
               <img
                 src={artworkUrl}
@@ -129,7 +129,7 @@ export function LyricsOverlay() {
             <div className="absolute top-10 right-10 flex gap-4 z-20">
               <button
                 onClick={() => playerActions.toggleLyrics()}
-                className="w-12 h-12 rounded-2xl bg-white/[0.05] hover:bg-white/10 flex items-center justify-center text-white transition-all backdrop-blur-md border border-white/[0.06]"
+                className="w-12 h-12 rounded-2xl bg-white/5 hover:bg-white/10 flex items-center justify-center text-white transition-all backdrop-blur-md border border-white/[0.06]"
               >
                 <X size={22} />
               </button>
