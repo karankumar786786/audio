@@ -220,8 +220,8 @@ export class RecommbeeRecommendationService implements RecommendationService<Rec
         "imageKey",
         "language",
       ],
-      diversity: 0.6, // Increases variety of recommended items
-      rotationRate: 0.3, // Ensures different items are recommended in subsequent requests
+     diversity: 0.4, // Increases variety of recommended items
+      rotationRate: 0.6, // Ensures different items are recommended in subsequent requests
       rotationTime: 3600, // Duration in seconds that rotation remains effective
     });
 
