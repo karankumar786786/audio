@@ -125,19 +125,19 @@ export function AppNavbar() {
       >
         <form
           onSubmit={handleSearch}
-          className="relative group overflow-hidden rounded-2xl w-96"
+          className="relative group rounded-2xl w-96"
         >
-          <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none text-zinc-500 group-focus-within:text-primary transition-colors">
-            <Search size={18} />
-          </div>
           <input
             type="text"
             placeholder="Search for tracks, artists..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onFocus={() => setIsFocused(true)}
-            className="bg-black/60 backdrop-blur-3xl border border-white/10 rounded-2xl py-3 pl-14 pr-8 text-xs font-black focus:ring-2 focus:ring-primary/50 transition-all outline-none w-full text-white placeholder-zinc-700 shadow-2xl"
+            className="bg-black/60 backdrop-blur-3xl border border-white/10 rounded-2xl py-3 pl-14 pr-8 text-xs font-black focus:ring-2 focus:ring-primary/50 transition-all outline-none w-full text-white placeholder-zinc-700 shadow-2xl relative z-10"
           />
+          <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none text-zinc-500 group-focus-within:text-primary transition-colors z-20">
+            <Search size={18} />
+          </div>
         </form>
 
         <AnimatePresence>

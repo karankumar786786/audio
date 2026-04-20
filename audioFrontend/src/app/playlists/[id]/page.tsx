@@ -141,7 +141,7 @@ export default function PlaylistPage() {
 
         <div className="absolute inset-0 flex items-end p-12 gap-10 z-20">
           {/* Cover Art */}
-          <div className="h-64 w-64 shrink-0 overflow-hidden rounded-[2.5rem] border-8 border-black/50 shadow-2xl hidden md:block group-hover:scale-105 transition-transform duration-700 relative bg-zinc-900 flex items-center justify-center">
+          <div className="h-64 w-64 shrink-0 overflow-hidden rounded-[2.5rem] border-8 border-black/50 shadow-2xl  md:block group-hover:scale-105 transition-transform duration-700 relative bg-zinc-900 flex items-center justify-center">
             {playlist?.coverImageKey ? (
               <img src={coverUrl} alt="" className="h-full w-full object-cover" />
             ) : (
@@ -224,7 +224,7 @@ export default function PlaylistPage() {
                 <div
                   key={song.id}
                   onClick={() => playerActions.playSong(mapToPlayerSong(song))}
-                  className="group grid grid-cols-12 items-center gap-4 p-5 rounded-[2.5rem] hover:bg-white/3 border border-transparent hover:border-white/5 transition-all duration-300 text-left cursor-pointer"
+                  className="group  grid grid-cols-12 items-center gap-4 p-5 rounded-[2.5rem] hover:bg-white/3 border border-white/5  transition-all duration-300 text-left cursor-pointer"
                 >
                   {/* Index */}
                   <div className="col-span-1 text-center text-zinc-600 font-black text-xs group-hover:text-primary transition-colors italic">
