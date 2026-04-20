@@ -133,22 +133,56 @@ body {
 }
 
 /* ─── Form Elements ─── */
-input[type="range"].volume-slider {
+.modern-slider {
   -webkit-appearance: none;
   appearance: none;
+  width: 100%;
   height: 3px;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.08);
   border-radius: 10px;
   outline: none;
+  cursor: pointer;
+  background-image: linear-gradient(var(--primary), var(--primary));
+  background-size: 0% 100%;
+  background-repeat: no-repeat;
+  transition: height 0.2s ease;
 }
 
-input[type="range"].volume-slider::-webkit-slider-thumb {
+.modern-slider:hover {
+  height: 5px;
+}
+
+.modern-slider::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 10px;
-  height: 10px;
+  width: 0;
+  height: 0;
   background: white;
   border-radius: 50%;
   cursor: pointer;
-  box-shadow: 0 0 8px var(--primary);
+  box-shadow: 0 0 15px var(--primary);
+  transition: all 0.2s ease;
+}
+
+.modern-slider:hover::-webkit-slider-thumb {
+  width: 12px;
+  height: 12px;
+}
+
+/* Specific overrides for volume slider */
+.volume-slider {
+  background-size: var(--volume-percent, 0%) 100%;
+}
+
+/* Specific overrides for progress slider */
+.progress-slider {
+  background: transparent !important; /* Managed by the parent wrapper's buffered div */
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 10;
+}
+
+.progress-slider::-webkit-slider-runnable-track {
+  background: transparent;
 }

@@ -44,8 +44,7 @@ export function ShakaMusicPlayer() {
   const playerRef = useRef<any>(null);
   const lyricsContainerRef = useRef<HTMLDivElement>(null);
   const animFrameRef = useRef<number>(0);
-  const progressRef = useRef<HTMLDivElement>(null);
-  const volumeRef = useRef<HTMLDivElement>(null);
+
   const lastStateRef = useRef<{ id: string; time: number; duration: number }>({
     id: "",
     time: 0,
@@ -421,20 +420,18 @@ export function ShakaMusicPlayer() {
     }
   }, [selectedQuality, currentSong?.id]);
 
-  // Seek on progress click
-  const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!progressRef.current || !audioRef.current || !duration) return;
-    const rect = progressRef.current.getBoundingClientRect();
-    const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-    audioRef.current.currentTime = pct * duration;
+  // Seek Change Handler (Native Slider)
+  const handleSeekChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!audioRef.current || !duration) return;
+    const val = parseFloat(e.target.value);
+    audioRef.current.currentTime = val;
+    setLocalTime(val);
   };
 
-  // Volume click handler
-  const handleVolumeClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!volumeRef.current) return;
-    const rect = volumeRef.current.getBoundingClientRect();
-    const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-    playerActions.setVolume(pct);
+  // Volume Change Handler (Native Slider)
+  const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = parseFloat(e.target.value);
+    playerActions.setVolume(val);
   };
 
   // Toggle favourite
@@ -650,26 +647,35 @@ export function ShakaMusicPlayer() {
         {/* ─── Controls ─── */}
         <div className="flex-none px-6 pb-6 pt-2 space-y-4 relative z-10">
           {/* Progress */}
-          <div className="space-y-1.5">
-            <div
-              ref={progressRef}
-              onClick={handleSeek}
-              className="progress-track relative h-[3px] bg-white/6 rounded-full overflow-visible group cursor-pointer"
-            >
+          <div className="space-y-1.5 pt-2">
+            <div className="relative h-[5px] group cursor-pointer flex items-center">
+              {/* Background Track */}
+              <div className="absolute top-1/2 -translate-y-1/2 left-0 w-full h-[3px] bg-white/6 rounded-full" />
+              
+              {/* Buffered Bar */}
               <div
-                className="absolute top-0 left-0 h-full bg-white/6 rounded-full"
+                className="absolute top-1/2 -translate-y-1/2 left-0 h-[3px] bg-white/10 rounded-full transition-all duration-300 pointer-events-none"
                 style={{ width: `${bufferedPct}%` }}
               />
+
+              {/* Progress Bar (Visual) */}
               <div
-                className="absolute top-0 left-0 h-full rounded-full"
+                className="absolute top-1/2 -translate-y-1/2 left-0 h-[3px] rounded-full group-hover:h-[5px] transition-all pointer-events-none"
                 style={{
                   width: `${progressPct}%`,
                   background: "linear-gradient(90deg, var(--primary), oklch(0.6 0.2 142))",
                 }}
               />
-              <div
-                className="progress-thumb"
-                style={{ left: `calc(${progressPct}% - 6px)` }}
+
+              {/* Native Slider Input */}
+              <input
+                type="range"
+                min="0"
+                max={duration || 0}
+                step="0.1"
+                value={localTime}
+                onChange={handleSeekChange}
+                className="modern-slider progress-slider"
               />
             </div>
             <div className="flex justify-between text-[9px] font-bold text-zinc-600 tabular-nums">
@@ -744,23 +750,16 @@ export function ShakaMusicPlayer() {
             >
               <VolumeIcon size={14} />
             </button>
-            <div
-              ref={volumeRef}
-              onClick={handleVolumeClick}
-              className="flex-1 h-[3px] bg-white/4 rounded-full relative cursor-pointer group"
-            >
-              {/* Fill background */}
-              <div
-                className="absolute top-0 left-0 h-full rounded-full"
-                style={{
-                  width: `${volumePct}%`,
-                  background: "linear-gradient(90deg, var(--primary), oklch(0.6 0.2 142))"
-                }}
-              />
-              {/* Subtle track handle */}
-              <div
-                className="absolute top-1/2 -translate-y-1/2 w-[10px] h-[10px] bg-white rounded-full opacity-0 group-hover:opacity-100 transition-all shadow-[0_0_10px_rgba(255,255,255,0.5)]"
-                style={{ left: `calc(${volumePct}% - 5px)` }}
+            <div className="flex-1 relative flex items-center h-4 group">
+              <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.01"
+                value={isMuted ? 0 : volume}
+                onChange={handleVolumeChange}
+                className="modern-slider volume-slider"
+                style={{ "--volume-percent": `${volumePct}%` } as any}
               />
             </div>
             <span className="text-[9px] font-bold text-zinc-700 tabular-nums w-7 text-right">
