@@ -16,6 +16,7 @@ import {
   Volume1,
   Music,
   Repeat1,
+  Shuffle,
   Mic2,
   Heart,
   Plus,
@@ -537,7 +538,7 @@ export function ShakaMusicPlayer() {
         <audio ref={audioRef} className="hidden" crossOrigin="anonymous" />
 
         {/* ─── Album Art (compact) ─── */}
-        <div className="flex-none px-6 pt-6 pb-2 relative z-10">
+        <div className="flex-none px-6 pt-2 pb-1 relative z-10">
           <motion.div
             key={currentSong.id}
             initial={{ scale: 0.92, opacity: 0 }}
@@ -554,7 +555,7 @@ export function ShakaMusicPlayer() {
         </div>
 
         {/* ─── Track Info + Actions ─── */}
-        <div className="flex-none px-6 py-2 relative z-10">
+        <div className="flex-none px-6 py-1 relative z-10">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0 flex-1">
               <h2 className="text-base font-black text-white italic uppercase tracking-tight truncate leading-tight text-glow-green">
@@ -594,7 +595,7 @@ export function ShakaMusicPlayer() {
 
         {/* ─── Word-Level Lyrics (more space) ─── */}
         <div className="flex-1 overflow-hidden relative z-10 px-6 flex flex-col justify-center lyrics-mask min-h-0">
-          <div className="flex-1 flex flex-col items-center justify-center py-4">
+          <div className="flex-1 flex flex-col items-center justify-center py-1">
             <AnimatePresence mode="wait">
               {currentCaption ? (
                 <motion.div
@@ -694,142 +695,152 @@ export function ShakaMusicPlayer() {
             </div>
           </div>
 
-          {/* Playback Buttons */}
-          <div className="flex items-center justify-center gap-7">
-            <button
-              onClick={() => {
-                playerActions.toggleRepeat();
-                const nextModeMap: Record<string, string> = { none: "all", all: "one", one: "none" };
-                const nextMode = nextModeMap[repeatMode] || "none";
-                toast.success("Repeat Mode Changed", {
-                  description: `Mode: ${nextMode.charAt(0).toUpperCase() + nextMode.slice(1)}`,
-                });
-              }}
-              className={`p-1.5 rounded-lg transition-all ${repeatMode !== "none"
-                ? "text-primary"
-                : "text-zinc-700 hover:text-zinc-400"
-                }`}
-            >
-              <Repeat1 size={16} />
-            </button>
-
-            <button
-              onClick={() => playerActions.previous()}
-              className="text-zinc-500 hover:text-white transition-colors active:scale-90"
-            >
-              <SkipBack size={16} fill="currentColor" />
-            </button>
-
-            <motion.button
-              whileTap={{ scale: 0.88 }}
-              onClick={() => playerActions.setIsPlaying(!isPlaying)}
-              className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-black shadow-[0_4px_20px_rgba(255,255,255,0.12)] hover:shadow-[0_4px_30px_rgba(255,255,255,0.2)] transition-shadow"
-            >
-              {isLoading ? (
-                <div className="w-3 h-3 border-2 border-black/10 border-t-primary rounded-full animate-spin" />
-              ) : isPlaying ? (
-                <Pause size={20} fill="black" />
-              ) : (
-                <Play size={16} fill="black" className="ml-0.5" />
-              )}
-            </motion.button>
-
-            <button
-              onClick={() => playerActions.next()}
-              className="text-zinc-500 hover:text-white transition-colors active:scale-90"
-            >
-              <SkipForward size={20} fill="currentColor" />
-            </button>
-
-            <div className="relative group">
+          {/* Playback Buttons Group */}
+          <div className="space-y-4 pt-1">
+            {/* 1. Main Controls (Centered) */}
+            <div className="flex items-center justify-center gap-8">
               <button
-                onClick={() => setShowQualityMenu(!showQualityMenu)}
-                className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg transition-all border ${showQualityMenu
-                  ? "bg-primary/10 border-primary/30 text-primary shadow-lg shadow-primary/10"
-                  : "bg-white/3 border-white/5 text-zinc-500 hover:text-white hover:bg-white/5"
-                  }`}
+                onClick={() => playerActions.previous()}
+                className="text-zinc-500 hover:text-white transition-colors active:scale-90"
+                title="Previous"
               >
-                <span className="text-[10px] font-black uppercase tracking-wider italic">
-                  {selectedQuality === "auto" ? "AUTO" : `${Math.round((selectedQuality as number) / 1000)}K`}
-                </span>
-                <ChevronDown size={12} className={`transition-transform duration-300 ${showQualityMenu ? "rotate-180" : ""}`} />
+                <SkipBack size={20} fill="currentColor" />
               </button>
 
-              <AnimatePresence>
-                {showQualityMenu && (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.95, y: 10 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.95, y: 10 }}
-                    className="absolute bottom-full right-0 mb-3 w-40 glass-effect-strong border border-white/10 rounded-2xl p-2 shadow-2xl z-[100]"
-                  >
-                    <p className="text-[9px] font-black text-zinc-600 uppercase tracking-widest px-3 py-2 border-b border-white/5 mb-1.5">
-                      Stream Quality
-                    </p>
-                    <div className="max-h-[200px] overflow-y-auto custom-scrollbar">
-                      <button
-                        onClick={() => {
-                          playerActions.setSelectedQuality("auto");
-                          setShowQualityMenu(false);
-                          toast.success("Quality: Auto", {
-                            description: "Automatic quality adjustment enabled.",
-                          });
-                        }}
-                        className={`w-full text-left px-3 py-2.5 rounded-xl text-xs font-black italic transition-all mb-1 ${selectedQuality === "auto"
-                          ? "bg-primary text-black shadow-lg shadow-primary/20"
-                          : "text-zinc-400 hover:text-white hover:bg-white/5"
-                          }`}
-                      >
-                        AUTO
-                      </button>
-                      {qualityTracks.map((t: any) => (
-                        <button
-                          key={t.bandwidth}
-                          onClick={() => {
-                            playerActions.setSelectedQuality(t.bandwidth);
-                            setShowQualityMenu(false);
-                            toast.success("Quality Updated", {
-                              description: `Streaming at ${Math.round(t.bandwidth / 1000)} kbps.`,
-                            });
-                          }}
-                          className={`w-full text-left px-3 py-2.5 rounded-xl text-xs font-black italic transition-all mb-1 ${selectedQuality === t.bandwidth
-                            ? "bg-primary text-black shadow-lg shadow-primary/20"
-                            : "text-zinc-400 hover:text-white hover:bg-white/5"
-                            }`}
-                        >
-                          {Math.round(t.bandwidth / 1000)} KBPS
-                        </button>
-                      ))}
-                    </div>
-                  </motion.div>
+              <motion.button
+                whileTap={{ scale: 0.9 }}
+                onClick={() => playerActions.setIsPlaying(!isPlaying)}
+                className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-black shadow-lg hover:shadow-xl hover:scale-105 transition-all"
+              >
+                {isLoading ? (
+                  <div className="w-4 h-4 border-2 border-black/10 border-t-primary rounded-full animate-spin" />
+                ) : isPlaying ? (
+                  <Pause size={22} fill="black" />
+                ) : (
+                  <Play size={22} fill="black" className="translate-x-0.5" />
                 )}
-              </AnimatePresence>
-            </div>
-          </div>
+              </motion.button>
 
-          {/* Volume - Custom div-based slider */}
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => playerActions.setIsMuted(!isMuted)}
-              className="text-zinc-600 hover:text-zinc-300 transition-colors flex-none"
-            >
-              <VolumeIcon size={14} />
-            </button>
-            <div className="flex-1 relative flex items-center h-4 group">
-              <input
-                type="range"
-                min="0"
-                max="1"
-                step="0.01"
-                value={isMuted ? 0 : volume}
-                onChange={handleVolumeChange}
-                className="modern-slider volume-slider"
-                style={{ "--volume-percent": `${volumePct}%` } as any}
-              />
+              <button
+                onClick={() => playerActions.next()}
+                className="text-zinc-500 hover:text-white transition-colors active:scale-90"
+                title="Next"
+              >
+                <SkipForward size={20} fill="currentColor" />
+              </button>
             </div>
-            <span className="text-[9px] font-bold text-zinc-700 tabular-nums w-7 text-right">
-              {Math.round(volumePct)}
-            </span>
+
+            {/* 2. Utility & Volume Row (Combined for space) */}
+            <div className="flex items-center justify-between px-1 gap-4">
+              <div className="flex items-center gap-1.5 shrink-0">
+                <button
+                  onClick={() => {
+                    playerActions.toggleShuffle();
+                    toast.success(isShuffle ? "Shuffle Off" : "Shuffle On");
+                  }}
+                  className={`p-1.5 rounded-lg transition-all ${isShuffle ? "text-primary bg-primary/10" : "text-zinc-600 hover:text-zinc-400"
+                    }`}
+                  title="Shuffle"
+                >
+                  <Shuffle size={14} />
+                </button>
+
+                <button
+                  onClick={() => {
+                    playerActions.toggleRepeat();
+                    const modes: Record<string, string> = { none: "all", all: "one", one: "none" };
+                    const next = modes[repeatMode] || "none";
+                    toast.success(`Repeat: ${next.toUpperCase()}`);
+                  }}
+                  className={`p-1.5 rounded-lg transition-all ${repeatMode !== "none" ? "text-primary bg-primary/10" : "text-zinc-600 hover:text-zinc-400"
+                    }`}
+                  title="Repeat Mode"
+                >
+                  <Repeat1 size={14} />
+                </button>
+
+                <div className="relative group ml-1">
+                  <button
+                    onClick={() => setShowQualityMenu(!showQualityMenu)}
+                    className={`flex items-center gap-1.5 px-2 py-1 rounded-lg transition-all border ${showQualityMenu
+                      ? "bg-primary/10 border-primary/30 text-primary"
+                      : "bg-white/5 border-white/5 text-zinc-500 hover:text-white"
+                      }`}
+                  >
+                    <span className="text-[9px] font-black italic tracking-wider">
+                      {selectedQuality === "auto" ? "HD" : `${Math.round((selectedQuality as number) / 1000)}K`}
+                    </span>
+                    <ChevronDown size={10} className={`transition-transform duration-300 ${showQualityMenu ? "rotate-180" : ""}`} />
+                  </button>
+
+                  <AnimatePresence>
+                    {showQualityMenu && (
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                        className="absolute bottom-full left-0 mb-3 w-40 glass-effect-strong border border-white/10 rounded-2xl p-2 shadow-2xl z-[100]"
+                      >
+                        <p className="text-[9px] font-black text-zinc-600 uppercase tracking-widest px-3 py-2 border-b border-white/5 mb-1.5">
+                          Stream Quality
+                        </p>
+                        <div className="max-h-[200px] overflow-y-auto custom-scrollbar">
+                          <button
+                            onClick={() => {
+                              playerActions.setSelectedQuality("auto");
+                              setShowQualityMenu(false);
+                            }}
+                            className={`w-full text-left px-3 py-2.5 rounded-xl text-xs font-black italic transition-all mb-1 ${selectedQuality === "auto"
+                              ? "bg-primary text-black"
+                              : "text-zinc-400 hover:text-white hover:bg-white/5"
+                              }`}
+                          >
+                            AUTO
+                          </button>
+                          {qualityTracks.map((t: any) => (
+                            <button
+                              key={t.bandwidth}
+                              onClick={() => {
+                                playerActions.setSelectedQuality(t.bandwidth);
+                                setShowQualityMenu(false);
+                              }}
+                              className={`w-full text-left px-3 py-2.5 rounded-xl text-xs font-black italic transition-all mb-1 ${selectedQuality === t.bandwidth
+                                ? "bg-primary text-black"
+                                : "text-zinc-400 hover:text-white hover:bg-white/5"
+                                }`}
+                            >
+                              {Math.round(t.bandwidth / 1000)} KBPS
+                            </button>
+                          ))}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              </div>
+
+              {/* Compact Volume Slider */}
+              <div className="flex items-center gap-2 flex-1 min-w-0 opacity-60 hover:opacity-100 transition-opacity justify-end">
+                <button
+                  onClick={() => playerActions.setIsMuted(!isMuted)}
+                  className="text-zinc-500 hover:text-white transition-colors shrink-0"
+                >
+                  <VolumeIcon size={13} />
+                </button>
+                <div className="w-16 sm:w-20 relative flex items-center h-3">
+                  <input
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.01"
+                    value={isMuted ? 0 : volume}
+                    onChange={handleVolumeChange}
+                    className="modern-slider volume-slider"
+                    style={{ "--volume-percent": `${volumePct}%` } as any}
+                  />
+                </div>
+              </div>
+            </div>
           </div>
 
 
