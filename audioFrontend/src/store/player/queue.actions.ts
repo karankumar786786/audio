@@ -63,31 +63,21 @@ export const queueActions = {
         const rawData = Array.isArray(res.data) ? res.data : (res.data.data || []);
         const newSongs = mapListToPlayerSongs(rawData);
         const existingIds = new Set(queue.map((s) => s.id));
-        
-        const freshSongs = newSongs.filter((s) => !existingIds.has(s.id));
-        const repetitiveSongs = newSongs.filter((s) => existingIds.has(s.id));
+        const uniqueNewSongs = newSongs.filter((s) => !existingIds.has(s.id));
 
-        // Allow up to 50% of the batch to be duplicates
-        const maxDuplicates = Math.floor(newSongs.length / 2);
-        const duplicatesToTake = repetitiveSongs.slice(0, maxDuplicates);
-        const songsToAdd = [...freshSongs, ...duplicatesToTake];
-
-        if (songsToAdd.length > 0) {
+        if (uniqueNewSongs.length > 0) {
           playerStore.setState((s) => {
-            const updatedQueue = [...s.queue, ...songsToAdd];
-            console.log(`[Queue] Refilled with ${songsToAdd.length} songs (${freshSongs.length} fresh, ${duplicatesToTake.length} repetitive). New total: ${updatedQueue.length}`);
+            const updatedQueue = [...s.queue, ...uniqueNewSongs];
+            console.log(`[Queue] Refilled with ${uniqueNewSongs.length} unique songs. New total: ${updatedQueue.length}`);
             if (typeof window !== "undefined") {
               localStorage.setItem("last_queue", JSON.stringify(updatedQueue));
             }
             return { ...s, queue: updatedQueue };
           });
-          
-          // Cleanup old history if queue is too large
-          queueActions.trimQueue();
 
-          if (isInit && !currentSong && songsToAdd.length > 0) {
+          if (isInit && !currentSong && uniqueNewSongs.length > 0) {
             import("@/store/player/playback.actions").then(({ playbackActions }) => {
-                playbackActions.play(songsToAdd[0]);
+                playbackActions.play(uniqueNewSongs[0]);
                 playbackActions.setIsPlaying(false);
             });
           }
@@ -145,28 +135,5 @@ export const queueActions = {
     if (prevIdx >= 0) {
       import("@/store/player/playback.actions").then(({ playbackActions }) => playbackActions.play(queue[prevIdx]));
     }
-  },
-
-  trimQueue: () => {
-    playerStore.setState((s) => {
-      // Keep queue manageable (max 100). Keep 20 songs of history.
-      if (s.queue.length <= 100) return s;
-
-      const keepBefore = 20;
-      const startIdx = Math.max(0, s.lastQueueIndex - keepBefore);
-
-      if (startIdx <= 0) return s;
-
-      const newQueue = s.queue.slice(startIdx);
-      const newLastQueueIndex = s.lastQueueIndex - startIdx;
-
-      console.log(`[Queue] Trimmed ${startIdx} historical songs. New total: ${newQueue.length}`);
-      
-      if (typeof window !== "undefined") {
-        localStorage.setItem("last_queue", JSON.stringify(newQueue));
-      }
-
-      return { ...s, queue: newQueue, lastQueueIndex: newLastQueueIndex };
-    });
   },
 };
