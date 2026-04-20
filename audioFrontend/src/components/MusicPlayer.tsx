@@ -13,6 +13,7 @@ import {
   ListMusic,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { toast } from "sonner";
 
 export function MusicPlayer() {
   const state = useStore(playerStore, (s) => s);
@@ -136,7 +137,12 @@ export function MusicPlayer() {
       {/* Extra actions */}
       <div className="flex items-center justify-end gap-4 w-1/3">
         <button
-          onClick={() => playerActions.toggleLyrics()}
+          onClick={() => {
+            playerActions.toggleLyrics();
+            toast.success(state.isLyricsOpen ? "Lyrics Disabled" : "Lyrics Enabled", {
+              description: state.isLyricsOpen ? "Closing lyric view." : "Opening transcript playback.",
+            });
+          }}
           className={`p-2 rounded-lg transition-all ${state.isLyricsOpen ? "text-primary bg-primary/10" : "text-zinc-400 hover:text-white"}`}
           title="Lyrics"
         >

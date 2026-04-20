@@ -36,22 +36,18 @@ export function SongCard({ song, priority, onRemove }: SongCardProps) {
       return;
     }
 
-    try {
-      await playerActions.toggleFavourite(song.id);
-      if (isFavourite) {
-        toast.success("Removed from favourites", {
-          description: `"${song.title}" removed from your collection.`,
-        });
-      } else {
-        toast.success("Added to favourites", {
-          description: `"${song.title}" added to your collection.`,
-        });
+    toast.promise(playerActions.toggleFavourite(song.id), {
+      loading: isFavourite ? "Removing from Favourites..." : "Adding to Favourites...",
+      success: () => {
+        return isFavourite ? "Removed from Favourites" : "Added to Favourites";
+      },
+      error: "Failed to update favourites",
+      description: () => {
+        return isFavourite 
+          ? `"${song.title}" removed from your collection.`
+          : `"${song.title}" added to your collection.`;
       }
-    } catch (err) {
-      toast.error("Error", {
-        description: "Failed to update favourites.",
-      });
-    }
+    });
   };
 
   const handleOpenPlaylistPicker = (e: React.MouseEvent) => {

@@ -60,9 +60,6 @@ export default function PlaylistPage() {
   const deletePlaylist = useMutation({
     mutationFn: () => musicApi.users.deletePlaylist(id as string),
     onSuccess: () => {
-      toast.success("Buffer Released", {
-        description: "Playlist has been deleted from the system.",
-      });
       queryClient.invalidateQueries({ queryKey: ["user-playlists"] });
       router.push("/playlists");
     },
@@ -75,10 +72,7 @@ export default function PlaylistPage() {
         songId,
       ),
     onSuccess: () => {
-      toast.success("Transients Decoupled", {
-        description: "Song removed from playlist.",
-      });
-      queryClient.invalidateQueries({ queryKey: ["playlist-songs", id] });
+      queryClient.invalidateQueries({ queryKey: ["playlist-songs", id], exact: false });
     },
   });
 
@@ -107,8 +101,8 @@ export default function PlaylistPage() {
     if (songs.length === 0) return;
     const playerSongs = mapListToPlayerSongs(songs);
     playerActions.playAll(playerSongs);
-    toast.success("Stream Initialized", {
-      description: `Now playing all ${songs.length} tracks.`,
+    toast.success("Playing All", {
+      description: `Starting playback for ${songs.length} tracks.`,
     });
   };
 
@@ -187,7 +181,16 @@ export default function PlaylistPage() {
               <div className="flex items-center gap-3">
                 {isUserPlaylist && (
                   <button
-                    onClick={() => confirm("Release this buffer from memory?") && deletePlaylist.mutate()}
+                    onClick={() => {
+                      if (confirm("Release this buffer from memory?")) {
+                        toast.promise(deletePlaylist.mutateAsync(), {
+                          loading: "Deleting Playlist...",
+                          success: "Playlist Deleted",
+                          error: "Failed to delete",
+                          description: "Playlist removed from your collection."
+                        });
+                      }
+                    }}
                     className="h-16 w-16 rounded-4xl bg-red-500/10 border border-red-500/10 flex items-center justify-center text-red-500 hover:bg-red-500 hover:text-white transition-all shadow-xl shadow-red-500/10"
                   >
                     <Trash2 size={20} />
@@ -216,7 +219,7 @@ export default function PlaylistPage() {
               <div
                 key={song.id}
                 onClick={() => playerActions.playSong(mapToPlayerSong(song))}
-                className="group grid grid-cols-12 items-center gap-4 p-5 rounded-[2.5rem] hover:bg-white/[0.03] border border-transparent hover:border-white/[0.05] transition-all duration-300 text-left cursor-pointer"
+                className="group grid grid-cols-12 items-center gap-4 p-5 rounded-[2.5rem] hover:bg-white/3 border border-transparent hover:border-white/5 transition-all duration-300 text-left cursor-pointer"
               >
                 {/* Index */}
                 <div className="col-span-1 text-center text-zinc-600 font-black text-xs group-hover:text-primary transition-colors italic">
@@ -270,7 +273,12 @@ export default function PlaylistPage() {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        removeSong.mutate(song.id);
+                        toast.promise(removeSong.mutateAsync(song.id), {
+                          loading: "Removing Song...",
+                          success: "Removed from Playlist",
+                          error: "Failed to remove",
+                          description: "Song removed from this playlist successfully."
+                        });
                       }}
                       className="p-3 rounded-xl bg-red-500/5 text-red-500/40 hover:bg-red-500 hover:text-white opacity-0 group-hover:opacity-100 transition-all scale-75 group-hover:scale-100"
                     >

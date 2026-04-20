@@ -51,19 +51,9 @@ export function PlaylistPickerModal({
   const addToPlaylist = useMutation({
     mutationFn: (playlistId: string) =>
       musicApi.users.addSongToPlaylist(playlistId, songId),
-    onSuccess: (_, playlistId) => {
-      const playlist = playlists?.data?.data.find(
-        (p: Playlist) => p.id === playlistId,
-      );
-      toast.success("Added to playlist", {
-        description: `"${songTitle}" added to ${playlist?.name || "playlist"}.`,
-      });
+    onSuccess: () => {
       onClose();
     },
-    onError: () =>
-      toast.error("Failed", {
-        description: "Song may already exist in this playlist.",
-      }),
   });
 
   const createAndAdd = useMutation({
@@ -72,15 +62,10 @@ export function PlaylistPickerModal({
       await musicApi.users.addSongToPlaylist(res.data.id, songId);
       return res.data;
     },
-    onSuccess: (playlist) => {
-      toast.success("Playlist created", {
-        description: `Created "${playlist.name}" and added "${songTitle}".`,
-      });
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["user-playlists"] });
       onClose();
     },
-    onError: () =>
-      toast.error("Failed to create playlist."),
   });
 
   if (!isOpen || !mounted) return null;
@@ -146,7 +131,17 @@ export function PlaylistPickerModal({
                     value={newName}
                     onChange={(e) => setNewName(e.target.value)}
                     onKeyDown={(e) => {
-                      if (e.key === "Enter" && newName.trim()) createAndAdd.mutate();
+                      if (e.key === "Enter" && newName.trim()) {
+                        toast.promise(createAndAdd.mutateAsync(), {
+                          loading: "Creating Playlist...",
+                          success: (playlist) => `Playlist "${playlist.name}" Created`,
+                          error: "Failed to create playlist",
+                          description: (playlist: any) => 
+                            playlist?.name 
+                              ? `Created "${playlist.name}" and added "${songTitle}".`
+                              : "Failed to create new playlist."
+                        });
+                      }
                       if (e.key === "Escape") setIsCreating(false);
                     }}
                     className="w-full bg-zinc-900 border border-white/6 p-4 rounded-xl text-white text-sm font-bold outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/30 transition-all placeholder-zinc-600"
@@ -159,7 +154,19 @@ export function PlaylistPickerModal({
                       Cancel
                     </button>
                     <button
-                      onClick={() => newName.trim() && createAndAdd.mutate()}
+                      onClick={() => {
+                        if (newName.trim()) {
+                          toast.promise(createAndAdd.mutateAsync(), {
+                            loading: "Creating Playlist...",
+                            success: (playlist) => `Playlist "${playlist.name}" Created`,
+                            error: "Failed to create playlist",
+                            description: (playlist: any) => 
+                              playlist?.name 
+                                ? `Created "${playlist.name}" and added "${songTitle}".`
+                                : "Failed to create new playlist."
+                          });
+                        }
+                      }}
                       disabled={!newName.trim() || createAndAdd.isPending}
                       className="flex-1 py-3 bg-primary text-black rounded-xl font-black text-[11px] uppercase tracking-widest hover:brightness-110 transition-all shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
@@ -211,7 +218,14 @@ export function PlaylistPickerModal({
                     playlists?.data?.data.map((playlist: Playlist) => (
                       <button
                         key={playlist.id}
-                        onClick={() => addToPlaylist.mutate(playlist.id)}
+                        onClick={() => {
+                          toast.promise(addToPlaylist.mutateAsync(playlist.id), {
+                            loading: "Adding to Playlist...",
+                            success: "Added to Playlist",
+                            error: "Failed to add to playlist",
+                            description: `"${songTitle}" added to ${playlist.name}.`
+                          });
+                        }}
                         disabled={addToPlaylist.isPending}
                         className="w-full flex items-center justify-between p-3.5 rounded-xl  border border-transparent hover:bg-white/4 transition-all group disabled:opacity-50"
                       >

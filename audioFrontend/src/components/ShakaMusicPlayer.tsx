@@ -454,13 +454,23 @@ export function ShakaMusicPlayer() {
     }
     if (isTogglingFav) return;
 
+    const wasFav = isFavourite;
+    toast.promise(playerActions.toggleFavourite(currentSong.id), {
+      loading: wasFav ? "Removing from Favourites..." : "Adding to Favourites...",
+      success: () => {
+        return wasFav ? "Removed from Favourites" : "Added to Favourites";
+      },
+      error: "Failed to update Favourites",
+      description: () => {
+        return wasFav 
+          ? `"${currentSong.title}" removed.`
+          : `"${currentSong.title}" added to favourites.`;
+      }
+    });
+
     setIsTogglingFav(true);
     try {
-      const wasFav = isFavourite;
       await playerActions.toggleFavourite(currentSong.id);
-      toast.success(wasFav ? "Removed from favourites" : "Added to favourites");
-    } catch {
-      toast.error("Failed to update favourites");
     } finally {
       setIsTogglingFav(false);
     }
@@ -599,7 +609,7 @@ export function ShakaMusicPlayer() {
                             key={idx}
                             animate={{
                               color: isActive
-                                ? "var(--primary)"
+                                ? "white"
                                 : isPast
                                   ? "rgba(255,255,255,0.4)"
                                   : "rgba(255,255,255,0.12)",
@@ -672,7 +682,14 @@ export function ShakaMusicPlayer() {
           {/* Playback Buttons */}
           <div className="flex items-center justify-center gap-7">
             <button
-              onClick={() => playerActions.toggleRepeat()}
+              onClick={() => {
+                playerActions.toggleRepeat();
+                const nextModeMap: Record<string, string> = { none: "all", all: "one", one: "none" };
+                const nextMode = nextModeMap[repeatMode] || "none";
+                toast.success("Repeat Mode Changed", {
+                  description: `Mode: ${nextMode.charAt(0).toUpperCase() + nextMode.slice(1)}`,
+                });
+              }}
               className={`p-1.5 rounded-lg transition-all ${repeatMode !== "none"
                   ? "text-primary"
                   : "text-zinc-700 hover:text-zinc-400"
@@ -769,6 +786,9 @@ export function ShakaMusicPlayer() {
                     onClick={() => {
                       playerActions.setSelectedQuality("auto");
                       setShowQualityMenu(false);
+                      toast.success("Quality: Auto", {
+                        description: "Automatic quality adjustment enabled.",
+                      });
                     }}
                     className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold transition-all ${selectedQuality === "auto"
                         ? "bg-primary/15 text-primary"
@@ -783,6 +803,9 @@ export function ShakaMusicPlayer() {
                       onClick={() => {
                         playerActions.setSelectedQuality(t.bandwidth);
                         setShowQualityMenu(false);
+                        toast.success("Quality Updated", {
+                          description: `Streaming at ${Math.round(t.bandwidth / 1000)} kbps.`,
+                        });
                       }}
                     className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold transition-all ${selectedQuality === t.bandwidth
                         ? "bg-primary/15 text-primary"

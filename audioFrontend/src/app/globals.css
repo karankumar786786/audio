@@ -103,7 +103,6 @@ body {
   top: 50%;
   transform: translateY(-50%);
   transition: all 0.2s ease;
-  box-shadow: 0 0 10px var(--primary);
 }
 .progress-track:hover .progress-thumb {
   width: 12px;

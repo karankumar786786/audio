@@ -23,6 +23,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { playerActions } from "@/store/player.store";
 import { mapToPlayerSong } from "@/lib/player-utils";
+import { toast } from "sonner";
 import { getImageUrl } from "@/lib/image-utils";
 
 export function AppNavbar() {
@@ -64,8 +65,12 @@ export function AppNavbar() {
 
   const clearHistory = useMutation({
     mutationFn: () => musicApi.users.clearSearchHistory(),
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: ["search-history"] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["search-history"] });
+      toast.success("History Cleared", {
+        description: "Your search history has been cleared.",
+      });
+    },
   });
 
   const handleSearch = (e: React.FormEvent) => {
@@ -82,6 +87,9 @@ export function AppNavbar() {
 
   const handlePlaySong = (song: any) => {
     playerActions.play(mapToPlayerSong(song));
+    toast.success("Playing Song", {
+      description: `Starting playback for "${song.title}"...`,
+    });
     if (systemUser?.id) saveHistory.mutate(song.title);
     setIsFocused(false);
   };
@@ -360,7 +368,12 @@ export function AppNavbar() {
           <div className="flex items-center gap-4">
             <motion.div
               whileHover={{ scale: 1.05 }}
-              onClick={() => logout()}
+              onClick={() => {
+                logout();
+                toast.success("Logged Out", {
+                  description: "You have been successfully logged out.",
+                });
+              }}
               className="w-12 h-12 rounded-2xl overflow-hidden border-2 border-transparent hover:border-primary transition-all cursor-pointer shadow-2xl ring-4 ring-black group relative"
             >
               <img

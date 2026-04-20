@@ -9,6 +9,7 @@ import { getImageUrl } from "@/lib/image-utils";
 import {   Play,  ArrowLeft, Clock, Calendar, Music } from "lucide-react";
 import { playerActions } from "@/store/player.store";
 import { mapToPlayerSong, mapListToPlayerSongs } from "@/lib/player-utils";
+import { toast } from "sonner";
 
 export default function ArtistPage() {
   const { id } = useParams();
@@ -110,7 +111,14 @@ export default function ArtistPage() {
 
             <div className="pt-4 flex items-center gap-4">
               <button 
-                onClick={() => songs.length > 0 && playerActions.playAll(mapListToPlayerSongs(songs))}
+                onClick={() => {
+                  if (songs.length > 0) {
+                    playerActions.playAll(mapListToPlayerSongs(songs));
+                    toast.success("Playing Songs", {
+                      description: `Starting playback for ${songs.length} songs by ${artist?.name}.`,
+                    });
+                  }
+                }}
                 disabled={songs.length === 0}
                 className="px-12 h-16 bg-primary text-black rounded-3xl font-black text-xs uppercase tracking-widest hover:scale-105 active:scale-95 transition-all flex items-center gap-3 shadow-2xl shadow-white/10 disabled:opacity-50"
               >
