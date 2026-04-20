@@ -182,7 +182,6 @@ export default function PlaylistPage() {
                 {isUserPlaylist && (
                   <button
                     onClick={() => {
-                      if (confirm("Release this buffer from memory?")) {
                         toast.promise(deletePlaylist.mutateAsync(), {
                           loading: "Deleting Playlist...",
                           success: "Playlist Deleted",
@@ -190,7 +189,7 @@ export default function PlaylistPage() {
                           description: "Playlist removed from your collection."
                         });
                       }
-                    }}
+                    }
                     className="h-16 w-16 rounded-4xl bg-red-500/10 border border-red-500/10 flex items-center justify-center text-red-500 hover:bg-red-500 hover:text-white transition-all shadow-xl shadow-red-500/10"
                   >
                     <Trash2 size={20} />

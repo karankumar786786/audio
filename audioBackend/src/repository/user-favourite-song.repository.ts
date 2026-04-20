@@ -6,6 +6,8 @@ import { BaseRepository } from "./base.repository";
 import { logMethods, type Logger } from "../observability";
 import type { SignatureService } from "../lib";
 
+import { NotFoundError } from "../errors";
+
 type CreateFavData = Omit<UserFavouriteSongSchema, "id">;
 
 export class UserFavouriteSongRepository extends BaseRepository<UserFavouriteSongSchema, CreateFavData, any> {
@@ -72,7 +74,7 @@ export class UserFavouriteSongRepository extends BaseRepository<UserFavouriteSon
             WHERE user_id = ${userId} AND song_id = ${songId}
             RETURNING id, user_id AS "userId", song_id AS "songId"
         `;
-        if (!entry) throw new Error("Favourite not found");
+        if (!entry) throw new NotFoundError("Favourite not found");
         return this.mapRow(entry);
     }
 
