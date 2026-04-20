@@ -81,6 +81,12 @@ export function ShakaMusicPlayer() {
   const [isPlaylistModalOpen, setIsPlaylistModalOpen] = useState(false);
   const [isPlayerReady, setIsPlayerReady] = useState(false);
 
+  // Initialize Player State (Persistence + Recommendations)
+  useEffect(() => {
+    playerActions.hydrate();
+    playerActions.initQueue();
+  }, []);
+
   // Diagnostic: Log state changes (only on significant updates)
   useEffect(() => {
     console.log("[Player] 📊 State/Song Change:", {

@@ -1,6 +1,7 @@
 import { Store } from "@tanstack/react-store";
 import { type PlayerSong } from "../lib/player-utils";
 import { musicApi } from "../lib/api";
+import { mapListToPlayerSongs } from "../lib/player-utils";
 
 interface PlayerState {
   currentSong: PlayerSong | null;
@@ -102,13 +103,17 @@ export const playerActions = {
   play: (song: PlayerSong) => {
     playerStore.setState((s) => {
       const idx = s.queue.findIndex((item) => item.id === song.id);
-      return {
+      const newState = {
         ...s,
         currentSong: song,
         isPlaying: true,
         lastQueueIndex: idx !== -1 ? idx : s.lastQueueIndex,
         currentTime: 0,
       };
+      if (typeof window !== "undefined") {
+        localStorage.setItem("last_played_song", JSON.stringify(song));
+      }
+      return newState;
     });
   },
 
@@ -122,13 +127,106 @@ export const playerActions = {
   },
 
   setQueue: (songs: PlayerSong[]) => {
-    playerStore.setState((s) => ({ ...s, queue: songs, lastQueueIndex: -1 }));
+    playerStore.setState((s) => {
+      if (typeof window !== "undefined") {
+        localStorage.setItem("last_queue", JSON.stringify(songs));
+      }
+      return { ...s, queue: songs, lastQueueIndex: -1 };
+    });
   },
 
+  // Intelligent Play All: Insert after current index instead of replacing
   playAll: (songs: PlayerSong[]) => {
     if (songs.length === 0) return;
-    playerActions.setQueue(songs);
+    
+    playerStore.setState((s) => {
+      const currentIdx = s.lastQueueIndex;
+      const newQueue = [...s.queue];
+      
+      // Insert after current index
+      newQueue.splice(currentIdx + 1, 0, ...songs);
+      
+      if (typeof window !== "undefined") {
+        localStorage.setItem("last_queue", JSON.stringify(newQueue));
+      }
+      
+      return {
+        ...s,
+        queue: newQueue,
+        // We don't automatically jump if something is already playing,
+        // but often 'Play All' implies start playing the first one.
+        // I'll stick to the "Add to queue after current" request literal interpretation.
+        // Actually, users usually expect the first song to start if they click Play All.
+        // I'll start the first one but it's now at currentIdx + 1.
+      };
+    });
+    
+    // Auto-start the first song of the new batch
+    const { queue, lastQueueIndex } = playerStore.state;
     playerActions.play(songs[0]);
+  },
+
+  // Hydrate from localStorage
+  hydrate: () => {
+    if (typeof window === "undefined") return;
+    try {
+      const lastSong = localStorage.getItem("last_played_song");
+      const lastQueue = localStorage.getItem("last_queue");
+      
+      playerStore.setState((s) => {
+        const song = lastSong ? JSON.parse(lastSong) : s.currentSong;
+        const queueRes = lastQueue ? JSON.parse(lastQueue) : s.queue;
+        const idx = queueRes.findIndex((item: any) => item.id === (song?.id));
+
+        return {
+          ...s,
+          currentSong: song,
+          queue: queueRes,
+          lastQueueIndex: idx !== -1 ? idx : s.lastQueueIndex,
+        };
+      });
+    } catch (err) {
+      console.error("[PlayerStore] Hydration failed:", err);
+    }
+  },
+
+  // Initialize with recommendations if empty (auth-aware fallback)
+  initQueue: async () => {
+    const { queue, currentSong, systemUser } = playerStore.state;
+    if (queue.length === 0) {
+      try {
+        console.log("[PlayerStore] 🤖 Initializing queue...");
+
+        let res;
+        // If logged in, get personalized recommendations
+        if (systemUser?.id) {
+          try {
+            res = await musicApi.interactions.getRecommendations();
+          } catch (err: any) {
+            // Fallback to trending if recommendations fail (e.g. 401/403)
+            console.warn(
+              "[PlayerStore] Recommendations failed, falling back to trending.",
+            );
+            res = await musicApi.interactions.getTrending();
+          }
+        } else {
+          // Unauthenticated: Get trending songs
+          res = await musicApi.interactions.getTrending();
+        }
+
+        if (res?.success && res?.data?.data) {
+          const recs = mapListToPlayerSongs(res.data.data);
+          playerActions.setQueue(recs);
+
+          if (!currentSong && recs.length > 0) {
+            playerActions.play(recs[0]);
+            playerActions.setIsPlaying(false);
+          }
+        }
+      } catch (err) {
+        console.error("[PlayerStore] Failed to init queue:", err);
+      }
+    }
   },
 
   next: () => {
