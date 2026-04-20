@@ -19,7 +19,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "One Melody",
-  description: "Your music, everywhere.",
+  description: "Your music, everywhere."
 };
 
 console.log("[Layout] 🧬 RootLayout module loaded");

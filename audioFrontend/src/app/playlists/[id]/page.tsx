@@ -122,15 +122,7 @@ export default function PlaylistPage() {
 
   return (
     <div className="px-10 pb-20 space-y-12">
-      {/* Navigation */}
-      {/* <div className="flex items-center gap-6">
-        <Link
-          href="/playlists"
-          className="w-12 h-12 rounded-full border border-white/5 bg-white/5 flex items-center justify-center hover:bg-white/10 transition-all group"
-        >
-          <ArrowLeft size={20} className="text-zinc-400 group-hover:text-white transition-colors" />
-        </Link>
-      </div> */}
+     
 
       {/* Playlist Hero */}
       <section className="relative h-[480px] w-full overflow-hidden rounded-[3.5rem] border border-white/5 shadow-2xl group">
@@ -218,12 +210,12 @@ export default function PlaylistPage() {
 
         <div className="space-y-4">
           {/* Table Header */}
-          <div className="grid grid-cols-12 w-full px-10 py-2 text-zinc-600 text-[9px] font-black uppercase tracking-[0.2em] italic mb-2">
+          <div className="grid grid-cols-12 w-full px-6 py-2 text-zinc-600 text-[9px] font-black uppercase tracking-[0.2em] italic mb-2">
             <div className="col-span-1 text-center">#</div>
-            <div className="col-span-6 md:col-span-5">Title</div>
+            <div className="col-span-6 md:col-span-6">Title</div>
             <div className="col-span-3 hidden md:block">Artist</div>
             <div className="col-span-2 md:col-span-1 text-right md:text-left">Duration</div>
-            <div className="hidden md:block col-span-2" />
+            <div className="hidden md:block col-span-1" />
           </div>
 
           <div className="flex flex-col gap-2">
@@ -240,7 +232,7 @@ export default function PlaylistPage() {
                   </div>
 
                   {/* Title & Image */}
-                  <div className="col-span-6 md:col-span-5 flex items-center gap-6">
+                  <div className="col-span-6 md:col-span-6 flex items-center gap-6">
                     <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-2xl border border-white/5 shadow-2xl">
                       {(song.imageKey || song.coverImageKey) ? (
                         <img
@@ -288,7 +280,7 @@ export default function PlaylistPage() {
                   </div>
 
                   {/* Actions */}
-                  <div className="col-span-3 md:col-span-2 flex items-center justify-end gap-6 pr-4">
+                  <div className="col-span-3 md:col-span-1 flex items-center justify-end gap-6 pr-4">
                     {isUserPlaylist ? (
                       <button
                         onClick={(e) => {

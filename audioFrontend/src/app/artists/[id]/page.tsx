@@ -67,16 +67,6 @@ export default function ArtistPage() {
 
   return (
     <div className="px-10 pb-20 space-y-12">
-      {/* Header Navigation */}
-      {/* <div className="flex items-center gap-6">
-        <Link 
-          href="/artists"
-          className="w-12 h-12 rounded-full border border-white/5 bg-white/5 flex items-center justify-center hover:bg-white/10 transition-all group"
-        >
-          <ArrowLeft size={20} className="text-zinc-400 group-hover:text-white transition-colors" />
-        </Link>
-      </div> */}
-
       {/* Hero Banner */}
       <section className="relative h-[480px] w-full overflow-hidden rounded-[3.5rem] border border-white/5 shadow-2xl group">
         <div className="absolute inset-0 bg-zinc-950">
@@ -136,9 +126,9 @@ export default function ArtistPage() {
       </section>
 
       {/* Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-        {/* Left: Tracks (8 cols) */}
-        <div className="lg:col-span-8 space-y-8">
+      <div className="grid grid-cols-1 lg:grid-cols-12">
+        {/* Left: Tracks (Full Width) */}
+        <div className="lg:col-span-12 space-y-8">
           <div className="flex items-center justify-between border-b border-white/5 pb-6">
             <div className="flex items-center gap-4">
               <h3 className="text-2xl font-black italic uppercase tracking-tighter text-white">
@@ -154,10 +144,9 @@ export default function ArtistPage() {
             {/* Table Header */}
             <div className="grid grid-cols-12 w-full px-6 py-2 text-zinc-600 text-[9px] font-black uppercase tracking-[0.2em] italic mb-2">
               <div className="col-span-1 text-center">#</div>
-              <div className="col-span-6 md:col-span-5">Track Info</div>
+              <div className="col-span-6 md:col-span-7">Track Info</div>
               <div className="col-span-3 hidden md:block">Metatag</div>
               <div className="col-span-2 md:col-span-1 text-right md:text-left">Time</div>
-              <div className="hidden md:block col-span-2" />
             </div>
 
             <div className="flex flex-col gap-2">
@@ -174,7 +163,7 @@ export default function ArtistPage() {
                     </div>
 
                     {/* Image & Title */}
-                    <div className="col-span-6 md:col-span-5 flex items-center gap-6">
+                    <div className="col-span-6 md:col-span-7 flex items-center gap-6">
                       <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-2xl border border-white/5 shadow-2xl">
                         {getImageUrl(song.imageKey, { width: 100, height: 100, aspectRatio: "1-1" }) ? (
                           <img
@@ -221,8 +210,6 @@ export default function ArtistPage() {
                       <Clock size={12} className="text-zinc-600 group-hover:text-primary transition-colors hidden md:block" />
                       <span>{formatDuration(song.duration)}</span>
                     </div>
-
-                    <div className="hidden md:block col-span-2" />
                   </div>
                 ))
               ) : (
@@ -231,46 +218,6 @@ export default function ArtistPage() {
                   <p className="text-zinc-600 font-black uppercase italic tracking-[0.3em] text-[10px]">Transmission Silent</p>
                 </div>
               )}
-            </div>
-          </div>
-        </div>
-
-        {/* Right: Sidebar (4 cols) */}
-        <div className="lg:col-span-4 space-y-10">
-          <div className="space-y-6">
-            <div className="flex items-center gap-4">
-              <h3 className="text-2xl font-black italic uppercase tracking-tighter text-white">
-                Biography
-              </h3>
-              <div className="h-px flex-1 bg-linear-to-r from-primary/30 to-transparent" />
-            </div>
-
-            <div className="relative group">
-              {/* Glass Card */}
-              <div className="absolute inset-0 bg-primary/5 blur-3xl opacity-0 group-hover:opacity-20 transition-opacity duration-[2s]" />
-              <div className="relative p-10 rounded-[3.5rem] bg-zinc-900/40 border border-white/5 space-y-8 backdrop-blur-3xl shadow-2xl">
-                <p className="text-zinc-400 text-sm font-medium leading-relaxed italic opacity-80 first-letter:text-4xl first-letter:font-black first-letter:text-white first-letter:mr-2">
-                  {artist?.about || "This artist has chosen to remain an enigma, letting their frequencies speak for themselves through the neural pathways of the network."}
-                </p>
-
-                <div className="pt-8 border-t border-white/5 space-y-5">
-                  <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest italic">
-                    <span className="text-zinc-500">Node Activation</span>
-                    <span className="text-primary">{formatDate(artist?.createdAt)}</span>
-                  </div>
-                  <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest italic">
-                    <span className="text-zinc-500">Security Status</span>
-                    <div className="flex items-center gap-1.5 text-white">
-                      <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-                      <span>Verified Profile</span>
-                    </div>
-                  </div>
-                  <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest italic">
-                    <span className="text-zinc-500">Frequency Count</span>
-                    <span className="text-white tabular-nums">{songs.length} Tracks Loaded</span>
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
         </div>
