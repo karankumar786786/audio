@@ -136,7 +136,7 @@ export default function PlaylistPage() {
           <ArrowLeft size={20} className="text-zinc-400 group-hover:text-white transition-colors" />
         </Link>
         <h2 className="text-xl font-black italic uppercase tracking-tighter text-white">
-          Cluster Info <span className="text-violet-500">/</span> {playlist?.title || playlist?.name}
+          Cluster Info <span className="text-primary">/</span> {playlist?.title || playlist?.name}
         </h2>
       </div>
 
@@ -150,7 +150,7 @@ export default function PlaylistPage() {
               className="h-full w-full object-cover opacity-40 blur-sm group-hover:scale-110 group-hover:opacity-60 transition-all duration-[2s]"
             />
           ) : (
-            <div className="h-full w-full bg-linear-to-br from-violet-950 via-zinc-950 to-black" />
+            <div className="h-full w-full bg-linear-to-br from-primary via-zinc-950 to-black" />
           )}
           <div className="absolute inset-0 bg-linear-to-t from-black via-black/20 to-transparent" />
         </div>
@@ -171,14 +171,14 @@ export default function PlaylistPage() {
             </h1>
 
             <p className="max-w-2xl text-zinc-500 font-medium italic text-sm opacity-80 line-clamp-2">
-              {playlist?.description || "A synchronized frequency of audio transients organized by the network algorithm for optimal acoustic resonance."}
+              {playlist?.description || ""}
             </p>
 
             <div className="pt-6 flex items-center gap-4">
               <button
                 onClick={handleStreamAll}
                 disabled={songs.length === 0}
-                className="px-12 h-16 bg-white text-black rounded-4xl font-black text-xs uppercase tracking-widest hover:scale-105 active:scale-95 transition-all flex items-center gap-3 shadow-2xl shadow-white/10 disabled:opacity-50"
+                className="px-12 h-16 bg-primary text-black rounded-4xl font-black text-xs uppercase tracking-widest hover:scale-105 active:scale-95 transition-all flex items-center gap-3 shadow-2xl shadow-white/10 disabled:opacity-50"
               >
                 <Play fill="black" size={18} />
                 Play all

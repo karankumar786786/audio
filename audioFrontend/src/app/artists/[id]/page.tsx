@@ -112,7 +112,7 @@ export default function ArtistPage() {
               <button 
                 onClick={() => songs.length > 0 && playerActions.playAll(mapListToPlayerSongs(songs))}
                 disabled={songs.length === 0}
-                className="px-12 h-16 bg-white text-black rounded-3xl font-black text-xs uppercase tracking-widest hover:scale-105 active:scale-95 transition-all flex items-center gap-3 shadow-2xl shadow-white/10 disabled:opacity-50"
+                className="px-12 h-16 bg-primary text-black rounded-3xl font-black text-xs uppercase tracking-widest hover:scale-105 active:scale-95 transition-all flex items-center gap-3 shadow-2xl shadow-white/10 disabled:opacity-50"
               >
                 <Play fill="black" size={18} />
                 Play All
@@ -125,7 +125,7 @@ export default function ArtistPage() {
         <div className="space-y-8">
            <div className="flex items-center gap-4 mb-8">
             <h3 className="text-2xl font-black italic uppercase tracking-tighter text-white">
-              About Node
+              About Artist
             </h3>
             <div className="h-px flex-1 bg-linear-to-r from-primary/30 to-transparent" />
           </div>

@@ -66,7 +66,7 @@ export default function PlaylistsPage() {
             <h2 className="text-3xl font-black italic tracking-tighter uppercase text-white">
               Your Playlists
             </h2>
-            <div className="h-px w-24 bg-linear-to-r from-violet-500 to-transparent" />
+            <div className="h-px w-24 bg-linear-to-r from-primary to-transparent" />
           </div>
           <button
             onClick={() =>
@@ -150,7 +150,7 @@ export default function PlaylistsPage() {
                 value={newPlaylistName}
                 onChange={(e) => setNewPlaylistName(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleCreatePlaylist()}
-                className="w-full bg-zinc-900 border border-white/10 p-5 rounded-2xl text-white font-bold italic tracking-tight mb-8 focus:outline-none focus:ring-2 focus:ring-violet-500 transition-all"
+                className="w-full bg-zinc-900 border border-white/10 p-5 rounded-2xl text-white font-bold italic tracking-tight mb-8 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all"
               />
               <div className="flex gap-4">
                 <button
@@ -161,7 +161,7 @@ export default function PlaylistsPage() {
                 </button>
                 <button
                   onClick={handleCreatePlaylist}
-                  className="flex-1 py-4 bg-violet-500 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-violet-500/20 hover:bg-violet-400 transition-all"
+                  className="flex-1 py-4 bg-primary text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-violet-500/20 hover:bg-primary transition-all"
                 >
                   Initialize
                 </button>
@@ -201,7 +201,7 @@ function PlaylistRow({
             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center bg-violet-500/10 text-violet-400">
+          <div className="w-full h-full flex items-center justify-center bg-primary-500/10 text-primary">
             <ListMusic className="opacity-40" size={32} />
           </div>
         )}
