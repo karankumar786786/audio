@@ -22,6 +22,7 @@ interface PlayerState {
   systemToken: string | null;
   systemUser: any | null;
   favourites: Set<string>;
+  isRefilling: boolean;
 }
 
 // Restore systemUser from localStorage on init
@@ -68,6 +69,7 @@ export const playerStore = new Store<PlayerState>({
   systemToken: null,
   systemUser: _initSystemUser,
   favourites: new Set<string>(),
+  isRefilling: false,
 });
 
 // Hydrate token on client side only
@@ -190,42 +192,69 @@ export const playerActions = {
     }
   },
 
-  // Initialize with recommendations if empty (auth-aware fallback)
-  initQueue: async () => {
-    const { queue, currentSong, systemUser } = playerStore.state;
-    if (queue.length === 0) {
-      try {
-        console.log("[PlayerStore] 🤖 Initializing queue...");
+  // Unified refill logic (Infinite Queue)
+  refillQueue: async (isInit = false) => {
+    const { queue, currentSong, systemUser, isRefilling } = playerStore.state;
 
-        let res;
-        // If logged in, get personalized recommendations
-        if (systemUser?.id) {
-          try {
-            res = await musicApi.interactions.getRecommendations();
-          } catch (err: any) {
-            // Fallback to trending if recommendations fail (e.g. 401/403)
-            console.warn(
-              "[PlayerStore] Recommendations failed, falling back to trending.",
-            );
-            res = await musicApi.interactions.getTrending();
-          }
-        } else {
-          // Unauthenticated: Get trending songs
+    // Prevent concurrent refills
+    if (isRefilling) return;
+
+    // If not initializing and we already have plenty of songs, skip
+    if (!isInit && queue.length - playerStore.state.lastQueueIndex > 3) return;
+
+    try {
+      playerStore.setState((s) => ({ ...s, isRefilling: true }));
+      console.log(
+        `[PlayerStore] 🔄 ${isInit ? "Initializing" : "Refilling"} queue...`,
+      );
+
+      let res;
+      if (systemUser?.id) {
+        try {
+          res = await musicApi.interactions.getRecommendations();
+        } catch (err: any) {
+          console.warn("[PlayerStore] Recommendations failed, using trending.");
           res = await musicApi.interactions.getTrending();
         }
+      } else {
+        res = await musicApi.interactions.getTrending();
+      }
 
-        if (res?.success && res?.data?.data) {
-          const recs = mapListToPlayerSongs(res.data.data);
-          playerActions.setQueue(recs);
+      if (res?.success && res?.data?.data) {
+        const newSongs = mapListToPlayerSongs(res.data.data);
 
-          if (!currentSong && recs.length > 0) {
-            playerActions.play(recs[0]);
+        // Filter out songs already in queue to avoid immediate duplicates
+        const existingIds = new Set(queue.map((s) => s.id));
+        const uniqueNewSongs = newSongs.filter((s) => !existingIds.has(s.id));
+
+        if (uniqueNewSongs.length > 0) {
+          playerStore.setState((s) => {
+            const updatedQueue = [...s.queue, ...uniqueNewSongs];
+            if (typeof window !== "undefined") {
+              localStorage.setItem("last_queue", JSON.stringify(updatedQueue));
+            }
+            return { ...s, queue: updatedQueue };
+          });
+
+          // If initializing and no song loaded, pick the first
+          if (isInit && !currentSong && uniqueNewSongs.length > 0) {
+            playerActions.play(uniqueNewSongs[0]);
             playerActions.setIsPlaying(false);
           }
         }
-      } catch (err) {
-        console.error("[PlayerStore] Failed to init queue:", err);
       }
+    } catch (err) {
+      console.error("[PlayerStore] Refill failed:", err);
+    } finally {
+      playerStore.setState((s) => ({ ...s, isRefilling: false }));
+    }
+  },
+
+  // Initialize with recommendations if empty (auth-aware fallback)
+  initQueue: async () => {
+    const { queue } = playerStore.state;
+    if (queue.length === 0) {
+      await playerActions.refillQueue(true);
     }
   },
 
@@ -246,6 +275,12 @@ export const playerActions = {
 
     if (nextIdx < queue.length) {
       playerActions.play(queue[nextIdx]);
+
+      // Infinite Refill: Check if we're running low (2 or 1 remaining)
+      const remaining = queue.length - (nextIdx + 1);
+      if (remaining <= 2) {
+        playerActions.refillQueue();
+      }
     } else if (repeatMode === "all") {
       playerActions.play(queue[0]);
     } else {
