@@ -191,7 +191,7 @@ function PlaylistRow({
   return (
     <Link 
       href={`/playlists/${playlist.id}${isSystem ? "?type=system" : "?type=user"}`} 
-      className="group flex items-center gap-8 p-5 rounded-[2.5rem] border-2 border-white/3 hover:bg-white/[0.03] border border-transparent hover:border-white/[0.05] transition-all duration-500"
+      className="group flex items-center gap-8 p-5 rounded-[2.5rem]   hover:bg-white/3 border border-transparent hover:border-white/5 transition-all duration-500"
     >
       <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-3xl border border-white/5 shadow-2xl">
         {playlist.coverImageKey ? (
