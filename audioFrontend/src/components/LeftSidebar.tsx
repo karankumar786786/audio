@@ -132,53 +132,11 @@ export function LeftSidebar() {
           <section suppressHydrationWarning>
             <div className="flex items-center justify-between px-4 mb-4">
               <h3 className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.2em] italic">
-                Your Lists
+                Your Playlists
               </h3>
-              {hasMounted && systemUser && (
-                <button
-                  onClick={() => setIsCreating(true)}
-                  className="text-zinc-600 hover:text-primary transition-colors"
-                >
-                  <Plus size={14} />
-                </button>
-              )}
             </div>
 
-            {/* Inline Create Input */}
-            <AnimatePresence mode="wait">
-              {isCreating && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  className="px-3 mb-4"
-                >
-                  <div className="flex items-center gap-2 bg-zinc-900/80 border border-white/10 rounded-xl p-2 shadow-2xl">
-                    <input
-                      autoFocus
-                      type="text"
-                      placeholder="Name..."
-                      value={newName}
-                      onChange={(e) => setNewName(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") handleCreatePlaylist();
-                        if (e.key === "Escape") {
-                          setIsCreating(false);
-                          setNewName("");
-                        }
-                      }}
-                      className="flex-1 bg-transparent text-xs text-white font-black px-2 py-1.5 outline-none placeholder-zinc-700"
-                    />
-                    <button
-                      onClick={handleCreatePlaylist}
-                      className="p-1.5 bg-primary text-black rounded-lg hover:brightness-110 transition-all shrink-0"
-                    >
-                      <Plus size={12} strokeWidth={3} />
-                    </button>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+            
 
             <nav className="space-y-0.5">
               {!hasMounted || isLoading ? (
