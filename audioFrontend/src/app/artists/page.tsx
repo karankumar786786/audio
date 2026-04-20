@@ -15,7 +15,7 @@ export default function ArtistsPage() {
   const artists = artistsResponse?.data?.data || [];
 
   return (
-    <div className="px-10 pb-20">
+    <div className=" pb-20">
       <section>
         <div className="flex items-center justify-between mb-12 px-2">
           <div className="flex items-center gap-6">

@@ -513,7 +513,7 @@ export function ShakaMusicPlayer() {
 
   return (
     <>
-      <div className="w-[380px] glass-effect-strong border-l border-white/4 flex flex-col h-screen overflow-hidden flex-none relative z-50">
+      <div className="w-[340px] glass-effect-strong border-l border-white/4 flex flex-col h-screen overflow-hidden flex-none relative z-50">
         {/* ─── Ambient Glow ─── */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
           <div

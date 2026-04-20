@@ -6,9 +6,8 @@ import { SongCard } from "../../components/SongCard";
 import { HeroSection } from "../../components/HeroSection";
 import { ArtistCard } from "../../components/ArtistCard";
 import { PlaylistCard } from "../../components/PlaylistCard";
-import { useEffect, useState, useRef } from "react";
-import { motion } from "framer-motion";
-import { Sparkles, TrendingUp, Clock, Users2, ListMusic, Zap } from "lucide-react";
+import { useEffect, useState } from "react";
+import {  Clock, Users2, ListMusic, Zap } from "lucide-react";
 import { useStore } from "@tanstack/react-store";
 import { playerStore } from "../../store/player.store";
 
@@ -106,7 +105,7 @@ export default function HomePage() {
           <div className="h-px flex-1 mx-8 bg-linear-to-r from-white/6 to-transparent" />
         </div>
 
-        <div className="flex flex-row overflow-x-auto gap-12 pb-6 no-scrollbar mask-fade-right">
+        <div className="flex flex-row overflow-x-auto gap-12 pb-6 no-scrollbar mask-fade-right px-1">
           {isArtistsLoading ? (
             [1, 2, 3, 4, 5, 6].map((i) => (
               <div key={i} className="flex-none w-[160px] space-y-4">
@@ -130,13 +129,13 @@ export default function HomePage() {
               <ListMusic className="text-primary" size={18} />
             </div>
             <h2 className="text-2xl font-black italic tracking-tight uppercase text-white">
-              Playlists
+              Featured Playlists
             </h2>
           </div>
           <div className="h-px flex-1 mx-8 bg-linear-to-r from-white/6 to-transparent" />
         </div>
 
-        <div className="flex flex-row overflow-x-auto gap-8 pb-6 no-scrollbar mask-fade-right">
+        <div className="flex flex-row overflow-x-auto gap-8 pb-6 no-scrollbar mask-fade-right px-1">
           {isPlaylistsLoading ? (
             [1, 2, 3, 4, 5, 6].map((i) => (
               <div key={i} className="flex-none w-[180px] space-y-4">
@@ -163,15 +162,19 @@ export default function HomePage() {
                   <Zap className="text-primary fill-primary" size={18} />
                 </div>
                 <h2 className="text-2xl font-black italic tracking-tight uppercase text-white">
-                  Recommendation
+                  Recommendations
                 </h2>
               </div>
               <div className="h-px flex-1 bg-linear-to-r from-white/6 to-transparent" />
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
-              {recommendations.data.data.slice(0, 5).map((song: Song) => (
-                <SongCard key={`rec-${song.id}`} song={song} />
+            <div className="flex flex-row overflow-x-auto gap-6 pb-6 no-scrollbar mask-fade-right px-1">
+              {recommendations.data.data.slice(0, 10).map((song: Song) => (
+                <SongCard 
+                  key={`rec-${song.id}`} 
+                  song={song} 
+                  className="flex-none w-[220px]"
+                />
               ))}
             </div>
           </section>

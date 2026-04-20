@@ -117,7 +117,7 @@ export function AppNavbar() {
   }, []);
 
   return (
-    <header className="sticky top-0 z-40 w-full px-10 py-6 flex items-center justify-between pointer-events-none">
+    <header className="sticky top-0 z-40 w-full px-5 py-6 flex items-center justify-between pointer-events-none">
       {/* Search Input Container */}
       <div
         className="flex items-center gap-6 pointer-events-auto relative"

@@ -13,9 +13,10 @@ interface SongCardProps {
   song: Song;
   priority?: boolean;
   onRemove?: () => void;
+  className?: string;
 }
 
-export function SongCard({ song, priority, onRemove }: SongCardProps) {
+export function SongCard({ song, priority, onRemove, className }: SongCardProps) {
   const systemUser = useStore(playerStore, (s) => s.systemUser);
   const favourites = useStore(playerStore, (s) => s.favourites);
   const [isPlaylistModalOpen, setIsPlaylistModalOpen] = useState(false);
@@ -68,7 +69,7 @@ export function SongCard({ song, priority, onRemove }: SongCardProps) {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         onClick={handlePlay}
-        className="glass-effect hover-scale p-3.5 rounded-[1.8rem] group cursor-pointer relative overflow-hidden"
+        className={`glass-effect hover-scale p-3.5 rounded-[1.8rem] group cursor-pointer relative overflow-hidden ${className || ""}`}
       >
         <div className="aspect-square bg-zinc-900 rounded-[1.4rem] mb-4 relative shadow-2xl overflow-hidden ring-1 ring-white/4">
           <img

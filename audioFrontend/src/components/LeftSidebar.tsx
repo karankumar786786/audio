@@ -69,7 +69,7 @@ export function LeftSidebar() {
   };
 
   return (
-    <aside className="w-64 glass-effect border-r border-white/4 flex flex-col h-screen fixed left-0 top-0 z-50 overflow-hidden">
+    <aside className="w-60 glass-effect border-r border-white/4 flex flex-col h-screen fixed left-0 top-0 z-50 overflow-hidden">
       <div className="p-8 flex flex-col h-full bg-black/20">
         {/* Logo */}
         <div className="flex items-center gap-3 mb-12 group cursor-pointer shrink-0">
