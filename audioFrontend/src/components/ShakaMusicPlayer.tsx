@@ -771,7 +771,7 @@ export function ShakaMusicPlayer() {
                       setShowQualityMenu(false);
                     }}
                     className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold transition-all ${selectedQuality === "auto"
-                        ? "bg-indigo-500/15 text-indigo-400"
+                        ? "bg-primary/15 text-primary"
                         : "text-zinc-500 hover:text-white hover:bg-white/5"
                       }`}
                   >

@@ -23,7 +23,7 @@ export default function ArtistsPage() {
             <h2 className="text-3xl font-black italic tracking-tighter uppercase text-white">
               Artists
             </h2>
-            <div className="h-px w-24 bg-linear-to-r from-indigo-500 to-transparent" />
+            <div className="h-px w-24 bg-linear-to-r from-primary to-transparent" />
           </div>
         </div>
 
@@ -56,7 +56,7 @@ export default function ArtistsPage() {
                       className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-700"
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-indigo-500/10 text-indigo-400 text-3xl font-black italic uppercase">
+                    <div className="w-full h-full flex items-center justify-center bg-primary/10 text-primary text-3xl font-black italic uppercase">
                       {artist.name?.[0]}
                     </div>
                   )}

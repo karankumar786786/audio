@@ -122,9 +122,9 @@ export function MusicPlayer() {
               max={state.duration || 100}
               value={state.currentTime}
               onChange={handleSeek}
-              className="absolute w-full h-1 bg-zinc-800 rounded-full appearance-none cursor-pointer accent-indigo-500 overflow-hidden"
+              className="absolute w-full h-1 bg-zinc-800 rounded-full appearance-none cursor-pointer accent-primary overflow-hidden"
               style={{
-                background: `linear-gradient(to right, #6366f1 ${state.duration > 0 ? (state.currentTime / state.duration) * 100 : 0}%, #27272a ${state.duration > 0 ? (state.currentTime / state.duration) * 100 : 0}%)`,
+                background: `linear-gradient(to right, var(--primary) ${state.duration > 0 ? (state.currentTime / state.duration) * 100 : 0}%, #27272a ${state.duration > 0 ? (state.currentTime / state.duration) * 100 : 0}%)`,
               }}
             />
           </div>
@@ -138,7 +138,7 @@ export function MusicPlayer() {
       <div className="flex items-center justify-end gap-4 w-1/3">
         <button
           onClick={() => playerActions.toggleLyrics()}
-          className={`p-2 rounded-lg transition-all ${state.isLyricsOpen ? "text-indigo-400 bg-indigo-500/10" : "text-zinc-400 hover:text-white"}`}
+          className={`p-2 rounded-lg transition-all ${state.isLyricsOpen ? "text-primary bg-primary/10" : "text-zinc-400 hover:text-white"}`}
           title="Lyrics"
         >
           <Music size={18} />

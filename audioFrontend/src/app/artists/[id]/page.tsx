@@ -85,7 +85,7 @@ export default function ArtistPage() {
               className="h-full w-full object-cover opacity-40 blur-sm group-hover:scale-110 group-hover:opacity-60 transition-all duration-[2s]"
             />
           ) : (
-            <div className="h-full w-full bg-linear-to-br from-indigo-950 via-zinc-950 to-black" />
+            <div className="h-full w-full bg-linear-to-br from-primary/20 via-zinc-950 to-black" />
           )}
           <div className="absolute inset-0 bg-linear-to-t from-black via-black/20 to-transparent" />
         </div>
@@ -127,7 +127,7 @@ export default function ArtistPage() {
             <h3 className="text-2xl font-black italic uppercase tracking-tighter text-white">
               About Node
             </h3>
-            <div className="h-px flex-1 bg-linear-to-r from-indigo-500/30 to-transparent" />
+            <div className="h-px flex-1 bg-linear-to-r from-primary/30 to-transparent" />
           </div>
 
           <div className="p-8 rounded-[3rem] bg-zinc-900/40 border border-white/5 space-y-6 backdrop-blur-3xl shadow-2xl">
@@ -138,7 +138,7 @@ export default function ArtistPage() {
             <div className="pt-6 border-t border-white/5 space-y-4">
               <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest italic">
                 <span className="text-zinc-500">Date of Birth</span>
-                <span className="text-indigo-400">{formatDate(artist?.createdAt)}</span>
+                <span className="text-primary">{formatDate(artist?.createdAt)}</span>
               </div>
               <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest italic">
                 <span className="text-zinc-500">Verified</span>
@@ -169,7 +169,7 @@ export default function ArtistPage() {
                   onClick={() => playerActions.playSong(mapToPlayerSong(song))}
                   className="group flex items-center gap-6 p-4 rounded-3xl hover:bg-white/[0.03] border border-transparent hover:border-white/[0.05] transition-all duration-300 text-left"
                 >
-                  <div className="w-8 text-center text-zinc-600 font-black text-xs group-hover:text-indigo-400 transition-colors italic">
+                  <div className="w-8 text-center text-zinc-600 font-black text-xs group-hover:text-primary transition-colors italic">
                     {(index + 1).toString().padStart(2, "0")}
                   </div>
 
@@ -191,12 +191,12 @@ export default function ArtistPage() {
                   </div>
 
                   <div className="flex-1 min-w-0">
-                    <h4 className="font-black italic uppercase tracking-tighter text-white group-hover:text-indigo-400 transition-colors truncate text-lg">
+                    <h4 className="font-black italic uppercase tracking-tighter text-white group-hover:text-primary transition-colors truncate text-lg">
                       {song.title}
                     </h4>
                     <p className="text-[10px] font-black uppercase tracking-[0.1em] text-zinc-400 italic group-hover:text-zinc-300 transition-colors flex items-center gap-2">
                        {song.language && (
-                         <span className="px-2 py-0.5 rounded bg-white/5 border border-white/5 text-[8px] text-indigo-400">
+                         <span className="px-2 py-0.5 rounded bg-white/5 border border-white/5 text-[8px] text-primary">
                            {song.language}
                          </span>
                        )}
@@ -207,7 +207,7 @@ export default function ArtistPage() {
 
                   <div className="shrink-0 flex items-center gap-8 text-zinc-400 text-[10px] font-black uppercase tracking-widest italic group-hover:text-white transition-colors">
                     <div className="flex items-center gap-2 w-20 justify-end">
-                      <Clock size={12} className="text-indigo-500/50" />
+                      <Clock size={12} className="text-primary/50" />
                       {formatDuration(song.duration || song.durationMs || 0)}
                     </div>
                   </div>

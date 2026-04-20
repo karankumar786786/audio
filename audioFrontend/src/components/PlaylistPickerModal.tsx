@@ -112,7 +112,7 @@ export function PlaylistPickerModal({
             {/* Header */}
             <div className="p-6 pb-4 border-b bg-white/4 flex items-center justify-between">
               <div className="flex items-center gap-3 min-w-0">
-                <div className="p-2.5 bg-indigo-500/10 text-indigo-400 rounded-xl shrink-0">
+                <div className="p-2.5 bg-primary/10 text-primary rounded-xl shrink-0">
                   <ListMusic size={18} />
                 </div>
                 <div className="min-w-0">
@@ -149,7 +149,7 @@ export function PlaylistPickerModal({
                       if (e.key === "Enter" && newName.trim()) createAndAdd.mutate();
                       if (e.key === "Escape") setIsCreating(false);
                     }}
-                    className="w-full bg-zinc-900 border border-white/6 p-4 rounded-xl text-white text-sm font-bold outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/30 transition-all placeholder-zinc-600"
+                    className="w-full bg-zinc-900 border border-white/6 p-4 rounded-xl text-white text-sm font-bold outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/30 transition-all placeholder-zinc-600"
                   />
                   <div className="flex gap-2">
                     <button
@@ -161,7 +161,7 @@ export function PlaylistPickerModal({
                     <button
                       onClick={() => newName.trim() && createAndAdd.mutate()}
                       disabled={!newName.trim() || createAndAdd.isPending}
-                      className="flex-1 py-3 bg-indigo-500 text-white rounded-xl font-bold text-[11px] uppercase tracking-wider hover:bg-indigo-400 transition-all shadow-lg shadow-indigo-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="flex-1 py-3 bg-primary text-black rounded-xl font-black text-[11px] uppercase tracking-widest hover:brightness-110 transition-all shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {createAndAdd.isPending ? "Creating..." : "Create & Add"}
                     </button>
@@ -172,9 +172,9 @@ export function PlaylistPickerModal({
                   {/* Create New Button */}
                   <button
                     onClick={() => setIsCreating(true)}
-                    className="w-full flex items-center gap-3 p-3.5 rounded-xl bg-white/3 hover:bg-white/6 border  hover:border-indigo-500/20 transition-all group"
+                    className="w-full flex items-center gap-3 p-3.5 rounded-xl bg-white/3 hover:bg-white/6 border  hover:border-primary/20 transition-all group"
                   >
-                    <div className="w-10 h-10 bg-indigo-500 rounded-lg flex items-center justify-center text-white shadow group-hover:scale-105 transition-transform shrink-0">
+                    <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center text-black shadow group-hover:scale-105 transition-transform shrink-0">
                       <Plus size={18} />
                     </div>
                     <span className="text-sm font-bold text-white">
@@ -216,7 +216,7 @@ export function PlaylistPickerModal({
                         className="w-full flex items-center justify-between p-3.5 rounded-xl  border border-transparent hover:bg-white/4 transition-all group disabled:opacity-50"
                       >
                         <div className="flex items-center gap-3 min-w-0">
-                          <div className="w-10 h-10 bg-zinc-900 rounded-lg overflow-hidden flex items-center justify-center text-zinc-700 group-hover:text-indigo-400 transition-colors shrink-0">
+                          <div className="w-10 h-10 bg-zinc-900 rounded-lg overflow-hidden flex items-center justify-center text-zinc-700 group-hover:text-primary transition-colors shrink-0">
                             {playlist.coverImageKey ? (
                               <img
                                 src={getImageUrl(playlist.coverImageKey, {

@@ -96,8 +96,8 @@ export default function HomePage() {
       <section>
         <div className="flex items-center justify-between mb-8 px-1">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-indigo-500/10 rounded-xl border border-indigo-500/20">
-              <Users2 className="text-indigo-400" size={18} />
+            <div className="p-2 bg-primary/10 rounded-xl border border-primary/20">
+              <Users2 className="text-primary" size={18} />
             </div>
             <h2 className="text-2xl font-black italic tracking-tight uppercase text-white">
               Top Artists
@@ -126,8 +126,8 @@ export default function HomePage() {
       <section>
         <div className="flex items-center justify-between mb-8 px-1">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-emerald-500/10 rounded-xl border border-emerald-500/20">
-              <ListMusic className="text-emerald-400" size={18} />
+            <div className="p-2 bg-primary/10 rounded-xl border border-primary/20">
+              <ListMusic className="text-primary" size={18} />
             </div>
             <h2 className="text-2xl font-black italic tracking-tight uppercase text-white">
               Playlists
@@ -159,8 +159,8 @@ export default function HomePage() {
           <section>
             <div className="flex items-center gap-4 mb-8 px-1">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-purple-500/10 rounded-xl border border-purple-500/20">
-                  <Zap className="text-purple-400 fill-purple-400" size={18} />
+                <div className="p-2 bg-primary/10 rounded-xl border border-primary/20">
+                  <Zap className="text-primary fill-primary" size={18} />
                 </div>
                 <h2 className="text-2xl font-black italic tracking-tight uppercase text-white">
                   Recommendation
@@ -227,8 +227,8 @@ export default function HomePage() {
         >
           {isFetchingNextPage && (
             <div className="relative w-10 h-10 flex items-center justify-center">
-              <div className="absolute inset-0 border-[3px] border-indigo-500/10 rounded-full" />
-              <div className="absolute inset-0 border-[3px] border-t-indigo-500 rounded-full animate-spin" />
+              <div className="absolute inset-0 border-[3px] border-primary/10 rounded-full" />
+              <div className="absolute inset-0 border-[3px] border-t-primary rounded-full animate-spin" />
             </div>
           )}
         </div>

@@ -20,12 +20,11 @@ export default function Home() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-zinc-950 text-white selection:bg-indigo-500/30">
-
+    <div className="flex flex-col min-h-screen bg-zinc-950 text-white selection:bg-primary/30">
       <main className="flex-1 flex flex-col items-center justify-center px-4 relative overflow-hidden">
         {/* Background Gradients */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-indigo-600/20 rounded-full blur-[120px] -z-10 animate-pulse"></div>
-        <div className="absolute top-1/4 right-1/4 w-[300px] h-[300px] bg-purple-600/10 rounded-full blur-[100px] -z-10"></div>
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/20 rounded-full blur-[120px] -z-10 animate-pulse"></div>
+        <div className="absolute top-1/4 right-1/4 w-[300px] h-[300px] bg-primary/10 rounded-full blur-[100px] -z-10"></div>
 
         <div className="max-w-4xl w-full text-center space-y-8 animate-in fade-in slide-in-from-bottom-5 duration-1000">
           <h1 className="text-6xl md:text-8xl font-black tracking-tighter leading-tight bg-linear-to-b from-white to-white/40 bg-clip-text text-transparent italic">
@@ -43,7 +42,7 @@ export default function Home() {
             {isAuthenticated ? (
               <button
                 onClick={() => router.push("/home")}
-                className="w-full sm:w-auto px-8 py-4 bg-indigo-600 text-white rounded-2xl hover:bg-indigo-500 transition-all font-bold text-lg shadow-xl shadow-indigo-500/20 active:scale-95 flex items-center justify-center gap-2 group"
+                className="w-full sm:w-auto px-8 py-4 bg-primary text-black rounded-2xl hover:brightness-110 transition-all font-bold text-lg shadow-xl shadow-primary/20 active:scale-95 flex items-center justify-center gap-2 group"
               >
                 Enter Library
                 <svg

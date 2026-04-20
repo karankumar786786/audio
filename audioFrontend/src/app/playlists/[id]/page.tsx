@@ -221,7 +221,7 @@ export default function PlaylistPage() {
                 className="group grid grid-cols-12 items-center gap-4 p-5 rounded-[2.5rem] hover:bg-white/[0.03] border border-transparent hover:border-white/[0.05] transition-all duration-300 text-left cursor-pointer"
               >
                 {/* Index */}
-                <div className="col-span-1 text-center text-zinc-600 font-black text-xs group-hover:text-violet-400 transition-colors italic">
+                <div className="col-span-1 text-center text-zinc-600 font-black text-xs group-hover:text-primary transition-colors italic">
                   {(index + 1).toString().padStart(2, "0")}
                 </div>
 
@@ -244,12 +244,12 @@ export default function PlaylistPage() {
                     </div>
                   </div>
                   <div className="min-w-0">
-                    <h4 className="font-black italic uppercase tracking-tighter text-white group-hover:text-violet-400 transition-colors truncate text-lg">
+                    <h4 className="font-black italic uppercase tracking-tighter text-white group-hover:text-primary transition-colors truncate text-lg">
                       {song.title}
                     </h4>
                     <div className="flex items-center gap-2">
                       {song.language && (
-                        <span className="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[8px] text-violet-400 font-black uppercase tracking-widest">
+                        <span className="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[8px] text-primary font-black uppercase tracking-widest">
                           {song.language}
                         </span>
                       )}

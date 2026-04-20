@@ -124,10 +124,10 @@ export default function LibraryPage() {
       <div className="flex items-center justify-between mb-20 px-4">
         <div className="space-y-4">
           <div className="flex items-center gap-3">
-            <div className="p-3 bg-indigo-500 rounded-2xl shadow-xl shadow-indigo-500/20">
-              <LibraryIcon size={24} className="text-white" />
+            <div className="p-3 bg-primary rounded-2xl shadow-xl shadow-primary/20">
+              <LibraryIcon size={24} className="text-black" />
             </div>
-            <span className="text-xs font-black uppercase tracking-[0.2em] text-indigo-400 italic">
+            <span className="text-xs font-black uppercase tracking-[0.2em] text-primary italic">
               User Repository
             </span>
           </div>
@@ -189,13 +189,13 @@ export default function LibraryPage() {
           >
             <tab.icon
               size={14}
-              className={activeTab === tab.id ? "text-indigo-500" : ""}
+              className={activeTab === tab.id ? "text-primary" : ""}
             />
             {tab.label}
             {activeTab === tab.id && (
               <motion.div
                 layoutId="activeTab"
-                className="absolute bottom-0 left-0 right-0 h-1 bg-indigo-500 rounded-full"
+                className="absolute bottom-0 left-0 right-0 h-1 bg-primary rounded-full"
               />
             )}
           </button>
@@ -289,7 +289,7 @@ export default function LibraryPage() {
                     >
                       <div className="w-full aspect-square bg-zinc-800 rounded-[2.5rem] mb-6 flex items-center justify-center shadow-2xl relative overflow-hidden ring-1 ring-white/5">
                         <ListMusic
-                          className="text-zinc-700 group-hover:text-indigo-500 transition-colors"
+                          className="text-zinc-700 group-hover:text-primary transition-colors"
                           size={64}
                         />
                         <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-all">
@@ -341,7 +341,7 @@ export default function LibraryPage() {
                 value={newPlaylistName}
                 onChange={(e) => setNewPlaylistName(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleCreatePlaylist()}
-                className="w-full bg-zinc-900 border border-white/10 p-5 rounded-2xl text-white font-bold italic tracking-tight mb-8 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+                className="w-full bg-zinc-900 border border-white/10 p-5 rounded-2xl text-white font-bold italic tracking-tight mb-8 focus:outline-none focus:ring-2 focus:ring-primary transition-all"
               />
               <div className="flex gap-4">
                 <button
@@ -352,7 +352,7 @@ export default function LibraryPage() {
                 </button>
                 <button
                   onClick={handleCreatePlaylist}
-                  className="flex-1 py-4 bg-indigo-500 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-indigo-500/20 hover:bg-indigo-400 transition-all"
+                  className="flex-1 py-4 bg-primary text-black rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-primary/20 hover:brightness-110 transition-all"
                 >
                   Initialize
                 </button>
