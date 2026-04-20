@@ -77,6 +77,7 @@ export default function PlaylistPage() {
   });
 
   const formatDuration = (ms: number) => {
+    if (!ms) return "0:00";
     const totalSeconds = Math.floor(ms / 1000);
     const minutes = Math.floor(totalSeconds / 60);
     const seconds = totalSeconds % 60;
@@ -208,7 +209,8 @@ export default function PlaylistPage() {
             <div className="col-span-1 text-center">#</div>
             <div className="col-span-6 md:col-span-5">Song Title</div>
             <div className="col-span-3 hidden md:block">Artist Name</div>
-            <div className="col-span-5 md:col-span-1" />
+            <div className="col-span-2 md:col-span-1 text-right md:text-left">Duration</div>
+            <div className="hidden md:block col-span-2" />
           </div>
         </div>
 
@@ -267,7 +269,14 @@ export default function PlaylistPage() {
                   </span>
                 </div>
                 {/* Actions */}
-                <div className="col-span-5 md:col-span-1 lg:col-span-3 flex items-center justify-end gap-6 pr-4">
+                {/* Duration */}
+                <div className="col-span-2 md:col-span-1 flex items-center justify-end md:justify-start gap-2 text-zinc-400 text-[10px] font-black uppercase tracking-widest italic group-hover:text-white transition-colors">
+                  <Clock size={12} className="text-zinc-600 group-hover:text-primary transition-colors hidden md:block" />
+                  <span>{formatDuration(song.duration)}</span>
+                </div>
+
+                {/* Actions */}
+                <div className="col-span-3 md:col-span-2 flex items-center justify-end gap-6 pr-4">
                   {isUserPlaylist && (
                     <button
                       onClick={(e) => {

@@ -25,6 +25,7 @@ export default function ArtistPage() {
   });
 
   const formatDuration = (ms: number) => {
+    if (!ms) return "0:00";
     const totalSeconds = Math.floor(ms / 1000);
     const minutes = Math.floor(totalSeconds / 60);
     const seconds = totalSeconds % 60;
@@ -214,7 +215,10 @@ export default function ArtistPage() {
                   </div>
 
                   <div className="shrink-0 flex items-center gap-8 text-zinc-400 text-[10px] font-black uppercase tracking-widest italic group-hover:text-white transition-colors">
-                    <div className="flex items-center gap-2 w-20 justify-end" />
+                    <div className="flex items-center gap-2 w-20 justify-end">
+                      <Clock size={12} className="text-zinc-600 group-hover:text-primary transition-colors" />
+                      <span>{formatDuration(song.duration)}</span>
+                    </div>
                   </div>
                 </button>
               ))
