@@ -7,7 +7,7 @@ console.log("[Player] 🧬 ShakaMusicPlayer module execution started");
 import { useStore } from "@tanstack/react-store";
 import { playerStore, playerActions } from "../store/player.store";
 import {
-  Play,
+
   Pause,
   SkipForward,
   SkipBack,
@@ -16,10 +16,11 @@ import {
   Volume1,
   Music,
   Repeat1,
-  Layers,
   Mic2,
   Heart,
   Plus,
+  ChevronDown,
+  Play,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getImageUrl } from "../lib/image-utils";
@@ -274,11 +275,14 @@ export function ShakaMusicPlayer() {
     const audio = audioRef.current;
     if (!audio) return;
     const handleEnded = () => {
+      console.log("[Player] 🔚 Song ended naturally, transitioning...");
+      isInternalChange.current = true;
       const last = lastStateRef.current;
       if (last.id) {
         playerActions.recordListen(last.id, 100);
         lastStateRef.current = { id: "", time: 0, duration: 0 };
       }
+      playerActions.next();
     };
     audio.addEventListener("ended", handleEnded);
     return () => audio.removeEventListener("ended", handleEnded);
@@ -657,7 +661,7 @@ export function ShakaMusicPlayer() {
             <div className="relative h-[5px] group cursor-pointer flex items-center">
               {/* Background Track */}
               <div className="absolute top-1/2 -translate-y-1/2 left-0 w-full h-[3px] bg-white/6 rounded-full" />
-              
+
               {/* Buffered Bar */}
               <div
                 className="absolute top-1/2 -translate-y-1/2 left-0 h-[3px] bg-white/10 rounded-full transition-all duration-300 pointer-events-none"
@@ -713,7 +717,7 @@ export function ShakaMusicPlayer() {
               onClick={() => playerActions.previous()}
               className="text-zinc-500 hover:text-white transition-colors active:scale-90"
             >
-              <SkipBack size={20} fill="currentColor" />
+              <SkipBack size={16} fill="currentColor" />
             </button>
 
             <motion.button
@@ -722,11 +726,11 @@ export function ShakaMusicPlayer() {
               className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-black shadow-[0_4px_20px_rgba(255,255,255,0.12)] hover:shadow-[0_4px_30px_rgba(255,255,255,0.2)] transition-shadow"
             >
               {isLoading ? (
-                <div className="w-4 h-4 border-2 border-black/10 border-t-primary rounded-full animate-spin" />
+                <div className="w-3 h-3 border-2 border-black/10 border-t-primary rounded-full animate-spin" />
               ) : isPlaying ? (
                 <Pause size={20} fill="black" />
               ) : (
-                <Play size={20} fill="black" className="ml-0.5" />
+                <Play size={16} fill="black" className="ml-0.5" />
               )}
             </motion.button>
 
@@ -737,15 +741,70 @@ export function ShakaMusicPlayer() {
               <SkipForward size={20} fill="currentColor" />
             </button>
 
-            <button
-              onClick={() => setShowQualityMenu(!showQualityMenu)}
-              className={`p-1.5 rounded-lg transition-all ${showQualityMenu
-                ? "text-primary"
-                : "text-zinc-700 hover:text-zinc-400"
-                }`}
-            >
-              <Layers size={16} />
-            </button>
+            <div className="relative group">
+              <button
+                onClick={() => setShowQualityMenu(!showQualityMenu)}
+                className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg transition-all border ${showQualityMenu
+                  ? "bg-primary/10 border-primary/30 text-primary shadow-lg shadow-primary/10"
+                  : "bg-white/3 border-white/5 text-zinc-500 hover:text-white hover:bg-white/5"
+                  }`}
+              >
+                <span className="text-[10px] font-black uppercase tracking-wider italic">
+                  {selectedQuality === "auto" ? "AUTO" : `${Math.round((selectedQuality as number) / 1000)}K`}
+                </span>
+                <ChevronDown size={12} className={`transition-transform duration-300 ${showQualityMenu ? "rotate-180" : ""}`} />
+              </button>
+
+              <AnimatePresence>
+                {showQualityMenu && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                    className="absolute bottom-full right-0 mb-3 w-40 glass-effect-strong border border-white/10 rounded-2xl p-2 shadow-2xl z-[100]"
+                  >
+                    <p className="text-[9px] font-black text-zinc-600 uppercase tracking-widest px-3 py-2 border-b border-white/5 mb-1.5">
+                      Stream Quality
+                    </p>
+                    <div className="max-h-[200px] overflow-y-auto custom-scrollbar">
+                      <button
+                        onClick={() => {
+                          playerActions.setSelectedQuality("auto");
+                          setShowQualityMenu(false);
+                          toast.success("Quality: Auto", {
+                            description: "Automatic quality adjustment enabled.",
+                          });
+                        }}
+                        className={`w-full text-left px-3 py-2.5 rounded-xl text-xs font-black italic transition-all mb-1 ${selectedQuality === "auto"
+                          ? "bg-primary text-black shadow-lg shadow-primary/20"
+                          : "text-zinc-400 hover:text-white hover:bg-white/5"
+                          }`}
+                      >
+                        AUTO
+                      </button>
+                      {qualityTracks.map((t: any) => (
+                        <button
+                          key={t.bandwidth}
+                          onClick={() => {
+                            playerActions.setSelectedQuality(t.bandwidth);
+                            setShowQualityMenu(false);
+                            toast.success("Quality Updated", {
+                              description: `Streaming at ${Math.round(t.bandwidth / 1000)} kbps.`,
+                            });
+                          }}
+                          className={`w-full text-left px-3 py-2.5 rounded-xl text-xs font-black italic transition-all mb-1 ${selectedQuality === t.bandwidth
+                            ? "bg-primary text-black shadow-lg shadow-primary/20"
+                            : "text-zinc-400 hover:text-white hover:bg-white/5"
+                            }`}
+                        >
+                          {Math.round(t.bandwidth / 1000)} KBPS
+                        </button>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           </div>
 
           {/* Volume - Custom div-based slider */}
@@ -773,56 +832,7 @@ export function ShakaMusicPlayer() {
             </span>
           </div>
 
-          {/* Quality Selector */}
-          <AnimatePresence>
-            {showQualityMenu && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
-                className="overflow-hidden"
-              >
-                <div className="bg-white/3 border border-white/6 rounded-xl p-2 space-y-0.5">
-                  <p className="text-[9px] font-black text-zinc-600 uppercase tracking-widest px-2 py-1 border-b border-white/4 mb-1">
-                    Quality
-                  </p>
-                  <button
-                    onClick={() => {
-                      playerActions.setSelectedQuality("auto");
-                      setShowQualityMenu(false);
-                      toast.success("Quality: Auto", {
-                        description: "Automatic quality adjustment enabled.",
-                      });
-                    }}
-                    className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold transition-all ${selectedQuality === "auto"
-                      ? "bg-primary/15 text-primary"
-                      : "text-zinc-500 hover:text-white hover:bg-white/5"
-                      }`}
-                  >
-                    Auto
-                  </button>
-                  {qualityTracks.map((t: any) => (
-                    <button
-                      key={t.bandwidth}
-                      onClick={() => {
-                        playerActions.setSelectedQuality(t.bandwidth);
-                        setShowQualityMenu(false);
-                        toast.success("Quality Updated", {
-                          description: `Streaming at ${Math.round(t.bandwidth / 1000)} kbps.`,
-                        });
-                      }}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold transition-all ${selectedQuality === t.bandwidth
-                        ? "bg-primary/15 text-primary"
-                        : "text-zinc-500 hover:text-white hover:bg-white/5"
-                        }`}
-                    >
-                      {Math.round(t.bandwidth / 1000)} kbps
-                    </button>
-                  ))}
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+
         </div>
       </div>
 
