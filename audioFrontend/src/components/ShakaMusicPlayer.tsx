@@ -113,8 +113,8 @@ export function ShakaMusicPlayer() {
     setLocalTime(val);
   };
 
-  const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    playerActions.setVolume(parseFloat(e.target.value));
+  const handleVolumeChange = (e: React.FormEvent<HTMLInputElement>) => {
+    playerActions.setVolume(parseFloat(e.currentTarget.value));
   };
 
   // ─── Render ───

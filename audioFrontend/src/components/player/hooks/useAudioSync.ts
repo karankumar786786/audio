@@ -22,7 +22,11 @@ export function useAudioSync(
   // 1. Sync Play/Pause and Volume
   useEffect(() => {
     if (!audioElement) return;
-    audioElement.volume = isMuted ? 0 : volume;
+    
+    // Explicitly set both to ensure browser sync
+    const targetVolume = Math.max(0, Math.min(1, volume));
+    audioElement.volume = targetVolume;
+    audioElement.muted = isMuted || targetVolume === 0;
   }, [audioElement, volume, isMuted]);
 
   useEffect(() => {

@@ -171,7 +171,44 @@ body {
 
 /* Specific overrides for volume slider */
 .volume-slider {
-  background-size: var(--volume-percent, 0%) 100%;
+  background: transparent !important;
+  height: 24px !important; /* Expansion of the hit area */
+}
+
+/* Chrome/Safari Thumb */
+.volume-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  background: white;
+  border-radius: 50%;
+  cursor: pointer;
+  opacity: 0;
+  border: 2px solid var(--primary);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  margin-top: 0; /* Center it in the 24px height */
+}
+
+/* Firefox Thumb */
+.volume-slider::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  background: white;
+  border-radius: 50%;
+  cursor: pointer;
+  opacity: 0;
+  border: 2px solid var(--primary);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+/* Show thumb on container hover/active */
+.volume-slider:hover::-webkit-slider-thumb,
+.volume-slider:active::-webkit-slider-thumb,
+.volume-slider:hover::-moz-range-thumb,
+.volume-slider:active::-moz-range-thumb {
+  opacity: 1;
+  transform: scale(1.1);
 }
 
 /* Specific overrides for progress slider */

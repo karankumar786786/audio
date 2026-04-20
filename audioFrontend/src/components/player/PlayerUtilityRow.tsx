@@ -14,7 +14,7 @@ interface PlayerUtilityRowProps {
   onSelectQuality: (quality: "auto" | number) => void;
   volume: number;
   isMuted: boolean;
-  onVolumeChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onVolumeChange: (e: React.FormEvent<HTMLInputElement>) => void;
   onToggleMute: () => void;
 }
 
@@ -68,7 +68,7 @@ export const PlayerUtilityRow: React.FC<PlayerUtilityRowProps> = ({
         />
       </div>
 
-      <div className="flex-1 flex items-center gap-3 min-w-0 max-w-[120px]">
+      <div className="flex-1 flex items-center gap-3 min-w-[100px] max-w-[160px]">
         <button
           onClick={onToggleMute}
           className="text-zinc-600 hover:text-white transition-colors shrink-0"
@@ -87,8 +87,9 @@ export const PlayerUtilityRow: React.FC<PlayerUtilityRowProps> = ({
             max="1"
             step="0.01"
             value={isMuted ? 0 : volume}
-            onChange={onVolumeChange}
+            onInput={onVolumeChange}
             className="modern-slider volume-slider"
+            style={{ "--volume-percent": `${volumePct}%` } as React.CSSProperties}
           />
         </div>
       </div>
