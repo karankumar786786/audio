@@ -97,7 +97,10 @@ export default function Home() {
       </main>
 
       <footer className="px-8 py-10 border-t border-white/5 text-zinc-500 flex flex-col md:flex-row justify-between items-center gap-6">
-        <div className="text-sm">© 2026 AudioSync Inc. Built with passion.</div>
+        <div className="flex items-center gap-3 text-sm">
+          <img src="/image.png" alt="Logo" className="w-5 h-5 opacity-50 grayscale hover:grayscale-0 hover:opacity-100 transition-all" />
+          <span>© 2026 AudioSync Inc. Built with passion.</span>
+        </div>
         <div className="flex gap-8 text-xs font-medium uppercase tracking-widest">
           <a href="#" className="hover:text-white transition-colors">
             Twitter

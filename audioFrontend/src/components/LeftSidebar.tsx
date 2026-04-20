@@ -20,7 +20,6 @@ import { musicApi } from "@/lib/api";
 import { useStore } from "@tanstack/react-store";
 import { playerStore } from "@/store/player.store";
 import { toast } from "sonner";
-import { motion, AnimatePresence } from "framer-motion";
 
 const menuItems = [
   { icon: Home, label: "Home", href: "/home" },
@@ -73,11 +72,15 @@ export function LeftSidebar() {
       <div className="p-8 flex flex-col h-full bg-black/20">
         {/* Logo */}
         <div className="flex items-center gap-3 mb-12 group cursor-pointer shrink-0">
-          <div className="w-10 h-10 bg-primary rounded-2xl flex items-center justify-center shadow-2xl shadow-primary/30 group-hover:scale-110 transition-transform duration-500">
-            <Mic2 className="text-black fill-black" size={24} />
+          <div className="w-10 h-10 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-500 overflow-hidden">
+            <img 
+              src="/image.png" 
+              alt="Logo" 
+              className="w-full h-full object-contain filter drop-shadow-[0_0_8px_rgba(var(--primary),0.5)]"
+            />
           </div>
           <span className="text-xl font-black tracking-tighter italic text-white uppercase text-glow-green">
-            AudioSync
+            One Melody
           </span>
         </div>
 

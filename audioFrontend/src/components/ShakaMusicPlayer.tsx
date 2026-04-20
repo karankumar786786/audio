@@ -84,12 +84,12 @@ export function ShakaMusicPlayer() {
 
   // Diagnostic: Log state changes (only on significant updates)
   useEffect(() => {
-    console.log("[Player] 📊 State/Song Change:", { 
-      hasSong: !!currentSong, 
+    console.log("[Player] 📊 State/Song Change:", {
+      hasSong: !!currentSong,
       songId: currentSong?.id,
-      isPlaying, 
-      isPlayerReady, 
-      isLoading 
+      isPlaying,
+      isPlayerReady,
+      isLoading
     });
   }, [isPlaying, isLoading, isPlayerReady, currentSong?.id]);
 
@@ -127,7 +127,7 @@ export function ShakaMusicPlayer() {
     audio.addEventListener("play", onPlay);
     audio.addEventListener("playing", onPlay);
     audio.addEventListener("pause", onPause);
-    
+
     // Intense Debugging: native status events
     const onWaiting = () => console.log("[Audio] ⏳ WAITING (buffering)...");
     const onStalled = () => console.log("[Audio] ⚠️ STALLED");
@@ -159,9 +159,9 @@ export function ShakaMusicPlayer() {
 
     const runLifecycle = async () => {
       try {
-        console.log("[Player] 🧬 Unified Lifecycle Triggered", { 
-          songId: currentSong?.id, 
-          hasPlayer: !!playerRef.current 
+        console.log("[Player] 🧬 Unified Lifecycle Triggered", {
+          songId: currentSong?.id,
+          hasPlayer: !!playerRef.current
         });
 
         // 1. Initialize Player Instance if missing
@@ -456,7 +456,7 @@ export function ShakaMusicPlayer() {
 
     const wasFav = isFavourite;
     setIsTogglingFav(true);
-    
+
     toast.promise(playerActions.toggleFavourite(currentSong.id), {
       loading: wasFav ? "Removing from Favourites..." : "Adding to Favourites...",
       success: () => {
@@ -468,7 +468,7 @@ export function ShakaMusicPlayer() {
         return "Failed to update Favourites";
       },
       description: () => {
-        return wasFav 
+        return wasFav
           ? `"${currentSong.title}" removed.`
           : `"${currentSong.title}" added to favourites.`;
       }
@@ -561,8 +561,8 @@ export function ShakaMusicPlayer() {
               <button
                 onClick={handleToggleFavourite}
                 className={`p-2 rounded-xl transition-all ${isFavourite
-                    ? "text-primary shadow-2xl shadow-primary/20"
-                    : "text-zinc-600 hover:text-primary hover:bg-white/5"
+                  ? "text-primary shadow-2xl shadow-primary/20"
+                  : "text-zinc-600 hover:text-primary hover:bg-white/5"
                   }`}
                 title={isFavourite ? "Remove from favourites" : "Add to favourites"}
               >
@@ -664,7 +664,7 @@ export function ShakaMusicPlayer() {
                 className="absolute top-0 left-0 h-full rounded-full"
                 style={{
                   width: `${progressPct}%`,
-                  background: "linear-gradient(90deg, oklch(0.77 0.17 142), oklch(0.5 0.13 142))",
+                  background: "linear-gradient(90deg, var(--primary), oklch(0.6 0.2 142))",
                 }}
               />
               <div
@@ -690,8 +690,8 @@ export function ShakaMusicPlayer() {
                 });
               }}
               className={`p-1.5 rounded-lg transition-all ${repeatMode !== "none"
-                  ? "text-primary"
-                  : "text-zinc-700 hover:text-zinc-400"
+                ? "text-primary"
+                : "text-zinc-700 hover:text-zinc-400"
                 }`}
             >
               <Repeat1 size={16} />
@@ -728,8 +728,8 @@ export function ShakaMusicPlayer() {
             <button
               onClick={() => setShowQualityMenu(!showQualityMenu)}
               className={`p-1.5 rounded-lg transition-all ${showQualityMenu
-                  ? "text-primary"
-                  : "text-zinc-700 hover:text-zinc-400"
+                ? "text-primary"
+                : "text-zinc-700 hover:text-zinc-400"
                 }`}
             >
               <Layers size={16} />
@@ -754,7 +754,7 @@ export function ShakaMusicPlayer() {
                 className="absolute top-0 left-0 h-full rounded-full"
                 style={{
                   width: `${volumePct}%`,
-                  background: "linear-gradient(90deg, oklch(0.77 0.17 142), oklch(0.5 0.13 142))"
+                  background: "linear-gradient(90deg, var(--primary), oklch(0.6 0.2 142))"
                 }}
               />
               {/* Subtle track handle */}
@@ -790,8 +790,8 @@ export function ShakaMusicPlayer() {
                       });
                     }}
                     className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold transition-all ${selectedQuality === "auto"
-                        ? "bg-primary/15 text-primary"
-                        : "text-zinc-500 hover:text-white hover:bg-white/5"
+                      ? "bg-primary/15 text-primary"
+                      : "text-zinc-500 hover:text-white hover:bg-white/5"
                       }`}
                   >
                     Auto
@@ -806,10 +806,10 @@ export function ShakaMusicPlayer() {
                           description: `Streaming at ${Math.round(t.bandwidth / 1000)} kbps.`,
                         });
                       }}
-                    className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold transition-all ${selectedQuality === t.bandwidth
+                      className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold transition-all ${selectedQuality === t.bandwidth
                         ? "bg-primary/15 text-primary"
                         : "text-zinc-500 hover:text-white hover:bg-white/5"
-                      }`}
+                        }`}
                     >
                       {Math.round(t.bandwidth / 1000)} kbps
                     </button>

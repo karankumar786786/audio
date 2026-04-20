@@ -3,9 +3,9 @@
 :root {
   --background: oklch(0 0 0);
   --foreground: oklch(1 0 0);
-  --primary: oklch(0.77 0.17 142);
+  --primary: oklch(0.75 0.25 142);
   --primary-foreground: oklch(0 0 0);
-  --accent: oklch(0.77 0.17 142 / 15%);
+  --accent: oklch(0.75 0.25 140 / 12%);
   --border: oklch(1 0 0 / 10%);
   --sidebar: oklch(0 0 0);
   --radius: 0.75rem;
@@ -27,11 +27,9 @@ body {
   font-family: Inter, system-ui, sans-serif;
   overflow: hidden;
   min-height: 100vh;
-  background-image: radial-gradient(
-    circle at 50% -20%,
-    oklch(0.77 0.17 142 / 12%),
-    transparent 75%
-  );
+  background-image: radial-gradient(circle at 50% -20%,
+      oklch(0.75 0.25 142 / 12%),
+      transparent 75%);
 }
 
 /* ─── Modern Utilities ─── */
@@ -49,12 +47,13 @@ body {
 }
 
 @utility text-glow-green {
-  text-shadow: 0 0 20px oklch(0.77 0.17 142 / 40%);
+  text-shadow: 0 0 20px oklch(0.75 0.25 142 / 40%);
 }
 
 @utility no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
+
   &::-webkit-scrollbar {
     display: none;
   }
@@ -78,6 +77,7 @@ body {
 .lyrics-scrollbar::-webkit-scrollbar {
   width: 3px;
 }
+
 .lyrics-scrollbar::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.08);
   border-radius: 10px;
@@ -94,6 +94,7 @@ body {
   cursor: pointer;
   transition: height 0.2s ease;
 }
+
 .progress-thumb {
   width: 0;
   height: 0;
@@ -104,6 +105,7 @@ body {
   transform: translateY(-50%);
   transition: all 0.2s ease;
 }
+
 .progress-track:hover .progress-thumb {
   width: 12px;
   height: 12px;
@@ -111,9 +113,19 @@ body {
 
 /* ─── Smooth Background Drift ─── */
 @keyframes ambient-drift {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  33% { transform: translate(10px, -15px) scale(1.03); }
-  66% { transform: translate(-10px, 10px) scale(0.97); }
+
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+
+  33% {
+    transform: translate(10px, -15px) scale(1.03);
+  }
+
+  66% {
+    transform: translate(-10px, 10px) scale(0.97);
+  }
 }
 
 .ambient-drift {
@@ -129,6 +141,7 @@ input[type="range"].volume-slider {
   border-radius: 10px;
   outline: none;
 }
+
 input[type="range"].volume-slider::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
