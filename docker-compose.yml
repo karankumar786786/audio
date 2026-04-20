@@ -1,0 +1,139 @@
+services:
+  caddy:
+    image: caddy:latest
+    container_name: caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - onemelody-network
+
+  traefik:
+    image: traefik:v2.11
+    container_name: traefik
+    restart: unless-stopped
+    environment:
+      - DOCKER_API_VERSION=1.41
+    command:
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--providers.docker.network=onemelody-network"
+      - "--entrypoints.web.address=:80"
+      - "--api.insecure=true"
+      - "--log.level=DEBUG"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - onemelody-network
+
+  audio-frontend:
+    build: ./audioFrontend
+    image: karankumar9955/onemelodyaudiofrontend:latest
+    container_name: audio-frontend
+    restart: unless-stopped
+    env_file:
+      - production/audiofrontend.env
+    environment:
+      - NODE_ENV=production
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.audio-frontend.rule=Host(`one-org.me`, `www.one-org.me`)"
+      - "traefik.http.services.audio-frontend.loadbalancer.server.port=3000"
+    networks:
+      - onemelody-network
+
+  admin-frontend:
+    build: ./adminFrontend
+    image: karankumar9955/onemelodyadminfrontend:latest
+    container_name: admin-frontend
+    restart: unless-stopped
+    env_file:
+      - production/adminfrontend.env
+    environment:
+      - NODE_ENV=production
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.admin-frontend.rule=Host(`admin.one-org.me`)"
+      - "traefik.http.services.admin-frontend.loadbalancer.server.port=3000"
+    networks:
+      - onemelody-network
+
+  audio-backend:
+    build: ./audioBackend
+    image: karankumar9955/onemelodyaudiobackend:latest
+    container_name: audio-backend
+    restart: unless-stopped
+    env_file:
+      - production/audiobackend.env
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.audio-backend.rule=Host(`api.one-org.me`)"
+      - "traefik.http.services.audio-backend.loadbalancer.server.port=3000"
+    networks:
+      - onemelody-network
+
+  admin-backend:
+    build: ./adminBackend
+    image: karankumar9955/onemelodyadminbackend:latest
+    container_name: admin-backend
+    restart: unless-stopped
+    env_file:
+      - production/adminbackend.env
+    environment:
+      - NODE_ENV=production
+      - PORT=4001
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.admin-backend.rule=Host(`admin-api.one-org.me`)"
+      - "traefik.http.services.admin-backend.loadbalancer.server.port=4001"
+    networks:
+      - onemelody-network
+
+  audio-processing:
+    build: ./audioProcessing
+    image: karankumar9955/onemelodyaudioprocessing:latest
+    container_name: audio-processing
+    restart: unless-stopped
+    env_file:
+      - production/audioprocessing.env
+    environment:
+      - NODE_ENV=production
+      - PORT=3002
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.audio-processing.rule=Host(`process.one-org.me`)"
+      - "traefik.http.services.audio-processing.loadbalancer.server.port=3002"
+    networks:
+      - onemelody-network
+
+  audio-feature-extraction:
+    build: ./audioFeatureExtraction
+    image: karankumar9955/onemelodyaudiofeaturesextraction:latest
+    container_name: audio-feature-extraction
+    restart: unless-stopped
+    env_file:
+      - production/audiofeatureextraction.env
+    environment:
+      - NODE_ENV=production
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.audio-feature-extraction.rule=Host(`extract.one-org.me`)"
+      - "traefik.http.services.audio-feature-extraction.loadbalancer.server.port=8000"
+    networks:
+      - onemelody-network
+
+networks:
+  onemelody-network:
+    driver: bridge
+
+volumes:
+  caddy_data:
+  caddy_config:

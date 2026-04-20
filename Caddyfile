@@ -1,0 +1,3 @@
+one-org.me, www.one-org.me, admin.one-org.me, api.one-org.me, admin-api.one-org.me, extract.one-org.me, process.one-org.me {
+    reverse_proxy traefik:80
+}

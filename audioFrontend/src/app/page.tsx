@@ -3,11 +3,22 @@
 import { useAuth0 } from "@auth0/auth0-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 export default function Home() {
   const { loginWithRedirect, logout, isAuthenticated, user, isLoading } =
     useAuth0();
   const router = useRouter();
+
+  useEffect(() => {
+    if (!isLoading) {
+      if (isAuthenticated) {
+        router.push("/home");
+      } else {
+        loginWithRedirect();
+      }
+    }
+  }, [isLoading, isAuthenticated, router, loginWithRedirect]);
 
   if (isLoading) {
     return (

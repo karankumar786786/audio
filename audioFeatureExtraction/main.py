@@ -1,7 +1,4 @@
 import os
-# Force Inngest into Dev Mode
-os.environ["INNGEST_DEV"] = "1"
-
 import uvicorn
 import logging
 import boto3
@@ -26,7 +23,8 @@ TEMP_DIR = "temp"
 
 # Initialize Inngest
 inngest_client = inngest.Inngest(
-    app_id="audio-processing",
+    app_id="audio-feature-extraction",
+    signing_key=os.getenv("INNGEST_SIGNING_KEY"),
     logger=logger
 )
 

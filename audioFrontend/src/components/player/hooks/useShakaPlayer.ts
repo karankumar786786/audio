@@ -1,6 +1,7 @@
 import { useEffect, useRef, useCallback } from "react";
 // @ts-ignore
-import shaka from "shaka-player";
+// Removed top-level import to prevent SSR navigator errors
+// import shaka from "shaka-player";
 import { playerActions } from "../../../store/player.store";
 import { toast } from "sonner";
 
@@ -29,6 +30,8 @@ export function useShakaPlayer(audioElement: HTMLAudioElement | null, currentSon
     const runLifecycle = async () => {
       try {
         if (!playerRef.current) {
+          // Dynamic import of shaka-player only on the client
+          const shaka = (await import("shaka-player")).default;
           shaka.polyfill.installAll();
           const player = new shaka.Player();
           playerRef.current = player;

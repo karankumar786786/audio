@@ -25,14 +25,14 @@ export function mapToPlayerSong(song: Song): PlayerSong {
       height: 400,
       focus: "auto",
       aspectRatio: "1-1",
-    }),
+    }) || "",
     posterUrl: getImageUrl(song.imageKey, {
       width: 720,
       height: 720,
       focus: "auto",
       aspectRatio: "1-1",
       quality: 90,
-    }),
+    }) || "",
   };
 }
 

@@ -93,4 +93,4 @@ export const audioProcessingService = new AudioProcessingService(
     logger
 );
 
-export const inngest = new Inngest({id:"test-music"})
+export const inngest = new Inngest({id:"audio-processing"})
