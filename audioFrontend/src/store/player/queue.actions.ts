@@ -8,6 +8,7 @@ export const queueActions = {
       if (typeof window !== "undefined") {
         localStorage.setItem("last_queue", JSON.stringify(songs));
       }
+      console.log(`[Queue] Setting queue: ${songs.length} songs`);
       return { ...s, queue: songs, lastQueueIndex: -1 };
     });
   },
@@ -24,6 +25,7 @@ export const queueActions = {
         localStorage.setItem("last_queue", JSON.stringify(newQueue));
       }
       
+      console.log(`[Queue] Added ${songs.length} songs to queue after current. New total: ${newQueue.length}`);
       return { ...s, queue: newQueue };
     });
     
@@ -66,6 +68,7 @@ export const queueActions = {
         if (uniqueNewSongs.length > 0) {
           playerStore.setState((s) => {
             const updatedQueue = [...s.queue, ...uniqueNewSongs];
+            console.log(`[Queue] Refilled with ${uniqueNewSongs.length} unique songs. New total: ${updatedQueue.length}`);
             if (typeof window !== "undefined") {
               localStorage.setItem("last_queue", JSON.stringify(updatedQueue));
             }
