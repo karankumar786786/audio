@@ -206,10 +206,7 @@ export default function ArtistPage() {
                   </div>
 
                   <div className="shrink-0 flex items-center gap-8 text-zinc-400 text-[10px] font-black uppercase tracking-widest italic group-hover:text-white transition-colors">
-                    <div className="flex items-center gap-2 w-20 justify-end">
-                      <Clock size={12} className="text-primary/50" />
-                      {formatDuration(song.duration || song.durationMs || 0)}
-                    </div>
+                    <div className="flex items-center gap-2 w-20 justify-end" />
                   </div>
                 </button>
               ))

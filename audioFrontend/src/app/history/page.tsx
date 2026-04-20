@@ -56,13 +56,6 @@ export default function HistoryPage() {
             {historyEvents.map((event: any) => (
               <div key={event.historyId} className="group relative">
                 <SongCard song={event} />
-                <div className="absolute top-4 right-4 z-10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                  <div className="bg-black/80 backdrop-blur-md px-3 py-1 rounded-full border border-white/10 shadow-xl">
-                    <span className="text-[9px] font-bold text-primary uppercase tracking-tighter">
-                      {new Date(event.listenedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </span>
-                  </div>
-                </div>
               </div>
             ))}
           </div>

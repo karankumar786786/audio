@@ -206,9 +206,7 @@ export default function PlaylistPage() {
             <div className="col-span-1 text-center">#</div>
             <div className="col-span-6 md:col-span-5">Song Title</div>
             <div className="col-span-3 hidden md:block">Artist Name</div>
-            <div className="col-span-5 md:col-span-1 text-right pr-6">
-              <Clock className="h-3 w-3 inline mb-0.5" />
-            </div>
+            <div className="col-span-5 md:col-span-1" />
           </div>
         </div>
 
@@ -266,11 +264,8 @@ export default function PlaylistPage() {
                     {song.artistName}
                   </span>
                 </div>
-                {/* Actions & Duration */}
+                {/* Actions */}
                 <div className="col-span-5 md:col-span-1 lg:col-span-3 flex items-center justify-end gap-6 pr-4">
-                  <div className="text-zinc-400 font-black text-xs italic group-hover:text-white transition-colors w-14 text-right">
-                    {formatDuration(song.duration || song.durationMs || 0)}
-                  </div>
                   {isUserPlaylist && (
                     <button
                       onClick={(e) => {
