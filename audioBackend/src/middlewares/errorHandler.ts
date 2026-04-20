@@ -25,5 +25,6 @@ export const errorHandler = (
 
   // Generic / unexpected errors
   const message = err instanceof Error ? err.message : "Internal Server Error";
+  console.error("[Global Error Handler] 500 Error:", err);
   new ApiResponse(500, message, null, false).send(res);
 };

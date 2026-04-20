@@ -455,25 +455,24 @@ export function ShakaMusicPlayer() {
     if (isTogglingFav) return;
 
     const wasFav = isFavourite;
+    setIsTogglingFav(true);
+    
     toast.promise(playerActions.toggleFavourite(currentSong.id), {
       loading: wasFav ? "Removing from Favourites..." : "Adding to Favourites...",
       success: () => {
+        setIsTogglingFav(false);
         return wasFav ? "Removed from Favourites" : "Added to Favourites";
       },
-      error: "Failed to update Favourites",
+      error: () => {
+        setIsTogglingFav(false);
+        return "Failed to update Favourites";
+      },
       description: () => {
         return wasFav 
           ? `"${currentSong.title}" removed.`
           : `"${currentSong.title}" added to favourites.`;
       }
     });
-
-    setIsTogglingFav(true);
-    try {
-      await playerActions.toggleFavourite(currentSong.id);
-    } finally {
-      setIsTogglingFav(false);
-    }
   };
 
   // Get the optimized poster URL via ImageKit
@@ -609,7 +608,7 @@ export function ShakaMusicPlayer() {
                             key={idx}
                             animate={{
                               color: isActive
-                                ? "white"
+                                ? "#ffffff"
                                 : isPast
                                   ? "rgba(255,255,255,0.4)"
                                   : "rgba(255,255,255,0.12)",

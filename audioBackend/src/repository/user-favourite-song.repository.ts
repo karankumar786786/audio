@@ -1,4 +1,3 @@
-import { randomUUIDv7 } from "bun";
 import type { Database } from "../infra/db";
 import { userFavouriteSongSchema, type UserFavouriteSongSchema } from "../schema/userFavouriteSong.schema";
 import { songSchema, type SongSchema } from "../schema/songs.schema";
