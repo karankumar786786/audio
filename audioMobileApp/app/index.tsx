@@ -15,9 +15,9 @@ export default function AuthScreen() {
 
   const handleAuth = async () => {
     try {
-      await loginWithAuth0('AUTH0_ACCESS_TOKEN_PLACEHOLDER');
+      await loginWithAuth0();
     } catch (error) {
-      // Errors are handled inside loginWithAuth0 toasts/logs
+      console.error("[Auth] Sync failed:", error);
     }
   };
 
