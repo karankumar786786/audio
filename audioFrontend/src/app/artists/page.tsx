@@ -4,8 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { musicApi } from "@/lib/api";
 import { getImageUrl } from "@/lib/image-utils";
 import Link from "next/link";
-import { Mic2, Users2, Sparkles, ChevronRight } from "lucide-react";
-import { motion } from "framer-motion";
+import {  ChevronRight } from "lucide-react";
 
 export default function ArtistsPage() {
   const { data: artistsResponse, isLoading } = useQuery({
@@ -40,7 +39,7 @@ export default function ArtistsPage() {
               <Link
                 key={artist.id}
                 href={`/artists/${artist.id}`}
-                className="group flex items-center gap-8 p-6 rounded-[2rem] border-2 border-white/3 hover:bg-white/[0.03] border border-transparent hover:border-white/[0.05] transition-all duration-500"
+                className="group flex items-center gap-8 p-6 rounded-4xl border-2 border-white/3 hover:bg-white/[0.03] border border-transparent hover:border-white/[0.05] transition-all duration-500"
               >
                 {/* Artist Avatar */}
                 <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-full ring-2 ring-white/5 group-hover:ring-primary/40 transition-all duration-700 shadow-2xl">

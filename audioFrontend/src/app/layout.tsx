@@ -18,7 +18,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "AudioSync",
+  title: "One Melody",
   description: "Your music, everywhere.",
 };
 

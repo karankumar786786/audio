@@ -9,7 +9,6 @@ import {
   SkipBack,
   SkipForward,
   Volume2,
-  Maximize2,
   Music,
   ListMusic,
 } from "lucide-react";
@@ -59,7 +58,7 @@ export function MusicPlayer() {
     <motion.footer
       initial={{ y: 100 }}
       animate={{ y: 0 }}
-      className="fixed bottom-0 left-0 right-0 h-24 bg-zinc-950/80 backdrop-blur-2xl border-t border-white/5 px-6 flex items-center justify-between z-[100] shadow-2xl"
+      className="fixed bottom-0 left-0 right-0 h-24 bg-zinc-950/80 backdrop-blur-2xl border-t border-white/5 px-6 flex items-center justify-between z-100 shadow-2xl"
     >
       <audio
         ref={audioRef}

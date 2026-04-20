@@ -167,7 +167,7 @@ export default function ArtistPage() {
                 <button
                   key={song.id}
                   onClick={() => playerActions.playSong(mapToPlayerSong(song))}
-                  className="group flex items-center gap-6 p-4 rounded-3xl hover:bg-white/[0.03] border border-transparent hover:border-white/[0.05] transition-all duration-300 text-left"
+                  className="group flex items-center gap-6 p-4 rounded-3xl hover:bg-white/3 border border-transparent hover:border-white/[0.05] transition-all duration-300 text-left"
                 >
                   <div className="w-8 text-center text-zinc-600 font-black text-xs group-hover:text-primary transition-colors italic">
                     {(index + 1).toString().padStart(2, "0")}
@@ -194,7 +194,7 @@ export default function ArtistPage() {
                     <h4 className="font-black italic uppercase tracking-tighter text-white group-hover:text-primary transition-colors truncate text-lg">
                       {song.title}
                     </h4>
-                    <p className="text-[10px] font-black uppercase tracking-[0.1em] text-zinc-400 italic group-hover:text-zinc-300 transition-colors flex items-center gap-2">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400 italic group-hover:text-zinc-300 transition-colors flex items-center gap-2">
                        {song.language && (
                          <span className="px-2 py-0.5 rounded bg-white/5 border border-white/5 text-[8px] text-primary">
                            {song.language}
