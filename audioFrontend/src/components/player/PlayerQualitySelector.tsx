@@ -42,7 +42,7 @@ export const PlayerQualitySelector: React.FC<PlayerQualitySelectorProps> = ({
             initial={{ opacity: 0, scale: 0.95, y: 10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 10 }}
-            className="absolute bottom-full left-0 mb-3 w-40 glass-effect-strong border border-white/10 rounded-2xl p-2 shadow-2xl z-[100]"
+            className="absolute bottom-full left-0 mb-3 w-40 glass-effect-strong border border-white/10 rounded-2xl p-2 shadow-2xl z-100"
           >
             <p className="text-[9px] font-black text-zinc-600 uppercase tracking-widest px-3 py-2 border-b border-white/5 mb-1.5">
               Stream Quality
