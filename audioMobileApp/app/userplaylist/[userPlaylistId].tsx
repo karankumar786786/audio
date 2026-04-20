@@ -1,10 +1,10 @@
 import { View, Text, FlatList, Image, Pressable, ActivityIndicator, Alert, Dimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useLocalSearchParams, router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { musicApi } from '../../lib/api';
-import { getCoverImageUrl } from '../../lib/s3';
+import { getImageUrl } from '../../lib/image-utils';
 import { capitalize } from '../../lib/utils';
 import { usePlayerActions } from '../../lib/player-context';
 import SongRow from '../../components/SongRow';
@@ -14,63 +14,71 @@ import { StatusBar } from 'expo-status-bar';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
+const mapToPlayerSong = (s: any) => ({
+  id: s.id,
+  title: s.title,
+  artistName: s.artistName,
+  songKey: s.songKey,
+  imageKey: s.imageKey,
+  coverUrl: getImageUrl(s.imageKey, { width: 400, height: 400, crop: 'at_max' }) || null,
+});
+
 export default function UserPlaylistDetail() {
   const insets = useSafeAreaInsets();
   const { userPlaylistId } = useLocalSearchParams<{ userPlaylistId: string }>();
   const { playAll } = usePlayerActions();
   const queryClient = useQueryClient();
 
-  const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useInfiniteQuery({
+  const { data: infoData, isLoading: infoLoading } = useQuery({
     queryKey: ['userPlaylist', userPlaylistId],
-    queryFn: ({ pageParam = 1 }) => musicApi.getUserPlaylist(userPlaylistId!, pageParam, 50),
+    queryFn: () => musicApi.users.getPlaylistById(userPlaylistId!),
+    enabled: !!userPlaylistId,
+  });
+
+  const { data: songsData, isLoading: songsLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useInfiniteQuery({
+    queryKey: ['userPlaylistSongs', userPlaylistId],
+    queryFn: ({ pageParam = 1 }) => musicApi.users.getPlaylistSongs(userPlaylistId!, pageParam, 50),
     initialPageParam: 1,
     getNextPageParam: (lastPage) => {
-      if (!lastPage?.songs?.data || lastPage.songs.data.length < 50) return undefined;
-      return (lastPage.songs?.meta?.page ?? 0) + 1;
+      const pagination = lastPage?.data?.pagination || lastPage?.pagination;
+      if (!pagination || !pagination.hasNext) return undefined;
+      return pagination.page + 1;
     },
     enabled: !!userPlaylistId,
   });
 
-  const playlist = data?.pages?.[0];
-  const allSongsData = data?.pages?.flatMap((page) => page.songs?.data || []) || [];
-  const songs = allSongsData.map((item: any) => item.song || item).filter(Boolean);
+  const playlist = infoData?.data;
+  const allSongs = songsData?.pages?.flatMap((page) => page.data?.data || page.data || []) || [];
 
-  const coverUrl = playlist ? getCoverImageUrl(playlist.storageKey, 'large') || null : null;
+  const coverUrl = getImageUrl(playlist?.imageKey || playlist?.coverImageKey, { width: 800, height: 800 });
 
   const removeMutation = useMutation({
-    mutationFn: (songId: string) => musicApi.removeSongFromUserPlaylist(userPlaylistId!, songId),
+    mutationFn: (songId: string) => musicApi.users.removeSongFromPlaylist(userPlaylistId!, songId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['userPlaylist', userPlaylistId] });
+      queryClient.invalidateQueries({ queryKey: ['userPlaylistSongs', userPlaylistId] });
       queryClient.invalidateQueries({ queryKey: ['userPlaylists'] });
     },
     onError: () => Alert.alert('Error', 'Failed to remove song'),
   });
 
   const handleRemove = (song: any) => {
-    Alert.alert('Remove Song', `Remove "${song.title}" from this playlist?`, [
+    Alert.alert('Remove Frequency', `Remove "${song.title}" from this node?`, [
       { text: 'Cancel', style: 'cancel' },
       { text: 'Remove', style: 'destructive', onPress: () => removeMutation.mutate(song.id) },
     ]);
   };
 
   const handlePlayAll = useCallback(() => {
-    if (songs.length === 0) return;
-    const playerSongs = songs.map((s: any) => ({
-      id: s.id,
-      title: s.title,
-      artistName: s.artistName,
-      storageKey: s.storageKey,
-      coverUrl: getCoverImageUrl(s.storageKey, 'large', true) || null,
-    }));
+    if (allSongs.length === 0) return;
+    const playerSongs = allSongs.map(mapToPlayerSong);
     playAll(playerSongs);
-  }, [songs, playAll]);
+  }, [allSongs, playAll]);
 
   const MemoizedHeader = useMemo(() => {
     if (!playlist) return null;
 
     return (
       <View>
-        {/* ── Hero ── */}
         <View style={{ height: 500, width: SCREEN_WIDTH }}>
           {coverUrl ? (
             <Image
@@ -81,12 +89,11 @@ export default function UserPlaylistDetail() {
           ) : (
             <View
               style={{ position: 'absolute', width: '100%', height: '100%' }}
-              className="items-center justify-center bg-zinc-900">
-              <Ionicons name="musical-notes" size={80} color="rgba(255,255,255,0.04)" />
+              className="items-center justify-center bg-[#0a0a0a]">
+              <Ionicons name="musical-notes" size={80} color="rgba(8,248,8,0.02)" />
             </View>
           )}
 
-          {/* Multi-layer gradient */}
           <LinearGradient
             colors={[
               'rgba(0,0,0,0.15)',
@@ -99,17 +106,7 @@ export default function UserPlaylistDetail() {
             style={{ position: 'absolute', width: '100%', height: '100%' }}
           />
 
-          {/* Side vignette */}
-          <LinearGradient
-            colors={['rgba(0,0,0,0.4)', 'transparent', 'rgba(0,0,0,0.4)']}
-            start={{ x: 0, y: 0.5 }}
-            end={{ x: 1, y: 0.5 }}
-            style={{ position: 'absolute', width: '100%', height: '100%' }}
-          />
-
-          {/* Bottom content */}
           <View className="absolute bottom-0 left-0 right-0 px-6 pb-7">
-            {/* Cover + title */}
             <View className="mb-5 flex-row items-end gap-4">
               <View
                 style={{
@@ -119,11 +116,7 @@ export default function UserPlaylistDetail() {
                   overflow: 'hidden',
                   borderWidth: 2,
                   borderColor: 'rgba(8,248,8,0.25)',
-                  shadowColor: '#08f808',
-                  shadowOffset: { width: 0, height: 0 },
-                  shadowOpacity: 0.4,
-                  shadowRadius: 20,
-                  elevation: 10,
+                  backgroundColor: '#1a1a1a',
                 }}>
                 {coverUrl ? (
                   <Image
@@ -140,23 +133,22 @@ export default function UserPlaylistDetail() {
 
               <View className="flex-1 pb-1">
                 <View className="mb-1.5 flex-row items-center gap-1.5">
-                  <View className="h-4 w-4 items-center justify-center rounded-full bg-primary">
+                  <View className="h-4 w-4 items-center justify-center rounded-full bg-[#08f808]">
                     <Ionicons name="person" size={9} color="#000" />
                   </View>
-                  <Text className="text-[10px] font-black uppercase tracking-[3px] text-primary/80">
-                    Personal Playlist
+                  <Text className="text-[10px] font-black uppercase tracking-[3px] text-[#08f808]/80">
+                    Personal Frequency
                   </Text>
                 </View>
                 <Text
                   className="font-black text-white uppercase"
                   numberOfLines={2}
                   style={{ fontSize: 38, lineHeight: 42, letterSpacing: -1.5 }}>
-                  {capitalize(playlist.title)}
+                  {capitalize(playlist.name || playlist.title)}
                 </Text>
               </View>
             </View>
 
-            {/* Stats row */}
             <View className="flex-row items-center gap-2">
               <View
                 style={{
@@ -168,14 +160,13 @@ export default function UserPlaylistDetail() {
                   paddingVertical: 6,
                 }}>
                 <Text className="text-[11px] font-black uppercase tracking-[2px] text-zinc-300">
-                  {songs.length} Tracks
+                  {allSongs.length} Nodes
                 </Text>
               </View>
             </View>
           </View>
         </View>
 
-        {/* ── Action Bar ── */}
         <View className="px-6 py-5">
           <Pressable
             onPress={handlePlayAll}
@@ -186,30 +177,27 @@ export default function UserPlaylistDetail() {
               shadowRadius: 16,
               elevation: 8,
             }}
-            className="h-14 flex-row items-center justify-center gap-3 rounded-2xl bg-primary active:opacity-80">
+            className="h-14 flex-row items-center justify-center gap-3 rounded-2xl bg-[#08f808] active:opacity-80">
             <Ionicons name="play" size={22} color="#000" style={{ marginLeft: 3 }} />
             <Text
               style={{ letterSpacing: 2 }}
               className="text-[13px] font-black uppercase text-black">
-              Play All
+              Sync All
             </Text>
           </Pressable>
         </View>
 
-        {/* ── Section Header ── */}
         <View className="flex-row items-center justify-between px-6 pb-3 pt-1">
-          <Text className="text-[22px] font-black tracking-tight text-white">Tracks</Text>
+          <Text className="text-[22px] font-black tracking-tight text-white">Signals</Text>
           <Text className="text-[11px] font-black uppercase tracking-[2px] text-zinc-600">
-            {songs.length} songs
+            {allSongs.length} units
           </Text>
         </View>
       </View>
     );
-  }, [playlist, songs.length, coverUrl, handlePlayAll]);
+  }, [playlist, allSongs.length, coverUrl, handlePlayAll]);
 
-  // ── Skeleton ──────────────────────────────────────────────────────────────
-
-  if (isLoading) {
+  if (infoLoading || (songsLoading && allSongs.length === 0)) {
     return (
       <View className="flex-1 bg-black">
         <StatusBar style="light" />
@@ -230,26 +218,6 @@ export default function UserPlaylistDetail() {
             <View className="h-7 w-28 rounded-full bg-zinc-800" />
           </View>
         </View>
-        {/* Play All skeleton */}
-        <View className="px-6 py-5">
-          <View className="h-14 w-full rounded-2xl bg-zinc-900" />
-        </View>
-        {/* Track skeletons */}
-        <View className="px-6">
-          {[1, 2, 3, 4, 5, 6].map((i) => (
-            <View key={i} className="flex-row items-center gap-4 py-3">
-              <View className="h-5 w-5 rounded bg-zinc-900" />
-              <View className="h-14 w-14 rounded-xl bg-zinc-900" />
-              <View className="flex-1 gap-2">
-                <View
-                  className="h-4 rounded-lg bg-zinc-900"
-                  style={{ width: `${60 + (i % 3) * 15}%` }}
-                />
-                <View className="h-3 w-1/3 rounded-lg bg-zinc-900" />
-              </View>
-            </View>
-          ))}
-        </View>
       </View>
     );
   }
@@ -258,7 +226,6 @@ export default function UserPlaylistDetail() {
     <View className="flex-1 bg-black">
       <StatusBar style="light" />
 
-      {/* Full screen small blurred ambient background */}
       {coverUrl && (
         <>
           <Image
@@ -279,18 +246,11 @@ export default function UserPlaylistDetail() {
           <LinearGradient
             colors={['rgba(0,0,0,0.3)', 'rgba(0,0,0,0.7)', 'black']}
             locations={[0, 0.4, 0.8]}
-            style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-            }}
+            style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
           />
         </>
       )}
 
-      {/* Floating back button */}
       <Pressable
         onPress={() => router.back()}
         style={{
@@ -311,11 +271,11 @@ export default function UserPlaylistDetail() {
       </Pressable>
 
       <FlatList
-        data={songs}
+        data={allSongs}
         keyExtractor={(item, index) => item?.id || `song-${index}`}
         renderItem={({ item, index }) => (
           <SongRow
-            song={item}
+            song={mapToPlayerSong(item)}
             index={index}
             renderRightAction={() => (
               <Pressable

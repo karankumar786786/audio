@@ -15,7 +15,7 @@ import { useQuery, useInfiniteQuery } from '@tanstack/react-query';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { musicApi } from '../../lib/api';
-import { getCoverImageUrl } from '../../lib/s3';
+import { getImageUrl } from '../../lib/image-utils';
 import { capitalize } from '../../lib/utils';
 import { usePlayerActions } from '../../lib/player-context';
 import { playerActions, PlayerSong } from '../../lib/player-store';
@@ -28,35 +28,38 @@ const Skeleton = ({ className }: { className: string }) => (
   <View className={`bg-white/[0.06] ${className}`} />
 );
 
+const mapToPlayerSong = (s: any): PlayerSong => ({
+  id: s.id,
+  title: s.title,
+  artistName: s.artistName,
+  songKey: s.songKey,
+  imageKey: s.imageKey,
+  coverUrl: getImageUrl(s.imageKey, { width: 600, height: 600, crop: 'at_max' }) || null,
+});
+
 export default function Home() {
   const {
-    data: featuredData,
-    isLoading: featuredLoading,
-    refetch: refetchFeatured,
+    data: recommendationsData,
+    isLoading: recommendationsLoading,
+    refetch: refetchRecommendations,
   } = useQuery({
-    queryKey: ['featured'],
-    queryFn: () => musicApi.getFeatured(),
+    queryKey: ['recommendations'],
+    queryFn: () => musicApi.interactions.getRecommendations(),
   });
 
   const { data: trendingData, isLoading: trendingLoading } = useQuery({
     queryKey: ['trending'],
-    queryFn: () => musicApi.getTrending(),
+    queryFn: () => musicApi.interactions.getTrending(),
   });
 
   const { data: artistsData, isLoading: artistsLoading } = useQuery({
     queryKey: ['artists'],
-    queryFn: () => musicApi.getArtists(),
+    queryFn: () => musicApi.artists.list(1, 15),
   });
 
   const { data: playlistsData, isLoading: playlistsLoading } = useQuery({
     queryKey: ['playlists'],
-    queryFn: () => musicApi.getPlaylists(),
-  });
-
-  const { data: feedData, isLoading: feedLoading } = useQuery({
-    queryKey: ['feed'],
-    queryFn: () => musicApi.getFeed(),
-    staleTime: 5 * 60 * 1000,
+    queryFn: () => musicApi.playlists.list(1, 15),
   });
 
   const {
@@ -67,45 +70,41 @@ export default function Home() {
     isFetchingNextPage,
   } = useInfiniteQuery({
     queryKey: ['songs'],
-    queryFn: ({ pageParam = 1 }) => musicApi.getSongs(pageParam, 20),
+    queryFn: ({ pageParam = 1 }) => musicApi.songs.getFeed(pageParam, 20),
     initialPageParam: 1,
     getNextPageParam: (lastPage) => {
-      if (!lastPage?.data || lastPage.data.length < 20) return undefined;
-      return (lastPage.meta?.page ?? 0) + 1;
+      const pagination = lastPage?.data?.pagination || lastPage?.pagination;
+      if (!pagination || !pagination.hasNext) return undefined;
+      return pagination.page + 1;
     },
   });
 
-  const allSongs = songsData?.pages?.flatMap((page) => page.data || []) || [];
+  const allSongs = songsData?.pages?.flatMap((page) => page.data?.data || page.data || []) || [];
 
   useEffect(() => {
-    const feedSongs = feedData?.data || [];
+    const recSongs = recommendationsData?.data || [];
     const trendSongs = trendingData?.data || [];
-    const activeData = feedSongs.length > 0 ? feedSongs : trendSongs;
+    const activeData = recSongs.length > 0 ? recSongs : trendSongs;
+    
     if (activeData.length > 0) {
-      const playerSongs: PlayerSong[] = activeData.map((s: any) => ({
-        id: s.id,
-        title: s.title,
-        artistName: s.artistName,
-        storageKey: s.storageKey,
-        coverUrl: getCoverImageUrl(s.storageKey, 'large', true) || null,
-      }));
+      const playerSongs: PlayerSong[] = activeData.map(mapToPlayerSong);
       playerActions.syncFeedToQueue(playerSongs);
     }
-  }, [feedData, trendingData]);
+  }, [recommendationsData, trendingData]);
 
   const [refreshing, setRefreshing] = React.useState(false);
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await refetchFeatured();
+    await refetchRecommendations();
     setRefreshing(false);
-  }, [refetchFeatured]);
+  }, [refetchRecommendations]);
 
   const { play } = usePlayerActions();
 
   // ── Featured carousel ──────────────────────────────────────────────────────
   const featuredScrollRef = useRef<ScrollView>(null);
   const [featuredIndex, setFeaturedIndex] = React.useState(0);
-  const featured = (featuredData?.data || []).slice(0, 8);
+  const featured = (recommendationsData?.data || []).slice(0, 8);
   const featuredCount = featured.length;
 
   useEffect(() => {
@@ -126,7 +125,7 @@ export default function Home() {
   // ── Section label ──────────────────────────────────────────────────────────
   const SectionLabel = ({ title, icon }: { title: string; icon?: string }) => (
     <View className="mb-5 flex-row items-center gap-2.5 px-6">
-      <View className="h-5 w-1 rounded-full bg-primary" />
+      <View className="h-5 w-1 rounded-full bg-[#08f808]" />
       {icon && <Ionicons name={icon as any} size={20} color="#08f808" />}
       <Text className="text-2xl font-black tracking-tighter text-white">{title}</Text>
     </View>
@@ -134,7 +133,7 @@ export default function Home() {
 
   // ── Featured ───────────────────────────────────────────────────────────────
   const renderFeatured = () => {
-    if (featuredLoading) {
+    if (recommendationsLoading) {
       return (
         <View className="mb-10 px-6">
           <Skeleton className="h-[420px] rounded-[40px]" />
@@ -158,22 +157,13 @@ export default function Home() {
             setFeaturedIndex(Math.max(0, Math.min(idx, featuredCount - 1)));
           }}>
           {featured.map((item: any, idx: number) => {
-            const coverUrl =
-              item.coverUrl || getCoverImageUrl(item.storageKey, 'large', true) || null;
+            const coverUrl = getImageUrl(item.imageKey, { width: 800, height: 800, quality: 90 });
 
             return (
               <Pressable
                 key={item.id}
                 style={{ width: SCREEN_WIDTH, paddingHorizontal: 20 }}
-                onPress={() =>
-                  play({
-                    id: item.id,
-                    title: item.title,
-                    artistName: item.artistName,
-                    storageKey: item.storageKey,
-                    coverUrl,
-                  })
-                }>
+                onPress={() => play(mapToPlayerSong(item))}>
                 <View
                   style={{
                     height: 420,
@@ -188,7 +178,6 @@ export default function Home() {
                     elevation: 24,
                     backgroundColor: '#111',
                   }}>
-                  {/* Full bleed artwork */}
                   {coverUrl ? (
                     <Image
                       source={{ uri: coverUrl }}
@@ -209,7 +198,6 @@ export default function Home() {
                     </View>
                   )}
 
-                  {/* Cinematic gradient */}
                   <LinearGradient
                     colors={[
                       'rgba(0,0,0,0.45)',
@@ -222,7 +210,6 @@ export default function Home() {
                     style={{ position: 'absolute', width: '100%', height: '100%' }}
                   />
 
-                  {/* Top row */}
                   <View
                     style={{
                       position: 'absolute',
@@ -233,7 +220,6 @@ export default function Home() {
                       alignItems: 'center',
                       justifyContent: 'space-between',
                     }}>
-                    {/* Featured chip */}
                     <View
                       style={{
                         flexDirection: 'row',
@@ -266,12 +252,11 @@ export default function Home() {
                           color: '#fff',
                           textTransform: 'uppercase',
                         }}>
-                        Featured
+                        Recommendations
                       </Text>
                     </View>
                   </View>
 
-                  {/* Bottom info */}
                   <View
                     style={{
                       position: 'absolute',
@@ -282,8 +267,6 @@ export default function Home() {
                       paddingBottom: 26,
                       paddingTop: 20,
                     }}>
-
-                    {/* Title + play btn */}
                     <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 12 }}>
                       <View style={{ flex: 1 }}>
                         <Text
@@ -338,7 +321,6 @@ export default function Home() {
           })}
         </ScrollView>
 
-        {/* Progress dots only */}
         {featured.length > 1 && (
           <View
             style={{
@@ -368,7 +350,7 @@ export default function Home() {
 
   // ── Top Artists ────────────────────────────────────────────────────────────
   const renderArtists = useMemo(() => {
-    const artists = artistsData?.data || [];
+    const artists = artistsData?.data?.data || [];
     if (artistsLoading) {
       return (
         <View className="mb-8">
@@ -393,13 +375,13 @@ export default function Home() {
 
     return (
       <View className="mb-8">
-        <SectionLabel title="Top Artists" />
+        <SectionLabel title="Top Artists" icon="people" />
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={{ paddingHorizontal: 16, gap: 16 }}>
-          {artists.slice(0, 15).map((item: any) => {
-            const avatarUrl = getCoverImageUrl(item.storageKey, 'medium') || null;
+          {artists.map((item: any) => {
+            const avatarUrl = getImageUrl(item.imageKey, { width: 300, height: 300, crop: 'at_max' });
             return (
               <Pressable
                 key={item.id}
@@ -423,7 +405,7 @@ export default function Home() {
                       resizeMode="cover"
                     />
                   ) : (
-                    <View className="h-full w-full items-center justify-center bg-primary/10">
+                    <View className="h-full w-full items-center justify-center bg-[#08f808]/10">
                       <Ionicons name="person" size={40} color="#08f808" />
                     </View>
                   )}
@@ -431,7 +413,7 @@ export default function Home() {
                 <Text
                   className="text-center text-[13px] font-bold leading-tight text-white"
                   numberOfLines={1}>
-                  {capitalize(item.artistName || item.name)}
+                  {capitalize(item.name)}
                 </Text>
                 <View className="mt-1.5 rounded-full bg-white/[0.06] px-2.5 py-0.5">
                   <Text className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
@@ -448,7 +430,7 @@ export default function Home() {
 
   // ── Playlists ──────────────────────────────────────────────────────────────
   const renderPlaylists = useMemo(() => {
-    const playlists = playlistsData?.data || [];
+    const playlists = playlistsData?.data?.data || [];
     if (playlistsLoading) {
       return (
         <View className="mb-8">
@@ -473,16 +455,13 @@ export default function Home() {
 
     return (
       <View className="mb-8">
-        <SectionLabel title="Playlists" />
+        <SectionLabel title="Playlists" icon="musical-notes" />
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={{ paddingHorizontal: 16, gap: 14 }}>
           {playlists.map((item: any) => {
-            const coverUrl =
-              getCoverImageUrl(item.storageKey, 'medium') ||
-              getCoverImageUrl(item.storageKey, 'small') ||
-              null;
+            const coverUrl = getImageUrl(item.imageKey, { width: 400, height: 400 });
             return (
               <Pressable
                 key={item.id}
@@ -518,7 +497,7 @@ export default function Home() {
                 <Text
                   className="text-[13px] font-bold leading-tight text-white"
                   numberOfLines={1}>
-                  {capitalize(item.title)}
+                  {capitalize(item.name)}
                 </Text>
               </Pressable>
             );
@@ -562,23 +541,12 @@ export default function Home() {
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={{ paddingHorizontal: 16, gap: 14 }}>
           {trending.slice(0, 10).map((item: any, index: number) => {
-            const coverUrl =
-              item.coverUrl || getCoverImageUrl(item.storageKey, 'medium', true) || null;
-            const largeCoverUrl =
-              item.coverUrl || getCoverImageUrl(item.storageKey, 'large', true) || null;
+            const coverUrl = getImageUrl(item.imageKey, { width: 400, height: 400 });
             return (
               <Pressable
                 key={item.id}
                 className="w-44 active:opacity-75"
-                onPress={() =>
-                  play({
-                    id: item.id,
-                    title: item.title,
-                    artistName: item.artistName,
-                    storageKey: item.storageKey,
-                    coverUrl: largeCoverUrl,
-                  })
-                }>
+                onPress={() => play(mapToPlayerSong(item))}>
                 <View
                   className="mb-3 h-44 overflow-hidden rounded-[28px]"
                   style={{
@@ -625,113 +593,13 @@ export default function Home() {
     );
   }, [trendingData, trendingLoading, play]);
 
-  // ── Discover For You ───────────────────────────────────────────────────────
-  const renderDiscoverForYou = useMemo(() => {
-    const feedSongs = feedData?.data || [];
-    if (feedLoading) {
-      return (
-        <View className="mb-8">
-          <View className="mb-5 flex-row items-center gap-3 px-6">
-            <Skeleton className="h-6 w-6 rounded-full" />
-            <Skeleton className="h-7 w-44 rounded-lg" />
-          </View>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ paddingHorizontal: 16, gap: 12 }}>
-            {[...Array(4)].map((_, i) => (
-              <View key={i} className="w-40 gap-2">
-                <Skeleton className="h-40 w-40 rounded-[24px]" />
-                <Skeleton className="h-3.5 w-28 rounded" />
-                <Skeleton className="h-3 w-20 rounded" />
-              </View>
-            ))}
-          </ScrollView>
-        </View>
-      );
-    }
-    if (feedSongs.length === 0) return null;
-
-    return (
-      <View className="mb-8">
-        <View className="mb-5 flex-row items-center gap-2.5 px-6">
-          <View className="h-5 w-1 rounded-full bg-primary" />
-          <Ionicons name="sparkles" size={20} color="#08f808" />
-          <Text className="text-2xl font-black tracking-tighter text-white">Discover For You</Text>
-        </View>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ paddingHorizontal: 16, gap: 14 }}>
-          {feedSongs.slice(0, 15).map((item: any) => {
-            const coverUrl =
-              item.coverUrl || getCoverImageUrl(item.storageKey, 'medium', true) || null;
-            const largeCoverUrl =
-              item.coverUrl || getCoverImageUrl(item.storageKey, 'large', true) || null;
-            return (
-              <Pressable
-                key={item.id}
-                className="w-40 active:opacity-75"
-                onPress={() =>
-                  play({
-                    id: item.id,
-                    title: item.title,
-                    artistName: item.artistName,
-                    storageKey: item.storageKey,
-                    coverUrl: largeCoverUrl,
-                  })
-                }>
-                <View
-                  className="mb-3 h-40 overflow-hidden rounded-[24px]"
-                  style={{
-                    borderWidth: 1,
-                    borderColor: 'rgba(255,255,255,0.07)',
-                    shadowColor: '#08f808',
-                    shadowOffset: { width: 0, height: 4 },
-                    shadowOpacity: 0.08,
-                    shadowRadius: 12,
-                    elevation: 8,
-                  }}>
-                  {coverUrl ? (
-                    <Image
-                      source={{ uri: coverUrl }}
-                      className="h-full w-full"
-                      resizeMode="cover"
-                    />
-                  ) : (
-                    <View className="h-full w-full items-center justify-center bg-primary/5">
-                      <Ionicons name="sparkles" size={36} color="#08f808" />
-                    </View>
-                  )}
-                  <LinearGradient
-                    colors={['transparent', 'rgba(0,0,0,0.5)']}
-                    className="absolute bottom-0 left-0 right-0 h-1/2"
-                  />
-                </View>
-                <Text
-                  className="text-[13px] font-bold leading-tight text-white"
-                  numberOfLines={1}>
-                  {capitalize(item.title)}
-                </Text>
-                <Text className="mt-0.5 text-xs font-medium text-zinc-500" numberOfLines={1}>
-                  {capitalize(item.artistName)}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </ScrollView>
-      </View>
-    );
-  }, [feedData, feedLoading, play]);
-
   // ── Header ─────────────────────────────────────────────────────────────────
   const renderHeader = useMemo(
     () => (
       <View>
-        {/* Branding bar */}
         <View className="flex-row items-center gap-3 px-6 pb-7 pt-5">
           <View
-            className="h-10 w-10 items-center justify-center rounded-2xl bg-primary/10"
+            className="h-10 w-10 items-center justify-center rounded-2xl bg-[#08f808]/10"
             style={{
               borderWidth: 1,
               borderColor: 'rgba(8,248,8,0.18)',
@@ -743,9 +611,9 @@ export default function Home() {
             />
           </View>
           <View>
-            <Text className="text-xl font-black tracking-tighter text-white">One Melody</Text>
-            <Text className="text-[10px] font-semibold uppercase tracking-[0.12em] text-primary/70">
-              Your music universe
+            <Text className="text-xl font-black tracking-tighter text-white">Frequency</Text>
+            <Text className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[#08f808]/70">
+              Your audio universe
             </Text>
           </View>
         </View>
@@ -754,15 +622,14 @@ export default function Home() {
         {renderArtists}
         {renderPlaylists}
         {renderTrending}
-        {renderDiscoverForYou}
 
         <View className="mb-4 flex-row items-center gap-2.5 px-6 pb-4">
           <View className="h-5 w-1 rounded-full bg-white/20" />
-          <Text className="text-2xl font-black tracking-tighter text-white">All Songs</Text>
+          <Text className="text-2xl font-black tracking-tighter text-white">Frequency Feed</Text>
         </View>
       </View>
     ),
-    [renderFeatured, renderArtists, renderPlaylists, renderTrending, renderDiscoverForYou]
+    [renderFeatured, renderArtists, renderPlaylists, renderTrending]
   );
 
   return (
@@ -778,18 +645,24 @@ export default function Home() {
       <FlatList
         data={allSongs}
         keyExtractor={(item) => item.id}
-        renderItem={({ item, index }) => <SongRow song={item} index={index} />}
+        renderItem={({ item, index }) => <SongRow song={mapToPlayerSong(item)} index={index} />}
         ListHeaderComponent={renderHeader}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#08f808" />
+        }
+        onEndReached={() => {
+          if (hasNextPage && !isFetchingNextPage) fetchNextPage();
+        }}
         ListEmptyComponent={
           songsLoading ? (
             <View className="items-center gap-3 py-12">
               <ActivityIndicator color="#08f808" size="large" />
-              <Text className="text-sm font-medium text-zinc-600">Loading songs…</Text>
+              <Text className="text-sm font-medium text-zinc-600">Syncing frequencies…</Text>
             </View>
           ) : (
             <View className="items-center gap-2 py-20">
               <Ionicons name="musical-notes-outline" size={40} color="#3f3f46" />
-              <Text className="text-base font-semibold text-zinc-500">No songs yet</Text>
+              <Text className="text-base font-semibold text-zinc-500">No signals detected</Text>
             </View>
           )
         }
@@ -800,14 +673,6 @@ export default function Home() {
             </View>
           ) : null
         }
-        onEndReached={() => {
-          if (hasNextPage && !isFetchingNextPage) fetchNextPage();
-        }}
-        onEndReachedThreshold={0.5}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#08f808" />
-        }
-        contentContainerStyle={{ paddingBottom: 120, paddingTop: 2 }}
       />
     </SafeAreaView>
   );

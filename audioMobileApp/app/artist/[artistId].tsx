@@ -12,7 +12,7 @@ import { useQuery, useInfiniteQuery } from '@tanstack/react-query';
 import { useLocalSearchParams, router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { musicApi } from '../../lib/api';
-import { getCoverImageUrl, getBannerImageUrl } from '../../lib/s3';
+import { getImageUrl } from '../../lib/image-utils';
 import { capitalize } from '../../lib/utils';
 import { usePlayerActions } from '../../lib/player-context';
 import SongRow from '../../components/SongRow';
@@ -22,14 +22,23 @@ import { StatusBar } from 'expo-status-bar';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
+const mapToPlayerSong = (s: any) => ({
+  id: s.id,
+  title: s.title,
+  artistName: s.artistName,
+  songKey: s.songKey,
+  imageKey: s.imageKey,
+  coverUrl: getImageUrl(s.imageKey, { width: 400, height: 400, crop: 'at_max' }) || null,
+});
+
 export default function ArtistDetail() {
   const insets = useSafeAreaInsets();
   const { artistId } = useLocalSearchParams<{ artistId: string }>();
   const { playAll } = usePlayerActions();
 
-  const { data: artist, isLoading: isArtistLoading } = useQuery({
+  const { data: artistData, isLoading: isArtistLoading } = useQuery({
     queryKey: ['artist', artistId],
-    queryFn: () => musicApi.getArtist(artistId!),
+    queryFn: () => musicApi.artists.getById(artistId!),
     enabled: !!artistId,
   });
 
@@ -41,30 +50,26 @@ export default function ArtistDetail() {
     isFetchingNextPage,
   } = useInfiniteQuery({
     queryKey: ['artist-songs', artistId],
-    queryFn: ({ pageParam = 1 }) => musicApi.getArtistSongs(artistId!, pageParam, 50),
+    queryFn: ({ pageParam = 1 }) => musicApi.artists.getSongs(artistId!, pageParam, 50),
     initialPageParam: 1,
     getNextPageParam: (lastPage) => {
-      if (!lastPage?.data || lastPage.data.length < 50) return undefined;
-      return (lastPage.meta?.page ?? 0) + 1;
+      const pagination = lastPage?.data?.pagination || lastPage?.pagination;
+      if (!pagination || !pagination.hasNext) return undefined;
+      return pagination.page + 1;
     },
     enabled: !!artistId,
   });
 
-  const songs = songsData?.pages?.flatMap((page) => page.data || []) || [];
-  const totalTracks = songsData?.pages?.[0]?.meta?.totalItems || songs.length;
+  const artist = artistData?.data;
+  const songs = songsData?.pages?.flatMap((page) => page.data?.data || page.data || []) || [];
+  const totalTracks = artist?.songCount || songs.length;
 
-  const avatarUrl = artist ? getCoverImageUrl(artist.storageKey, 'large') || null : null;
-  const bannerUrl = artist ? getBannerImageUrl(artist.storageKey, 'large') || null : null;
+  const avatarUrl = getImageUrl(artist?.imageKey || artist?.coverImageKey, { width: 800, height: 800 });
+  const bannerUrl = getImageUrl(artist?.bannerImageKey || artist?.bannerKey, { width: 1200, height: 600, crop: 'force' });
 
   const handlePlayAll = useCallback(() => {
     if (songs.length === 0) return;
-    const playerSongs = songs.map((s: any) => ({
-      id: s.id,
-      title: s.title,
-      artistName: s.artistName,
-      storageKey: s.storageKey,
-      coverUrl: getCoverImageUrl(s.storageKey, 'large', true) || null,
-    }));
+    const playerSongs = songs.map(mapToPlayerSong);
     playAll(playerSongs);
   }, [songs, playAll]);
 
@@ -73,7 +78,6 @@ export default function ArtistDetail() {
 
     return (
       <View>
-        {/* ── Hero ── */}
         <View style={{ height: 500, width: SCREEN_WIDTH }}>
           {bannerUrl || avatarUrl ? (
             <Image
@@ -88,7 +92,6 @@ export default function ArtistDetail() {
             />
           )}
 
-          {/* Multi-layer gradient */}
           <LinearGradient
             colors={[
               'rgba(0,0,0,0.15)',
@@ -101,17 +104,7 @@ export default function ArtistDetail() {
             style={{ position: 'absolute', width: '100%', height: '100%' }}
           />
 
-          {/* Side vignette */}
-          <LinearGradient
-            colors={['rgba(0,0,0,0.4)', 'transparent', 'rgba(0,0,0,0.4)']}
-            start={{ x: 0, y: 0.5 }}
-            end={{ x: 1, y: 0.5 }}
-            style={{ position: 'absolute', width: '100%', height: '100%' }}
-          />
-
-          {/* Bottom content */}
           <View className="absolute bottom-0 left-0 right-0 px-6 pb-7">
-            {/* Avatar + name */}
             <View className="mb-5 flex-row items-end gap-4">
               <View
                 style={{
@@ -121,11 +114,7 @@ export default function ArtistDetail() {
                   overflow: 'hidden',
                   borderWidth: 2,
                   borderColor: 'rgba(8,248,8,0.25)',
-                  shadowColor: '#08f808',
-                  shadowOffset: { width: 0, height: 0 },
-                  shadowOpacity: 0.4,
-                  shadowRadius: 20,
-                  elevation: 10,
+                  backgroundColor: '#1a1a1a',
                 }}>
                 {avatarUrl ? (
                   <Image
@@ -135,8 +124,8 @@ export default function ArtistDetail() {
                   />
                 ) : (
                   <View className="flex-1 items-center justify-center bg-zinc-800">
-                    <Text className="text-3xl font-black text-primary">
-                      {artist.artistName?.[0]?.toUpperCase()}
+                    <Text className="text-3xl font-black text-[#08f808]">
+                      {(artist.name || artist.artistName)?.[0]?.toUpperCase()}
                     </Text>
                   </View>
                 )}
@@ -144,23 +133,22 @@ export default function ArtistDetail() {
 
               <View className="flex-1 pb-1">
                 <View className="mb-1.5 flex-row items-center gap-1.5">
-                  <View className="h-4 w-4 items-center justify-center rounded-full bg-primary">
+                  <View className="h-4 w-4 items-center justify-center rounded-full bg-[#08f808]">
                     <Ionicons name="checkmark" size={10} color="#000" />
                   </View>
-                  <Text className="text-[10px] font-black uppercase tracking-[3px] text-primary/80">
-                    Verified Artist
+                  <Text className="text-[10px] font-black uppercase tracking-[3px] text-[#08f808]/80">
+                    Validated Signal
                   </Text>
                 </View>
                 <Text
                   className="font-black text-white uppercase"
                   numberOfLines={2}
                   style={{ fontSize: 38, lineHeight: 42, letterSpacing: -1.5 }}>
-                  {capitalize(artist.artistName)}
+                  {capitalize(artist.name || artist.artistName)}
                 </Text>
               </View>
             </View>
 
-            {/* Stats row */}
             <View className="flex-row items-center gap-2">
               <View
                 style={{
@@ -172,7 +160,7 @@ export default function ArtistDetail() {
                   paddingVertical: 6,
                 }}>
                 <Text className="text-[11px] font-black uppercase tracking-[2px] text-zinc-300">
-                  {totalTracks} Tracks
+                  {totalTracks} Signals
                 </Text>
               </View>
               {artist.bio && (
@@ -186,7 +174,6 @@ export default function ArtistDetail() {
           </View>
         </View>
 
-        {/* ── Action Bar ── */}
         <View className="px-6 py-5">
           <Pressable
             onPress={handlePlayAll}
@@ -197,32 +184,29 @@ export default function ArtistDetail() {
               shadowRadius: 16,
               elevation: 8,
             }}
-            className="h-14 flex-row items-center justify-center gap-3 rounded-2xl bg-primary active:opacity-80">
+            className="h-14 flex-row items-center justify-center gap-3 rounded-2xl bg-[#08f808] active:opacity-80">
             <Ionicons name="play" size={22} color="#000" style={{ marginLeft: 3 }} />
             <Text
               style={{ letterSpacing: 2 }}
               className="text-[13px] font-black uppercase text-black">
-              Play All
+              Sync All
             </Text>
           </Pressable>
         </View>
 
-        {/* ── Section Header ── */}
         <View className="flex-row items-center justify-between px-6 pb-3 pt-1">
           <Text className="text-[22px] font-black tracking-tight text-white">
-            Popular Releases
+            Primary Emissions
           </Text>
           <Text className="text-[11px] font-black uppercase tracking-[2px] text-zinc-600">
-            {totalTracks} songs
+            {totalTracks} units
           </Text>
         </View>
       </View>
     );
-  }, [artist, songs, bannerUrl, avatarUrl, handlePlayAll, totalTracks]);
+  }, [artist, avatarUrl, bannerUrl, handlePlayAll, totalTracks]);
 
-  // ── Skeleton ──────────────────────────────────────────────────────────────
-
-  if (isArtistLoading || isSongsLoading) {
+  if (isArtistLoading || (isSongsLoading && songs.length === 0)) {
     return (
       <View className="flex-1 bg-black">
         <StatusBar style="light" />
@@ -243,26 +227,6 @@ export default function ArtistDetail() {
             <View className="h-7 w-28 rounded-full bg-zinc-800" />
           </View>
         </View>
-        {/* Play All skeleton */}
-        <View className="px-6 py-5">
-          <View className="h-14 w-full rounded-2xl bg-zinc-900" />
-        </View>
-        {/* Track skeletons */}
-        <View className="px-6">
-          {[1, 2, 3, 4, 5, 6].map((i) => (
-            <View key={i} className="flex-row items-center gap-4 py-3">
-              <View className="h-5 w-5 rounded bg-zinc-900" />
-              <View className="h-14 w-14 rounded-xl bg-zinc-900" />
-              <View className="flex-1 gap-2">
-                <View
-                  className="h-4 rounded-lg bg-zinc-900"
-                  style={{ width: `${60 + (i % 3) * 15}%` }}
-                />
-                <View className="h-3 w-1/3 rounded-lg bg-zinc-900" />
-              </View>
-            </View>
-          ))}
-        </View>
       </View>
     );
   }
@@ -271,7 +235,6 @@ export default function ArtistDetail() {
     <View className="flex-1 bg-black">
       <StatusBar style="light" />
 
-      {/* Full screen small blurred ambient background */}
       {(avatarUrl || bannerUrl) && (
         <>
           <Image
@@ -292,18 +255,11 @@ export default function ArtistDetail() {
           <LinearGradient
             colors={['rgba(0,0,0,0.3)', 'rgba(0,0,0,0.7)', 'black']}
             locations={[0, 0.4, 0.8]}
-            style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-            }}
+            style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
           />
         </>
       )}
 
-      {/* Floating back button */}
       <Pressable
         onPress={() => router.back()}
         style={{
@@ -326,7 +282,7 @@ export default function ArtistDetail() {
       <FlatList
         data={songs}
         keyExtractor={(item) => item.id}
-        renderItem={({ item, index }) => <SongRow song={item} index={index} />}
+        renderItem={({ item, index }) => <SongRow song={mapToPlayerSong(item)} index={index} />}
         ListHeaderComponent={MemoizedHeader}
         ListFooterComponent={
           isFetchingNextPage ? (

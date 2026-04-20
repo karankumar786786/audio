@@ -13,9 +13,18 @@ import { Ionicons } from '@expo/vector-icons';
 import { musicApi } from '../../lib/api';
 import SongRow from '../../components/SongRow';
 import { usePlayerActions } from '../../lib/player-context';
-import { getCoverImageUrl } from '../../lib/s3';
+import { getImageUrl } from '../../lib/image-utils';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useCallback, useMemo, useState } from 'react';
+
+const mapToPlayerSong = (s: any) => ({
+  id: s.id,
+  title: s.title,
+  artistName: s.artistName,
+  songKey: s.songKey,
+  imageKey: s.imageKey,
+  coverUrl: getImageUrl(s.imageKey, { width: 400, height: 400, crop: 'at_max' }) || null,
+});
 
 export default function Favourites() {
   const { playAll } = usePlayerActions();
@@ -24,25 +33,26 @@ export default function Favourites() {
   const { data, isLoading, isFetching, fetchNextPage, hasNextPage, isFetchingNextPage, refetch } =
     useInfiniteQuery({
       queryKey: ['favourites', 'paginated'],
-      queryFn: ({ pageParam = 1 }) => musicApi.getFavourites(pageParam, 20),
+      queryFn: ({ pageParam = 1 }) => musicApi.users.getFavourites(pageParam, 20),
       initialPageParam: 1,
       getNextPageParam: (lastPage) => {
-        if (!lastPage?.data || lastPage.data.length < 20) return undefined;
-        return (lastPage.meta?.page ?? 0) + 1;
+        const pagination = lastPage?.data?.pagination || lastPage?.pagination;
+        if (!pagination || !pagination.hasNext) return undefined;
+        return pagination.page + 1;
       },
     });
 
   const removeFavMutation = useMutation({
-    mutationFn: (songId: string) => musicApi.removeFavourite(songId),
+    mutationFn: (songId: string) => musicApi.users.removeFavourite(songId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['favourites'] });
     },
     onError: () => {
-      Alert.alert('Error', 'Failed to remove from favourites');
+      Alert.alert('Error', 'Failed to remove from sync');
     },
   });
 
-  const favorites = data?.pages?.flatMap((page) => page.data || []) || [];
+  const favorites = data?.pages?.flatMap((page) => page.data?.data || page.data || []) || [];
 
   const [refreshing, setRefreshing] = useState(false);
   const onRefresh = useCallback(async () => {
@@ -53,32 +63,18 @@ export default function Favourites() {
 
   const handlePlayAll = useCallback(() => {
     if (favorites.length === 0) return;
-    const playerSongs = favorites
-      .map((item: any) => {
-        const s = item.song;
-        if (!s) return null;
-        return {
-          id: s.id,
-          title: s.title,
-          artistName: s.artistName,
-          storageKey: s.storageKey,
-          coverUrl: getCoverImageUrl(s.storageKey, 'large', true) || null,
-        };
-      })
-      .filter(Boolean);
-    if (playerSongs.length === 0) return;
+    const playerSongs = favorites.map(mapToPlayerSong);
     playAll(playerSongs as any);
   }, [favorites, playAll]);
 
   const MemoizedHeader = useMemo(
     () => (
       <View className="px-6 pb-4 pt-6">
-        {/* Title row */}
         <View className="flex-row items-center justify-between">
           <View className="flex-1">
-            <Text className="text-4xl font-black tracking-tighter text-white">Favourites</Text>
+            <Text className="text-4xl font-black tracking-tighter text-white">Synced Signals</Text>
             <Text className="mt-1 text-sm font-bold text-zinc-500">
-              {favorites.length} liked songs
+              {favorites.length} active mappings
             </Text>
           </View>
           <View className="flex-row items-center gap-3">
@@ -103,7 +99,6 @@ export default function Favourites() {
           </View>
         </View>
 
-        {/* Play All */}
         {favorites.length > 0 && (
           <Pressable
             onPress={handlePlayAll}
@@ -115,10 +110,10 @@ export default function Favourites() {
               shadowRadius: 16,
               elevation: 8,
             }}
-            className="h-14 flex-row items-center justify-center gap-3 rounded-2xl bg-primary active:opacity-80">
+            className="h-14 flex-row items-center justify-center gap-3 rounded-2xl bg-[#08f808] active:opacity-80">
             <Ionicons name="play" size={22} color="#000" style={{ marginLeft: 3 }} />
             <Text style={{ letterSpacing: 2 }} className="text-[13px] font-black uppercase text-black">
-              Play All
+              Sync All
             </Text>
           </Pressable>
         )}
@@ -128,21 +123,19 @@ export default function Favourites() {
   );
 
   const renderItem = ({ item, index }: { item: any; index: number }) => {
-    const song = item.song;
-    if (!song) return null;
     return (
       <SongRow
-        song={{ ...song, isLiked: true }}
+        song={mapToPlayerSong(item)}
         index={index}
         renderRightAction={() => (
           <Pressable
             onPress={() => {
-              Alert.alert('Remove Favourite', 'Are you sure you want to remove this song?', [
+              Alert.alert('Remove Sync', 'Are you sure you want to remove this signal?', [
                 { text: 'Cancel', style: 'cancel' },
                 {
                   text: 'Remove',
                   style: 'destructive',
-                  onPress: () => removeFavMutation.mutate(song.id),
+                  onPress: () => removeFavMutation.mutate(item.id),
                 },
               ]);
             }}
@@ -154,51 +147,16 @@ export default function Favourites() {
               justifyContent: 'center',
               borderRadius: 20,
             }}>
-            {removeFavMutation.isPending && removeFavMutation.variables === song.id ? (
+            {removeFavMutation.isPending && removeFavMutation.variables === item.id ? (
               <ActivityIndicator color="#ef4444" size="small" />
             ) : (
-              <Ionicons name="trash-outline" size={19} color="#ef4444" />
+              <Ionicons name="heart" size={19} color="#ef4444" />
             )}
           </Pressable>
         )}
       />
     );
   };
-
-  // ── Skeleton ────────────────────────────────────────────────────────────
-
-  if (isLoading) {
-    return (
-      <SafeAreaView className="flex-1 bg-black" edges={['top']}>
-        <LinearGradient
-          colors={['#1a1a1a', '#050505']}
-          className="absolute inset-0"
-          start={{ x: 0, y: 0 }}
-          end={{ x: 0, y: 0.5 }}
-        />
-        <View className="px-6 pb-4 pt-6">
-          <View className="h-10 w-48 rounded-xl bg-zinc-900" />
-          <View className="mt-2 h-4 w-32 rounded-lg bg-zinc-900" />
-          <View className="mt-5 h-14 w-full rounded-2xl bg-zinc-900" />
-        </View>
-        <View className="mt-2 px-4">
-          {[1, 2, 3, 4, 5, 6].map((i) => (
-            <View key={i} className="flex-row items-center gap-3 px-4 py-3">
-              <View className="h-4 w-5 rounded bg-zinc-900" />
-              <View className="h-14 w-14 rounded-xl bg-zinc-900" />
-              <View className="flex-1 gap-2">
-                <View
-                  className="h-4 rounded-lg bg-zinc-900"
-                  style={{ width: `${60 + (i % 3) * 15}%` }}
-                />
-                <View className="h-3 w-1/3 rounded-lg bg-zinc-900" />
-              </View>
-            </View>
-          ))}
-        </View>
-      </SafeAreaView>
-    );
-  }
 
   return (
     <SafeAreaView className="flex-1 bg-black" edges={['top']}>
@@ -217,28 +175,30 @@ export default function Favourites() {
         contentContainerStyle={{ paddingBottom: 100 }}
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
-          <View className="items-center py-24">
-            <View
-              style={{
-                width: 96,
-                height: 96,
-                borderRadius: 48,
-                alignItems: 'center',
-                justifyContent: 'center',
-                backgroundColor: 'rgba(255,255,255,0.03)',
-                borderWidth: 1,
-                borderColor: 'rgba(255,255,255,0.06)',
-                marginBottom: 20,
-              }}>
-              <Ionicons name="heart-outline" size={40} color="#3f3f46" />
+          isLoading ? null : (
+            <View className="items-center py-24">
+              <View
+                style={{
+                  width: 96,
+                  height: 96,
+                  borderRadius: 48,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  backgroundColor: 'rgba(255,255,255,0.03)',
+                  borderWidth: 1,
+                  borderColor: 'rgba(255,255,255,0.06)',
+                  marginBottom: 20,
+                }}>
+                <Ionicons name="heart-outline" size={40} color="#3f3f46" />
+              </View>
+              <Text className="text-lg font-black tracking-tight text-zinc-400">
+                No signals synced
+              </Text>
+              <Text className="mt-2 px-12 text-center text-sm font-medium text-zinc-600">
+                Initialize a signal mapping by tapping the heart icon on any song.
+              </Text>
             </View>
-            <Text className="text-lg font-black tracking-tight text-zinc-400">
-              No favourites yet
-            </Text>
-            <Text className="mt-2 px-12 text-center text-sm font-medium text-zinc-600">
-              Tap the heart icon on any song to add it here
-            </Text>
-          </View>
+          )
         }
         ListFooterComponent={
           isFetchingNextPage ? (

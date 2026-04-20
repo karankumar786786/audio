@@ -4,18 +4,23 @@ import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
 import MiniPlayer from '../../components/MiniPlayer';
 import { musicApi } from '../../lib/api';
+import { useAuth } from '../../lib/auth';
 
 export default function TabLayout() {
+  const { user } = useAuth();
+
   useQuery({
     queryKey: ['userPlaylists'],
-    queryFn: () => musicApi.getUserPlaylists(),
+    queryFn: () => musicApi.users.getPlaylists(1, 10),
     staleTime: 5 * 60 * 1000,
+    enabled: !!user,
   });
 
   useQuery({
     queryKey: ['me'],
-    queryFn: () => musicApi.getProfile(),
+    queryFn: () => musicApi.users.getById(user?.id || ''),
     staleTime: 5 * 60 * 1000,
+    enabled: !!user?.id,
   });
 
   return (
@@ -58,26 +63,25 @@ export default function TabLayout() {
         <Tabs.Screen
           name="userPlaylists"
           options={{
-            title: 'Playlists',
-            tabBarIcon: ({ color, size }) => <Ionicons name="list" size={size} color={color} />,
+            title: 'Frequencies',
+            tabBarIcon: ({ color, size }) => <Ionicons name="radio-outline" size={size} color={color} />,
           }}
         />
         <Tabs.Screen
           name="favourites"
           options={{
-            title: 'Favourites',
+            title: 'Synced',
             tabBarIcon: ({ color, size }) => <Ionicons name="heart" size={size} color={color} />,
           }}
         />
         <Tabs.Screen
           name="profile"
           options={{
-            title: 'Profile',
-            tabBarIcon: ({ color, size }) => <Ionicons name="person" size={size} color={color} />,
+            title: 'Identity',
+            tabBarIcon: ({ color, size }) => <Ionicons name="person-circle-outline" size={size} color={color} />,
           }}
         />
       </Tabs>
-      {/* Mini Player sits above tab bar */}
       <View className="absolute bottom-24 left-0 right-0">
         <MiniPlayer />
       </View>

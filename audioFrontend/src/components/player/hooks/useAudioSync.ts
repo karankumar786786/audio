@@ -57,7 +57,15 @@ export function useAudioSync(
       playerActions.setIsPlaying(false);
     };
     const handleEnded = () => {
-      isInternalChange.current = true;
+      // Robust check: Only trigger 'next' if we are actually at/near the end of the song.
+      // This prevents the common browser issue where interruptions or source changes 
+      // fire an 'ended' event prematurely.
+      const isNearEnd = Math.abs(audioElement.currentTime - audioElement.duration) < 1.0;
+      if (!isNearEnd) {
+        console.debug("[Player] Ignoring 'ended' event (not at end of duration)");
+        return;
+      }
+
       const last = lastStateRef.current;
       if (last.id) {
         playerActions.recordListen(last.id, 100);

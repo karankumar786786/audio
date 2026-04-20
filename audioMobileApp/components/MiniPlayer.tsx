@@ -18,10 +18,6 @@ export default function MiniPlayer() {
       pathname: '/player',
       params: {
         songId: currentSong.id,
-        title: currentSong.title,
-        artistName: currentSong.artistName,
-        storageKey: currentSong.storageKey,
-        coverUrl: currentSong.coverUrl || '',
       },
     });
   };
@@ -29,16 +25,14 @@ export default function MiniPlayer() {
   return (
     <View className="mx-4 overflow-hidden rounded-[24px] border border-white/[0.08] bg-black/80 shadow-2xl">
       <View>
-        {/* Progress bar */}
         <View className="h-[2px] bg-white/[0.05]">
           <View
-            className="h-full bg-primary shadow-sm shadow-primary"
+            className="h-full bg-[#08f808]"
             style={{ width: `${progress * 100}%` }}
           />
         </View>
 
         <Pressable onPress={openFullPlayer} className="flex-row items-center gap-3 px-5 py-3">
-          {/* Cover */}
           <View className="h-12 w-12 overflow-hidden rounded-xl bg-white/[0.03] shadow-lg">
             {currentSong.coverUrl ? (
               <Image
@@ -47,13 +41,12 @@ export default function MiniPlayer() {
                 resizeMode="cover"
               />
             ) : (
-              <View className="h-full w-full items-center justify-center bg-primary/10">
+              <View className="h-full w-full items-center justify-center bg-[#08f808]/10">
                 <Ionicons name="musical-notes" size={20} color="#08f808" />
               </View>
             )}
           </View>
 
-          {/* Song info */}
           <View className="min-w-0 flex-1">
             <Text className="text-[15px] font-black tracking-tight text-white" numberOfLines={1}>
               {capitalize(currentSong.title)}
@@ -63,12 +56,9 @@ export default function MiniPlayer() {
             </Text>
           </View>
 
-          {/* Play/Pause + Skip */}
           <Pressable
-            onPress={(e) => {
-              togglePlayPause();
-            }}
-            className="h-11 w-11 items-center justify-center rounded-full bg-white shadow-md transition-all active:scale-95"
+            onPress={togglePlayPause}
+            className="h-11 w-11 items-center justify-center rounded-full bg-white shadow-md active:scale-95"
             hitSlop={8}>
             {isBuffering ? (
               <ActivityIndicator color="#000" size="small" />

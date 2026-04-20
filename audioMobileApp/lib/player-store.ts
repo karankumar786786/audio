@@ -1,14 +1,14 @@
 import { Store } from '@tanstack/react-store';
 import { musicApi } from './api';
-import { getCoverImageUrl } from './s3';
+import { getImageUrl } from './image-utils';
 
 export interface PlayerSong {
     id: string;
     title: string;
     artistName: string;
-    storageKey: string;
+    songKey: string;
+    imageKey: string;
     coverUrl: string | null;
-    songBaseUrl?: string;
 }
 
 type QueueSource = 'feed' | 'user' | 'empty';
@@ -33,9 +33,17 @@ export const playerStore = new Store<PlayerState>({
     queueSource: 'empty',
 });
 
+const mapToPlayerSong = (s: any): PlayerSong => ({
+    id: s.id,
+    title: s.title,
+    artistName: s.artistName,
+    songKey: s.songKey,
+    imageKey: s.imageKey,
+    coverUrl: getImageUrl(s.imageKey, { width: 600, height: 600, crop: 'at_max' }) || null,
+});
+
 export const playerActions = {
     setCurrentSong: (song: PlayerSong | null) => {
-        
         playerStore.setState((state) => {
             let newLastQueueIndex = state.lastQueueIndex;
             if (song) {
@@ -44,11 +52,9 @@ export const playerActions = {
             }
 
             if (state.currentSong?.id === song?.id && song !== null) {
-                
                 return { ...state, lastQueueIndex: newLastQueueIndex };
             }
 
-            
             return {
                 ...state,
                 currentSong: song,
@@ -73,18 +79,13 @@ export const playerActions = {
                 queueSource: 'feed',
             };
         });
-        const actions = playerActions as any;
-        actions._fallbackPool = [];
-        actions._fallbackPoolFetched = true;
     },
 
     playSong: (song: PlayerSong) => {
-        
         playerStore.setState((state) => {
             const existingIdx = state.queue.findIndex((s) => s.id === song.id);
 
             if (existingIdx !== -1) {
-                
                 return {
                     ...state,
                     currentSong: song,
@@ -99,7 +100,6 @@ export const playerActions = {
                 song,
                 ...state.queue.slice(insertAt),
             ];
-            
 
             return {
                 ...state,
@@ -109,11 +109,10 @@ export const playerActions = {
                 lastQueueIndex: insertAt,
             };
         });
-        musicApi.addView(song.id).catch(() => {});
+        musicApi.interactions.recordListen(song.id, 0).catch(() => {});
     },
 
     playAll: (songs: PlayerSong[]) => {
-        
         if (songs.length === 0) return;
         playerStore.setState((state) => ({
             ...state,
@@ -123,7 +122,7 @@ export const playerActions = {
             isPlaying: false,
             queueSource: 'user',
         }));
-        musicApi.addView(songs[0].id).catch(() => {});
+        musicApi.interactions.recordListen(songs[0].id, 0).catch(() => {});
     },
 
     addToQueue: (songs: PlayerSong[]) => {
@@ -136,16 +135,10 @@ export const playerActions = {
 
     restoreFromHistory: async () => {
         try {
-            const res = await musicApi.getHistory(1, 1);
-            if (res?.data && res.data.length > 0) {
-                const lastPlayed = res.data[0].song || res.data[0];
-                const song: PlayerSong = {
-                    id: lastPlayed.id,
-                    title: lastPlayed.title,
-                    artistName: lastPlayed.artistName,
-                    storageKey: lastPlayed.storageKey,
-                    coverUrl: getCoverImageUrl(lastPlayed.storageKey, 'large', true) || null,
-                };
+            const res = await musicApi.users.getHistory(1, 1);
+            if (res?.data?.data && res.data.data.length > 0) {
+                const lastPlayed = res.data.data[0];
+                const song = mapToPlayerSong(lastPlayed);
                 playerStore.setState((state) => ({
                     ...state,
                     currentSong: song,
@@ -162,7 +155,6 @@ export const playerActions = {
     setIsPlaying: (isPlaying: boolean) => {
         playerStore.setState((state) => {
             if (state.isPlaying === isPlaying) return state;
-            
             return { ...state, isPlaying };
         });
     },
@@ -186,7 +178,6 @@ export const playerActions = {
         const { queue, lastQueueIndex, repeatMode } = playerStore.state;
 
         if (currentPosition > 3) {
-            // Just signal restart — context will seekTo(0), no isPlaying flip needed
             return 'restart';
         }
 
@@ -197,11 +188,11 @@ export const playerActions = {
         if (prevIndex >= 0) {
             const prevSong = queue[prevIndex];
             playerActions.setCurrentSong(prevSong);
-            musicApi.addView(prevSong.id).catch(() => {});
+            musicApi.interactions.recordListen(prevSong.id, 0).catch(() => {});
         } else if (repeatMode === 'all' && queue.length > 0) {
             const lastSong = queue[queue.length - 1];
             playerActions.setCurrentSong(lastSong);
-            musicApi.addView(lastSong.id).catch(() => {});
+            musicApi.interactions.recordListen(lastSong.id, 0).catch(() => {});
         } else {
             return 'restart';
         }
@@ -211,10 +202,8 @@ export const playerActions = {
 
     playNext: async () => {
         const { queue, lastQueueIndex, isShuffle, repeatMode, currentSong } = playerStore.state;
-        
 
         if (repeatMode === 'one' && currentSong) {
-            
             playerStore.setState((s) => ({ ...s, isPlaying: false }));
             return;
         }
@@ -232,28 +221,22 @@ export const playerActions = {
             nextIndex = 0;
         }
 
-        
-
         if (nextIndex >= 0 && nextIndex < queue.length) {
             const nextSong = queue[nextIndex];
-            
             playerActions.setCurrentSong(nextSong);
-            musicApi.addView(nextSong.id).catch(() => {});
+            musicApi.interactions.recordListen(nextSong.id, 0).catch(() => {});
         } else if (repeatMode === 'all' && queue.length > 0) {
             const nextSong = queue[0];
-            
             playerActions.setCurrentSong(nextSong);
-            musicApi.addView(nextSong.id).catch(() => {});
+            musicApi.interactions.recordListen(nextSong.id, 0).catch(() => {});
         } else {
-            
-            await playerActions.playNextFromFallback();
+             await playerActions.playNextFromFallback();
         }
 
         const finalQueue = playerStore.state.queue;
         const finalIdx = playerStore.state.lastQueueIndex;
         const remaining = finalQueue.length - finalIdx - 1;
         if (finalQueue.length > 0 && remaining <= 2) {
-            
             playerActions.fetchAndAddFeedToQueue();
         }
     },
@@ -266,10 +249,7 @@ export const playerActions = {
         const actions = playerActions as any;
         actions._fallbackQueue++;
 
-        if (actions._fallbackFetching) {
-            
-            return;
-        }
+        if (actions._fallbackFetching) return;
 
         actions._fallbackFetching = true;
 
@@ -278,36 +258,19 @@ export const playerActions = {
                 const existingIds = new Set(playerStore.state.queue.map((s) => s.id));
                 let nextSong: PlayerSong | undefined;
                 
-                // Try fetching up to 3 pages to find a non-duplicate
                 for (let i = 0; i < 3; i++) {
-                
-                const res = await musicApi.getSongs(actions._fallbackPage, 5);
-                
-                if (res?.data && res.data.length > 0) {
-                    const mapped: PlayerSong[] = res.data.map((s: any) => ({
-                        id: s.id,
-                        title: s.title,
-                        artistName: s.artistName,
-                        storageKey: s.storageKey,
-                        coverUrl: getCoverImageUrl(s.storageKey, 'large', true) || null,
-                    }));
-
-                    nextSong = mapped.find((s) => !existingIds.has(s.id));
+                    const res = await musicApi.songs.getFeed(actions._fallbackPage, 5);
+                    const data = res?.data?.data || res?.data || [];
                     
-                    if (nextSong) {
-                        break;
-                    } else {
-                        
-                        actions._fallbackPage++;
-                    }
-                } else {
-                    
-                    break;
+                    if (data.length > 0) {
+                        const mapped: PlayerSong[] = data.map(mapToPlayerSong);
+                        nextSong = mapped.find((s) => !existingIds.has(s.id));
+                        if (nextSong) break;
+                        else actions._fallbackPage++;
+                    } else break;
                 }
-            }
 
                 if (nextSong) {
-                    
                     playerStore.setState((state) => ({
                         ...state,
                         queue: [...state.queue, nextSong!],
@@ -316,17 +279,14 @@ export const playerActions = {
                         lastQueueIndex: state.queue.length,
                         queueSource: 'feed',
                     }));
-                    musicApi.addView(nextSong.id).catch(() => {});
-                    actions._fallbackPage++; // Advance for the next call
-                } else {
-                    
+                    musicApi.interactions.recordListen(nextSong.id, 0).catch(() => {});
+                    actions._fallbackPage++;
                 }
-
                 actions._fallbackQueue--;
             }
         } catch (err) {
             console.warn('Fallback fetch failed:', err);
-            actions._fallbackQueue = 0; // Clear queue on error to prevent infinite loop
+            actions._fallbackQueue = 0;
         } finally {
             actions._fallbackFetching = false;
         }
@@ -335,17 +295,11 @@ export const playerActions = {
     fetchAndAddFeedToQueue: async () => {
         try {
             const { queue } = playerStore.state;
-            const currentIds = queue.map((s) => s.id);
-            const feedData = await musicApi.getFeed(currentIds);
-            if (feedData && feedData.data) {
-                const newSongs: PlayerSong[] = feedData.data.map((s: any) => ({
-                    id: s.id,
-                    title: s.title,
-                    artistName: s.artistName,
-                    storageKey: s.storageKey,
-                    coverUrl: getCoverImageUrl(s.storageKey, 'large', true) || null,
-                }));
-
+            const res = await musicApi.songs.getFeed(1, 10);
+            const data = res?.data?.data || res?.data || [];
+            
+            if (data.length > 0) {
+                const newSongs: PlayerSong[] = data.map(mapToPlayerSong);
                 playerStore.setState((state) => {
                     const existingIds = new Set(state.queue.map((s) => s.id));
                     const freshFeedSongs = newSongs.filter((s) => !existingIds.has(s.id));
@@ -357,7 +311,6 @@ export const playerActions = {
 
                     return { ...state, queue: merged };
                 });
-
                 return newSongs;
             }
         } catch (error) {

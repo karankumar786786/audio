@@ -1,216 +1,286 @@
-import axios from 'axios';
-import * as SecureStore from 'expo-secure-store';
+import axios from "axios";
+import * as SecureStore from "expo-secure-store";
 
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'https://music-backend.one-org.me';
+/**
+ * Global API Client Hub for audioBackend
+ * Organized into domain sub-modules for 100% backend parity.
+ */
+
+const API_BASE_URL =
+  process.env.EXPO_PUBLIC_API_URL || "http://10.0.2.2:3000/api/v1";
+
+export const api = axios.create({
+  baseURL: API_BASE_URL,
+  timeout: 15000,
+});
 
 let cachedToken: string | null = null;
 
-export const api = axios.create({
-    baseURL: API_BASE_URL,
-    timeout: 15000,
+// Interceptor for System JWT Authentication (using SecureStore for mobile)
+api.interceptors.request.use(async (config) => {
+  if (!cachedToken) {
+    cachedToken = await SecureStore.getItemAsync("system_token");
+  }
+  if (cachedToken) {
+    config.headers.Authorization = `Bearer ${cachedToken}`;
+  }
+  return config;
 });
 
-// Request interceptor – attach JWT from SecureStore
-api.interceptors.request.use(
-    async (config) => {
-        if (!cachedToken) {
-            cachedToken = await SecureStore.getItemAsync('access_token');
-        }
-        if (cachedToken) {
-            config.headers.Authorization = `Bearer ${cachedToken}`;
-        }
-        return config;
-    },
-    (error) => Promise.reject(error),
+// Response Interceptor for Session Auto-Healing
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const status = error.response ? error.response.status : null;
+    if (status === 401) {
+      // Only purge session if it's a critical auth-required endpoint,
+      // not background interactions which might fail due to stale tokens/timing.
+      const isBackgroundRequest = error.config.url.includes("/interactions/");
+      if (!isBackgroundRequest) {
+        console.warn(
+          "[API] Security interceptor triggered (401). Purging stale session.",
+        );
+        cachedToken = null;
+        await SecureStore.deleteItemAsync("system_token");
+        await SecureStore.deleteItemAsync("system_user");
+      }
+    }
+    return Promise.reject(error);
+  },
 );
 
-// Response interceptor to handle token expiration
-api.interceptors.response.use(
-    (response) => response,
-    async (error) => {
-        if (error.response?.status === 401) {
-            cachedToken = null;
-            await SecureStore.deleteItemAsync('access_token');
-        }
-        return Promise.reject(error);
-    }
-);
+export interface Song {
+  id: string;
+  title: string;
+  artistName: string;
+  duration: number;
+  songKey: string;
+  imageKey: string;
+  language?: string;
+}
+
+export interface HistoryEvent extends Song {
+  historyId: string;
+  listenedAt: string;
+  part: number;
+}
+
+export interface Playlist {
+  id: string;
+  name: string;
+  description?: string;
+  coverImageKey?: string;
+  bannerImageKey?: string;
+}
+
+export interface Artist {
+  id: string;
+  name: string;
+  about?: string;
+  dob?: string;
+  coverImageKey?: string;
+  bannerImageKey?: string;
+}
+
+export interface UnifiedSearchResponse {
+  songs: Song[];
+  artists: Artist[];
+  playlists: Playlist[];
+}
+
+export interface PaginatedResult<T> {
+  data: T[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+  };
+}
+
+export interface ApiResponse<T> {
+  success: boolean;
+  message: string;
+  data: T;
+}
 
 export const musicApi = {
-    // ── Auth ──
-    login: async (credentials: { email: string; password: string }) => {
-        const response = await api.post('/auth/login', credentials);
-        if (response.data.access_token) {
-            cachedToken = response.data.access_token;
-            await SecureStore.setItemAsync('access_token', response.data.access_token);
-        }
-        return response.data;
+  /** --- USERS MODULE --- */
+  users: {
+    register: async (accessToken: string) => {
+      const res = await api.post("/users/register", { accessToken });
+      if (res.data.success && res.data.data.token) {
+        cachedToken = res.data.data.token;
+        await SecureStore.setItemAsync("system_token", cachedToken!);
+        await SecureStore.setItemAsync("system_user", JSON.stringify(res.data.data));
+      }
+      return res.data;
     },
-
-    register: async (data: { email: string; password: string; name: string }) => {
-        const response = await api.post('/auth/register', data);
-        if (response.data.access_token) {
-            cachedToken = response.data.access_token;
-            await SecureStore.setItemAsync('access_token', response.data.access_token);
-        }
-        return response.data;
+    getById: async (id: string) => {
+      const res = await api.get(`/users/${id}`);
+      return res.data;
     },
-
-    logout: async () => {
-        cachedToken = null;
-        await SecureStore.deleteItemAsync('access_token');
-    },
-
-    getMe: async () => {
-        const response = await api.get('/auth/me');
-        return response.data;
-    },
-
-    getProfile: async () => {
-        const response = await api.get('/users/me');
-        return response.data;
-    },
-
-    updateProfile: async (data: { name?: string; profilePictureKey?: string }) => {
-        const response = await api.patch('/users/me', data);
-        return response.data;
-    },
-
-    changePassword: async (data: { oldPassword?: string; newPassword?: string }) => {
-        const response = await api.patch('/users/me/password', data);
-        return response.data;
-    },
-
-    // ── Feed & Content ──
-    getFeed: async (excludeIds: string[] = []) => {
-        const params = excludeIds.length > 0 ? `?exclude=${excludeIds.join(',')}` : '';
-        const response = await api.get(`/feed${params}`);
-        return response.data;
-    },
-
-    getTrending: async () => {
-        const response = await api.get('/interaction/trending');
-        return response.data;
-    },
-
-    getFeatured: async () => {
-        const response = await api.get('/interaction/featured');
-        return response.data;
-    },
-
-    search: async (query: string) => {
-        const response = await api.get(`/search?q=${query}`);
-        return response.data;
-    },
-
-    getArtists: async (page = 1, limit = 20) => {
-        const response = await api.get(`/artists?page=${page}&limit=${limit}`);
-        return response.data;
-    },
-
-    getArtist: async (id: string) => {
-        const response = await api.get(`/artists/${id}`);
-        return response.data;
-    },
-
-    getArtistSongs: async (id: string, page = 1, limit = 50) => {
-        const response = await api.get(`/artists/${id}/songs?page=${page}&limit=${limit}`);
-        return response.data;
-    },
-
-    getPlaylists: async (page = 1, limit = 20) => {
-        const response = await api.get(`/playlists?page=${page}&limit=${limit}`);
-        return response.data;
-    },
-
-    getPlaylist: async (id: string, page = 1, limit = 20) => {
-        const response = await api.get(`/playlists/${id}?page=${page}&limit=${limit}`);
-        return response.data;
-    },
-
-    getSongs: async (page = 1, limit = 20) => {
-        const response = await api.get(`/songs?page=${page}&limit=${limit}`);
-        return response.data;
-    },
-
+    // Favourites
     getFavourites: async (page = 1, limit = 50) => {
-        const response = await api.get(`/interaction/favourites?page=${page}&limit=${limit}`);
-        return response.data;
+      const res = await api.get(
+        `/users/favourites?page=${page}&limit=${limit}`,
+      );
+      return res.data;
     },
-
     addFavourite: async (songId: string) => {
-        const response = await api.post('/interaction/favourites', { songId });
-        return response.data;
+      const res = await api.post("/users/favourites", { songId });
+      return res.data;
     },
-
     removeFavourite: async (songId: string) => {
-        const response = await api.delete(`/interaction/favourites/${songId}`);
-        return response.data;
+      const res = await api.delete("/users/favourites", {
+        data: { songId },
+      });
+      return res.data;
     },
-    checkFavourite: async (songId: string) => {
-        const response = await api.get(`/interaction/favourites/check/${songId}`);
-        return response.data;
-    },
-
+    // History
     getHistory: async (page = 1, limit = 50) => {
-        const response = await api.get(`/interaction/history?page=${page}&limit=${limit}`);
-        return response.data;
+      const res = await api.get(
+        `/users/history?page=${page}&limit=${limit}`,
+      );
+      return res.data;
     },
-
-    getUserPlaylists: async (page = 1, limit = 20) => {
-        const response = await api.get(`/userplaylists?page=${page}&limit=${limit}`);
-        return response.data;
+    // Search History
+    getSearchHistory: async (page = 1, limit = 20) => {
+      const res = await api.get(
+        `/users/search-history?page=${page}&limit=${limit}`,
+      );
+      return res.data;
     },
-
-    getUserPlaylist: async (id: string, page = 1, limit = 50) => {
-        const response = await api.get(`/userplaylists/${id}?page=${page}&limit=${limit}`);
-        return response.data;
+    saveSearchHistory: async (searchedText: string) => {
+      const res = await api.post("/users/search-history", {
+        searchedText,
+      });
+      return res.data;
     },
-
-    createUserPlaylist: async (data: { title: string }) => {
-        const response = await api.post('/userplaylists', data);
-        return response.data;
-    },
-
-    deleteUserPlaylist: async (id: string) => {
-        const response = await api.delete(`/userplaylists/${id}`);
-        return response.data;
-    },
-
-    addSongToUserPlaylist: async (playlistId: string, songId: string) => {
-        const response = await api.post(`/userplaylists/${playlistId}/songs`, { songId });
-        return response.data;
-    },
-
-    removeSongFromUserPlaylist: async (playlistId: string, songId: string) => {
-        const response = await api.delete(`/userplaylists/${playlistId}/songs/${songId}`);
-        return response.data;
-    },
-
-    addView: async (songId: string) => {
-        const response = await api.post('/interaction/views', { songId });
-        return response.data;
-    },
-
-    getProfilePictureUploadUrl: async (fileName: string, contentType: string) => {
-        const response = await api.get('/users/me/profile-picture-upload-url', {
-            params: { fileName, contentType },
-        });
-        return response.data;
-    },
-
-    addSearchHistory: async (data: { searchString: string }) => {
-        const response = await api.post('/interaction/search-history', data);
-        return response.data;
-    },
-
-    getSearchHistory: async () => {
-        const response = await api.get('/interaction/search-history');
-        return response.data;
-    },
-
     clearSearchHistory: async () => {
-        const response = await api.delete('/interaction/search-history');
-        return response.data;
+      const res = await api.delete(`/users/search-history`);
+      return res.data;
     },
+    // Personal Playlists
+    getPlaylists: async (page = 1, limit = 50) => {
+      const res = await api.get(
+        `/users/playlists?page=${page}&limit=${limit}`,
+      );
+      return res.data;
+    },
+    createPlaylist: async (name: string) => {
+      const res = await api.post("/users/playlists", { name });
+      return res.data;
+    },
+    getPlaylistById: async (playlistId: string) => {
+      const res = await api.get(`/users/playlists/${playlistId}`);
+      return res.data;
+    },
+    getPlaylistSongs: async (playlistId: string, page = 1, limit = 50) => {
+      const res = await api.get(
+        `/users/playlists/${playlistId}/songs?page=${page}&limit=${limit}`,
+      );
+      return res.data;
+    },
+    addSongToPlaylist: async (
+      playlistId: string,
+      songId: string,
+    ) => {
+      const res = await api.post("/users/playlists/songs", {
+        playlistId,
+        songId,
+      });
+      return res.data;
+    },
+    removeSongFromPlaylist: async (
+      playlistId: string,
+      songId: string,
+    ) => {
+      const res = await api.delete("/users/playlists/songs", {
+        data: { playlistId, songId },
+      });
+      return res.data;
+    },
+    deletePlaylist: async (playlistId: string) => {
+      const res = await api.delete(`/users/playlists/${playlistId}`);
+      return res.data;
+    },
+  },
+
+  /** --- SONGS MODULE --- */
+  songs: {
+    getFeed: async (page = 1, limit = 15) => {
+      const res = await api.get(`/songs?page=${page}&limit=${limit}`);
+      return res.data;
+    },
+    getById: async (id: string) => {
+      const res = await api.get(`/songs/${id}`);
+      return res.data;
+    },
+  },
+
+  /** --- SEARCH MODULE --- */
+  search: {
+    unified: async (query: string) => {
+      const res = await api.get(`/search?q=${encodeURIComponent(query)}`);
+      return res.data;
+    },
+  },
+
+  /** --- INTERACTIONS MODULE --- */
+  interactions: {
+    recordListen: async (songId: string, part = 0) => {
+      const res = await api.post("/interactions/listen", {
+        songId,
+        part,
+      });
+      return res.data;
+    },
+    getTrending: async () => {
+      const res = await api.get("/interactions/trending");
+      return res.data;
+    },
+    getRecommendations: async () => {
+      const res = await api.get(`/interactions/recommendations`);
+      return res.data;
+    },
+  },
+
+  /** --- ARTISTS MODULE --- */
+  artists: {
+    list: async (page = 1, limit = 20) => {
+      const res = await api.get(`/artists?page=${page}&limit=${limit}`);
+      return res.data;
+    },
+    getById: async (id: string) => {
+      const res = await api.get(`/artists/${id}`);
+      return res.data;
+    },
+    getSongs: async (id: string, page = 1, limit = 50) => {
+      const res = await api.get(
+        `/artists/${id}/songs?page=${page}&limit=${limit}`,
+      );
+      return res.data;
+    },
+  },
+
+  /** --- SYSTEM PLAYLISTS MODULE --- */
+  playlists: {
+    list: async (page = 1, limit = 20) => {
+      const res = await api.get(`/playlists?page=${page}&limit=${limit}`);
+      return res.data;
+    },
+    getById: async (id: string) => {
+      const res = await api.get(`/playlists/${id}`);
+      return res.data;
+    },
+    getSongs: async (id: string, page = 1, limit = 50) => {
+      const res = await api.get(
+        `/playlists/${id}/songs?page=${page}&limit=${limit}`,
+      );
+      return res.data;
+    },
+  },
 };

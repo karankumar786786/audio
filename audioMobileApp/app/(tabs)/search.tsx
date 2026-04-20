@@ -14,11 +14,19 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { router, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { musicApi } from '../../lib/api';
-import { getCoverImageUrl } from '../../lib/s3';
+import { getImageUrl } from '../../lib/image-utils';
 import { capitalize } from '../../lib/utils';
 import SongRow from '../../components/SongRow';
 import { LinearGradient } from 'expo-linear-gradient';
-import { usePlayerActions } from '../../lib/player-context';
+
+const mapToPlayerSong = (s: any) => ({
+  id: s.id,
+  title: s.title,
+  artistName: s.artistName,
+  songKey: s.songKey,
+  imageKey: s.imageKey,
+  coverUrl: getImageUrl(s.imageKey, { width: 400, height: 400, crop: 'at_max' }) || null,
+});
 
 export default function SearchTab() {
   const [query, setQuery] = useState('');
@@ -26,7 +34,6 @@ export default function SearchTab() {
   const [isDebouncing, setIsDebouncing] = useState(false);
   const inputRef = useRef<TextInput>(null);
 
-  const { play } = usePlayerActions();
   const queryClient = useQueryClient();
 
   useFocusEffect(
@@ -53,17 +60,15 @@ export default function SearchTab() {
   }, [query]);
 
   const {
-    data,
+    data: searchData,
     isLoading: isInitialLoading,
     isFetching,
     isError,
-    error,
   } = useQuery({
     queryKey: ['search', debouncedQuery],
-    queryFn: () => musicApi.search(debouncedQuery),
+    queryFn: () => musicApi.search.unified(debouncedQuery),
     enabled: debouncedQuery.length > 0,
     staleTime: 30000,
-    placeholderData: (previousData: any) => previousData,
     retry: 1,
   });
 
@@ -71,37 +76,35 @@ export default function SearchTab() {
 
   const { data: historyData } = useQuery({
     queryKey: ['searchHistory'],
-    queryFn: () => musicApi.getSearchHistory(),
+    queryFn: () => musicApi.users.getSearchHistory(1, 20),
   });
 
   const saveHistoryMutation = useMutation({
-    mutationFn: (searchString: string) => musicApi.addSearchHistory({ searchString }),
+    mutationFn: (text: string) => musicApi.users.saveSearchHistory(text),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['searchHistory'] });
     },
   });
 
-  const saveHistoryMutate = saveHistoryMutation.mutate;
-
-  const results = data?.data;
+  const results = searchData?.data;
   const hasSongs = (results?.songs?.length ?? 0) > 0;
   const hasArtists = (results?.artists?.length ?? 0) > 0;
   const hasPlaylists = (results?.playlists?.length ?? 0) > 0;
   const hasResults = hasSongs || hasArtists || hasPlaylists;
 
-  const searchHistory = historyData || [];
+  const searchHistory = historyData?.data?.data || historyData?.data || [];
   const showHistory = !query && searchHistory.length > 0;
 
   const handleSaveHistory = useCallback(
-    (searchString: string) => {
+    (text: string) => {
       const exists = searchHistory.some(
-        (item: any) => item.searchString.toLowerCase() === searchString.toLowerCase()
+        (item: any) => (item.searchedText || item.searchString || '').toLowerCase() === text.toLowerCase()
       );
       if (!exists) {
-        saveHistoryMutate(searchString);
+        saveHistoryMutation.mutate(text);
       }
     },
-    [searchHistory, saveHistoryMutate]
+    [searchHistory, saveHistoryMutation]
   );
 
   const MemoizedResults = useMemo(() => {
@@ -119,18 +122,11 @@ export default function SearchTab() {
               {results.songs.map((song: any, index: number) => (
                 <SongRow
                   key={song.id}
-                  song={song}
+                  song={mapToPlayerSong(song)}
                   index={index}
                   onPress={() => {
                     handleSaveHistory(song.title);
                     Keyboard.dismiss();
-                    play({
-                      id: song.id,
-                      title: song.title,
-                      artistName: song.artistName,
-                      storageKey: song.storageKey,
-                      coverUrl: getCoverImageUrl(song.storageKey, 'large', true) || null,
-                    });
                   }}
                 />
               ))}
@@ -146,12 +142,12 @@ export default function SearchTab() {
             </Text>
             <View className="px-2">
               {results.artists.map((artist: any) => {
-                const avatarUrl = getCoverImageUrl(artist.storageKey, 'small') || null;
+                const avatarUrl = getImageUrl(artist.imageKey || artist.coverImageKey, { width: 200, height: 200, crop: 'at_max' });
                 return (
                   <Pressable
                     key={artist.id}
                     onPress={() => {
-                      handleSaveHistory(artist.artistName);
+                      handleSaveHistory(artist.name || artist.artistName);
                       Keyboard.dismiss();
                       router.push(`/artist/${artist.id}`);
                     }}
@@ -166,7 +162,7 @@ export default function SearchTab() {
                       ) : (
                         <View className="h-full w-full items-center justify-center bg-zinc-800">
                           <Text className="text-xl font-black text-white/20">
-                            {artist.artistName?.[0]?.toUpperCase()}
+                            {(artist.name || artist.artistName)?.[0]?.toUpperCase()}
                           </Text>
                         </View>
                       )}
@@ -175,7 +171,7 @@ export default function SearchTab() {
                       <Text
                         className="text-[17px] font-black tracking-tight text-white"
                         numberOfLines={1}>
-                        {capitalize(artist.artistName)}
+                        {capitalize(artist.name || artist.artistName)}
                       </Text>
                       <Text className="mt-0.5 text-[11px] font-black uppercase tracking-[0.15em] text-zinc-500">
                         Artist
@@ -199,12 +195,12 @@ export default function SearchTab() {
             </Text>
             <View className="px-2">
               {results.playlists.map((playlist: any) => {
-                const coverUrl = getCoverImageUrl(playlist.storageKey, 'small') || null;
+                const coverUrl = getImageUrl(playlist.imageKey || playlist.coverImageKey, { width: 200, height: 200 });
                 return (
                   <Pressable
                     key={playlist.id}
                     onPress={() => {
-                      handleSaveHistory(playlist.title);
+                      handleSaveHistory(playlist.name || playlist.title);
                       Keyboard.dismiss();
                       router.push(`/playlist/${playlist.id}`);
                     }}
@@ -226,7 +222,7 @@ export default function SearchTab() {
                       <Text
                         className="text-[17px] font-black tracking-tight text-white"
                         numberOfLines={1}>
-                        {capitalize(playlist.title)}
+                        {capitalize(playlist.name || playlist.title)}
                       </Text>
                       <Text
                         className="mt-0.5 text-[13px] font-medium text-zinc-500"
@@ -252,9 +248,7 @@ export default function SearchTab() {
     hasArtists,
     hasPlaylists,
     results,
-    data,
     handleSaveHistory,
-    play,
   ]);
 
   return (
@@ -266,7 +260,6 @@ export default function SearchTab() {
         end={{ x: 0, y: 0.5 }}
       />
 
-      {/* Title + back button */}
       <View className="flex-row items-center gap-3 px-6 pb-2 pt-6">
         <Pressable
           onPress={() => router.back()}
@@ -282,10 +275,9 @@ export default function SearchTab() {
           }}>
           <Ionicons name="chevron-back" size={22} color="#fff" />
         </Pressable>
-        <Text className="text-4xl font-black tracking-tighter text-white">Search</Text>
+        <Text className="text-4xl font-black tracking-tighter text-white">Frequency Search</Text>
       </View>
 
-      {/* Search Bar */}
       <View className="px-6 py-4">
         <View
           style={{ overflow: 'hidden' }}
@@ -294,12 +286,12 @@ export default function SearchTab() {
           <TextInput
             ref={inputRef}
             className="ml-4 flex-1 text-[18px] font-bold text-white"
-            placeholder="Artists, songs, or lyrics..."
+            placeholder="Signals, frequencies, or patterns..."
             placeholderTextColor="#52525b"
             value={query}
             onChangeText={setQuery}
             returnKeyType="search"
-            selectionColor="#22c55e"
+            selectionColor="#08f808"
             autoCorrect={false}
             autoCapitalize="none"
             spellCheck={false}
@@ -310,7 +302,7 @@ export default function SearchTab() {
           />
           {isPending && (
             <View className="mr-2">
-              <ActivityIndicator color="#22c55e" size="small" />
+              <ActivityIndicator color="#08f808" size="small" />
             </View>
           )}
           {query.length > 0 && (
@@ -330,93 +322,76 @@ export default function SearchTab() {
         keyboardDismissMode="on-drag"
         showsVerticalScrollIndicator={false}>
 
-        {/* Search History */}
         {showHistory && (
           <View className="px-6 pb-4">
             <View className="mb-4 flex-row items-center justify-between">
               <Text className="text-xs font-black uppercase tracking-[0.2em] text-zinc-500">
-                Recent Searches
+                Recent Frequencies
               </Text>
             </View>
             <View className="gap-1">
-              {searchHistory.slice(0, 10).map((item: any, index: number) => (
-                <Pressable
-                  key={item.id || index}
-                  onPress={() => {
-                    const text = item.searchString;
-                    setQuery(text);
-                    setDebouncedQuery(text);
-                    setIsDebouncing(false);
-                  }}
-                  className="flex-row items-center gap-4 rounded-2xl py-3 active:bg-white/10">
-                  <View className="h-10 w-10 items-center justify-center rounded-full bg-zinc-900/50">
-                    <Ionicons name="time-outline" size={18} color="#71717a" />
-                  </View>
-                  <Text
-                    className="flex-1 text-[16px] font-semibold text-zinc-300"
-                    numberOfLines={1}>
-                    {item.searchString}
-                  </Text>
-                  <Ionicons
-                    name="arrow-up-outline"
-                    size={16}
-                    color="#3f3f46"
-                    style={{ transform: [{ rotate: '-45deg' }] }}
-                  />
-                </Pressable>
-              ))}
+              {searchHistory.slice(0, 10).map((item: any, index: number) => {
+                const text = item.searchedText || item.searchString;
+                return (
+                  <Pressable
+                    key={item.id || index}
+                    onPress={() => {
+                      setQuery(text);
+                      setDebouncedQuery(text);
+                      setIsDebouncing(false);
+                    }}
+                    className="flex-row items-center gap-4 rounded-2xl py-3 active:bg-white/10">
+                    <View className="h-10 w-10 items-center justify-center rounded-full bg-zinc-900/50">
+                      <Ionicons name="time-outline" size={18} color="#71717a" />
+                    </View>
+                    <Text
+                      className="flex-1 text-[16px] font-semibold text-zinc-300"
+                      numberOfLines={1}>
+                      {text}
+                    </Text>
+                    <Ionicons
+                      name="arrow-up-outline"
+                      size={16}
+                      color="#3f3f46"
+                      style={{ transform: [{ rotate: '-45deg' }] }}
+                    />
+                  </Pressable>
+                );
+              })}
             </View>
           </View>
         )}
 
-        {/* Empty state */}
         {!query && !showHistory && (
           <View className="items-center py-20">
             <Ionicons name="search" size={48} color="#3f3f46" />
             <Text className="mt-4 text-base text-zinc-500">
-              Search for songs, artists, or playlists
+              Scan for songs, artists, or playlists
             </Text>
           </View>
         )}
 
-        {/* Initial loading */}
         {debouncedQuery.trim().length > 0 && isInitialLoading && !hasResults && (
           <View className="items-center py-20">
-            <ActivityIndicator color="#22c55e" size="large" />
+            <ActivityIndicator color="#08f808" size="large" />
             <Text className="mt-4 text-xs font-black uppercase tracking-widest text-zinc-600">
-              Searching...
+              Filtering...
             </Text>
           </View>
         )}
 
-        {/* No results */}
         {debouncedQuery.trim().length > 0 &&
           !isPending &&
           !isInitialLoading &&
-          !hasResults &&
-          !isError && (
+          !hasResults && (
             <View className="items-center py-20">
               <Ionicons name="sad-outline" size={48} color="#3f3f46" />
               <Text className="mt-4 text-base text-zinc-500">
-                No results for &quot;{debouncedQuery}&quot;
+                No signals found for &quot;{debouncedQuery}&quot;
               </Text>
             </View>
           )}
 
-        {/* Error state */}
-        {debouncedQuery.trim().length > 0 && isError && (
-          <View className="items-center py-20">
-            <Ionicons name="warning-outline" size={48} color="#ef4444" />
-            <Text className="mt-4 text-base text-zinc-400">Something went wrong.</Text>
-            <Pressable
-              onPress={() => queryClient.invalidateQueries({ queryKey: ['search'] })}
-              className="mt-4 rounded-full bg-white/10 px-6 py-2">
-              <Text className="font-bold text-white">Try Again</Text>
-            </Pressable>
-          </View>
-        )}
-
-        {/* Results */}
         {MemoizedResults}
       </ScrollView>
     </SafeAreaView>

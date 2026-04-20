@@ -6,6 +6,7 @@ interface User {
     id: string;
     email: string;
     name: string;
+    picture?: string;
     profilePictureKey?: string;
     profilePictureUrl?: string;
     createdAt?: string;
@@ -15,8 +16,7 @@ interface AuthContextType {
     user: User | null;
     isLoading: boolean;
     isAuthenticated: boolean;
-    login: (credentials: { email: string; password: string }) => Promise<any>;
-    register: (data: { email: string; password: string; name: string }) => Promise<any>;
+    loginWithAuth0: (accessToken: string) => Promise<any>;
     logout: () => Promise<void>;
     refetch: () => Promise<void>;
 }
@@ -25,8 +25,7 @@ const AuthContext = createContext<AuthContextType>({
     user: null,
     isLoading: true,
     isAuthenticated: false,
-    login: async () => { },
-    register: async () => { },
+    loginWithAuth0: async () => { },
     logout: async () => { },
     refetch: async () => { },
 });
@@ -37,17 +36,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const fetchUser = useCallback(async () => {
         try {
-            const token = await SecureStore.getItemAsync('access_token');
-            if (!token) {
+            const userDataJson = await SecureStore.getItemAsync('system_user');
+            const token = await SecureStore.getItemAsync('system_token');
+            
+            if (!token || !userDataJson) {
                 setUser(null);
                 setIsLoading(false);
                 return;
             }
-            const data = await musicApi.getMe();
-            setUser(data);
-        } catch {
+
+            const userData = JSON.parse(userDataJson);
+            setUser(userData);
+        } catch (err) {
+            console.error("[Auth] Failed to restore session:", err);
             setUser(null);
-            await SecureStore.deleteItemAsync('access_token');
+            await SecureStore.deleteItemAsync('system_token');
+            await SecureStore.deleteItemAsync('system_user');
         } finally {
             setIsLoading(false);
         }
@@ -57,22 +61,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         fetchUser();
     }, [fetchUser]);
 
-    const login = useCallback(async (credentials: { email: string; password: string }) => {
-        const data = await musicApi.login(credentials);
-        if (data.user) setUser(data.user);
-        else await fetchUser();
-        return data;
-    }, [fetchUser]);
-
-    const register = useCallback(async (regData: { email: string; password: string; name: string }) => {
-        const data = await musicApi.register(regData);
-        if (data.user) setUser(data.user);
-        else await fetchUser();
-        return data;
-    }, [fetchUser]);
+    /**
+     * Handshake with AudioBackend using an external provider's accessToken.
+     */
+    const loginWithAuth0 = useCallback(async (accessToken: string) => {
+        try {
+            const response = await musicApi.users.register(accessToken);
+            if (response.success) {
+                const userData = response.data.user || response.data;
+                setUser(userData);
+                return userData;
+            }
+            throw new Error(response.message || "Synchronization failed");
+        } catch (err) {
+            console.error("[Auth] Handshake error:", err);
+            throw err;
+        }
+    }, []);
 
     const logout = useCallback(async () => {
-        await musicApi.logout();
+        await SecureStore.deleteItemAsync('system_token');
+        await SecureStore.deleteItemAsync('system_user');
         setUser(null);
     }, []);
 
@@ -81,12 +90,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             user,
             isLoading,
             isAuthenticated: !!user,
-            login,
-            register,
+            loginWithAuth0,
             logout,
             refetch: fetchUser,
         }),
-        [user, isLoading, login, register, logout, fetchUser],
+        [user, isLoading, loginWithAuth0, logout, fetchUser],
     );
 
     return React.createElement(AuthContext.Provider, { value }, children);

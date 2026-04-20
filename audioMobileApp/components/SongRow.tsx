@@ -1,11 +1,11 @@
 import { View, Text, Image, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { getCoverImageUrl } from '../lib/s3';
 import { capitalize } from '../lib/utils';
 import { usePlayer } from '../lib/player-context';
+import { PlayerSong } from '../lib/player-store';
 
 interface SongRowProps {
-  song: any;
+  song: PlayerSong;
   index: number;
   onPress?: () => void;
   renderRightAction?: () => React.ReactNode;
@@ -13,17 +13,10 @@ interface SongRowProps {
 
 export default function SongRow({ song, index, onPress, renderRightAction }: SongRowProps) {
   const { play } = usePlayer();
-  const coverUrl = song.coverUrl || getCoverImageUrl(song.storageKey, 'small', true) || null;
+  const coverUrl = song.coverUrl;
 
   const openPlayer = () => {
-    const largeCoverUrl = song.coverUrl || getCoverImageUrl(song.storageKey, 'large', true) || null;
-    play({
-      id: song.id,
-      title: song.title,
-      artistName: song.artistName,
-      storageKey: song.storageKey,
-      coverUrl: largeCoverUrl,
-    });
+    play(song);
     if (onPress) {
       onPress();
     }
@@ -43,7 +36,7 @@ export default function SongRow({ song, index, onPress, renderRightAction }: Son
             <Image source={{ uri: coverUrl }} className="h-full w-full" resizeMode="cover" />
           ) : (
             <View className="h-full w-full items-center justify-center bg-primary/10">
-              <Ionicons name="musical-notes" size={24} color="#00FF85" />
+              <Ionicons name="musical-notes" size={24} color="#08f808" />
             </View>
           )}
         </View>
