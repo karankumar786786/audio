@@ -139,7 +139,17 @@ async def extract_features_job(ctx: inngest.Context):
 
 # ── FastAPI ───────────────────────────────────────────────────────────────────
 
+from fastapi.middleware.cors import CORSMiddleware
+
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Optional: keep the raw inspector for one more run to be safe
 @app.middleware("http")

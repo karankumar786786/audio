@@ -70,7 +70,9 @@ const artistRepository = new ArtistRepository(db, logger.child({ service: "Artis
 const playlistRepository = new PlaylistRepository(db, logger.child({ service: "PlaylistRepository" }));
 const songRepository = new SongRepository(db, logger.child({ service: "SongRepository" }));
 const songProcessingJobRepository = new SongProcessingJobRepository(db, logger.child({ service: "SongJobRepository" }));
-const inngest = new Inngest({ id: "test-music" });
+export const inngest = new Inngest({ 
+    id: "admin-backend",
+});
 
 // Services
 export const artistService = new ArtistService(artistRepository, songRepository, signatureService, algoliaSearchService, imagekitClient, logger.child({ service: "ArtistService" }));

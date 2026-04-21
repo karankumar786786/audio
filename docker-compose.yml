@@ -19,6 +19,8 @@ services:
     restart: unless-stopped
     environment:
       - DOCKER_API_VERSION=1.41
+      - TRAEFIK_SERVERSTRANSPORT_FORWARDINGTIMEOUTS_DIALTIMEOUT=600s
+      - TRAEFIK_SERVERSTRANSPORT_FORWARDINGTIMEOUTS_RESPONSEHEADERTIMEOUT=600s
     command:
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
@@ -26,13 +28,19 @@ services:
       - "--entrypoints.web.address=:80"
       - "--api.insecure=true"
       - "--log.level=DEBUG"
+      - "--accesslog=true"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     networks:
       - onemelody-network
 
   audio-frontend:
-    build: ./audioFrontend
+    build:
+      context: ./audioFrontend
+      args:
+        - NEXT_PUBLIC_AUTH0_DOMAIN=dev-csos8ec54uie5f2g.us.auth0.com
+        - NEXT_PUBLIC_AUTH0_CLIENT_ID=CH6haqIQJOrvzdlvf0o6Jn76snA0nbPJ
+        - NEXT_PUBLIC_API_URL=https://api.one-org.me/api/v1
     image: karankumar9955/onemelodyaudiofrontend:latest
     container_name: audio-frontend
     restart: unless-stopped
@@ -44,11 +52,16 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.audio-frontend.rule=Host(`one-org.me`, `www.one-org.me`)"
       - "traefik.http.services.audio-frontend.loadbalancer.server.port=3000"
+      - "traefik.docker.network=onemelody-network"
     networks:
       - onemelody-network
 
   admin-frontend:
-    build: ./adminFrontend
+    build:
+      context: ./adminFrontend
+      args:
+        - NEXT_PUBLIC_API_URL=https://admin-api.one-org.me/api/v1
+        - NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY=public_P5bD0aFcjhqTI9mkyoaZDc815Is=
     image: karankumar9955/onemelodyadminfrontend:latest
     container_name: admin-frontend
     restart: unless-stopped
@@ -59,6 +72,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.admin-frontend.rule=Host(`admin.one-org.me`)"
+      - "traefik.docker.network=onemelody-network"
       - "traefik.http.services.admin-frontend.loadbalancer.server.port=3000"
     networks:
       - onemelody-network
@@ -77,6 +91,7 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.audio-backend.rule=Host(`api.one-org.me`)"
       - "traefik.http.services.audio-backend.loadbalancer.server.port=3000"
+      - "traefik.docker.network=onemelody-network"
     networks:
       - onemelody-network
 
@@ -94,6 +109,7 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.admin-backend.rule=Host(`admin-api.one-org.me`)"
       - "traefik.http.services.admin-backend.loadbalancer.server.port=4001"
+      - "traefik.docker.network=onemelody-network"
     networks:
       - onemelody-network
 
@@ -101,6 +117,8 @@ services:
     build: ./audioProcessing
     image: karankumar9955/onemelodyaudioprocessing:latest
     container_name: audio-processing
+    volumes:
+      - ./yt-cookies.txt:/app/yt-cookies.txt
     restart: unless-stopped
     env_file:
       - production/audioprocessing.env
@@ -111,6 +129,7 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.audio-processing.rule=Host(`process.one-org.me`)"
       - "traefik.http.services.audio-processing.loadbalancer.server.port=3002"
+      - "traefik.docker.network=onemelody-network"
     networks:
       - onemelody-network
 
@@ -127,11 +146,13 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.audio-feature-extraction.rule=Host(`extract.one-org.me`)"
       - "traefik.http.services.audio-feature-extraction.loadbalancer.server.port=8000"
+      - "traefik.docker.network=onemelody-network"
     networks:
       - onemelody-network
 
 networks:
   onemelody-network:
+    name: onemelody-network
     driver: bridge
 
 volumes:

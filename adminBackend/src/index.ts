@@ -11,6 +11,10 @@ import { traceMiddleware } from "./middlewares/trace.middleware";
 import swaggerUi from "swagger-ui-express";
 import { generateOpenApiDocument } from "./docs/openapi-registry";
 import "./docs/openapi-routes";
+import { serve } from "inngest/express";
+import { inngest } from "./infra";
+import { functions } from "./inngest";
+
 
 
 
@@ -19,7 +23,15 @@ export const app = express();
 const PORT = process.env.PORT || 4001;
 
 app.use(traceMiddleware);
-app.use(cors())
+app.use(cors({
+    origin: [
+        "http://localhost:3000",
+        "http://localhost:3001",
+        "http://127.0.0.1:3000",
+        "http://127.0.0.1:3001"
+    ],
+    credentials: true
+}));
 app.use(express.json());
 app.use(helmet());
 app.use(express.urlencoded({ extended: true }));
@@ -27,6 +39,9 @@ app.use(express.urlencoded({ extended: true }));
 
 // Documentation
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(generateOpenApiDocument()));
+
+// Inngest
+app.use("/api/inngest", serve({ client: inngest, functions }));
 
 // Routes Implementation
 app.use("/api/v1", masterRouter);
