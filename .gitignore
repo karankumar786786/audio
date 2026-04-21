@@ -1,8 +1,0 @@
-yt-cookies.txt
-cookies.txt
-.DS_Store
-.env
-node_modules/
-dist/
-build/
-.next/
