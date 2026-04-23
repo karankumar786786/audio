@@ -5,16 +5,40 @@ import { musicApi } from "@/lib/api";
 export const playbackActions = {
   play: (song: PlayerSong) => {
     playerStore.setState((s) => {
-      const idx = s.queue.findIndex((item) => item.id === song.id);
+      let updatedQueue = [...s.queue];
+      // Match by queueId first (the exact instance), then fallback to song id
+      let idx = updatedQueue.findIndex((item) => item.queueId === song.queueId);
+      if (idx === -1) {
+        // Look for the song ahead first
+        idx = updatedQueue.findIndex((item, i) => i >= s.lastQueueIndex && item.id === song.id);
+        if (idx === -1) idx = updatedQueue.findIndex((item) => item.id === song.id);
+      }
+
+      if (idx === -1) {
+        // Insert after the current play position if missing
+        const insertIdx = Math.max(0, s.lastQueueIndex + 1);
+        updatedQueue.splice(insertIdx, 0, song);
+        idx = insertIdx;
+        console.log(`[Playback] song NOT in queue. INSERTED "${song.title}" at index ${idx}. QueueID: ${song.queueId}`);
+      } else {
+        console.log(`[Playback] song found in queue. JUMPING to "${song.title}" at index ${idx}. QueueID: ${song.queueId}`);
+      }
+
+      console.log(`[Queue State] Current Index: ${idx}, Total Songs: ${updatedQueue.length}`);
+
       const newState = {
         ...s,
+        queue: updatedQueue,
         currentSong: song,
         isPlaying: true,
-        lastQueueIndex: idx !== -1 ? idx : s.lastQueueIndex,
+        lastQueueIndex: idx,
         currentTime: 0,
       };
+
       if (typeof window !== "undefined") {
-        localStorage.setItem("last_played_song", JSON.stringify(song));
+        // We still save the queue, but the current song can be derived from lastQueueIndex
+        localStorage.setItem("last_queue", JSON.stringify(updatedQueue));
+        localStorage.setItem("last_queue_index", idx.toString());
       }
       return newState;
     });

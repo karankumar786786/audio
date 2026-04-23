@@ -58,14 +58,16 @@ export class InteractionService {
             } as SongSchema];
         });
 
-        this.logger.info(`[InteractionService] Recombee returned ${result.length} complete song objects for ${userId}.`);
+        this.logger.info(`[InteractionService] Recombee returned ${result.length} song objects for ${userId}: ${result.map(s => s.title).join(', ')}`);
 
         // If after filtering we have too few results, complement with Trending and then Random
         if (result.length < limit) {
             const combined = [...result];
-            this.logger.info(`[InteractionService] Recombee results insufficient (${result.length}/${limit}). Fetching trending fallback.`);
+            this.logger.info(`[InteractionService] Recombee results insufficient (${result.length}/${limit}) for ${userId}. Fetching trending fallback.`);
             
             const trending = await this.getTrendingSongs({ page: 1, limit });
+            this.logger.info(`[InteractionService] Trending fallback returned ${trending.data.length} songs.`);
+
             for (const s of trending.data) {
                 if (combined.length >= limit) break;
                 if (!combined.some(c => c.id === s.id)) {
@@ -74,8 +76,9 @@ export class InteractionService {
             }
 
             if (combined.length < limit) {
-                this.logger.info(`[InteractionService] Trending results insufficient (${combined.length}/${limit}). Fetching random fallback.`);
+                this.logger.info(`[InteractionService] Trending results insufficient (${combined.length}/${limit}) for ${userId}. Fetching random fallback.`);
                 const randomSongs = await this.songRepository.getRandom(limit);
+                this.logger.info(`[InteractionService] Random fallback returned ${randomSongs.length} songs.`);
                 for (const s of randomSongs) {
                     if (combined.length >= limit) break;
                     if (!combined.some(c => c.id === s.id)) {
@@ -83,6 +86,7 @@ export class InteractionService {
                     }
                 }
             }
+
             
             this.logger.info(`[InteractionService] Final returned count: ${combined.length}`);
             return buildPaginatedResult<SongSchema>(combined, combined.length, { page: 1, limit });

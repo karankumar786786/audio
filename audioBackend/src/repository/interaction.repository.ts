@@ -32,8 +32,9 @@ export class InteractionRepository extends BaseRepository<SongSchema, any, any> 
                 COUNT(h.id) as listen_count
             FROM user_history h
             JOIN songs s ON h.song_id = s.id
+            WHERE h.listened_at > NOW() - INTERVAL '7 days'
             GROUP BY s.id
-            ORDER BY listen_count DESC
+            ORDER BY listen_count DESC, RANDOM()
             LIMIT ${limit} OFFSET ${offset}
         `;
         return rows.map((row) => this.mapRow(row));

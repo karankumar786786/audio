@@ -62,17 +62,30 @@ export const queueActions = {
       if (res?.success && res?.data) {
         const rawData = Array.isArray(res.data) ? res.data : (res.data.data || []);
         const newSongs = mapListToPlayerSongs(rawData);
-        const existingIds = new Set(queue.map((s) => s.id));
-        const uniqueNewSongs = newSongs.filter((s) => !existingIds.has(s.id));
+        // We no longer strictly filter against the entire queue.
+        // queueId ensures each instance is unique for the player logic.
+        const uniqueNewSongs = newSongs;
+
+        console.log(`[Queue] API returned ${newSongs.length} songs. Added all ${uniqueNewSongs.length} to queue. Total queue: ${queue.length + newSongs.length}`);
 
         if (uniqueNewSongs.length > 0) {
           playerStore.setState((s) => {
-            const updatedQueue = [...s.queue, ...uniqueNewSongs];
-            console.log(`[Queue] Refilled with ${uniqueNewSongs.length} unique songs. New total: ${updatedQueue.length}`);
+            let updatedQueue = [...s.queue, ...uniqueNewSongs];
+            let updatedIdx = s.lastQueueIndex;
+
+            // Prune history if it grows too large (keep only 20 previous songs)
+            if (updatedIdx > 50) {
+              const toRemove = updatedIdx - 20;
+              updatedQueue = updatedQueue.slice(toRemove);
+              updatedIdx = 20;
+              console.log(`[Queue] Pruned ${toRemove} old songs from history.`);
+            }
+
+            console.log(`[Queue] APPENDED ${uniqueNewSongs.length} songs to the END of the queue. New total: ${updatedQueue.length}. Titles: ${uniqueNewSongs.map(s => s.title).join(', ')}`);
             if (typeof window !== "undefined") {
               localStorage.setItem("last_queue", JSON.stringify(updatedQueue));
             }
-            return { ...s, queue: updatedQueue };
+            return { ...s, queue: updatedQueue, lastQueueIndex: updatedIdx };
           });
 
           if (isInit && !currentSong && uniqueNewSongs.length > 0) {
@@ -88,6 +101,16 @@ export const queueActions = {
     } finally {
       playerStore.setState((s) => ({ ...s, isRefilling: false }));
     }
+  },
+
+  clearQueue: () => {
+    playerStore.setState((s) => {
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("last_queue");
+        localStorage.removeItem("last_queue_index");
+      }
+      return { ...s, queue: [], lastQueueIndex: -1, currentSong: null, isPlaying: false };
+    });
   },
 
   initQueue: async () => {
@@ -108,10 +131,21 @@ export const queueActions = {
 
     let nextIdx = lastQueueIndex + 1;
     if (isShuffle) {
-      nextIdx = Math.floor(Math.random() * queue.length);
+      // Improved shuffle: Avoid immediately repeating the same song if the queue has other options
+      const availableIndices = Array.from({ length: queue.length }, (_, i) => i)
+        .filter(i => i !== lastQueueIndex);
+      
+      if (availableIndices.length > 0) {
+        nextIdx = availableIndices[Math.floor(Math.random() * availableIndices.length)];
+      } else {
+        nextIdx = 0; // Fallback to start if only one song
+      }
     }
 
     if (nextIdx < queue.length) {
+      if (typeof window !== "undefined") {
+        localStorage.setItem("last_queue_index", nextIdx.toString());
+      }
       import("@/store/player/playback.actions").then(({ playbackActions }) => playbackActions.play(queue[nextIdx]));
       const remaining = queue.length - (nextIdx + 1);
       if (remaining <= 2) {
@@ -133,6 +167,9 @@ export const queueActions = {
 
     const prevIdx = lastQueueIndex - 1;
     if (prevIdx >= 0) {
+      if (typeof window !== "undefined") {
+        localStorage.setItem("last_queue_index", prevIdx.toString());
+      }
       import("@/store/player/playback.actions").then(({ playbackActions }) => playbackActions.play(queue[prevIdx]));
     }
   },

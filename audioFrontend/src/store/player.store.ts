@@ -14,19 +14,26 @@ export const playerActions = {
   hydrate: () => {
     if (typeof window === "undefined") return;
     try {
-      const lastSong = localStorage.getItem("last_played_song");
-      const lastQueue = localStorage.getItem("last_queue");
+      const lastIdxStr = localStorage.getItem("last_queue_index");
+      const lastQueueStr = localStorage.getItem("last_queue");
       
       playerStore.setState((s) => {
-        const song = lastSong ? JSON.parse(lastSong) : s.currentSong;
-        const queueRes = lastQueue ? JSON.parse(lastQueue) : s.queue;
-        const idx = queueRes.findIndex((item: any) => item.id === (song?.id));
+        const queueRes = lastQueueStr ? JSON.parse(lastQueueStr) : s.queue;
+        const savedIdx = lastIdxStr ? parseInt(lastIdxStr, 10) : -1;
+        
+        let currentSong = s.currentSong;
+        let lastQueueIndex = s.lastQueueIndex;
+
+        if (queueRes.length > 0 && savedIdx >= 0 && savedIdx < queueRes.length) {
+          currentSong = queueRes[savedIdx];
+          lastQueueIndex = savedIdx;
+        }
 
         return {
           ...s,
-          currentSong: song,
+          currentSong,
           queue: queueRes,
-          lastQueueIndex: idx !== -1 ? idx : s.lastQueueIndex,
+          lastQueueIndex,
         };
       });
     } catch (err) {

@@ -9,7 +9,7 @@ import { PlaylistCard } from "../../components/PlaylistCard";
 import { useEffect, useState } from "react";
 import {  Clock, Users2, ListMusic, Zap } from "lucide-react";
 import { useStore } from "@tanstack/react-store";
-import { playerStore } from "../../store/player.store";
+import { playerActions, playerStore } from "../../store/player.store";
 
 export default function HomePage() {
   const systemUser = useStore(playerStore, (s) => s.systemUser);
@@ -47,6 +47,13 @@ export default function HomePage() {
     });
 
   const systemToken = useStore(playerStore, (s) => s.systemToken);
+  const { clearQueue, initQueue } = playerActions;
+
+  // 0. Clear and Init Queue on Home Page strictly
+  useEffect(() => {
+    clearQueue();
+    initQueue();
+  }, []);
 
   // Recommendations
   const { data: recommendations } = useQuery({

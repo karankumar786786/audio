@@ -220,8 +220,8 @@ export class RecommbeeRecommendationService implements RecommendationService<Rec
         "imageKey",
         "language",
       ],
-      diversity: 0.4, // Increases variety of recommended items
-      rotationRate: 0.6, // Ensures different items are recommended in subsequent requests
+      diversity: 0.8, // Increases variety of recommended items
+      rotationRate: 0.9, // Ensures different items are recommended in subsequent requests
       rotationTime: 3600, // Duration in seconds that rotation remains effective
     });
 
@@ -229,7 +229,7 @@ export class RecommbeeRecommendationService implements RecommendationService<Rec
       recomms: Array<{ id: string; values?: Record<string, unknown> }>;
     }>(req);
 
-    this.logger.info(`[RECOMBEE] Recommendation for ${strippedId} returned ${result.recomms?.length ?? 0} items`);
+    this.logger.info(`[RECOMBEE] Recommendation for ${strippedId} returned ${result.recomms?.length ?? 0} items: ${result.recomms?.map(r => r.values?.title || r.id).join(', ')}`);
 
     return (result.recomms || []).map((r) => ({
       id: r.id,

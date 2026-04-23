@@ -4,6 +4,7 @@ import { getImageUrl } from "./image-utils";
 const S3_BASE_URL = "https://videotranscodeprod.s3.ap-south-1.amazonaws.com";
 
 export interface PlayerSong extends Song {
+  queueId: string; // Unique ID for this specific queue entry
   streamUrl: string;
   coverUrl: string;
   captionUrl?: string;
@@ -11,13 +12,14 @@ export interface PlayerSong extends Song {
 }
 
 /**
- * Maps a backend Song object to a PlayerSong with full URLs.
+ * Maps a backend Song object to a PlayerSong with full URLs and a unique queueId.
  */
 export function mapToPlayerSong(song: Song): PlayerSong {
   const streamBase = `${S3_BASE_URL}/${song.songKey}`;
 
   return {
     ...song,
+    queueId: typeof crypto !== "undefined" ? crypto.randomUUID() : Math.random().toString(36).substring(7),
     streamUrl: `${streamBase}/master.mpd`,
     captionUrl: `${streamBase}/caption.vtt`,
     coverUrl: getImageUrl(song.imageKey, {
