@@ -18,8 +18,16 @@ export const queueActions = {
     
     playerStore.setState((s) => {
       const currentIdx = s.lastQueueIndex;
+      const existingIds = new Set(s.queue.map(sq => sq.id));
+      const uniqueNewSongs = songs.filter(ns => !existingIds.has(ns.id));
+      
+      if (uniqueNewSongs.length === 0 && songs.length > 0) {
+        console.log("[Queue] All songs in playAll are already in queue. Skipping append.");
+        return s;
+      }
+
       const newQueue = [...s.queue];
-      newQueue.splice(currentIdx + 1, 0, ...songs);
+      newQueue.splice(currentIdx + 1, 0, ...uniqueNewSongs);
       
       if (typeof window !== "undefined") {
         localStorage.setItem("last_queue", JSON.stringify(newQueue));
@@ -62,9 +70,9 @@ export const queueActions = {
       if (res?.success && res?.data) {
         const rawData = Array.isArray(res.data) ? res.data : (res.data.data || []);
         const newSongs = mapListToPlayerSongs(rawData);
-        // We no longer strictly filter against the entire queue.
-        // queueId ensures each instance is unique for the player logic.
-        const uniqueNewSongs = newSongs;
+        // Strictly filter against current queue to ensure uniqueness
+        const existingIds = new Set(queue.map(s => s.id));
+        const uniqueNewSongs = newSongs.filter(s => !existingIds.has(s.id));
 
         console.log(`[Queue] API returned ${newSongs.length} songs. Added all ${uniqueNewSongs.length} to queue. Total queue: ${queue.length + newSongs.length}`);
 
@@ -105,11 +113,21 @@ export const queueActions = {
 
   clearQueue: () => {
     playerStore.setState((s) => {
+      console.log("[Queue] Clearing queue and stopping playback...");
       if (typeof window !== "undefined") {
         localStorage.removeItem("last_queue");
         localStorage.removeItem("last_queue_index");
       }
-      return { ...s, queue: [], lastQueueIndex: -1, currentSong: null, isPlaying: false };
+      return { 
+        ...s, 
+        queue: [], 
+        lastQueueIndex: -1, 
+        currentSong: null, 
+        isPlaying: false,
+        currentTime: 0,
+        duration: 0,
+        qualityTracks: []
+      };
     });
   },
 

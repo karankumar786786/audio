@@ -78,6 +78,9 @@ export function useShakaPlayer(audioElement: HTMLAudioElement | null, currentSon
           setTimeout(() => {
             if (isMounted) isInternalChange.current = false;
           }, 500);
+        } else {
+          // If streamUrl is cleared, ensure player stops
+          await player.unload();
         }
       } catch (e) {
         console.error("[Player] ❌ Unified Lifecycle Error:", e);

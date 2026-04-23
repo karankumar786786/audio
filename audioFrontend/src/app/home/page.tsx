@@ -49,13 +49,6 @@ export default function HomePage() {
   const systemToken = useStore(playerStore, (s) => s.systemToken);
   const { clearQueue, initQueue } = playerActions;
 
-  // 0. Clear and Init Queue on Home Page strictly
-  useEffect(() => {
-    clearQueue();
-    initQueue();
-  }, []);
-
-  // Recommendations
   const { data: recommendations } = useQuery({
     queryKey: ["recommendations", systemUser?.id],
     queryFn: () => musicApi.interactions.getRecommendations(),
