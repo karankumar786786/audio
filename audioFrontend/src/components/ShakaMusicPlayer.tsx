@@ -48,7 +48,6 @@ export function ShakaMusicPlayer() {
   // 1. Initialize Player State
   useEffect(() => {
     playerActions.hydrate();
-    playerActions.initQueue();
   }, []);
 
   // 2. Custom Hooks for Logic

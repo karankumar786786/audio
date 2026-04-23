@@ -50,13 +50,13 @@ export const queueActions = {
           // If recommendation is empty, fallback to trending
           const data = res?.data?.data || res?.data;
           if (!data || (Array.isArray(data) && data.length === 0)) {
-            res = await musicApi.interactions.getTrending();
+            res = await musicApi.interactions.getTrending(1, 2);
           }
         } catch (err) {
-          res = await musicApi.interactions.getTrending();
+          res = await musicApi.interactions.getTrending(1, 2);
         }
       } else {
-        res = await musicApi.interactions.getTrending();
+        res = await musicApi.interactions.getTrending(1, 2);
       }
 
       if (res?.success && res?.data) {

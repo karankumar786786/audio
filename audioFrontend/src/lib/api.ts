@@ -230,12 +230,12 @@ export const musicApi = {
       });
       return res.data;
     },
-    getTrending: async () => {
-      const res = await api.get("/interactions/trending");
+    getTrending: async (page = 1, limit = 20) => {
+      const res = await api.get(`/interactions/trending?page=${page}&limit=${limit}`);
       return res.data;
     },
-    getRecommendations: async () => {
-      const res = await api.get(`/interactions/recommendations`);
+    getRecommendations: async (limit = 10) => {
+      const res = await api.get(`/interactions/recommendations?limit=${limit}`);
       return res.data;
     },
   },
