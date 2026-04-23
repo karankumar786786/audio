@@ -206,35 +206,40 @@ export class RecommbeeRecommendationService implements RecommendationService<Rec
     limit: number
   ): Promise<Partial<RecommendationSchema>[]> {
     const strippedId = this.stripId(userId);
-    const req = new requests.RecommendItemsToUser(strippedId, limit, {
-      cascadeCreate: true,
-      returnProperties: true,
-      includedProperties: [
-        "fullId",
-        "jobId",
-        "createdAt",
-        "title",
-        "artistName",
-        "duration",
-        "songKey",
-        "imageKey",
-        "language",
-      ],
-      diversity: 0.8, // Increases variety of recommended items
-      rotationRate: 0.9, // Ensures different items are recommended in subsequent requests
-      rotationTime: 3600, // Duration in seconds that rotation remains effective
-    });
+    try {
+      const req = new requests.RecommendItemsToUser(strippedId, limit, {
+        cascadeCreate: true,
+        returnProperties: true,
+        includedProperties: [
+          "fullId",
+          "jobId",
+          "createdAt",
+          "title",
+          "artistName",
+          "duration",
+          "songKey",
+          "imageKey",
+          "language",
+        ],
+        diversity: 0.8, // Increases variety of recommended items
+        rotationRate: 0.9, // Ensures different items are recommended in subsequent requests
+        rotationTime: 3600, // Duration in seconds that rotation remains effective
+      });
 
-    const result = await this.send<{
-      recomms: Array<{ id: string; values?: Record<string, unknown> }>;
-    }>(req);
+      const result = await this.send<{
+        recomms: Array<{ id: string; values?: Record<string, unknown> }>;
+      }>(req);
 
-    this.logger.info(`[RECOMBEE] Recommendation for ${strippedId} returned ${result.recomms?.length ?? 0} items: ${result.recomms?.map(r => r.values?.title || r.id).join(', ')}`);
+      this.logger.info(`[RECOMBEE] Recommendation for ${strippedId} returned ${result.recomms?.length ?? 0} items: ${result.recomms?.map(r => r.values?.title || r.id).join(', ')}`);
 
-    return (result.recomms || []).map((r) => ({
-      id: r.id,
-      ...(r.values as Omit<RecommendationSchema, "id">),
-    }));
+      return (result.recomms || []).map((r) => ({
+        id: r.id,
+        ...(r.values as Omit<RecommendationSchema, "id">),
+      }));
+    } catch (err: any) {
+      this.logger.error(`[RECOMBEE] Error fetching recommendations for ${strippedId}: ${err.message || err}`);
+      return []; // Return empty so fallback logic can take over
+    }
   }
 
   async resetDatabase(): Promise<void> {

@@ -75,7 +75,7 @@ export const storageService = new S3StorageService(
 export const recommendationService = new RecommbeeRecommendationService(
     `${process.env.RECOMBEE_DATABASE}`,
     `${process.env.RECOMBEE_DATABASE_PRIVATE_TOKEN}`,
-    `${process.env.RECOMBEE_DATABASE_REGION}`,
+    process.env.RECOMBEE_DATABASE_REGION || "us-west",
     logger.child({ service: "RecommbeeService" })
 );
 
