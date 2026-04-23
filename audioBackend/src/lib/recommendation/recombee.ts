@@ -221,9 +221,9 @@ export class RecommbeeRecommendationService implements RecommendationService<Rec
           "imageKey",
           "language",
         ],
-        diversity: 0.8, // Increases variety of recommended items
-        rotationRate: 0.9, // Ensures different items are recommended in subsequent requests
-        rotationTime: 3600, // Duration in seconds that rotation remains effective
+        diversity: 0.2, // Prioritize high-match items
+        rotationRate: 0.2, // Allow favorites to repeat more often
+        rotationTime: 1200, // 20 minutes rotation
       });
 
       const result = await this.send<{
