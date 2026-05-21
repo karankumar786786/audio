@@ -1,7 +1,7 @@
 import type { ArtistRepository } from "../repository/artist.repository.ts";
 import type { SongRepository } from "../repository/song.repository.ts";
 import type { SignatureService } from "../infra/signature.types.ts";
-import type { SearchService, SearchRecord } from "../infra/search.types.ts";
+import type { SearchEngineService, SearchRecord } from "../infra/search.types.ts";
 import type { ArtistSchema, CreateArtistSchema } from "../schema/artist.schema.ts";
 import type { SongSchema } from "../schema/songs.schema.ts";
 import { type PaginationParams, type PaginatedResult, buildPaginatedResult } from "../types/pagination.ts";
@@ -14,7 +14,7 @@ export class ArtistService {
         private readonly songRepository: SongRepository,
         private readonly signatureService: SignatureService,
         private readonly logger: Logger,
-        private readonly searchService?: SearchService<SearchRecord>,
+        private readonly searchService?: SearchEngineService<SearchRecord>,
         private readonly imageKitClient?: any,
     ) {
         logMethods(this, this.logger);

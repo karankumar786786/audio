@@ -6,7 +6,7 @@ import type { SignatureService } from "../infra/signature.types.ts";
 import { songProcessingJob } from "../db/schema.ts";
 import { eq } from "drizzle-orm";
 
-type CreateJobData = Omit<SongProcessingJob, "transcodingAttempt" | "transcribingAttempt" | "status">;
+type CreateJobData = Omit<SongProcessingJob, "transcodingAttempt" | "transcribingAttempt" | "status"> & { status?: SongProcessingJob["status"] };
 type UpdateJobData = Partial<SongProcessingJob>;
 
 export class SongProcessingJobRepository extends BaseRepository<SongProcessingJob, typeof songProcessingJob, CreateJobData, UpdateJobData> {
@@ -49,7 +49,7 @@ export class SongProcessingJobRepository extends BaseRepository<SongProcessingJo
                 transcribingAttempt: 0,
                 transcribed: data.transcribed ?? false,
                 extractedFeatures: data.extractedFeatures ?? false,
-                status: "pending"
+                status: data.status || "pending"
             })
             .returning();
         if (!row) throw new Error("Failed to create song processing job");

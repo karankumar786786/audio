@@ -5,7 +5,7 @@ import Provider from "./provider";
 import { AuthSync } from "@/components/AuthSync";
 import { LeftSidebar } from "@/components/LeftSidebar";
 import { AppNavbar } from "@/components/AppNavbar";
-import { ShakaMusicPlayer } from "@/components/ShakaMusicPlayer";
+import { HlsMusicPlayer } from "@/components/HlsMusicPlayer";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -46,7 +46,7 @@ export default function RootLayout({
               {children}
             </main>
           </div>
-          <ShakaMusicPlayer />
+          <HlsMusicPlayer />
         </Provider>
       </body>
     </html>

@@ -1,15 +1,19 @@
 import { config } from "dotenv";
-import { neon, type NeonQueryFunction } from "@neondatabase/serverless";
-import {Inngest} from "inngest";
+import { Inngest } from "inngest";
 import ImageKit from "imagekit";
 config();
 
-export type Database = NeonQueryFunction<false, false>;
+import { 
+    createDb,
+    AlgoliaSearchService,
+    S3StorageService,
+    RecommbeeRecommendationService,
+    NodeCryptoSignatureService,
+    SongRepository,
+    SongProcessingJobRepository
+} from "@onemelody/core";
 
-import { AlgoliaService } from "../lib/search";
-import { S3Service } from "../lib/storage";
 import { AudioTranscoder } from "../lib/transcode";
-import { RecommendationServiceImpl } from "../lib/recommendation";
 import { TranscriptionService } from "../lib/transcribeAudio";
 import { logger } from "../observablity";
 
@@ -17,10 +21,10 @@ import { logger } from "../observablity";
 export { logger };
 
 // Database export
-export const db: Database = neon(`${process.env.DATABASE_URL}`) as any;
+export const db = createDb(process.env.DATABASE_URL || "postgresql://mock:mock@localhost:5432/mock");
 
 // Search Service
-export const searchService = new AlgoliaService(
+export const searchService = new AlgoliaSearchService(
     `${process.env.APP_ID}`,
     `${process.env.API_KEY}`,
     `${process.env.INDEX_NAME}`,
@@ -28,7 +32,7 @@ export const searchService = new AlgoliaService(
 );
 
 // Storage Service
-export const storageService = new S3Service(
+export const storageService = new S3StorageService(
     `${process.env.REGION}`,
     `${process.env.ACCESS_KEY_ID}`,
     `${process.env.SECRET_KEY}`,
@@ -52,20 +56,16 @@ export const transcodingService = new AudioTranscoder(
 );
 
 // Recommendation Service
-export const recommendationService = new RecommendationServiceImpl(
+export const recommendationService = new RecommbeeRecommendationService(
     `${process.env.RECOMBEE_DATABASE}`,
     `${process.env.RECOMBEE_DATABASE_PRIVATE_TOKEN}`,
-    `${process.env.RECOMBEE_DATABASE_REGION}`,
+    process.env.RECOMBEE_DATABASE_REGION || "us-west",
     logger
 );
 
-import { SignatureUtility } from "../lib/signature";
-export const signatureService = new SignatureUtility(`${process.env.SIGNATURE_SECRET}`);
-
-import { 
-    SongRepository, 
-    SongProcessingJobRepository,
-} from "../repository";
+export const signatureService = new NodeCryptoSignatureService(
+    `${process.env.SIGNATURE_SECRET}`
+);
 
 // Repositories
 export const songRepository = new SongRepository(db, logger, signatureService);
@@ -93,4 +93,4 @@ export const audioProcessingService = new AudioProcessingService(
     logger
 );
 
-export const inngest = new Inngest({id:"audio-processing"})
+export const inngest = new Inngest({ id: "audio-processing" });

@@ -1,9 +1,9 @@
 import { algoliasearch } from "algoliasearch";
 import type { SearchClient } from "algoliasearch";
-import type { SearchRecord, SearchService } from "./search.types.ts";
+import type { SearchRecord, SearchEngineService } from "./search.types.ts";
 import type { Logger } from "../utils/index.ts";
 
-export class AlgoliaSearchService implements SearchService<SearchRecord> {
+export class AlgoliaSearchService implements SearchEngineService<SearchRecord> {
     private readonly client: SearchClient;
     private readonly indexName: string;
     private readonly logger: Logger;

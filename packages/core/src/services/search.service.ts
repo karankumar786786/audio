@@ -1,4 +1,4 @@
-import type { SearchService as AlgoliaSearchService, SearchRecord } from "../infra/search.types.ts";
+import type { SearchEngineService as AlgoliaSearchService, SearchRecord } from "../infra/search.types.ts";
 import type { ArtistSchema } from "../schema/artist.schema.ts";
 import type { PlaylistSchema } from "../schema/playlist.schema.ts";
 import type { SongSchema } from "../schema/songs.schema.ts";

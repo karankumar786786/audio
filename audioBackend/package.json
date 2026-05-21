@@ -27,7 +27,7 @@
     "@onemelody/core": "workspace:*",
     "@aws-sdk/client-s3": "^3.1025.0",
     "@aws-sdk/s3-request-presigner": "^3.1027.0",
-    "@neondatabase/serverless": "^1.0.2",
+    "@neondatabase/serverless": "0.10.4",
     "@types/cookie-parser": "^1.4.10",
     "@types/pino-pretty": "^5.0.0",
     "algoliasearch": "^5.50.1",

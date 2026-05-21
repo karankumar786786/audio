@@ -6,10 +6,12 @@ import type { UserPlaylistRepository } from "../repository/user-playlist.reposit
 import type { RecommendationService, RecommendationSchema } from "../infra/recommendation.types.ts";
 import type { SignatureService } from "../infra/signature.types.ts";
 import type { JWTService } from "../infra/jwt.ts";
-import type { UserInfo, UserSchema, Payload } from "../schema/user.schema.ts";
+import type { UserInfo, UserSchema } from "../schema/user.schema.ts";
+import type { Payload } from "../schema/jwt.schema.ts";
 import type { UserPlaylistSchema, UserPlaylistSongSchema } from "../schema/userPlaylist.schema.ts";
 import type { SongSchema } from "../schema/songs.schema.ts";
 import type { UserSearchHistorySchema } from "../schema/userSearchHistory.schema.ts";
+import type { UserFavouriteSongSchema } from "../schema/userFavouriteSong.schema.ts";
 import { type HistoryEvent } from "../schema/userHistory.schema.ts";
 import { buildPaginatedResult, type PaginatedResult } from "../types/pagination.ts";
 import { logMethods, type Logger } from "../utils/index.ts";

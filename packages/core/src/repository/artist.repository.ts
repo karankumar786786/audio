@@ -44,8 +44,8 @@ export class ArtistRepository extends BaseRepository<ArtistSchema, typeof artist
         if (data.name !== undefined) setClause.name = data.name;
         if (data.about !== undefined) setClause.about = data.about;
         if (data.dob !== undefined) setClause.dob = new Date(data.dob);
-        if (data.coverImageKey !== undefined) setClause.coverImageKey = data.coverImageKey;
-        if (data.bannerImageKey !== undefined) setClause.bannerImageKey = data.bannerImageKey;
+        if (data.coverImageKey !== undefined) setClause.coverImageKey = data.coverImageKey ?? "";
+        if (data.bannerImageKey !== undefined) setClause.bannerImageKey = data.bannerImageKey ?? "";
 
         const [row] = await this.db
             .update(artists)

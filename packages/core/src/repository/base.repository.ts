@@ -27,7 +27,7 @@ export abstract class BaseRepository<
   }
 
   async getById(id: string): Promise<T> {
-    const rows = await this.db.select().from(this.table).where(eq(this.table.id, id)).limit(1);
+    const rows = await this.db.select().from(this.table as any).where(eq((this.table as any).id, id)).limit(1);
     const row = rows[0];
     if (!row) {
       const tableName = (this.table as any)?.tableName || "entity";
@@ -38,13 +38,13 @@ export abstract class BaseRepository<
   }
 
   async count(): Promise<number> {
-    const res = await this.db.select({ count: sql<number>`count(*)::int` }).from(this.table);
+    const res = await this.db.select({ count: sql<number>`count(*)::int` }).from(this.table as any);
     return res[0]?.count || 0;
   }
 
   async delete(id: string): Promise<T> {
-    const rows = await this.db.delete(this.table).where(eq(this.table.id, id)).returning();
-    const row = rows[0];
+    const rows = await this.db.delete(this.table as any).where(eq((this.table as any).id, id)).returning();
+    const row = (rows as any)[0];
     if (!row) {
       const tableName = (this.table as any)?.tableName || "entity";
       const entityName = tableName.endsWith('s') ? tableName.slice(0, -1) : tableName;

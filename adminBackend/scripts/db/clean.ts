@@ -18,6 +18,7 @@ const sql = neon(`${process.env.DATABASE_URL}`);
         await sql`TRUNCATE TABLE artists CASCADE;`;
         await sql`TRUNCATE TABLE songs CASCADE;`;
         await sql`TRUNCATE TABLE song_processing_job CASCADE;`;
+        await sql`TRUNCATE TABLE users CASCADE;`;
 
         console.log("✅ All tables truncated successfully");
     } catch (err) {

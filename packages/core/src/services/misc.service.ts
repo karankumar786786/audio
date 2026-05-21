@@ -19,14 +19,14 @@ export class MiscService {
 
     private async runYtDlp(args: string[]): Promise<any> {
         return new Promise((resolve, reject) => {
-            const child = spawn(this.ytDlpPath, args);
+            const child = spawn(this.ytDlpPath, args) as any;
             let stdout = "";
             let stderr = "";
 
-            child.stdout.on("data", (data) => { stdout += data; });
-            child.stderr.on("data", (data) => { stderr += data; });
+            child.stdout.on("data", (data: any) => { stdout += data; });
+            child.stderr.on("data", (data: any) => { stderr += data; });
 
-            child.on("close", (code) => {
+            child.on("close", (code: number | null) => {
                 if (code !== 0) {
                     this.logger.error({ code, stderr }, "yt-dlp execution failed");
                     return reject(new Error(`yt-dlp failed with code ${code}`));

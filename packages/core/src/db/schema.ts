@@ -47,36 +47,36 @@ export const playlistSongs = pgTable("playlist_songs", {
   id: varchar("id", { length: 255 }).primaryKey(),
   playlistId: varchar("playlist_id", { length: 255 }).notNull().references(() => playlists.id, { onDelete: "cascade" }),
   songId: varchar("song_id", { length: 255 }).notNull().references(() => songs.id, { onDelete: "cascade" })
-}, (t) => [
-  unique("unique_playlist_song").on(t.playlistId, t.songId)
-]);
+}, (t) => ({
+  uniquePlaylistSong: unique("unique_playlist_song").on(t.playlistId, t.songId)
+}));
 
 // 👤 USER PLAYLIST
 export const userPlaylists = pgTable("user_playlists", {
   id: varchar("id", { length: 255 }).primaryKey(),
   name: varchar("name", { length: 255 }).notNull(),
   userId: varchar("user_id", { length: 255 }).notNull().references(() => users.id, { onDelete: "cascade" })
-}, (t) => [
-  unique("unique_user_playlist").on(t.name, t.userId)
-]);
+}, (t) => ({
+  uniqueUserPlaylist: unique("unique_user_playlist").on(t.name, t.userId)
+}));
 
 // 🎧 USER PLAYLIST SONGS
 export const userPlaylistSongs = pgTable("user_playlist_songs", {
   id: varchar("id", { length: 255 }).primaryKey(),
   playlistId: varchar("playlist_id", { length: 255 }).notNull().references(() => userPlaylists.id, { onDelete: "cascade" }),
   songId: varchar("song_id", { length: 255 }).notNull().references(() => songs.id, { onDelete: "cascade" })
-}, (t) => [
-  unique("unique_user_playlist_song").on(t.playlistId, t.songId)
-]);
+}, (t) => ({
+  uniqueUserPlaylistSong: unique("unique_user_playlist_song").on(t.playlistId, t.songId)
+}));
 
 // 👤 USER FAVOURITE SONGS
 export const userFavouriteSongs = pgTable("user_favourite_songs", {
   id: varchar("id", { length: 255 }).primaryKey(),
   userId: varchar("user_id", { length: 255 }).notNull().references(() => users.id, { onDelete: "cascade" }),
   songId: varchar("song_id", { length: 255 }).notNull().references(() => songs.id, { onDelete: "cascade" })
-}, (t) => [
-  unique("unique_user_favourite_song").on(t.userId, t.songId)
-]);
+}, (t) => ({
+  uniqueUserFavouriteSong: unique("unique_user_favourite_song").on(t.userId, t.songId)
+}));
 
 // 🕑 USER HISTORY
 export const userHistory = pgTable("user_history", {

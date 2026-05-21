@@ -14,6 +14,8 @@ import {
     RecommbeeRecommendationService,
     NodeCryptoSignatureService,
     S3StorageService,
+    Jose,
+    type JWTService,
     
     // Services
     PlaylistService,
@@ -107,3 +109,9 @@ export const miscService = new MiscService(
 );
 
 export const searchService = new SearchService(algoliaSearchService, logger.child({ service: "UnifiedSearchService" }));
+
+export const jwtServices: JWTService = new Jose(
+    process.env.JWT_SECRET!,
+    process.env.JWT_EXPIRY_IN_HR!,
+    process.env.JWT_ISSUER!
+);

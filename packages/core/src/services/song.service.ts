@@ -1,7 +1,7 @@
 import type { SongRepository } from "../repository/song.repository.ts";
 import type { SongProcessingJobRepository } from "../repository/song-processing-job.repository.ts";
 import type { SignatureService } from "../infra/signature.types.ts";
-import type { SearchService, SearchRecord } from "../infra/search.types.ts";
+import type { SearchEngineService, SearchRecord } from "../infra/search.types.ts";
 import type { RecommendationService, RecommendationSchema } from "../infra/recommendation.types.ts";
 import type { StorageService } from "../infra/storage.types.ts";
 import { type CreateSongInput, type SongSchema, type UpdateSongInput } from "../schema/songs.schema.ts";
@@ -17,7 +17,7 @@ export class SongService {
         private readonly signatureService: SignatureService,
         private readonly logger: Logger,
         private readonly songProcessingJobRepository?: SongProcessingJobRepository,
-        private readonly searchService?: SearchService<SearchRecord>,
+        private readonly searchService?: SearchEngineService<SearchRecord>,
         private readonly recommendationService?: RecommendationService<RecommendationSchema>,
         private readonly storageService?: StorageService,
         private readonly imageKitClient?: any,

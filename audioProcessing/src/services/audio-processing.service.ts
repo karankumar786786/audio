@@ -1,7 +1,5 @@
 import { type Logger } from "../observablity";
-import { type SongProcessingJobRepository, type SongRepository } from "../repository";
-import { type SongProcessingJob } from "../schema/songProcessingJob.schema";
-import { type SignatureUtility } from "../lib/signature";
+import { type SongProcessingJobRepository, type SongRepository, type SongProcessingJob, type SignatureService } from "@onemelody/core";
 import * as path from "node:path";
 import * as fs from "node:fs";
 import { spawn } from "node:child_process";
@@ -18,7 +16,7 @@ export class AudioProcessingService {
         private readonly recommendationService: any, // RecommendationServiceImpl
         private readonly storageService: any, // S3Service
         private readonly imageKitClient: ImageKit,
-        private readonly signatureUtility: SignatureUtility,
+        private readonly signatureUtility: SignatureService,
         private readonly logger: Logger
     ) {}
 

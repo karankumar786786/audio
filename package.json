@@ -7,7 +7,6 @@
     "audioProcessing",
     "audioFrontend",
     "adminFrontend",
-    "audioMobileApp",
     "packages/*"
   ]
 }

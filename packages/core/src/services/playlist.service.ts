@@ -1,6 +1,6 @@
 import type { PlaylistRepository } from "../repository/playlist.repository.ts";
 import type { SignatureService } from "../infra/signature.types.ts";
-import type { SearchService, SearchRecord } from "../infra/search.types.ts";
+import type { SearchEngineService, SearchRecord } from "../infra/search.types.ts";
 import type { PlaylistSchema, PlaylistSongSchema, CreatePlaylistSchema } from "../schema/playlist.schema.ts";
 import type { SongSchema } from "../schema/songs.schema.ts";
 import { type PaginationParams, type PaginatedResult, buildPaginatedResult } from "../types/pagination.ts";
@@ -12,7 +12,7 @@ export class PlaylistService {
         private readonly playlistRepository: PlaylistRepository,
         private readonly signatureService: SignatureService,
         private readonly logger: Logger,
-        private readonly searchService?: SearchService<SearchRecord>,
+        private readonly searchService?: SearchEngineService<SearchRecord>,
         private readonly imageKitClient?: any,
     ) {
         logMethods(this, this.logger);

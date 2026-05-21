@@ -9,7 +9,7 @@ import { PlaylistPickerModal } from "./PlaylistPickerModal";
 import { toast } from "sonner";
 
 // Hooks
-import { useShakaPlayer } from "./player/hooks/useShakaPlayer";
+import { useHlsPlayer } from "./player/hooks/useHlsPlayer";
 import { useLyrics } from "./player/hooks/useLyrics";
 import { useAudioSync } from "./player/hooks/useAudioSync";
 
@@ -22,7 +22,7 @@ import { PlayerProgressBar } from "./player/PlayerProgressBar";
 import { PlayerMainControls } from "./player/PlayerMainControls";
 import { PlayerUtilityRow } from "./player/PlayerUtilityRow";
 
-export function ShakaMusicPlayer() {
+export function HlsMusicPlayer() {
   const audioRef = useRef<HTMLAudioElement>(null);
   const state = useStore(playerStore, (s) => s);
   const {
@@ -51,7 +51,7 @@ export function ShakaMusicPlayer() {
   }, []);
 
   // 2. Custom Hooks for Logic
-  const { isInternalChange } = useShakaPlayer(
+  const { isInternalChange } = useHlsPlayer(
     audioRef.current,
     currentSong?.id,
     currentSong?.streamUrl,

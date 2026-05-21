@@ -15,6 +15,9 @@ export const authenticate = asyncHandler(async (req: Request, res: Response, nex
     }
 
     const token = authHeader.split(" ")[1];
+    if (!token) {
+        throw new ApiError(401, "Authentication required (Bearer token missing)");
+    }
 
     try {
         const decoded = await jwtServices.verify(token);

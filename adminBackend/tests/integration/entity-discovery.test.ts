@@ -8,6 +8,7 @@ describe("Entity Discovery Integration", () => {
     let playlistService: PlaylistService;
     let jobRepo: SongProcessingJobRepository;
     let mockDb: any;
+    let mockResult: any;
     let mockLogger: any;
     let mockInngest: any;
     let mockSearch: any;
@@ -17,7 +18,42 @@ describe("Entity Discovery Integration", () => {
     let mockImageKit: any;
 
     beforeEach(() => {
-        mockDb = vi.fn() as any;
+        mockResult = [];
+        mockDb = {
+            select: vi.fn().mockImplementation((arg) => {
+                const isCount = arg && typeof arg === 'object' && 'count' in arg;
+                const selectChain: any = {
+                    from: vi.fn().mockReturnThis(),
+                    orderBy: vi.fn().mockReturnThis(),
+                    $dynamic: vi.fn().mockReturnThis(),
+                    limit: vi.fn().mockReturnThis(),
+                    offset: vi.fn().mockReturnThis(),
+                    where: vi.fn().mockReturnThis(),
+                    then: (onfulfilled: any) => Promise.resolve(isCount ? [{ count: 1 }] : mockResult).then(onfulfilled),
+                    catch: (onrejected: any) => Promise.resolve(isCount ? [{ count: 1 }] : mockResult).catch(onrejected)
+                };
+                return selectChain;
+            }),
+            insert: vi.fn().mockReturnThis(),
+            values: vi.fn().mockReturnThis(),
+            update: vi.fn().mockReturnThis(),
+            set: vi.fn().mockReturnThis(),
+            delete: vi.fn().mockReturnThis(),
+            where: vi.fn().mockReturnThis(),
+            returning: vi.fn().mockReturnThis(),
+            then: (onfulfilled: any) => Promise.resolve(mockResult).then(onfulfilled),
+            catch: (onrejected: any) => Promise.resolve(mockResult).catch(onrejected)
+        };
+        mockDb.from = vi.fn().mockReturnValue(mockDb);
+        mockDb.orderBy = vi.fn().mockReturnValue(mockDb);
+        mockDb.$dynamic = vi.fn().mockReturnValue(mockDb);
+        mockDb.limit = vi.fn().mockReturnValue(mockDb);
+        mockDb.offset = vi.fn().mockReturnValue(mockDb);
+        mockDb.where = vi.fn().mockReturnValue(mockDb);
+        mockDb.values = vi.fn().mockReturnValue(mockDb);
+        mockDb.returning = vi.fn().mockReturnValue(mockDb);
+        mockDb.set = vi.fn().mockReturnValue(mockDb);
+
         mockLogger = { 
             info: vi.fn(), 
             error: vi.fn(), 
@@ -35,27 +71,27 @@ describe("Entity Discovery Integration", () => {
         mockStorage = { uploadObject: vi.fn(), deleteObject: vi.fn() };
         mockImageKit = { upload: vi.fn() };
 
-        songRepo = new SongRepository(mockDb, mockLogger);
-        jobRepo = new SongProcessingJobRepository(mockDb, mockLogger);
+        songRepo = new SongRepository(mockDb, mockLogger, mockSig);
+        jobRepo = new SongProcessingJobRepository(mockDb, mockLogger, mockSig);
         
         songService = new SongService(
             songRepo, 
-            jobRepo, 
             mockSig, 
+            mockLogger,
+            jobRepo, 
             mockSearch, 
             mockRec, 
             mockStorage,
             mockImageKit,
-            mockLogger, 
             mockInngest
         );
         
-        playlistRepo = new PlaylistRepository(mockDb, mockLogger);
+        playlistRepo = new PlaylistRepository(mockDb, mockLogger, mockSig);
         playlistService = new PlaylistService(
             playlistRepo, 
             mockSig, 
-            mockSearch, 
-            mockLogger
+            mockLogger,
+            mockSearch
         );
     });
 
@@ -66,12 +102,7 @@ describe("Entity Discovery Integration", () => {
                 songKey: "k1", imageKey: "i1", language: "en", jobId: "j1",
                 createdAt: new Date().toISOString() 
             }];
-            
-            mockDb.mockImplementation((arg: any) => {
-                const sqlStr = Array.isArray(arg) ? arg.join("") : (typeof arg === 'string' ? arg : "");
-                if (sqlStr.includes("count(*)")) return Promise.resolve([{ count: 1 }]);
-                return Promise.resolve(mockRows);
-            });
+            mockResult = mockRows;
 
             const result = await songService.getSongs({ page: 1, limit: 10 });
 
@@ -88,7 +119,7 @@ describe("Entity Discovery Integration", () => {
                 coverImageKey: "k1", bannerImageKey: "b1", 
                 createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() 
             }];
-            mockDb.mockResolvedValue(mockPlaylists);
+            mockResult = mockPlaylists;
 
             const result = await playlistService.getPlaylists({ page: 1, limit: 10 });
 

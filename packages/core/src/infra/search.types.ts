@@ -26,7 +26,7 @@ export interface PlaylistRecord {
 
 export type SearchRecord = SongRecord | ArtistRecord | PlaylistRecord;
 
-export interface SearchService<T> {
+export interface SearchEngineService<T> {
     save(record: T): Promise<string>;
     search<R = T>(query: string): Promise<R[]>;
     setSettings(attributes: string[]): Promise<void>;

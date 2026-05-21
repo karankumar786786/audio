@@ -1,6 +1,6 @@
 import { SignJWT, jwtVerify } from "jose";
 import type { JWT } from "./jwt.types.ts";
-import { type Payload } from "../schema/user.schema.ts";
+import { type Payload } from "../schema/jwt.schema.ts";
 
 export class Jose implements JWT<Payload> {
   private secret: Uint8Array;

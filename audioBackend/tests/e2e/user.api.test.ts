@@ -10,8 +10,8 @@ vi.mock("../../src/middlewares/authenticate.middleware", () => ({
 }));
 
 // Mock infra to isolate the app
-vi.mock("../../src/infra", async () => {
-    const actual = await vi.importActual<typeof import("../../src/infra")>("../../src/infra");
+vi.mock("../../src/infra", async (importOriginal) => {
+    const actual = await importOriginal<typeof import("../../src/infra")>();
     return {
         ...actual,
         userController: {
