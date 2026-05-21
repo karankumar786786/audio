@@ -1,9 +1,17 @@
 import { registry, ApiResponseSchema, PaginatedResultSchema } from "./openapi-registry";
 import { z } from "zod";
-
-import { artistSchema, createArtistSchema, updateArtistSchema } from "../schema/artist.schema";
-import { playlistSchema, createPlaylistInput, playlistSongSchema, playlistSongInput } from "../schema/playlist.schema";
-import { songSchema, CreateSongSchema, updateSongSchema } from "../schema/songs.schema";
+import { 
+    artistSchema, 
+    createArtistSchema, 
+    updateArtistSchema, 
+    playlistSchema, 
+    createPlaylistInput, 
+    playlistSongSchema, 
+    playlistSongInput, 
+    songSchema, 
+    CreateSongSchema, 
+    updateSongSchema 
+} from "@onemelody/core";
 
 const wrapResponse = (dataSchema: z.ZodTypeAny) => z.object({
     success: z.boolean(),
@@ -112,7 +120,6 @@ registry.registerPath({
   },
 });
 
-
 // --- SONGS ---
 registry.registerPath({
   method: "post",
@@ -172,7 +179,6 @@ registry.registerPath({
     404: { description: "Song not found" },
   },
 });
-
 
 // --- PLAYLISTS ---
 registry.registerPath({

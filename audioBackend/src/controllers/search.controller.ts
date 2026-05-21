@@ -1,5 +1,5 @@
 import { type Request, type Response } from "express";
-import { type SearchService, type UnifiedSearchResponse } from "../services/search.service";
+import { type SearchService, type UnifiedSearchResponse } from "@onemelody/core";
 import { ApiResponse } from "../utils/ApiResponse";
 import { asyncHandler } from "../utils/asyncHandler";
 import { logMethods, type Logger } from "../observability";
@@ -14,7 +14,7 @@ export class SearchController {
 
     unifiedSearch = asyncHandler(async (req: Request, res: Response) => {
         const query: string = req.query.q as string || "";
-        const result:UnifiedSearchResponse = await this.searchService.unifiedSearch(query);
+        const result: UnifiedSearchResponse = await this.searchService.unifiedSearch(query);
         return new ApiResponse<UnifiedSearchResponse>(200, "Search results fetched", result).send(res);
     });
 }

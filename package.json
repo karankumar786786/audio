@@ -1,0 +1,13 @@
+{
+  "name": "onemelody",
+  "private": true,
+  "workspaces": [
+    "audioBackend",
+    "adminBackend",
+    "audioProcessing",
+    "audioFrontend",
+    "adminFrontend",
+    "audioMobileApp",
+    "packages/*"
+  ]
+}

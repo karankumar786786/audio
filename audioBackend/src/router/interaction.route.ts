@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { interactionController } from "../infra";
 import { validate } from "../middlewares/validate.middleware";
-import { userHistorySchema } from "../schema/userHistory.schema";
+import { userHistorySchema } from "@onemelody/core";
 import { secure } from "../middlewares/authenticate.middleware";
 
 const addListenInput = userHistorySchema.pick({ songId: true, part: true });

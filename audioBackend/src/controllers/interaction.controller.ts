@@ -1,10 +1,8 @@
 import { type Request, type Response } from "express";
-import { type InteractionService } from "../services/interaction.service";
+import { type InteractionService, type SongSchema, type PaginatedResult, type PaginationParams, parsePagination } from "@onemelody/core";
 import { ApiResponse } from "../utils/ApiResponse";
-import { parsePagination, type PaginatedResult, type PaginationParams } from "../type/pagination.type";
 import { asyncHandler } from "../utils/asyncHandler";
 import { logMethods, type Logger } from "../observability";
-import type { SongSchema } from "../schema";
 
 export class InteractionController {
     constructor(
@@ -23,15 +21,15 @@ export class InteractionController {
     });
 
     getTrendingSongs = asyncHandler(async (req: Request, res: Response) => {
-        const params:PaginationParams = parsePagination(req.query);
-        const result:PaginatedResult<SongSchema> = await this.interactionService.getTrendingSongs(params);
-        return  new ApiResponse<PaginatedResult<SongSchema>>(200, "Trending songs fetched", result).send(res);
+        const params: PaginationParams = parsePagination(req.query);
+        const result: PaginatedResult<SongSchema> = await this.interactionService.getTrendingSongs(params);
+        return new ApiResponse<PaginatedResult<SongSchema>>(200, "Trending songs fetched", result).send(res);
     });
 
     getRecommendations = asyncHandler(async (req: Request, res: Response) => {
-        const userId:string = (req as any).user.id;
-        const limit:number = parseInt(req.query.limit as string) || 10;
-        const result:PaginatedResult<SongSchema> = await this.interactionService.getRecommendations(userId, limit);
+        const userId: string = (req as any).user.id;
+        const limit: number = parseInt(req.query.limit as string) || 10;
+        const result: PaginatedResult<SongSchema> = await this.interactionService.getRecommendations(userId, limit);
         return new ApiResponse<PaginatedResult<SongSchema>>(200, "Recommendations fetched", result).send(res);
     });
 }

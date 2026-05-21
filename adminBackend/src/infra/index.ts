@@ -1,31 +1,29 @@
 import { config } from "dotenv";
 config();
-export type { Database } from "./db";
 import { Inngest } from "inngest";
 import ImageKit from "imagekit";
 import {
+    // Repositories
     ArtistRepository,
     PlaylistRepository,
     SongRepository,
     SongProcessingJobRepository,
-} from "../repository";
-import {
+    
+    // Infra
     AlgoliaSearchService,
     RecommbeeRecommendationService,
     NodeCryptoSignatureService,
-} from "../lib";
-import { logger } from "../observablity";
-import{
+    S3StorageService,
+    
+    // Services
     PlaylistService,
-    MiscService, SongService,
+    MiscService,
+    SongService,
     ArtistService,
     SearchService
-} from "../services";
-import { S3StorageService } from "../lib";
+} from "@onemelody/core";
+import { logger } from "../observablity";
 import { db } from "./db";
-
-
-
 
 // Search Service
 const algoliaSearchService = new AlgoliaSearchService(
@@ -39,7 +37,7 @@ const algoliaSearchService = new AlgoliaSearchService(
 const recommendationService = new RecommbeeRecommendationService(
     `${process.env.RECOMBEE_DATABASE}`,
     `${process.env.RECOMBEE_DATABASE_PRIVATE_TOKEN}`,
-    `${process.env.RECOMBEE_DATABASE_REGION}`,
+    process.env.RECOMBEE_DATABASE_REGION || "us-west",
     logger.child({ service: "Recommbee" })
 );
 
@@ -55,39 +53,57 @@ const storageService = new S3StorageService(
     logger.child({ service: "S3Storage" })
 );
 
-
-export const imagekitClient = new ImageKit(
-    {
-        publicKey: process.env.IMAGEKIT_PUBLIC_KEY!,
-        privateKey: process.env.IMAGEKIT_PRIVATE_KEY!,
-        urlEndpoint: process.env.IMAGEKIT_URL_ENDPOINT!
-    }
-)
-
+export const imagekitClient = new ImageKit({
+    publicKey: process.env.IMAGEKIT_PUBLIC_KEY!,
+    privateKey: process.env.IMAGEKIT_PRIVATE_KEY!,
+    urlEndpoint: process.env.IMAGEKIT_URL_ENDPOINT!
+});
 
 // Repositories
-const artistRepository = new ArtistRepository(db, logger.child({ service: "ArtistRepository" }));
-const playlistRepository = new PlaylistRepository(db, logger.child({ service: "PlaylistRepository" }));
-const songRepository = new SongRepository(db, logger.child({ service: "SongRepository" }));
-const songProcessingJobRepository = new SongProcessingJobRepository(db, logger.child({ service: "SongJobRepository" }));
+const artistRepository = new ArtistRepository(db, logger.child({ service: "ArtistRepository" }), signatureService);
+const playlistRepository = new PlaylistRepository(db, logger.child({ service: "PlaylistRepository" }), signatureService);
+const songRepository = new SongRepository(db, logger.child({ service: "SongRepository" }), signatureService);
+const songProcessingJobRepository = new SongProcessingJobRepository(db, logger.child({ service: "SongJobRepository" }), signatureService);
+
 export const inngest = new Inngest({ 
     id: "admin-backend",
 });
 
 // Services
-export const artistService = new ArtistService(artistRepository, songRepository, signatureService, algoliaSearchService, imagekitClient, logger.child({ service: "ArtistService" }));
-export const playlistService = new PlaylistService(playlistRepository, signatureService, algoliaSearchService, imagekitClient, logger.child({ service: "PlaylistService" }));
+export const artistService = new ArtistService(
+    artistRepository,
+    songRepository,
+    signatureService,
+    logger.child({ service: "ArtistService" }),
+    algoliaSearchService,
+    imagekitClient
+);
+
+export const playlistService = new PlaylistService(
+    playlistRepository,
+    signatureService,
+    logger.child({ service: "PlaylistService" }),
+    algoliaSearchService,
+    imagekitClient
+);
+
 export const songService = new SongService(
     songRepository, 
+    signatureService,
+    logger.child({ service: "SongService" }), 
     songProcessingJobRepository, 
-    signatureService, 
     algoliaSearchService, 
     recommendationService, 
     storageService,
     imagekitClient,
-    logger.child({ service: "SongService" }), 
     inngest
 );
-export const miscService = new MiscService(logger.child({ service: "MiscService" }), storageService, imagekitClient, signatureService);
-export const searchService = new SearchService(algoliaSearchService, logger.child({ service: "UnifiedSearchService" }));
 
+export const miscService = new MiscService(
+    logger.child({ service: "MiscService" }),
+    storageService,
+    imagekitClient,
+    signatureService
+);
+
+export const searchService = new SearchService(algoliaSearchService, logger.child({ service: "UnifiedSearchService" }));

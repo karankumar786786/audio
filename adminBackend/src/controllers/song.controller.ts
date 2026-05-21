@@ -1,8 +1,7 @@
 import { type Request, type Response } from "express";
 import { songService } from "../infra";
 import { ApiResponse } from "../utils/ApiResponse";
-import { parsePagination, type PaginatedResult, type PaginationParams } from "../types/pagination.type";
-import type { SongSchema } from "../schema/songs.schema";
+import { parsePagination, type PaginatedResult, type PaginationParams, type SongSchema } from "@onemelody/core";
 import { asyncHandler } from "../utils/asyncHandler";
 
 export const createSong = asyncHandler(async (req: Request, res: Response) => {
@@ -39,4 +38,3 @@ export const getSongs = asyncHandler(async (req: Request, res: Response) => {
     const result: PaginatedResult<SongSchema> = await songService.getSongs(params);
     return new ApiResponse<PaginatedResult<SongSchema>>(200, "Songs fetched", result).send(res);
 });
-

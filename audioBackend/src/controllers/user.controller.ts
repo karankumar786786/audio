@@ -1,12 +1,21 @@
 import { type Request, type Response } from "express";
-import { type UserService } from "../services/user.service";
+import { 
+    type UserService, 
+    type UserSchema, 
+    type UserFavouriteSongSchema, 
+    type UserPlaylistSchema, 
+    type UserPlaylistSongSchema, 
+    type SongSchema, 
+    type Payload, 
+    type UserSearchHistorySchema,
+    type HistoryEvent,
+    type PaginatedResult,
+    type PaginationParams,
+    parsePagination
+} from "@onemelody/core";
 import { ApiResponse } from "../utils/ApiResponse";
 import { asyncHandler } from "../utils/asyncHandler";
 import { logMethods, type Logger } from "../observability";
-import { parsePagination, type PaginationParams, type PaginatedResult } from "../type/pagination.type";
-import { type UserSchema, type UserFavouriteSongSchema, type UserPlaylistSchema, type UserPlaylistSongSchema, type SongSchema, type Payload, type UserSearchHistorySchema } from "../schema";
-import { type HistoryEvent } from "../schema/userHistory.schema";
-
 
 export class UserController {
     constructor(
@@ -18,8 +27,8 @@ export class UserController {
 
     handleUser = asyncHandler(async (req: Request, res: Response) => {
         const { accessToken } = req.body;
-        const data: {payload:Payload,token:string} = await this.userService.createUser(accessToken);
-        return new ApiResponse<Payload>(201, "User created successfully", data.payload).sendToken(req,res,data.token);
+        const data: { payload: Payload, token: string } = await this.userService.createUser(accessToken);
+        return new ApiResponse<Payload>(201, "User created successfully", data.payload).sendToken(req, res, data.token);
     });
 
     getUserById = asyncHandler(async (req: Request, res: Response) => {

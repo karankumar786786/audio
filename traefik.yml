@@ -10,3 +10,4 @@ entryPoints:
   web:
     address: ":80"
 
+postgresql://neondb_owner:npg_9c0lphfzJsIn@ep-cool-darkness-aputobsk.c-7.us-east-1.aws.neon.tech/neondb?sslmode=require

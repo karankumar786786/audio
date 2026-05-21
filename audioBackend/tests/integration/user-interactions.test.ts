@@ -1,10 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { UserService } from "../../src/services/user.service";
-import { UserRepository } from "../../src/repository/user.repository";
-import { UserFavouriteSongRepository } from "../../src/repository/user-favourite-song.repository";
-import { UserHistoryRepository } from "../../src/repository/user-history.repository";
-import { UserSearchHistoryRepository } from "../../src/repository/user-search-history.repository";
-import { NodeCryptoSignatureService } from "../../src/lib/signature";
+import { UserService, UserRepository, UserFavouriteSongRepository, UserHistoryRepository, UserSearchHistoryRepository, NodeCryptoSignatureService } from "@onemelody/core";
 
 describe("User Interactions Integration", () => {
     let userService: UserService;

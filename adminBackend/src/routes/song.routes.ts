@@ -8,7 +8,7 @@ import {
     createSongFromYoutube
 } from "../controllers/song.controller";
 import { validate } from "../middlewares/validate.middleware";
-import { CreateSongSchema, updateSongSchema } from "../schema";
+import { CreateSongSchema, updateSongSchema } from "@onemelody/core";
 
 export const songRouter = Router();
 

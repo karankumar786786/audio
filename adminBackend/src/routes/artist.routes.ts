@@ -8,9 +8,7 @@ import {
     updateArtist,
 } from "../controllers/artist.controller";
 import { validate } from "../middlewares/validate.middleware";
-import { createArtistSchema ,updateArtistSchema} from "../schema";
-
-
+import { createArtistSchema, updateArtistSchema } from "@onemelody/core";
 
 export const artistRouter = Router();
 

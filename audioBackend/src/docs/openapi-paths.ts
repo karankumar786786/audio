@@ -1,6 +1,6 @@
 import { registry } from "./openapi-registry";
 import { z } from "zod";
-import * as schemas from "../schema";
+import * as schemas from "@onemelody/core";
 
 const wrapResponse = (dataSchema: z.ZodTypeAny) => z.object({
   success: z.boolean(),

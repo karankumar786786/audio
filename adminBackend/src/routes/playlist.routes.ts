@@ -9,7 +9,7 @@ import {
     getSongsOfPlaylist,
 } from "../controllers/playlist.controller";
 import { validate } from "../middlewares/validate.middleware";
-import { createPlaylistInput, playlistSongInput } from "../schema";
+import { createPlaylistInput, playlistSongInput } from "@onemelody/core";
 
 export const playlistRoutes = Router();
 
@@ -20,4 +20,3 @@ playlistRoutes.delete("/songs", validate(playlistSongInput), deleteSongInPlaylis
 playlistRoutes.get("/:id", getPlaylistById);
 playlistRoutes.get("/:id/songs", getSongsOfPlaylist);
 playlistRoutes.delete("/:id", deletePlaylist);
-

@@ -1,6 +1,6 @@
 import { OpenAPIRegistry, extendZodWithOpenApi } from "@asteasolutions/zod-to-openapi";
 import { z } from "zod";
-import * as schemas from "../schema";
+import * as schemas from "@onemelody/core";
 
 extendZodWithOpenApi(z);
 

@@ -82,8 +82,8 @@ export function useShakaPlayer(audioElement: HTMLAudioElement | null, currentSon
           // If streamUrl is cleared, ensure player stops
           await player.unload();
         }
-      } catch (e) {
-        console.error("[Player] ❌ Unified Lifecycle Error:", e);
+      } catch (e: any) {
+        console.error("[Player] ❌ Unified Lifecycle Error:", e, e?.code, e?.message);
         isInternalChange.current = false;
       }
     };

@@ -9,13 +9,9 @@ import {
     S3StorageService, 
     RecommbeeRecommendationService,
     Jose,
-    type JWTService
-} from "../lib";
-import { logger } from "../observability";
-import { db } from "./db";
-
-// Repositories
-import { 
+    type JWTService,
+    
+    // Repositories
     SongRepository, 
     ArtistRepository, 
     PlaylistRepository, 
@@ -24,19 +20,19 @@ import {
     UserHistoryRepository, 
     UserRepository, 
     UserSearchHistoryRepository, 
-    InteractionRepository 
-} from "../repository";
-
-// Services
-import { 
+    InteractionRepository,
+    
+    // Services
     InteractionService, 
     SearchService, 
     UserService, 
     PlaylistService, 
     ArtistService, 
     SongService 
-} from "../services";
+} from "@onemelody/core";
 
+import { logger } from "../observability";
+import { db } from "./db";
 
 // Controllers
 import { 
@@ -106,9 +102,9 @@ const interactionRepository = new InteractionRepository(db, logger.child({ servi
 
 // --- 3. Services (Wired with DI) ---
 
-export const artistService = new ArtistService(artistRepository, songRepository, logger.child({ service: "ArtistService" }), signatureService);
-export const songService = new SongService(songRepository, logger.child({ service: "SongService" }),signatureService);
-export const playlistService = new PlaylistService(playlistRepository, logger.child({ service: "PlaylistService" }), signatureService);
+export const artistService = new ArtistService(artistRepository, songRepository, signatureService, logger.child({ service: "ArtistService" }));
+export const songService = new SongService(songRepository, signatureService, logger.child({ service: "SongService" }));
+export const playlistService = new PlaylistService(playlistRepository, signatureService, logger.child({ service: "PlaylistService" }));
 export const userService = new UserService(
     userRepository,
     userFavouriteSongRepository,

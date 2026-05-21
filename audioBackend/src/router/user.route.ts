@@ -1,12 +1,8 @@
 import { Router } from "express";
 import { userController } from "../infra";
 import { validate } from "../middlewares/validate.middleware";
-import { userFavouriteSongSchema } from "../schema/userFavouriteSong.schema";
-import { userSearchHistorySchema } from "../schema/userSearchHistory.schema";
-import { userPlaylistSchema, userPlaylistSongSchema } from "../schema/userPlaylist.schema";
-import { z } from "zod";
+import { userFavouriteSongSchema, userSearchHistorySchema, userPlaylistSchema, userPlaylistSongSchema } from "@onemelody/core";
 import { secure } from "../middlewares/authenticate.middleware";
-
 
 const favouriteSongInput = userFavouriteSongSchema.pick({ songId: true });
 const searchHistoryInput = userSearchHistorySchema.pick({ searchedText: true });
@@ -39,4 +35,4 @@ userRouter.get("/playlists/:id", secure, userController.getUserPlaylistById);
 userRouter.get("/playlists/:id/songs", secure, userController.getUserPlaylistSongs);
 userRouter.delete("/playlists/:id", secure, userController.deleteUserPlaylist);
 
-userRouter.get("/:id", secure,userController.getUserById);
+userRouter.get("/:id", secure, userController.getUserById);

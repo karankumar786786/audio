@@ -10,6 +10,7 @@ vi.mock("../../src/infra", async () => {
             getPlaylists: vi.fn(),
             getPlaylistById: vi.fn(),
             getSongsOfPlaylist: vi.fn(),
+            deletePlaylist: vi.fn(),
         },
     };
 });

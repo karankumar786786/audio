@@ -1,9 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { SongService } from "../../src/services/song.service";
-import { SongRepository } from "../../src/repository/song.repository";
-import { PlaylistService } from "../../src/services/playlist.service";
-import { PlaylistRepository } from "../../src/repository/playlist.repository";
-import { SongProcessingJobRepository } from "../../src/repository/song-processing-job.repository";
+import { SongService, SongRepository, PlaylistService, PlaylistRepository, SongProcessingJobRepository } from "@onemelody/core";
 
 describe("Entity Discovery Integration", () => {
     let songRepo: SongRepository;
