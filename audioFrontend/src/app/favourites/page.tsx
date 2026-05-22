@@ -32,7 +32,7 @@ export default function FavouritesPage() {
         <div className="flex items-center justify-between mb-12 px-2">
           <div className="flex items-center gap-6">
             <h2 className="text-3xl font-black italic tracking-tighter uppercase text-white">
-              Your Favourites Songs
+              Your Favourite Songs
             </h2>
             <div className="h-px w-24 bg-linear-to-r from-rose-500 to-transparent" />
           </div>

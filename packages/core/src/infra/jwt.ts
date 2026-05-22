@@ -4,13 +4,22 @@ import { type Payload } from "../schema/jwt.schema.ts";
 
 export class Jose implements JWT<Payload> {
   private secret: Uint8Array;
+  private readonly expiryInHr: string;
+  private readonly issuer: string;
 
   constructor(
-    private readonly secretKey: string,
-    private readonly expiryInHr: string,
-    private readonly issuer: string,
+    secretKey: string,
+    expiryInHr?: string,
+    issuer?: string,
   ) {
-    this.secret = new TextEncoder().encode(this.secretKey);
+    this.secret = new TextEncoder().encode(secretKey);
+    
+    let expiry = expiryInHr || "24h";
+    if (/^\d+$/.test(expiry)) {
+      expiry = `${expiry}h`;
+    }
+    this.expiryInHr = expiry;
+    this.issuer = issuer || "onemelody";
   }
 
   async sign(payload: Payload): Promise<string> {

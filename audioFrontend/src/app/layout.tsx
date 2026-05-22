@@ -2,10 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Provider from "./provider";
-import { AuthSync } from "@/components/AuthSync";
-import { LeftSidebar } from "@/components/LeftSidebar";
-import { AppNavbar } from "@/components/AppNavbar";
-import { HlsMusicPlayer } from "@/components/HlsMusicPlayer";
+import { ClientLayout } from "@/components/ClientLayout";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -38,15 +35,7 @@ export default function RootLayout({
     >
       <body className="min-h-full flex h-screen bg-black text-white selection:bg-primary/30 overflow-hidden">
         <Provider>
-          <AuthSync />
-          <LeftSidebar />
-          <div className="flex-1 flex flex-col min-w-0 ml-64 overflow-hidden relative">
-            <AppNavbar />
-            <main className="flex-1 overflow-y-auto no-scrollbar pt-2 pb-32">
-              {children}
-            </main>
-          </div>
-          <HlsMusicPlayer />
+          <ClientLayout>{children}</ClientLayout>
         </Provider>
       </body>
     </html>

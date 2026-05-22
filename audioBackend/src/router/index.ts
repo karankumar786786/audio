@@ -5,12 +5,14 @@ import { interactionRouter } from "./interaction.route";
 import { playlistRouter } from "./playlist.route";
 import { artistRouter } from "./artist.route";
 import { searchRouter } from "./search.route";
+import { authRouter } from "./auth.route";
 import { systemStatusController } from "../infra";
 
 export const masterRouter = Router();
 
 masterRouter.get("/status", systemStatusController.getStatus);
 
+masterRouter.use("/auth", authRouter);
 masterRouter.use("/songs", songRouter);
 masterRouter.use("/users", userRouter);
 masterRouter.use("/interactions", interactionRouter);

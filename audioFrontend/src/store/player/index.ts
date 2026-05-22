@@ -15,7 +15,9 @@ export interface PlayerState {
   qualityTracks: any[];
   selectedQuality: "auto" | number;
   isLyricsOpen: boolean;
+  isAuthModalOpen: boolean;
   systemToken: string | null;
+  systemRefreshToken: string | null;
   systemUser: any | null;
   favourites: Set<string>;
   isRefilling: boolean;
@@ -55,7 +57,9 @@ export const playerStore = new Store<PlayerState>({
   qualityTracks: [],
   selectedQuality: "auto",
   isLyricsOpen: false,
+  isAuthModalOpen: false,
   systemToken: null,
+  systemRefreshToken: null,
   systemUser: _initSystemUser,
   favourites: new Set<string>(),
   isRefilling: false,
@@ -64,7 +68,8 @@ export const playerStore = new Store<PlayerState>({
 // Hydrate token on client side only
 if (typeof window !== "undefined") {
   const token = localStorage.getItem("system_token");
+  const refreshToken = localStorage.getItem("system_refresh_token");
   if (token) {
-    playerStore.setState((s) => ({ ...s, systemToken: token }));
+    playerStore.setState((s) => ({ ...s, systemToken: token, systemRefreshToken: refreshToken }));
   }
 }

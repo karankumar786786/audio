@@ -2,6 +2,7 @@
 
 import { useEffect, useState, use } from "react";
 import Link from "next/link";
+import { adminFetch } from "@/lib/adminFetch";
 
 interface Artist {
   id: string;
@@ -29,12 +30,12 @@ export default function ArtistSongsPage({ params }: { params: Promise<{ id: stri
   const fetchData = async () => {
     try {
       // 1. Fetch Artist Details
-      const artistRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/artists/${id}`);
+      const artistRes = await adminFetch(`${process.env.NEXT_PUBLIC_API_URL}/artists/${id}`);
       const artistData = await artistRes.json();
       if (artistData.success) setArtist(artistData.data);
-
+      
       // 2. Fetch Artist Songs
-      const songsRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/artists/${id}/songs`);
+      const songsRes = await adminFetch(`${process.env.NEXT_PUBLIC_API_URL}/artists/${id}/songs`);
       const songsData = await songsRes.json();
       if (songsData.success) setSongs(songsData.data.data || []);
     } catch (err) {

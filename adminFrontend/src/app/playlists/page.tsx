@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { getImageUrl } from "@/lib/image-utils";
+import { adminFetch } from "@/lib/adminFetch";
 
 interface Playlist {
   id: string;
@@ -40,7 +41,7 @@ export default function PlaylistsPage() {
     try {
       const url = `${process.env.NEXT_PUBLIC_API_URL}/playlists`;
       console.log("Fetching from:", url);
-      const res = await fetch(url);
+      const res = await adminFetch(url);
       const data = await res.json();
       console.log("fetchPlaylists result success:", data.success);
       if (data.success) {
@@ -58,7 +59,7 @@ export default function PlaylistsPage() {
     try {
       const url = `${process.env.NEXT_PUBLIC_API_URL}/playlists/${id}/songs`;
       console.log("Fetching songs from:", url);
-      const res = await fetch(url);
+      const res = await adminFetch(url);
       const data = await res.json();
       if (data.success) {
         // Handle both paginated and non-paginated structures for resilience
@@ -74,7 +75,7 @@ export default function PlaylistsPage() {
   const fetchAllSongs = async () => {
     console.log("fetchAllSongs called");
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/songs?limit=100`);
+      const res = await adminFetch(`${process.env.NEXT_PUBLIC_API_URL}/songs?limit=100`);
       const data = await res.json();
       if (data.success) setAvailableSongs(data.data.data || []);
     } catch (err) {
@@ -98,7 +99,7 @@ export default function PlaylistsPage() {
     setCreating(true);
     try {
       // 1. Upload Cover Image
-      const sigResCover = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/misc/presigned-url/image`);
+      const sigResCover = await adminFetch(`${process.env.NEXT_PUBLIC_API_URL}/misc/presigned-url/image`);
       if (!sigResCover.ok) throw new Error("Failed to get cover upload signature");
       const sigDataCover = await sigResCover.json();
 
@@ -112,7 +113,7 @@ export default function PlaylistsPage() {
       const extCover = newPlaylist.coverImage.name.split('.').pop();
       formDataCover.append("fileName", `${sigDataCover.data.tempKey}.${extCover}`);
 
-      const uploadResCover = await fetch("https://upload.imagekit.io/api/v1/files/upload", {
+      const uploadResCover = await adminFetch("https://upload.imagekit.io/api/v1/files/upload", {
         method: "POST",
         body: formDataCover,
       });
@@ -120,7 +121,7 @@ export default function PlaylistsPage() {
       if (!uploadResCover.ok) throw new Error("Cover image upload failed");
 
       // 2. Upload Banner Image
-      const sigResBanner = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/misc/presigned-url/image`);
+      const sigResBanner = await adminFetch(`${process.env.NEXT_PUBLIC_API_URL}/misc/presigned-url/image`);
       if (!sigResBanner.ok) throw new Error("Failed to get banner upload signature");
       const sigDataBanner = await sigResBanner.json();
 
@@ -134,7 +135,7 @@ export default function PlaylistsPage() {
       const extBanner = newPlaylist.bannerImage.name.split('.').pop();
       formDataBanner.append("fileName", `${sigDataBanner.data.tempKey}.${extBanner}`);
 
-      const uploadResBanner = await fetch("https://upload.imagekit.io/api/v1/files/upload", {
+      const uploadResBanner = await adminFetch("https://upload.imagekit.io/api/v1/files/upload", {
         method: "POST",
         body: formDataBanner,
       });
@@ -142,7 +143,7 @@ export default function PlaylistsPage() {
       if (!uploadResBanner.ok) throw new Error("Banner image upload failed");
 
       // 3. Create Playlist in Backend
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/playlists`, {
+      const res = await adminFetch(`${process.env.NEXT_PUBLIC_API_URL}/playlists`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -171,7 +172,7 @@ export default function PlaylistsPage() {
   const addSongToPlaylist = async (songId: string) => {
     if (!selectedPlaylist) return;
     try {
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/playlists/songs`, {
+      await adminFetch(`${process.env.NEXT_PUBLIC_API_URL}/playlists/songs`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ playlistId: selectedPlaylist.id, songId }),
@@ -185,7 +186,7 @@ export default function PlaylistsPage() {
   const removeSongFromPlaylist = async (songId: string) => {
     if (!selectedPlaylist) return;
     try {
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/playlists/songs`, {
+      await adminFetch(`${process.env.NEXT_PUBLIC_API_URL}/playlists/songs`, {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ playlistId: selectedPlaylist.id, songId }),
@@ -202,7 +203,7 @@ export default function PlaylistsPage() {
     }
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/playlists/${id}`, {
+      const res = await adminFetch(`${process.env.NEXT_PUBLIC_API_URL}/playlists/${id}`, {
         method: "DELETE",
       });
       if (res.ok) {

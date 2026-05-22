@@ -68,7 +68,7 @@ export class AudioProcessingService {
         this.signatureUtility.verifyId(songId);
         const job = await this.jobRepository.getById(songId);
         const tempBucket = process.env.TEMP_BUCKET_NAME || "videotranscodetemp";
-        const prodBucket = process.env.PRODUCTION_BUCKET_NAME || "videotranscodeprod";
+        const prodBucket = process.env.PRODUCTION_BUCKET_NAME || "audioprocessingproduction";
         
         const baseTmpDir = path.join(process.cwd(), "tmp");
         if (!fs.existsSync(baseTmpDir)) {
@@ -226,6 +226,8 @@ export class AudioProcessingService {
                 "--no-check-certificates",
                 "--no-warnings"
             ]);
+            ytDlpProcess.stderr.resume();
+
 
             // 3. Upload to S3
             const tempSongKey = `songs/raw/${songId}.webm`;

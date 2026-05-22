@@ -4,6 +4,8 @@ import { pgTable, varchar, timestamp, text, integer, doublePrecision, boolean, u
 export const users = pgTable("users", {
   id: varchar("id", { length: 255 }).primaryKey(),
   email: varchar("email", { length: 255 }).notNull().unique(),
+  name: varchar("name", { length: 255 }),
+  role: varchar("role", { length: 50 }).default("user").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow()
 });
 

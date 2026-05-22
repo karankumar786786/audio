@@ -146,7 +146,7 @@ export function HlsMusicPlayer() {
       <div className="w-[340px] glass-effect-strong border-l border-white/4 flex flex-col h-screen overflow-hidden flex-none relative z-50">
         <PlayerBackground posterUrl={optimizedPosterUrl} />
         
-        <audio ref={audioRef} className="hidden" crossOrigin="anonymous" />
+        <audio ref={audioRef} className="hidden" />
 
         <PlayerAlbumArt 
             songId={currentSong.id} 

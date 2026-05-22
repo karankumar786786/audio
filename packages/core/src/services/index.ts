@@ -5,3 +5,5 @@ export * from "./search.service.ts";
 export * from "./user.service.ts";
 export * from "./interaction.service.ts";
 export * from "./misc.service.ts";
+export * from "./auth.service.ts";
+

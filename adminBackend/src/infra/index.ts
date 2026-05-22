@@ -8,6 +8,7 @@ import {
     PlaylistRepository,
     SongRepository,
     SongProcessingJobRepository,
+    UserRepository,
     
     // Infra
     AlgoliaSearchService,
@@ -22,7 +23,8 @@ import {
     MiscService,
     SongService,
     ArtistService,
-    SearchService
+    SearchService,
+    AuthService
 } from "@onemelody/core";
 import { logger } from "../observablity";
 import { db } from "./db";
@@ -66,6 +68,7 @@ const artistRepository = new ArtistRepository(db, logger.child({ service: "Artis
 const playlistRepository = new PlaylistRepository(db, logger.child({ service: "PlaylistRepository" }), signatureService);
 const songRepository = new SongRepository(db, logger.child({ service: "SongRepository" }), signatureService);
 const songProcessingJobRepository = new SongProcessingJobRepository(db, logger.child({ service: "SongJobRepository" }), signatureService);
+export const userRepository = new UserRepository(db, logger.child({ service: "UserRepository" }), signatureService);
 
 export const inngest = new Inngest({ 
     id: "admin-backend",
@@ -114,4 +117,11 @@ export const jwtServices: JWTService = new Jose(
     process.env.JWT_SECRET!,
     process.env.JWT_EXPIRY_IN_HR!,
     process.env.JWT_ISSUER!
+);
+
+export const authService = new AuthService(
+    userRepository,
+    jwtServices,
+    process.env.SIGNATURE_SECRET!,
+    process.env.JWT_SECRET!
 );

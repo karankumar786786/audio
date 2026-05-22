@@ -15,7 +15,7 @@ export default function ArtistsPage() {
   const artists = artistsResponse?.data?.data || [];
 
   return (
-    <div className=" pb-20">
+    <div className="px-10 pb-20">
       <section>
         <div className="flex items-center justify-between mb-12 px-2">
           <div className="flex items-center gap-6">
@@ -83,7 +83,7 @@ export default function ArtistsPage() {
             ))
           ) : (
             <div className="py-32 text-center text-zinc-700 border-2 border-dashed border-zinc-900 rounded-[4rem] font-bold italic tracking-tight uppercase">
-              No Artists founfd
+              No Artists found
             </div>
           )}
         </div>

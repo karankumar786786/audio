@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { adminFetch } from "@/lib/adminFetch";
 
 export default function DashboardPage() {
   const [stats, setStats] = useState({
@@ -15,9 +16,9 @@ export default function DashboardPage() {
     const fetchStats = async () => {
       try {
         const [songsRes, artistsRes, playlistsRes] = await Promise.all([
-          fetch(`${process.env.NEXT_PUBLIC_API_URL}/songs?limit=1`),
-          fetch(`${process.env.NEXT_PUBLIC_API_URL}/artists?limit=1`),
-          fetch(`${process.env.NEXT_PUBLIC_API_URL}/playlists?limit=1`),
+          adminFetch(`${process.env.NEXT_PUBLIC_API_URL}/songs?limit=1`),
+          adminFetch(`${process.env.NEXT_PUBLIC_API_URL}/artists?limit=1`),
+          adminFetch(`${process.env.NEXT_PUBLIC_API_URL}/playlists?limit=1`),
         ]);
 
         const [songs, artists, playlists] = await Promise.all([

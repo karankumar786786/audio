@@ -13,7 +13,7 @@ export function ArtistCard({ artist }: ArtistCardProps) {
   return (
     <Link
       href={`/artists/${artist.id}`}
-      className="flex-none w-[160px] group space-y-4 cursor-pointer text-center"
+      className="flex-none w-[160px] hover-scale group space-y-4 cursor-pointer text-center"
     >
       <div className="relative aspect-square overflow-hidden rounded-full bg-zinc-900 border border-white/5 mx-auto  transition-all duration-700 ">
         <img

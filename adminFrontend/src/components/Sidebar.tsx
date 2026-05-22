@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useAuth } from "@/lib/auth-context";
 
 const navItems = [
   { name: "Dashboard", href: "/", icon: "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" },
@@ -12,6 +13,17 @@ const navItems = [
 
 export function Sidebar() {
   const pathname = usePathname();
+  const { user } = useAuth();
+
+  // Only superadmin can manage other admins
+  const visibleNavItems = [...navItems];
+  if (user?.role === "superadmin") {
+    visibleNavItems.push({
+      name: "Admins",
+      href: "/users",
+      icon: "M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a3 3 0 11-6 0 3 3 0 016 0z"
+    });
+  }
 
   return (
     <aside className="fixed left-0 top-0 h-full w-64 bg-white dark:bg-zinc-950 border-r border-zinc-200 dark:border-zinc-800 flex flex-col z-50">
@@ -22,12 +34,12 @@ export function Sidebar() {
           </svg>
         </div>
         <span className="text-xl font-bold tracking-tight bg-gradient-to-r from-indigo-500 to-purple-600 bg-clip-text text-transparent">
-          Admin
+          OneMelody
         </span>
       </div>
 
       <nav className="flex-1 px-4 py-4 space-y-2">
-        {navItems.map((item) => {
+        {visibleNavItems.map((item) => {
           const isActive = pathname === item.href;
           return (
             <Link
@@ -48,15 +60,19 @@ export function Sidebar() {
         })}
       </nav>
 
-      <div className="p-6 border-t border-zinc-200 dark:border-zinc-800">
-        <div className="bg-zinc-50 dark:bg-zinc-900 p-4 rounded-2xl flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500" />
-          <div className="flex flex-col">
-            <span className="text-sm font-semibold text-zinc-900 dark:text-white">Admin User</span>
-            <span className="text-xs text-zinc-500">Super Admin</span>
+      {user && (
+        <div className="p-6 border-t border-zinc-200 dark:border-zinc-800">
+          <div className="bg-zinc-50 dark:bg-zinc-900 p-4 rounded-2xl flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center font-bold text-white text-sm uppercase">
+              {user.name.charAt(0)}
+            </div>
+            <div className="flex flex-col min-w-0">
+              <span className="text-sm font-semibold text-zinc-900 dark:text-white truncate">{user.name}</span>
+              <span className="text-xs text-zinc-500 capitalize">{user.role}</span>
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </aside>
   );
 }

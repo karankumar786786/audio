@@ -12,6 +12,20 @@ export const api = axios.create({
   baseURL: API_BASE_URL,
 });
 
+let isRefreshing = false;
+let failedQueue: any[] = [];
+
+const processQueue = (error: any, token: string | null = null) => {
+  failedQueue.forEach((prom) => {
+    if (token) {
+      prom.resolve(token);
+    } else {
+      prom.reject(error);
+    }
+  });
+  failedQueue = [];
+};
+
 // Interceptor for System JWT Authentication
 api.interceptors.request.use((config) => {
   if (typeof window !== "undefined") {
@@ -26,20 +40,57 @@ api.interceptors.request.use((config) => {
 // Response Interceptor for Session Auto-Healing
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
-    if (typeof window !== "undefined") {
-      const status = error.response ? error.response.status : null;
-      if (status === 401) {
-        // Only purge session if it's a critical auth-required endpoint,
-        // not background interactions which might fail due to stale tokens/timing.
-        const isBackgroundRequest = error.config.url.includes("/interactions/");
-        if (!isBackgroundRequest) {
-          console.warn(
-            "[API] Security interceptor triggered (401). Purging stale session.",
-          );
-          localStorage.removeItem("system_token");
-          localStorage.removeItem("system_user");
+  async (error) => {
+    const originalRequest = error.config;
+    if (
+      typeof window !== "undefined" &&
+      error.response?.status === 401 &&
+      !originalRequest._retry
+    ) {
+      const refreshToken = localStorage.getItem("system_refresh_token");
+      const isAuthRequest = originalRequest.url.includes("/auth/");
+
+      if (refreshToken && !isAuthRequest) {
+        if (isRefreshing) {
+          return new Promise((resolve, reject) => {
+            failedQueue.push({ resolve, reject });
+          })
+            .then((token) => {
+              originalRequest.headers.Authorization = `Bearer ${token}`;
+              return api(originalRequest);
+            })
+            .catch((err) => {
+              return Promise.reject(err);
+            });
         }
+
+        originalRequest._retry = true;
+        isRefreshing = true;
+
+        try {
+          const res = await axios.post(`${API_BASE_URL}/auth/refresh-token`, {
+            refreshToken,
+          });
+          const { accessToken } = res.data.data;
+          localStorage.setItem("system_token", accessToken);
+          originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+          processQueue(null, accessToken);
+          return api(originalRequest);
+        } catch (refreshError) {
+          processQueue(refreshError, null);
+          console.warn("[API] Token refresh failed. Purging session.");
+          localStorage.removeItem("system_token");
+          localStorage.removeItem("system_refresh_token");
+          localStorage.removeItem("system_user");
+          window.location.reload();
+          return Promise.reject(refreshError);
+        } finally {
+          isRefreshing = false;
+        }
+      } else {
+        localStorage.removeItem("system_token");
+        localStorage.removeItem("system_refresh_token");
+        localStorage.removeItem("system_user");
       }
     }
     return Promise.reject(error);
@@ -104,12 +155,32 @@ export interface ApiResponse<T> {
 }
 
 export const musicApi = {
-  /** --- USERS MODULE --- */
-  users: {
-    register: async (accessToken: string) => {
-      const res = await api.post("/users/register", { accessToken });
+  /** --- AUTH MODULE --- */
+  auth: {
+    register: async (name: string, email: string) => {
+      const res = await api.post("/auth/register", { name, email });
       return res.data;
     },
+    login: async (email: string) => {
+      const res = await api.post("/auth/login", { email });
+      return res.data;
+    },
+    resendOtp: async (token: string) => {
+      const res = await api.post("/auth/resend-otp", { token });
+      return res.data;
+    },
+    verifyOtp: async (token: string, otp: string) => {
+      const res = await api.post("/auth/verify-otp", { token, otp });
+      return res.data;
+    },
+    refreshToken: async (refreshToken: string) => {
+      const res = await api.post("/auth/refresh-token", { refreshToken });
+      return res.data;
+    },
+  },
+
+  /** --- USERS MODULE --- */
+  users: {
     getById: async (id: string) => {
       const res = await api.get(`/users/${id}`);
       return res.data;

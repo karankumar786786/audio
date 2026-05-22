@@ -2,6 +2,7 @@ import { playerStore } from "./player/index";
 import { queueActions } from "./player/queue.actions";
 import { playbackActions } from "./player/playback.actions";
 import { sessionActions } from "./player/session.actions";
+import { normalizePlayerSong } from "@/lib/player-utils";
 
 export { playerStore };
 
@@ -18,9 +19,13 @@ export const playerActions = {
       const lastQueueStr = localStorage.getItem("last_queue");
       
       playerStore.setState((s) => {
-        const queueRes = lastQueueStr ? JSON.parse(lastQueueStr) : s.queue;
+        let queueRes = lastQueueStr ? JSON.parse(lastQueueStr) : s.queue;
         const savedIdx = lastIdxStr ? parseInt(lastIdxStr, 10) : -1;
         
+        if (Array.isArray(queueRes)) {
+          queueRes = queueRes.map((song: any) => normalizePlayerSong(song));
+        }
+
         let currentSong = s.currentSong;
         let lastQueueIndex = s.lastQueueIndex;
 

@@ -6,7 +6,7 @@ import type { SignatureService } from "../infra/signature.types.ts";
 import { users } from "../db/schema.ts";
 import { eq, desc } from "drizzle-orm";
 
-type CreateUserData = Pick<UserSchema, "email">;
+type CreateUserData = { email: string; name?: string | null; role?: "user" | "admin" | "superadmin" };
 type UpdateUserData = Partial<CreateUserData>;
 
 export class UserRepository extends BaseRepository<UserSchema, typeof users, CreateUserData, UpdateUserData> {
@@ -23,10 +23,19 @@ export class UserRepository extends BaseRepository<UserSchema, typeof users, Cre
         const id = this.signatureService.generateSignedId();
         const [row] = await this.db
             .insert(users)
-            .values({ id, email: data.email })
+            .values({ 
+                id, 
+                email: data.email,
+                name: data.name || null,
+                role: data.role || "user"
+            })
             .onConflictDoUpdate({
                 target: users.id,
-                set: { email: data.email }
+                set: { 
+                    email: data.email,
+                    name: data.name || null,
+                    role: data.role || "user"
+                }
             })
             .returning();
         if (!row) throw new Error("Failed to create user");
@@ -36,6 +45,8 @@ export class UserRepository extends BaseRepository<UserSchema, typeof users, Cre
     async update(id: string, data: UpdateUserData): Promise<UserSchema> {
         const setClause: Partial<typeof users.$inferInsert> = {};
         if (data.email !== undefined) setClause.email = data.email;
+        if (data.name !== undefined) setClause.name = data.name;
+        if (data.role !== undefined) setClause.role = data.role;
 
         const [row] = await this.db
             .update(users)

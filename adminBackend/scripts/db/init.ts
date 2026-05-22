@@ -1,6 +1,8 @@
 import { neon } from "@neondatabase/serverless";
 import { config } from "dotenv";
-config();
+import * as crypto from "node:crypto";
+import * as path from "node:path";
+config({ path: path.resolve(__dirname, "../../.env") });
 
 const sql = neon(`${process.env.DATABASE_URL}`);
 
@@ -8,11 +10,13 @@ const sql = neon(`${process.env.DATABASE_URL}`);
     try {
         console.log("🚀 Initializing database schema...");
 
-        // 👤 USERS (Auth0 id is used as primary key in production)
+        // 👤 USERS
         await sql`
             CREATE TABLE IF NOT EXISTS users (
                 id VARCHAR(255) PRIMARY KEY,
                 email VARCHAR(255) NOT NULL UNIQUE,
+                name VARCHAR(255),
+                role VARCHAR(50) DEFAULT 'user' NOT NULL,
                 created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
             )
         `;
@@ -201,6 +205,25 @@ const sql = neon(`${process.env.DATABASE_URL}`);
         );
         `;
         await sql`CREATE INDEX IF NOT EXISTS idx_artist_name ON songs(artist_name);`;
+
+        // 🚀 SEED DEFAULT SUPER ADMIN
+        console.log("⏳ Seeding default super admin...");
+        const superAdminEmail = "superadmin@onemelody.com";
+        const [existingSuper] = await sql`SELECT id FROM users WHERE email = ${superAdminEmail} LIMIT 1`;
+        if (!existingSuper) {
+            const uuid = crypto.randomUUID().replace(/-/g, "");
+            const secret = process.env.SIGNATURE_SECRET || "audio-sync-secret-2026-v1";
+            const signature = crypto.createHmac("sha256", secret).update(uuid).digest("hex");
+            const signedId = `${uuid}.${signature}`;
+            
+            await sql`
+                INSERT INTO users (id, email, name, role)
+                VALUES (${signedId}, ${superAdminEmail}, 'Super Admin', 'superadmin')
+            `;
+            console.log("✅ Seeded default super admin user.");
+        } else {
+            console.log("ℹ️ Super admin user already exists.");
+        }
 
         console.log("✅ All tables created successfully");
     } catch (err) {

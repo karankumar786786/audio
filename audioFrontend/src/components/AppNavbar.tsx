@@ -13,7 +13,6 @@ import {
   ListMusic,
   Play,
 } from "lucide-react";
-import { useAuth0 } from "@auth0/auth0-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect, useRef } from "react";
 import { musicApi } from "@/lib/api";
@@ -27,14 +26,18 @@ import { toast } from "sonner";
 import { getImageUrl } from "@/lib/image-utils";
 
 export function AppNavbar() {
-  const { user, loginWithRedirect, logout, isAuthenticated } = useAuth0();
   const systemUser = useStore(playerStore, (s) => s.systemUser);
+  const [mounted, setMounted] = useState(false);
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [isFocused, setIsFocused] = useState(false);
   const queryClient = useQueryClient();
   const router = useRouter();
   const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Debounce query
   useEffect(() => {
@@ -364,12 +367,12 @@ export function AppNavbar() {
       {/* User & Actions */}
       <div className="flex items-center gap-4 pointer-events-auto">
 
-        {isAuthenticated ? (
+        {mounted && !!systemUser ? (
           <div className="flex items-center gap-4">
             <motion.div
               whileHover={{ scale: 1.05 }}
               onClick={() => {
-                logout();
+                playerActions.clearSystemSession();
                 toast.success("Logged Out", {
                   description: "You have been successfully logged out.",
                 });
@@ -377,7 +380,7 @@ export function AppNavbar() {
               className="w-12 h-12 rounded-2xl overflow-hidden border-2 border-transparent hover:border-primary transition-all cursor-pointer shadow-2xl ring-4 ring-black group relative"
             >
               <img
-                src={user?.picture || "https://avatar.vercel.sh/me"}
+                src={systemUser?.picture || `https://avatar.vercel.sh/${systemUser?.email || "me"}`}
                 className="w-full h-full object-cover"
                 alt="Profile"
               />
@@ -388,7 +391,7 @@ export function AppNavbar() {
           </div>
         ) : (
           <button
-            onClick={() => loginWithRedirect()}
+            onClick={() => playerActions.openAuthModal()}
             className="px-6 py-3 bg-primary text-black rounded-2xl text-[10px] font-black uppercase tracking-widest hover:brightness-110 transition-all shadow-2xl flex items-center gap-2"
           >
             <User size={14} />

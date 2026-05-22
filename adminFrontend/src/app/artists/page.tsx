@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { getImageUrl } from "@/lib/image-utils";
 import Link from "next/link";
+import { adminFetch } from "@/lib/adminFetch";
 
 interface Artist {
   id: string;
@@ -30,7 +31,7 @@ export default function ArtistsPage() {
 
   const fetchArtists = async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/artists`);
+      const response = await adminFetch(`${process.env.NEXT_PUBLIC_API_URL}/artists`);
       const result = await response.json();
       if (result.success) {
         setArtists(result.data.data || []);
@@ -49,7 +50,7 @@ export default function ArtistsPage() {
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure? This will delete the artist and potentially affect associated songs.")) return;
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/artists/${id}`, { method: "DELETE" });
+      const res = await adminFetch(`${process.env.NEXT_PUBLIC_API_URL}/artists/${id}`, { method: "DELETE" });
       if (res.ok) {
         setArtists(artists.filter(a => a.id !== id));
       } else {
@@ -69,7 +70,7 @@ export default function ArtistsPage() {
     setUploading(true);
     try {
       // 1. Upload Cover Image
-      const sigResCover = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/misc/presigned-url/image`);
+      const sigResCover = await adminFetch(`${process.env.NEXT_PUBLIC_API_URL}/misc/presigned-url/image`);
       if (!sigResCover.ok) throw new Error("Failed to get cover upload signature");
       const sigDataCover = await sigResCover.json();
 
@@ -83,7 +84,7 @@ export default function ArtistsPage() {
       const extCover = formData.coverImage.name.split('.').pop();
       formDataCover.append("fileName", `${sigDataCover.data.tempKey}.${extCover}`);
 
-      const uploadResCover = await fetch("https://upload.imagekit.io/api/v1/files/upload", {
+      const uploadResCover = await adminFetch("https://upload.imagekit.io/api/v1/files/upload", {
         method: "POST",
         body: formDataCover,
       });
@@ -91,7 +92,7 @@ export default function ArtistsPage() {
       if (!uploadResCover.ok) throw new Error("Cover image upload failed");
 
       // 2. Upload Banner Image
-      const sigResBanner = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/misc/presigned-url/image`);
+      const sigResBanner = await adminFetch(`${process.env.NEXT_PUBLIC_API_URL}/misc/presigned-url/image`);
       if (!sigResBanner.ok) throw new Error("Failed to get banner upload signature");
       const sigDataBanner = await sigResBanner.json();
 
@@ -105,7 +106,7 @@ export default function ArtistsPage() {
       const extBanner = formData.bannerImage.name.split('.').pop();
       formDataBanner.append("fileName", `${sigDataBanner.data.tempKey}.${extBanner}`);
 
-      const uploadResBanner = await fetch("https://upload.imagekit.io/api/v1/files/upload", {
+      const uploadResBanner = await adminFetch("https://upload.imagekit.io/api/v1/files/upload", {
         method: "POST",
         body: formDataBanner,
       });
@@ -113,7 +114,7 @@ export default function ArtistsPage() {
       if (!uploadResBanner.ok) throw new Error("Banner image upload failed");
 
       // 3. Create Artist in Backend
-      const createRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/artists`, {
+      const createRes = await adminFetch(`${process.env.NEXT_PUBLIC_API_URL}/artists`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

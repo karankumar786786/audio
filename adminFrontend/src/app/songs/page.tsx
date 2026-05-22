@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { getImageUrl } from "@/lib/image-utils";
+import { adminFetch } from "@/lib/adminFetch";
 
 interface Song {
   id: string;
@@ -33,7 +34,7 @@ export default function SongsPage() {
 
   const fetchSongs = async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/songs`);
+      const response = await adminFetch(`${process.env.NEXT_PUBLIC_API_URL}/songs`);
       const result = await response.json();
       if (result.success) {
         setSongs(result.data.items || result.data.data || []);
@@ -52,7 +53,7 @@ export default function SongsPage() {
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this song?")) return;
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/songs/${id}`, {
+      const res = await adminFetch(`${process.env.NEXT_PUBLIC_API_URL}/songs/${id}`, {
         method: "DELETE",
       });
       if (res.ok) {
@@ -75,7 +76,7 @@ export default function SongsPage() {
     setUploading(true);
     try {
       if (uploadMode === "youtube") {
-        const finalizeRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/songs/youtube`, {
+        const finalizeRes = await adminFetch(`${process.env.NEXT_PUBLIC_API_URL}/songs/youtube`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -97,8 +98,8 @@ export default function SongsPage() {
       }
       // 1. Get Pre-signed URLs
       const [songUrlRes, imageUrlRes] = await Promise.all([
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/misc/presigned-url/song`),
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/misc/presigned-url/image`),
+        adminFetch(`${process.env.NEXT_PUBLIC_API_URL}/misc/presigned-url/song`),
+        adminFetch(`${process.env.NEXT_PUBLIC_API_URL}/misc/presigned-url/image`),
       ]);
 
       const songUrlData = await songUrlRes.json();
@@ -110,7 +111,7 @@ export default function SongsPage() {
 
       // 2. Upload Files
       // S3 Upload for Song
-      await fetch(songUrlData.data.url, {
+      await adminFetch(songUrlData.data.url, {
         method: "PUT",
         body: formData.songFile,
         headers: { "Content-Type": formData.songFile.type },
@@ -129,7 +130,7 @@ export default function SongsPage() {
 
       imageFormData.append("fileName", fileNameWithExt);
 
-      const ikRes = await fetch("https://upload.imagekit.io/api/v1/files/upload", {
+      const ikRes = await adminFetch("https://upload.imagekit.io/api/v1/files/upload", {
         method: "POST",
         body: imageFormData,
       });
@@ -137,7 +138,7 @@ export default function SongsPage() {
       if (!ikRes.ok) throw new Error(ikData.message || "ImageKit upload failed");
 
       // 3. Finalize in Backend
-      const finalizeRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/songs`, {
+      const finalizeRes = await adminFetch(`${process.env.NEXT_PUBLIC_API_URL}/songs`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -167,7 +168,7 @@ export default function SongsPage() {
     if (!formData.ytUrl) return;
     setFetchingYt(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/misc/yt-info?url=${encodeURIComponent(formData.ytUrl)}`);
+      const res = await adminFetch(`${process.env.NEXT_PUBLIC_API_URL}/misc/yt-info?url=${encodeURIComponent(formData.ytUrl)}`);
       const data = await res.json();
       if (data.success && data.data?.title) {
         setFormData({ ...formData, title: data.data.title });

@@ -28,7 +28,8 @@ import {
     UserService, 
     PlaylistService, 
     ArtistService, 
-    SongService 
+    SongService,
+    AuthService
 } from "@onemelody/core";
 
 import { logger } from "../observability";
@@ -42,7 +43,8 @@ import {
     UserController,
     InteractionController,
     SearchController,
-    SystemStatusController
+    SystemStatusController,
+    AuthController
  } from "../controllers";
 
 
@@ -125,6 +127,12 @@ export const interactionService = new InteractionService(
     logger.child({ service: "InteractionService" })
 );
 export const internalSearchService = new SearchService(searchService, logger.child({ service: "SearchService" }));
+export const authService = new AuthService(
+    userRepository,
+    jwtServices,
+    process.env.SIGNATURE_SECRET!,
+    process.env.JWT_SECRET!
+);
 
 // --- 4. Controllers (Wired with DI) ---
 
@@ -135,3 +143,4 @@ export const userController = new UserController(userService, logger.child({ ser
 export const interactionController = new InteractionController(interactionService, logger.child({ service: "InteractionController" }));
 export const searchController = new SearchController(internalSearchService, logger.child({ service: "SearchController" }));
 export const systemStatusController = new SystemStatusController(logger.child({ service: "SystemStatusController" }));
+export const authController = new AuthController(authService, logger.child({ service: "AuthController" }));

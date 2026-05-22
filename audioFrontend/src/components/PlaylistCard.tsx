@@ -12,7 +12,7 @@ export function PlaylistCard({ playlist }: PlaylistCardProps) {
   return (
     <Link
       href={`/playlists/${playlist.id}?type=system`}
-      className="flex-none w-[180px] group relative space-y-4 cursor-pointer "
+      className="flex-none w-[180px] hover-scale group relative space-y-4 cursor-pointer"
     >
       <div className="relative aspect-square overflow-hidden rounded-[2.5rem] bg-zinc-900 border border-white/5 shadow-2xl  ">
         <img

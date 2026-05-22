@@ -38,6 +38,7 @@ export function useHlsPlayer(
         }
 
         if (streamUrl) {
+          console.log("[Player] Loading stream URL:", streamUrl);
           isInternalChange.current = true;
 
           // Check for native HLS support (Safari)

@@ -1,9 +1,17 @@
 import { playerStore } from "./index";
 import { type PlayerSong } from "@/lib/player-utils";
 import { musicApi } from "@/lib/api";
+import { toast } from "sonner";
 
 export const playbackActions = {
   play: (song: PlayerSong) => {
+    if (!playerStore.state.systemUser) {
+      toast.error("Authentication required", {
+        description: "Please sign in to play audio tracks.",
+      });
+      playerStore.setState((s) => ({ ...s, isAuthModalOpen: true }));
+      return;
+    }
     playerStore.setState((s) => {
       let updatedQueue = [...s.queue];
       // Match by queueId first (the exact instance), then fallback to song id
