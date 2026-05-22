@@ -1,5 +1,15 @@
 "use client";
 
+import { adminClient } from "./api";
+
+/**
+ * A fetch wrapper that reuses the shared OneMelodyClient's Axios instance
+ * for our API calls (getting automatic auth headers + token refresh),
+ * while falling through to native fetch for external URLs (e.g., ImageKit uploads).
+ *
+ * Returns a standard Response object to maintain backward compatibility
+ * with all admin pages that use `res.ok`, `res.json()`, etc.
+ */
 export async function adminFetch(
   input: RequestInfo | URL,
   init?: RequestInit
@@ -12,71 +22,76 @@ export async function adminFetch(
     url = `${baseUrl}${url.startsWith("/") ? "" : "/"}${url}`;
   }
 
-  // Determine if this is our API or an external one (like imagekit)
-  const isOurApi = url.includes(process.env.NEXT_PUBLIC_API_URL || "localhost");
+  // Determine if this is our API
+  const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api/v1";
+  const isOurApi = url.startsWith(apiBase);
 
-  let token = typeof window !== "undefined" ? localStorage.getItem("admin_token") : null;
+  if (isOurApi) {
+    // Delegate to the shared Axios client for our API (automatic auth + refresh)
+    const relativePath = url.replace(apiBase, "");
+    const method = (init?.method || "GET").toUpperCase();
 
-  const headers = new Headers(init?.headers);
-
-  if (token && isOurApi && !headers.has("Authorization")) {
-    headers.set("Authorization", `Bearer ${token}`);
-  }
-
-  let response = await fetch(url, {
-    ...init,
-    headers,
-  });
-
-  // Handle 401 Unauthorized
-  if (
-    response.status === 401 &&
-    typeof window !== "undefined" &&
-    isOurApi &&
-    !url.includes("/auth/refresh-token") &&
-    !url.includes("/auth/login") &&
-    !url.includes("/auth/verify-otp")
-  ) {
-    const refreshToken = localStorage.getItem("admin_refresh_token");
-    if (refreshToken) {
-      try {
-        const refreshRes = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api/v1"}/auth/refresh-token`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ refreshToken }),
-          }
-        );
-
-        if (refreshRes.ok) {
-          const refreshData = await refreshRes.json();
-          const newAccessToken = refreshData.accessToken;
-          const newRefreshToken = refreshData.refreshToken;
-
-          localStorage.setItem("admin_token", newAccessToken);
-          if (newRefreshToken) {
-            localStorage.setItem("admin_refresh_token", newRefreshToken);
-          }
-
-          // Retry the request with the new access token
-          headers.set("Authorization", `Bearer ${newAccessToken}`);
-          response = await fetch(url, {
-            ...init,
-            headers,
-          });
-        } else {
-          // Refresh failed - clear storage and force reload/redirect
-          localStorage.removeItem("admin_token");
-          localStorage.removeItem("admin_refresh_token");
-          localStorage.removeItem("admin_user");
-          window.location.href = "/";
+    // Parse body if present
+    let data: any = undefined;
+    if (init?.body) {
+      if (typeof init.body === "string") {
+        try {
+          data = JSON.parse(init.body);
+        } catch {
+          data = init.body;
         }
-      } catch (err) {
-        console.error("[adminFetch] Automatic token refresh failed:", err);
+      } else if (init.body instanceof FormData) {
+        data = init.body;
+      } else {
+        data = init.body;
       }
+    }
+
+    // Parse extra headers
+    const extraHeaders: Record<string, string> = {};
+    if (init?.headers) {
+      const h = new Headers(init.headers);
+      h.forEach((value, key) => {
+        extraHeaders[key] = value;
+      });
+    }
+
+    try {
+      const axiosRes = await adminClient.api.request({
+        url: relativePath,
+        method,
+        data,
+        headers: extraHeaders,
+      });
+
+      // Convert Axios response to a native Response for backward compatibility
+      return new Response(JSON.stringify(axiosRes.data), {
+        status: axiosRes.status,
+        statusText: axiosRes.statusText,
+        headers: new Headers(axiosRes.headers as any),
+      });
+    } catch (err: any) {
+      if (err.response) {
+        return new Response(JSON.stringify(err.response.data), {
+          status: err.response.status,
+          statusText: err.response.statusText,
+          headers: new Headers(err.response.headers as any),
+        });
+      }
+      // Network error or similar
+      throw err;
     }
   }
 
-  return response;
+  // For external URLs (e.g., ImageKit uploads), use native fetch with auth header
+  const token = typeof window !== "undefined" ? localStorage.getItem("admin_token") : null;
+  const headers = new Headers(init?.headers);
+  if (token && !headers.has("Authorization")) {
+    headers.set("Authorization", `Bearer ${token}`);
+  }
+
+  return fetch(url, {
+    ...init,
+    headers,
+  });
 }

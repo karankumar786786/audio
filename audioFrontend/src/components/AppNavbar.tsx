@@ -212,12 +212,12 @@ export function AppNavbar() {
 
                   <div className="p-2 space-y-1">
                     {/* Songs */}
-                    {searchResults?.data?.songs?.length > 0 && (
+                    {(searchResults?.data?.songs?.length ?? 0) > 0 && (
                       <div className="mb-4">
                         <h4 className="px-3 py-2 text-[9px] font-black text-zinc-600 uppercase tracking-widest">
                           Tracks
                         </h4>
-                        {searchResults.data.songs.map((song: any) => (
+                        {searchResults?.data?.songs.map((song: any) => (
                           <button
                             key={song.id}
                             onClick={() => handlePlaySong(song)}
@@ -253,12 +253,12 @@ export function AppNavbar() {
                     )}
 
                     {/* Artists */}
-                    {searchResults?.data?.artists?.length > 0 && (
+                    {(searchResults?.data?.artists?.length ?? 0) > 0 && (
                       <div className="mb-4">
                         <h4 className="px-3 py-2 text-[9px] font-black text-zinc-600 uppercase tracking-widest">
                           Nodes
                         </h4>
-                        {searchResults.data.artists.map((artist: any) => (
+                        {searchResults?.data?.artists.map((artist: any) => (
                           <button
                             key={artist.id}
                             onClick={() => handleArtistClick(artist)}
@@ -298,12 +298,12 @@ export function AppNavbar() {
                     )}
 
                     {/* Playlists */}
-                    {searchResults?.data?.playlists?.length > 0 && (
+                    {(searchResults?.data?.playlists?.length ?? 0) > 0 && (
                       <div>
                         <h4 className="px-3 py-2 text-[9px] font-black text-zinc-600 uppercase tracking-widest">
                           Clusters
                         </h4>
-                        {searchResults.data.playlists.map((playlist: any) => (
+                        {searchResults?.data?.playlists.map((playlist: any) => (
                           <button
                             key={playlist.id}
                             onClick={() => handlePlaylistClick(playlist)}

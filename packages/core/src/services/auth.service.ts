@@ -4,10 +4,7 @@ import type { UserRepository } from "../repository/user.repository.ts";
 import type { JWTService } from "../infra/jwt.ts";
 import { BadRequestError, NotFoundError } from "../errors/index.ts";
 import { SignJWT, jwtVerify } from "jose";
-import Redis from "ioredis";
 import { CacheService } from "../infra/cache.service.ts";
-
-const redis = new Redis("rediss://default:gQAAAAAAAUeXAAIgcDEzYTkxY2I1YjljMTE0MTExOWZmZGM1NDM0MTQ2ZWNmYw@sunny-wildcat-83863.upstash.io:6379");
 
 export interface OtpSession {
     email: string;
@@ -19,36 +16,22 @@ export interface OtpSession {
 }
 
 export class OtpCacheService {
-    constructor(private readonly cacheService?: CacheService) {}
+    private readonly cacheService: CacheService;
+
+    constructor(cacheService?: CacheService) {
+        this.cacheService = cacheService || new CacheService();
+    }
 
     async set(token: string, session: OtpSession): Promise<void> {
-        if (this.cacheService) {
-            await this.cacheService.set(`otp:${token}`, session, 300);
-        } else {
-            await redis.set(`otp:${token}`, JSON.stringify(session), "EX", 300);
-        }
+        await this.cacheService.set(`otp:${token}`, session, 300);
     }
 
     async get(token: string): Promise<OtpSession | null> {
-        if (this.cacheService) {
-            return await this.cacheService.get<OtpSession>(`otp:${token}`);
-        } else {
-            const data = await redis.get(`otp:${token}`);
-            if (!data) return null;
-            try {
-                return JSON.parse(data) as OtpSession;
-            } catch (_) {
-                return null;
-            }
-        }
+        return await this.cacheService.get<OtpSession>(`otp:${token}`);
     }
 
     async delete(token: string): Promise<void> {
-        if (this.cacheService) {
-            await this.cacheService.del(`otp:${token}`);
-        } else {
-            await redis.del(`otp:${token}`);
-        }
+        await this.cacheService.del(`otp:${token}`);
     }
 }
 

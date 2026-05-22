@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { adminClient } from "./api";
 
 interface User {
   id: string;
@@ -49,63 +50,46 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const login = async (email: string) => {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email }),
-    });
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data.message || "Failed to log in");
+    try {
+      const res = await adminClient.auth.login(email);
+      return { success: true, token: res.data.token };
+    } catch (err: any) {
+      throw new Error(err.response?.data?.message || "Failed to log in");
     }
-    return { success: true, token: data.data.token };
   };
 
   const register = async (name: string, email: string) => {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/register`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, email }),
-    });
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data.message || "Failed to register");
+    try {
+      const res = await adminClient.auth.register(name, email);
+      return { success: true, token: res.data.token };
+    } catch (err: any) {
+      throw new Error(err.response?.data?.message || "Failed to register");
     }
-    return { success: true, token: data.data.token };
   };
 
   const verifyOtp = async (email: string, otp: string, emailToken: string) => {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/verify-otp`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, otp, token: emailToken }),
-    });
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data.message || "Failed to verify OTP");
+    try {
+      const res = await adminClient.auth.verifyOtp(emailToken, otp, email);
+      const { accessToken, refreshToken, user: userData } = res.data;
+      localStorage.setItem("admin_token", accessToken);
+      localStorage.setItem("admin_refresh_token", refreshToken);
+      localStorage.setItem("admin_user", JSON.stringify(userData));
+
+      setUser(userData);
+      setToken(accessToken);
+      return { success: true };
+    } catch (err: any) {
+      throw new Error(err.response?.data?.message || "Failed to verify OTP");
     }
-
-    const { accessToken, refreshToken, user: userData } = data.data;
-    localStorage.setItem("admin_token", accessToken);
-    localStorage.setItem("admin_refresh_token", refreshToken);
-    localStorage.setItem("admin_user", JSON.stringify(userData));
-
-    setUser(userData);
-    setToken(accessToken);
-    return { success: true };
   };
 
   const resendOtp = async (email: string, emailToken: string) => {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/resend-otp`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, token: emailToken }),
-    });
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data.message || "Failed to resend OTP");
+    try {
+      const res = await adminClient.auth.resendOtp(emailToken, email);
+      return { success: true, token: res.data.token };
+    } catch (err: any) {
+      throw new Error(err.response?.data?.message || "Failed to resend OTP");
     }
-    return { success: true, token: data.data.token };
   };
 
   const logout = () => {
