@@ -7,6 +7,7 @@ import type { StorageService } from "../infra/storage.types.ts";
 import { type CreateSongInput, type SongSchema, type UpdateSongInput } from "../schema/songs.schema.ts";
 import { type PaginationParams, type PaginatedResult, buildPaginatedResult } from "../types/pagination.ts";
 import { logMethods, type Logger } from "../utils/index.ts";
+import { CacheService } from "../infra/cache.service.ts";
 import * as path from "node:path";
 
 export class SongService {
@@ -22,6 +23,7 @@ export class SongService {
         private readonly storageService?: StorageService,
         private readonly imageKitClient?: any,
         private readonly inngest?: any,
+        private readonly cacheService?: CacheService,
     ) {
         logMethods(this, this.logger);
         this.ytDlpPath = path.resolve(process.cwd(), "bin/yt-dlp");
@@ -29,18 +31,48 @@ export class SongService {
 
     async getSongs(params: PaginationParams): Promise<PaginatedResult<SongSchema>> {
         this.logger.debug({ params }, "getSongs starting");
+        const cacheKey = `songs:list:page:${params.page}:limit:${params.limit}`;
+        if (this.cacheService) {
+            const cached = await this.cacheService.get<PaginatedResult<SongSchema>>(cacheKey);
+            if (cached) {
+                this.logger.debug("getSongs cache hit");
+                return cached;
+            }
+        }
+
         const offset: number = (params.page - 1) * params.limit;
         const [data, total] = await Promise.all([
             this.songRepository.getAll(params.limit, offset),
             this.songRepository.count()
         ]);
         this.logger.debug({ total }, "getSongs successfully fetched");
-        return buildPaginatedResult<SongSchema>(data, total, params);
+        const result = buildPaginatedResult<SongSchema>(data, total, params);
+        
+        if (this.cacheService) {
+            await this.cacheService.set(cacheKey, result, 300); // Cache for 5 minutes
+        }
+
+        return result;
     }
 
     async getSongById(id: string): Promise<SongSchema> {
         this.signatureService.verifyId(id, "songId");
-        return await this.songRepository.getById(id);
+        const cacheKey = `songs:id:${id}`;
+        if (this.cacheService) {
+            const cached = await this.cacheService.get<SongSchema>(cacheKey);
+            if (cached) {
+                this.logger.debug({ id }, "getSongById cache hit");
+                return cached;
+            }
+        }
+
+        const song = await this.songRepository.getById(id);
+        
+        if (this.cacheService && song) {
+            await this.cacheService.set(cacheKey, song, 3600); // Cache for 1 hour
+        }
+
+        return song;
     }
 
     // ── Admin operations (only available if optional deps are injected) ─────────
@@ -134,6 +166,12 @@ export class SongService {
         const song: SongSchema = await this.songRepository.update(id, data);
         this.logger.info({ id }, "song updated in repository");
         
+        if (this.cacheService) {
+            await this.cacheService.del(`songs:id:${id}`);
+            await this.cacheService.delByPattern("songs:list:*");
+            this.logger.debug({ id }, "song cache and lists invalidated");
+        }
+
         if (this.searchService) {
             try {
                 await this.searchService.save(song as SearchRecord);
@@ -151,6 +189,12 @@ export class SongService {
         
         const song: SongSchema = await this.songRepository.delete(id);
         this.logger.info({ id }, "song deleted from repository");
+
+        if (this.cacheService) {
+            await this.cacheService.del(`songs:id:${id}`);
+            await this.cacheService.delByPattern("songs:list:*");
+            this.logger.debug({ id }, "song cache and lists invalidated");
+        }
 
         if (this.searchService) {
             try {

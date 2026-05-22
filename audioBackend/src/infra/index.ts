@@ -29,7 +29,8 @@ import {
     PlaylistService, 
     ArtistService, 
     SongService,
-    AuthService
+    AuthService,
+    CacheService
 } from "@onemelody/core";
 
 import { logger } from "../observability";
@@ -89,6 +90,7 @@ export const imagekitClient = new ImageKit({
 
 export const inngest = new Inngest({ id: "test-music" });
 export const jwtServices:JWTService = new Jose(process.env.JWT_SECRET!,process.env.JWT_EXPIRY_IN_HR!,process.env.JWT_ISSUER!);
+export const cacheService = new CacheService(logger.child({ service: "CacheService" }));
 
 // --- 2. Repositories (Wired with DI) ---
 
@@ -104,9 +106,35 @@ const interactionRepository = new InteractionRepository(db, logger.child({ servi
 
 // --- 3. Services (Wired with DI) ---
 
-export const artistService = new ArtistService(artistRepository, songRepository, signatureService, logger.child({ service: "ArtistService" }));
-export const songService = new SongService(songRepository, signatureService, logger.child({ service: "SongService" }));
-export const playlistService = new PlaylistService(playlistRepository, signatureService, logger.child({ service: "PlaylistService" }));
+export const artistService = new ArtistService(
+    artistRepository,
+    songRepository,
+    signatureService,
+    logger.child({ service: "ArtistService" }),
+    searchService,
+    imagekitClient,
+    cacheService
+);
+export const songService = new SongService(
+    songRepository,
+    signatureService,
+    logger.child({ service: "SongService" }),
+    undefined,
+    searchService,
+    recommendationService,
+    storageService,
+    imagekitClient,
+    inngest,
+    cacheService
+);
+export const playlistService = new PlaylistService(
+    playlistRepository,
+    signatureService,
+    logger.child({ service: "PlaylistService" }),
+    searchService,
+    imagekitClient,
+    cacheService
+);
 export const userService = new UserService(
     userRepository,
     userFavouriteSongRepository,
@@ -131,7 +159,8 @@ export const authService = new AuthService(
     userRepository,
     jwtServices,
     process.env.SIGNATURE_SECRET!,
-    process.env.JWT_SECRET!
+    process.env.JWT_SECRET!,
+    cacheService
 );
 
 // --- 4. Controllers (Wired with DI) ---

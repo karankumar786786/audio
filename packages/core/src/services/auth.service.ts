@@ -5,6 +5,7 @@ import type { JWTService } from "../infra/jwt.ts";
 import { BadRequestError, NotFoundError } from "../errors/index.ts";
 import { SignJWT, jwtVerify } from "jose";
 import Redis from "ioredis";
+import { CacheService } from "../infra/cache.service.ts";
 
 const redis = new Redis("rediss://default:gQAAAAAAAUeXAAIgcDEzYTkxY2I1YjljMTE0MTExOWZmZGM1NDM0MTQ2ZWNmYw@sunny-wildcat-83863.upstash.io:6379");
 
@@ -18,22 +19,36 @@ export interface OtpSession {
 }
 
 export class OtpCacheService {
+    constructor(private readonly cacheService?: CacheService) {}
+
     async set(token: string, session: OtpSession): Promise<void> {
-        await redis.set(`otp:${token}`, JSON.stringify(session), "EX", 300);
+        if (this.cacheService) {
+            await this.cacheService.set(`otp:${token}`, session, 300);
+        } else {
+            await redis.set(`otp:${token}`, JSON.stringify(session), "EX", 300);
+        }
     }
 
     async get(token: string): Promise<OtpSession | null> {
-        const data = await redis.get(`otp:${token}`);
-        if (!data) return null;
-        try {
-            return JSON.parse(data) as OtpSession;
-        } catch (_) {
-            return null;
+        if (this.cacheService) {
+            return await this.cacheService.get<OtpSession>(`otp:${token}`);
+        } else {
+            const data = await redis.get(`otp:${token}`);
+            if (!data) return null;
+            try {
+                return JSON.parse(data) as OtpSession;
+            } catch (_) {
+                return null;
+            }
         }
     }
 
     async delete(token: string): Promise<void> {
-        await redis.del(`otp:${token}`);
+        if (this.cacheService) {
+            await this.cacheService.del(`otp:${token}`);
+        } else {
+            await redis.del(`otp:${token}`);
+        }
     }
 }
 
@@ -104,7 +119,7 @@ export class EmailService {
 }
 
 export class AuthService {
-    private otpCache = new OtpCacheService();
+    private otpCache: OtpCacheService;
     private emailService = new EmailService();
     private secret: Uint8Array;
 
@@ -112,9 +127,11 @@ export class AuthService {
         private readonly userRepository: UserRepository,
         private readonly jwtService: JWTService,
         private readonly signatureSecret: string,
-        private readonly jwtSecretKey: string
+        private readonly jwtSecretKey: string,
+        private readonly cacheService?: CacheService
     ) {
         this.secret = new TextEncoder().encode(jwtSecretKey);
+        this.otpCache = new OtpCacheService(cacheService);
     }
 
     private generateHmacToken(email: string, action: string, name?: string | null): string {

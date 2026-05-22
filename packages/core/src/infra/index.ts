@@ -8,3 +8,4 @@ export * from "./recommendation.types.ts";
 export * from "./recombee.ts";
 export * from "./jwt.types.ts";
 export * from "./jwt.ts";
+export * from "./cache.service.ts";

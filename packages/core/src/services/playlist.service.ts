@@ -5,6 +5,7 @@ import type { PlaylistSchema, PlaylistSongSchema, CreatePlaylistSchema } from ".
 import type { SongSchema } from "../schema/songs.schema.ts";
 import { type PaginationParams, type PaginatedResult, buildPaginatedResult } from "../types/pagination.ts";
 import { logMethods, type Logger } from "../utils/index.ts";
+import { CacheService } from "../infra/cache.service.ts";
 import * as path from "node:path";
 
 export class PlaylistService {
@@ -14,37 +15,83 @@ export class PlaylistService {
         private readonly logger: Logger,
         private readonly searchService?: SearchEngineService<SearchRecord>,
         private readonly imageKitClient?: any,
+        private readonly cacheService?: CacheService,
     ) {
         logMethods(this, this.logger);
     }
 
     async getPlaylists(params: PaginationParams): Promise<PaginatedResult<PlaylistSchema>> {
         this.logger.debug({ params }, "getPlaylists starting");
+        const cacheKey = `playlists:list:page:${params.page}:limit:${params.limit}`;
+        if (this.cacheService) {
+            const cached = await this.cacheService.get<PaginatedResult<PlaylistSchema>>(cacheKey);
+            if (cached) {
+                this.logger.debug("getPlaylists cache hit");
+                return cached;
+            }
+        }
+
         const offset = (params.page - 1) * params.limit;
         const [data, total] = await Promise.all([
             this.playlistRepository.getAll(params.limit, offset),
             this.playlistRepository.count()
         ]);
         this.logger.debug({ total }, "getPlaylists successfully fetched");
-        return buildPaginatedResult<PlaylistSchema>(data, total, params);
+        const result = buildPaginatedResult<PlaylistSchema>(data, total, params);
+
+        if (this.cacheService) {
+            await this.cacheService.set(cacheKey, result, 300); // Cache lists for 5 minutes
+        }
+
+        return result;
     }
 
     async getPlaylistById(id: string): Promise<PlaylistSchema> {
         this.logger.debug({ id }, "getPlaylistById starting");
         this.signatureService.verifyId(id, "playlistId");
-        return await this.playlistRepository.getById(id);
+        const cacheKey = `playlists:id:${id}`;
+        if (this.cacheService) {
+            const cached = await this.cacheService.get<PlaylistSchema>(cacheKey);
+            if (cached) {
+                this.logger.debug({ id }, "getPlaylistById cache hit");
+                return cached;
+            }
+        }
+
+        const playlist = await this.playlistRepository.getById(id);
+
+        if (this.cacheService && playlist) {
+            await this.cacheService.set(cacheKey, playlist, 3600); // Cache details for 1 hour
+        }
+
+        return playlist;
     }
 
     async getPlaylistSongs(playlistId: string, params: PaginationParams): Promise<PaginatedResult<SongSchema>> {
         this.logger.debug({ playlistId, params }, "getPlaylistSongs starting");
         this.signatureService.verifyId(playlistId, "playlistId");
+        const cacheKey = `playlists:songs:id:${playlistId}:page:${params.page}:limit:${params.limit}`;
+        if (this.cacheService) {
+            const cached = await this.cacheService.get<PaginatedResult<SongSchema>>(cacheKey);
+            if (cached) {
+                this.logger.debug({ playlistId }, "getPlaylistSongs cache hit");
+                return cached;
+            }
+        }
+
         const offset = (params.page - 1) * params.limit;
         const [data, total] = await Promise.all([
             this.playlistRepository.getSongs(playlistId, params.limit, offset),
             this.playlistRepository.countSongs(playlistId)
         ]);
         this.logger.debug({ playlistId, total }, "getPlaylistSongs successfully fetched");
-        return buildPaginatedResult<SongSchema>(data, total, params);
+        const result = buildPaginatedResult<SongSchema>(data, total, params);
+
+        if (this.cacheService) {
+            await this.cacheService.set(cacheKey, result, 600); // Cache tracklist for 10 minutes
+        }
+
+        return result;
     }
 
     async addSongToPlaylist(data: PlaylistSongSchema): Promise<PlaylistSongSchema> {
@@ -53,6 +100,13 @@ export class PlaylistService {
         this.signatureService.verifyId(data.songId, "songId");
         const result = await this.playlistRepository.addSong(data);
         this.logger.info({ playlistId: data.playlistId, songId: data.songId }, "song added to playlist");
+
+        if (this.cacheService) {
+            await this.cacheService.del(`playlists:id:${data.playlistId}`);
+            await this.cacheService.delByPattern(`playlists:songs:id:${data.playlistId}:*`);
+            this.logger.debug({ playlistId: data.playlistId }, "playlist cache and tracklist invalidated");
+        }
+
         return result;
     }
 
@@ -62,6 +116,13 @@ export class PlaylistService {
         this.signatureService.verifyId(data.songId, "songId");
         const result = await this.playlistRepository.removeSong(data);
         this.logger.info({ playlistId: data.playlistId, songId: data.songId }, "song removed from playlist");
+
+        if (this.cacheService) {
+            await this.cacheService.del(`playlists:id:${data.playlistId}`);
+            await this.cacheService.delByPattern(`playlists:songs:id:${data.playlistId}:*`);
+            this.logger.debug({ playlistId: data.playlistId }, "playlist cache and tracklist invalidated");
+        }
+
         return result;
     }
 
@@ -73,6 +134,11 @@ export class PlaylistService {
         const playlist: PlaylistSchema = await this.playlistRepository.create({ id, ...data });
         this.logger.info({ id }, "playlist created in repository");
         
+        if (this.cacheService) {
+            await this.cacheService.delByPattern("playlists:list:*");
+            this.logger.debug("playlist catalogues cache invalidated");
+        }
+
         if (this.searchService) {
             try {
                 await this.searchService.save({ id, ...data } as SearchRecord);
@@ -89,6 +155,13 @@ export class PlaylistService {
         this.signatureService.verifyId(id, "playlistId");
         const playlist = await this.playlistRepository.delete(id);
         this.logger.info({ id }, "playlist deleted from repository");
+
+        if (this.cacheService) {
+            await this.cacheService.del(`playlists:id:${id}`);
+            await this.cacheService.delByPattern(`playlists:songs:id:${id}:*`);
+            await this.cacheService.delByPattern("playlists:list:*");
+            this.logger.debug({ id }, "playlist details, tracklists, and catalogues cache invalidated");
+        }
 
         if (this.searchService) {
             try {

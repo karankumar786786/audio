@@ -24,7 +24,8 @@ import {
     SongService,
     ArtistService,
     SearchService,
-    AuthService
+    AuthService,
+    CacheService
 } from "@onemelody/core";
 import { logger } from "../observablity";
 import { db } from "./db";
@@ -74,6 +75,8 @@ export const inngest = new Inngest({
     id: "admin-backend",
 });
 
+export const cacheService = new CacheService(logger.child({ service: "CacheService" }));
+
 // Services
 export const artistService = new ArtistService(
     artistRepository,
@@ -81,7 +84,8 @@ export const artistService = new ArtistService(
     signatureService,
     logger.child({ service: "ArtistService" }),
     algoliaSearchService,
-    imagekitClient
+    imagekitClient,
+    cacheService
 );
 
 export const playlistService = new PlaylistService(
@@ -89,7 +93,8 @@ export const playlistService = new PlaylistService(
     signatureService,
     logger.child({ service: "PlaylistService" }),
     algoliaSearchService,
-    imagekitClient
+    imagekitClient,
+    cacheService
 );
 
 export const songService = new SongService(
@@ -101,7 +106,8 @@ export const songService = new SongService(
     recommendationService, 
     storageService,
     imagekitClient,
-    inngest
+    inngest,
+    cacheService
 );
 
 export const miscService = new MiscService(
@@ -123,5 +129,6 @@ export const authService = new AuthService(
     userRepository,
     jwtServices,
     process.env.SIGNATURE_SECRET!,
-    process.env.JWT_SECRET!
+    process.env.JWT_SECRET!,
+    cacheService
 );
