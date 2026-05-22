@@ -137,9 +137,59 @@ export function LeftSidebar() {
               <h3 className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.2em] italic">
                 Your Playlists
               </h3>
+              <button
+                onClick={() => {
+                  if (!systemUser) {
+                    toast.error("Auth Required", {
+                      description: "Sign in to create playlists.",
+                    });
+                    return;
+                  }
+                  setIsCreating(!isCreating);
+                }}
+                className="w-5 h-5 rounded-md hover:bg-white/10 flex items-center justify-center text-zinc-500 hover:text-white transition-all cursor-pointer"
+                title="Create Playlist"
+              >
+                <Plus size={14} />
+              </button>
             </div>
 
-            
+            {isCreating && (
+              <div className="mx-2 px-3 py-2 flex items-center gap-2 bg-white/5 rounded-xl border border-white/10 mb-2 transition-all">
+                <input
+                  autoFocus
+                  type="text"
+                  placeholder="Playlist name..."
+                  value={newName}
+                  onChange={(e) => setNewName(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") handleCreatePlaylist();
+                    if (e.key === "Escape") {
+                      setIsCreating(false);
+                      setNewName("");
+                    }
+                  }}
+                  className="bg-transparent border-none outline-none text-[11px] font-medium text-white w-full placeholder:text-zinc-600"
+                />
+                <button
+                  onClick={handleCreatePlaylist}
+                  className="text-primary hover:text-emerald-400 transition-colors cursor-pointer"
+                  title="Create"
+                >
+                  <Plus size={14} />
+                </button>
+                <button
+                  onClick={() => {
+                    setIsCreating(false);
+                    setNewName("");
+                  }}
+                  className="text-zinc-500 hover:text-zinc-300 transition-colors cursor-pointer"
+                  title="Cancel"
+                >
+                  <X size={14} />
+                </button>
+              </div>
+            )}
 
             <nav className="space-y-0.5">
               {!hasMounted || isLoading ? (

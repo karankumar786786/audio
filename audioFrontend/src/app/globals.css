@@ -59,6 +59,15 @@ body {
   }
 }
 
+@utility vinyl-glow {
+  box-shadow: 0 0 50px oklch(0.75 0.25 142 / 15%), 0 0 100px oklch(0.75 0.25 142 / 5%);
+}
+
+@utility glass-border-glow {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.5), inset 0 0 20px rgba(255, 255, 255, 0.02);
+}
+
 /* ─── Scrollbar Polish ─── */
 ::-webkit-scrollbar {
   width: 5px;

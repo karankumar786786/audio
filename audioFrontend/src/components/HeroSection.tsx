@@ -43,14 +43,14 @@ export function HeroSection({
               quality: 90,
             })}
             initial={{ opacity: 0, scale: 1.1 }}
-            animate={{ opacity: 0.4, scale: 1 }}
+            animate={{ opacity: 0.45, scale: 1 }}
             exit={{ opacity: 0, scale: 1.05 }}
             transition={{ duration: 1 }}
             className="absolute inset-0 w-full h-full object-cover"
             alt=""
           />
         </AnimatePresence>
-        <div className="absolute inset-0 bg-linear-to-t from-black via-black/20 to-transparent" />
+        <div className="absolute inset-0 bg-linear-to-t from-black via-black/50 to-black/10" />
       </div>
 
       {/* Content */}
@@ -79,7 +79,7 @@ export function HeroSection({
           >
             <button
               onClick={() => playerActions.play(mapToPlayerSong(currentSong))}
-              className="px-10 py-5 bg-primary text-black rounded-full font-black text-sm uppercase tracking-widest flex items-center gap-3 shadow-2xl shadow-primary/20 hover:scale-105 active:scale-95 transition-all duration-300"
+              className="px-10 py-5 bg-gradient-to-r from-primary to-emerald-400 text-black rounded-full font-black text-sm uppercase tracking-widest flex items-center gap-3 shadow-[0_10px_35px_rgba(120,240,142,0.3)] hover:scale-[1.03] hover:shadow-[0_10px_45px_rgba(120,240,142,0.45)] active:scale-95 transition-all duration-300"
             >
               <Play fill="black" size={24} />
               Play Now

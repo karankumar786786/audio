@@ -1,4 +1,4 @@
-import { pgTable, varchar, timestamp, text, integer, doublePrecision, boolean, unique } from "drizzle-orm/pg-core";
+import { pgTable, varchar, timestamp, text, integer, doublePrecision, boolean, unique, index } from "drizzle-orm/pg-core";
 
 // 👤 USERS
 export const users = pgTable("users", {
@@ -68,7 +68,8 @@ export const userPlaylistSongs = pgTable("user_playlist_songs", {
   playlistId: varchar("playlist_id", { length: 255 }).notNull().references(() => userPlaylists.id, { onDelete: "cascade" }),
   songId: varchar("song_id", { length: 255 }).notNull().references(() => songs.id, { onDelete: "cascade" })
 }, (t) => ({
-  uniqueUserPlaylistSong: unique("unique_user_playlist_song").on(t.playlistId, t.songId)
+  uniqueUserPlaylistSong: unique("unique_user_playlist_song").on(t.playlistId, t.songId),
+  playlistIdIdx: index("user_playlist_songs_playlist_id_idx").on(t.playlistId)
 }));
 
 // 👤 USER FAVOURITE SONGS
@@ -87,7 +88,9 @@ export const userHistory = pgTable("user_history", {
   songId: varchar("song_id", { length: 255 }).notNull().references(() => songs.id, { onDelete: "cascade" }),
   part: integer("part").notNull(),
   listenedAt: timestamp("listened_at", { withTimezone: true }).defaultNow()
-});
+}, (t) => ({
+  userIdIdx: index("user_history_user_id_idx").on(t.userId)
+}));
 
 // 🕑 USER SEARCH HISTORY
 export const userSearchHistory = pgTable("user_search_history", {

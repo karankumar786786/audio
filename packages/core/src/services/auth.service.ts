@@ -4,12 +4,9 @@ import type { UserRepository } from "../repository/user.repository.ts";
 import type { JWTService } from "../infra/jwt.ts";
 import { BadRequestError, NotFoundError } from "../errors/index.ts";
 import { SignJWT, jwtVerify } from "jose";
-import { Redis } from "@upstash/redis";
+import Redis from "ioredis";
 
-const redis = new Redis({
-  url: 'https://sunny-wildcat-83863.upstash.io',
-  token: 'gQAAAAAAAUeXAAIgcDEzYTkxY2I1YjljMTE0MTExOWZmZGM1NDM0MTQ2ZWNmYw',
-});
+const redis = new Redis("rediss://default:gQAAAAAAAUeXAAIgcDEzYTkxY2I1YjljMTE0MTExOWZmZGM1NDM0MTQ2ZWNmYw@sunny-wildcat-83863.upstash.io:6379");
 
 export interface OtpSession {
     email: string;
@@ -22,20 +19,17 @@ export interface OtpSession {
 
 export class OtpCacheService {
     async set(token: string, session: OtpSession): Promise<void> {
-        await redis.set(`otp:${token}`, JSON.stringify(session), { ex: 300 });
+        await redis.set(`otp:${token}`, JSON.stringify(session), "EX", 300);
     }
 
     async get(token: string): Promise<OtpSession | null> {
-        const data = await redis.get<OtpSession | string>(`otp:${token}`);
+        const data = await redis.get(`otp:${token}`);
         if (!data) return null;
-        if (typeof data === "string") {
-            try {
-                return JSON.parse(data) as OtpSession;
-            } catch (_) {
-                return null;
-            }
+        try {
+            return JSON.parse(data) as OtpSession;
+        } catch (_) {
+            return null;
         }
-        return data as OtpSession;
     }
 
     async delete(token: string): Promise<void> {

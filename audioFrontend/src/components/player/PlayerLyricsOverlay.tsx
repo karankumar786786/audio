@@ -1,6 +1,7 @@
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Mic2 } from "lucide-react";
+import { useStore } from "@tanstack/react-store";
+import { playerStore } from "../../store/player.store";
 import { TranscriptionEntry } from "./hooks/useLyrics";
 
 interface PlayerLyricsOverlayProps {
@@ -12,6 +13,8 @@ export const PlayerLyricsOverlay: React.FC<PlayerLyricsOverlayProps> = ({
   currentCaption,
   localTime,
 }) => {
+  const isPlaying = useStore(playerStore, (s) => s.isPlaying);
+
   return (
     <div className="flex-1 overflow-hidden relative z-10 px-6 flex flex-col justify-center lyrics-mask min-h-0">
       <div className="flex-1 flex flex-col items-center justify-center py-1">
@@ -60,15 +63,49 @@ export const PlayerLyricsOverlay: React.FC<PlayerLyricsOverlayProps> = ({
           ) : (
             <motion.div
               key="idle"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="flex flex-col items-center gap-2"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="flex flex-col items-center gap-5 py-4 w-full"
             >
-              <Mic2 className="text-zinc-800" size={20} />
-              <p className="text-[9px] font-bold text-zinc-800 uppercase tracking-[0.15em]">
-                Lyrics
-              </p>
+              {/* Bouncing neon equalizer waveform */}
+              <div className="flex items-end gap-1.5 h-16 px-4">
+                {[...Array(9)].map((_, i) => {
+                  const animDurations = [1.2, 0.8, 1.4, 0.9, 1.1, 1.3, 0.7, 1.0, 1.2];
+                  const heightSequence = [
+                    [16, 40, 16],
+                    [12, 56, 12],
+                    [20, 32, 20],
+                    [8, 48, 8],
+                    [16, 64, 16],
+                    [12, 40, 12],
+                    [20, 56, 20],
+                    [8, 32, 8],
+                    [16, 48, 16]
+                  ];
+                  return (
+                    <motion.div
+                      key={i}
+                      animate={isPlaying ? { height: heightSequence[i] } : { height: 8 }}
+                      transition={{
+                        duration: animDurations[i],
+                        repeat: Infinity,
+                        ease: "easeInOut",
+                      }}
+                      className="w-1 bg-gradient-to-t from-primary/30 to-primary rounded-full shadow-[0_0_10px_rgba(120,240,142,0.3)]"
+                      style={{ height: 8 }}
+                    />
+                  );
+                })}
+              </div>
+              <div className="text-center space-y-1">
+                <p className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.25em] italic">
+                  Aura Sync Active
+                </p>
+                <p className="text-[8px] font-bold text-zinc-700 uppercase tracking-widest">
+                  {isPlaying ? "Streaming lossless audio" : "Playback paused"}
+                </p>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>

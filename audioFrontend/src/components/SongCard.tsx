@@ -19,9 +19,12 @@ interface SongCardProps {
 export function SongCard({ song, priority, onRemove, className }: SongCardProps) {
   const systemUser = useStore(playerStore, (s) => s.systemUser);
   const favourites = useStore(playerStore, (s) => s.favourites);
+  const currentSong = useStore(playerStore, (s) => s.currentSong);
+  const isPlaying = useStore(playerStore, (s) => s.isPlaying);
   const [isPlaylistModalOpen, setIsPlaylistModalOpen] = useState(false);
 
   const isFavourite = favourites.has(song.id);
+  const isActiveSong = currentSong?.id === song.id;
 
   const handlePlay = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -69,7 +72,11 @@ export function SongCard({ song, priority, onRemove, className }: SongCardProps)
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         onClick={handlePlay}
-        className={`glass-effect hover-scale p-3.5 rounded-[1.8rem] group cursor-pointer relative overflow-hidden ${className || ""}`}
+        className={`glass-effect hover-scale p-3.5 rounded-[1.8rem] group cursor-pointer relative overflow-hidden ${
+          isActiveSong
+            ? "ring-1 ring-primary/40 shadow-[0_0_20px_rgba(120,240,142,0.12)] bg-primary/2"
+            : "hover:shadow-[0_0_25px_rgba(120,240,142,0.1)]"
+        } ${className || ""}`}
       >
         <div className="aspect-square bg-zinc-900 rounded-[1.4rem] mb-4 relative shadow-2xl overflow-hidden ring-1 ring-white/4">
           <img
@@ -86,13 +93,41 @@ export function SongCard({ song, priority, onRemove, className }: SongCardProps)
 
           <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-all duration-500 flex items-center justify-center backdrop-blur-[2px]">
           </div>
+
+          {/* Micro Equalizer Overlay on playing song cover art */}
+          {isActiveSong && isPlaying && (
+            <div className="absolute bottom-3 right-3 bg-black/60 backdrop-blur-md px-2 py-1.5 rounded-lg flex items-end gap-[3px] border border-white/5 z-20">
+              <motion.div
+                animate={{ height: [4, 12, 4] }}
+                transition={{ duration: 1, repeat: Infinity, ease: "easeInOut" }}
+                className="w-[2px] bg-primary rounded-full"
+                style={{ height: 4 }}
+              />
+              <motion.div
+                animate={{ height: [6, 16, 6] }}
+                transition={{ duration: 0.8, repeat: Infinity, ease: "easeInOut", delay: 0.2 }}
+                className="w-[2px] bg-primary rounded-full"
+                style={{ height: 6 }}
+              />
+              <motion.div
+                animate={{ height: [3, 9, 3] }}
+                transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut", delay: 0.4 }}
+                className="w-[2px] bg-primary rounded-full"
+                style={{ height: 3 }}
+              />
+            </div>
+          )}
         </div>
 
         <div className="space-y-1.5 px-1.5 pb-1">
-          <h3 className="font-black text-white truncate text-[0.9rem] uppercase italic tracking-tighter text-glow-green">
+          <h3 className={`font-black truncate text-[0.9rem] uppercase italic tracking-tighter text-glow-green transition-colors duration-300 ${
+            isActiveSong ? "text-primary" : "text-white"
+          }`}>
             {song.title}
           </h3>
-          <p className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.15em] truncate group-hover:text-primary transition-colors italic">
+          <p className={`text-[10px] font-black uppercase tracking-[0.15em] truncate transition-colors italic ${
+            isActiveSong ? "text-primary/70" : "text-zinc-500 group-hover:text-primary"
+          }`}>
             {song.artistName}
           </p>
         </div>

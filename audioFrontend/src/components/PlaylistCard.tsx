@@ -14,7 +14,7 @@ export function PlaylistCard({ playlist }: PlaylistCardProps) {
       href={`/playlists/${playlist.id}?type=system`}
       className="flex-none w-[180px] hover-scale group relative space-y-4 cursor-pointer"
     >
-      <div className="relative aspect-square overflow-hidden rounded-[2.5rem] bg-zinc-900 border border-white/5 shadow-2xl  ">
+      <div className="relative aspect-square overflow-hidden rounded-[2.5rem] bg-zinc-900 border border-white/5 shadow-2xl transition-all duration-700 group-hover:ring-2 group-hover:ring-primary/40 group-hover:shadow-[0_0_35px_rgba(120,240,142,0.15)]">
         <img
           src={getImageUrl(playlist.coverImageKey || playlist.bannerImageKey, {
             width: 400,

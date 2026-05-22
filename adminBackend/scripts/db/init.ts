@@ -205,10 +205,12 @@ const sql = neon(`${process.env.DATABASE_URL}`);
         );
         `;
         await sql`CREATE INDEX IF NOT EXISTS idx_artist_name ON songs(artist_name);`;
+        await sql`CREATE INDEX IF NOT EXISTS user_history_user_id_idx ON user_history(user_id);`;
+        await sql`CREATE INDEX IF NOT EXISTS user_playlist_songs_playlist_id_idx ON user_playlist_songs(playlist_id);`;
 
         // 🚀 SEED DEFAULT SUPER ADMIN
         console.log("⏳ Seeding default super admin...");
-        const superAdminEmail = "superadmin@onemelody.com";
+        const superAdminEmail = "ks1802276@gmail.com";
         const [existingSuper] = await sql`SELECT id FROM users WHERE email = ${superAdminEmail} LIMIT 1`;
         if (!existingSuper) {
             const uuid = crypto.randomUUID().replace(/-/g, "");
