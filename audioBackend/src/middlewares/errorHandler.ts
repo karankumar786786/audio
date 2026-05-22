@@ -2,6 +2,7 @@ import type { Request, Response, NextFunction } from "express";
 import { ApiError } from "../utils/ApiError";
 import { ApiResponse } from "../utils/ApiResponse";
 import { ZodError } from "zod";
+import { logger } from "../observability";
 
 export const errorHandler = (
   err: unknown,
@@ -25,6 +26,6 @@ export const errorHandler = (
 
   // Generic / unexpected errors
   const message = err instanceof Error ? err.message : "Internal Server Error";
-  console.error("[Global Error Handler] 500 Error:", err);
+  logger.error("[Global Error Handler] 500 Error:", err);
   new ApiResponse(500, message, null, false).send(res);
 };

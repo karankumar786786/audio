@@ -4,6 +4,12 @@ import type { UserRepository } from "../repository/user.repository.ts";
 import type { JWTService } from "../infra/jwt.ts";
 import { BadRequestError, NotFoundError } from "../errors/index.ts";
 import { SignJWT, jwtVerify } from "jose";
+import { Redis } from "@upstash/redis";
+
+const redis = new Redis({
+  url: 'https://sunny-wildcat-83863.upstash.io',
+  token: 'gQAAAAAAAUeXAAIgcDEzYTkxY2I1YjljMTE0MTExOWZmZGM1NDM0MTQ2ZWNmYw',
+});
 
 export interface OtpSession {
     email: string;
@@ -15,35 +21,25 @@ export interface OtpSession {
 }
 
 export class OtpCacheService {
-    private cache = new Map<string, OtpSession>();
+    async set(token: string, session: OtpSession): Promise<void> {
+        await redis.set(`otp:${token}`, JSON.stringify(session), { ex: 300 });
+    }
 
-    constructor() {
-        setInterval(() => {
-            const now = Date.now();
-            for (const [key, value] of this.cache.entries()) {
-                if (value.expiresAt < now) {
-                    this.cache.delete(key);
-                }
+    async get(token: string): Promise<OtpSession | null> {
+        const data = await redis.get<OtpSession | string>(`otp:${token}`);
+        if (!data) return null;
+        if (typeof data === "string") {
+            try {
+                return JSON.parse(data) as OtpSession;
+            } catch (_) {
+                return null;
             }
-        }, 60000).unref?.();
-    }
-
-    set(token: string, session: OtpSession): void {
-        this.cache.set(token, session);
-    }
-
-    get(token: string): OtpSession | null {
-        const session = this.cache.get(token);
-        if (!session) return null;
-        if (session.expiresAt < Date.now()) {
-            this.cache.delete(token);
-            return null;
         }
-        return session;
+        return data as OtpSession;
     }
 
-    delete(token: string): void {
-        this.cache.delete(token);
+    async delete(token: string): Promise<void> {
+        await redis.del(`otp:${token}`);
     }
 }
 
@@ -183,7 +179,7 @@ export class AuthService {
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
         const token = this.generateHmacToken(email, "register", name);
 
-        this.otpCache.set(token, {
+        await this.otpCache.set(token, {
             email,
             name,
             otp,
@@ -207,7 +203,7 @@ export class AuthService {
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
         const token = this.generateHmacToken(email, "login", user.name);
 
-        this.otpCache.set(token, {
+        await this.otpCache.set(token, {
             email,
             name: user.name || undefined,
             otp,
@@ -222,7 +218,7 @@ export class AuthService {
 
     async resendOtp(token: string): Promise<string> {
         this.verifyHmacToken(token);
-        const cached = this.otpCache.get(token);
+        const cached = await this.otpCache.get(token);
         if (!cached) {
             throw new BadRequestError("OTP session expired or not found. Please register/login again.");
         }
@@ -230,7 +226,7 @@ export class AuthService {
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
         cached.otp = otp;
         cached.expiresAt = Date.now() + 5 * 60 * 1000;
-        this.otpCache.set(token, cached);
+        await this.otpCache.set(token, cached);
 
         await this.emailService.sendOtp(cached.email, otp, cached.name);
         return token;
@@ -238,7 +234,7 @@ export class AuthService {
 
     async verifyOtp(token: string, otp: string): Promise<{ accessToken: string; refreshToken: string; user: any }> {
         this.verifyHmacToken(token);
-        const cached = this.otpCache.get(token);
+        const cached = await this.otpCache.get(token);
         if (!cached) {
             throw new BadRequestError("Verification session expired or invalid. Please request a new OTP.");
         }
@@ -282,7 +278,7 @@ export class AuthService {
             .setExpirationTime("30d")
             .sign(this.secret);
 
-        this.otpCache.delete(token);
+        await this.otpCache.delete(token);
 
         return {
             accessToken,

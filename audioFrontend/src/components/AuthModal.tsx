@@ -240,7 +240,7 @@ export function AuthModal() {
                                                 placeholder="you@example.com"
                                                 value={email}
                                                 onChange={(e) => setEmail(e.target.value)}
-                                                className="w-full rounded-lg border border-white/10 bg-zinc-900/50 py-2.5 pl-10 pr-4 text-white placeholder-zinc-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all text-sm"
+                                                className="w-full rounded-lg border border-white/10 bg-zinc-900/50 py-2.5 pl-10 pr-4 text-white placeholder-zinc-500 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-all text-sm"
                                             />
                                         </div>
                                     </div>
@@ -248,7 +248,7 @@ export function AuthModal() {
                                     <button
                                         type="submit"
                                         disabled={loading || !email}
-                                        className="w-full flex items-center justify-center gap-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-2.5 transition-all disabled:opacity-50 text-sm shadow-lg shadow-indigo-600/20"
+                                        className="w-full flex items-center justify-center gap-2 rounded-lg bg-primary hover:bg-emerald-400 text-black font-semibold py-2.5 transition-all disabled:opacity-50 text-sm shadow-lg shadow-primary/20 cursor-pointer"
                                     >
                                         {loading ? (
                                             <Loader2 className="h-4 w-4 animate-spin" />
@@ -262,7 +262,7 @@ export function AuthModal() {
                                     New to OneMelody?{" "}
                                     <button
                                         onClick={() => setView("register")}
-                                        className="text-indigo-400 hover:text-indigo-300 font-semibold hover:underline bg-transparent border-none p-0 cursor-pointer"
+                                        className="text-primary hover:text-emerald-400 font-semibold hover:underline bg-transparent border-none p-0 cursor-pointer"
                                     >
                                         Create an account
                                     </button>
@@ -296,7 +296,7 @@ export function AuthModal() {
                                                 placeholder="John Doe"
                                                 value={name}
                                                 onChange={(e) => setName(e.target.value)}
-                                                className="w-full rounded-lg border border-white/10 bg-zinc-900/50 py-2.5 pl-10 pr-4 text-white placeholder-zinc-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all text-sm"
+                                                className="w-full rounded-lg border border-white/10 bg-zinc-900/50 py-2.5 pl-10 pr-4 text-white placeholder-zinc-500 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-all text-sm"
                                             />
                                         </div>
                                     </div>
@@ -313,7 +313,7 @@ export function AuthModal() {
                                                 placeholder="you@example.com"
                                                 value={email}
                                                 onChange={(e) => setEmail(e.target.value)}
-                                                className="w-full rounded-lg border border-white/10 bg-zinc-900/50 py-2.5 pl-10 pr-4 text-white placeholder-zinc-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all text-sm"
+                                                className="w-full rounded-lg border border-white/10 bg-zinc-900/50 py-2.5 pl-10 pr-4 text-white placeholder-zinc-500 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-all text-sm"
                                             />
                                         </div>
                                     </div>
@@ -321,7 +321,7 @@ export function AuthModal() {
                                     <button
                                         type="submit"
                                         disabled={loading || !email || !name}
-                                        className="w-full flex items-center justify-center gap-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-2.5 transition-all disabled:opacity-50 text-sm shadow-lg shadow-indigo-600/20"
+                                        className="w-full flex items-center justify-center gap-2 rounded-lg bg-primary hover:bg-emerald-400 text-black font-semibold py-2.5 transition-all disabled:opacity-50 text-sm shadow-lg shadow-primary/20 cursor-pointer"
                                     >
                                         {loading ? (
                                             <Loader2 className="h-4 w-4 animate-spin" />
@@ -335,7 +335,7 @@ export function AuthModal() {
                                     Already have an account?{" "}
                                     <button
                                         onClick={() => setView("login")}
-                                        className="text-indigo-400 hover:text-indigo-300 font-semibold hover:underline bg-transparent border-none p-0 cursor-pointer"
+                                        className="text-primary hover:text-emerald-400 font-semibold hover:underline bg-transparent border-none p-0 cursor-pointer"
                                     >
                                         Sign in
                                     </button>
@@ -377,7 +377,7 @@ export function AuthModal() {
                                                 value={val}
                                                 onChange={(e) => handleOtpChange(idx, e.target.value)}
                                                 onKeyDown={(e) => handleKeyDown(idx, e)}
-                                                className="w-12 h-14 text-center text-2xl font-bold rounded-xl border border-white/10 bg-zinc-900/50 text-white placeholder-zinc-800 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all shadow-md shadow-black/50"
+                                                className="w-12 h-14 text-center text-2xl font-bold rounded-xl border border-white/10 bg-zinc-900/50 text-white placeholder-zinc-800 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-all shadow-md shadow-black/50"
                                                 autoFocus={idx === 0}
                                             />
                                         ))}
@@ -386,7 +386,7 @@ export function AuthModal() {
                                     {/* Countdown and Actions */}
                                     <div className="flex flex-col items-center gap-4">
                                         <div className="flex items-center gap-2 text-sm text-zinc-400 font-medium">
-                                            <Clock className="h-4 w-4 text-indigo-400" />
+                                            <Clock className="h-4 w-4 text-primary" />
                                             <span>
                                                 {timeLeft > 0 ? (
                                                     `Expires in ${formatTime(timeLeft)}`
@@ -400,7 +400,7 @@ export function AuthModal() {
                                             type="button"
                                             disabled={loading || timeLeft > 0}
                                             onClick={handleResendOtp}
-                                            className="text-xs font-semibold text-indigo-400 hover:text-indigo-300 hover:underline uppercase tracking-widest disabled:opacity-30 disabled:hover:no-underline bg-transparent border-none cursor-pointer"
+                                            className="text-xs font-semibold text-primary hover:text-emerald-400 hover:underline uppercase tracking-widest disabled:opacity-30 disabled:hover:no-underline bg-transparent border-none cursor-pointer"
                                         >
                                             Resend Code
                                         </button>
@@ -409,7 +409,7 @@ export function AuthModal() {
                                     <button
                                         type="submit"
                                         disabled={loading || otpValues.join("").length < 6}
-                                        className="w-full flex items-center justify-center gap-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-2.5 transition-all disabled:opacity-50 text-sm shadow-lg shadow-indigo-600/20"
+                                        className="w-full flex items-center justify-center gap-2 rounded-lg bg-primary hover:bg-emerald-400 text-black font-semibold py-2.5 transition-all disabled:opacity-50 text-sm shadow-lg shadow-primary/20 cursor-pointer"
                                     >
                                         {loading ? (
                                             <Loader2 className="h-4 w-4 animate-spin" />

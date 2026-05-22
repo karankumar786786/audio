@@ -36,9 +36,12 @@ app.use(express.json());
 app.use(helmet());
 app.use(express.urlencoded({ extended: true }));
 
+import { generalLimiter } from "./middlewares/rateLimiter.middleware";
+app.use(generalLimiter);
 
 // Documentation
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(generateOpenApiDocument()));
+
 
 // Inngest
 app.use("/api/inngest", serve({ client: inngest, functions }));

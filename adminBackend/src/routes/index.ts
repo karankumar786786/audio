@@ -7,10 +7,11 @@ import { songRouter } from "./song.routes";
 import { searchRouter } from "./search.routes";
 import { userRouter } from "./user.routes";
 import { authenticate } from "../middlewares";
+import { authLimiter } from "../middlewares/rateLimiter.middleware";
 
 export const masterRouter = Router();
 
-masterRouter.use("/auth", authRouter);
+masterRouter.use("/auth", authLimiter, authRouter);
 masterRouter.use("/artists", authenticate, artistRouter);
 masterRouter.use("/playlists", authenticate, playlistRoutes);
 masterRouter.use("/misc", authenticate, miscRouter);

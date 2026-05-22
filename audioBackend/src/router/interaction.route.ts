@@ -3,11 +3,17 @@ import { interactionController } from "../infra";
 import { validate } from "../middlewares/validate.middleware";
 import { userHistorySchema } from "@onemelody/core";
 import { secure } from "../middlewares/authenticate.middleware";
+import { z } from "zod";
 
 const addListenInput = userHistorySchema.pick({ songId: true, part: true });
 
 export const interactionRouter = Router();
 
+const paginationQuery = z.object({
+    page: z.string().regex(/^\d+$/).transform(Number).optional(),
+    limit: z.string().regex(/^\d+$/).transform(Number).optional(),
+});
+
 interactionRouter.post("/listen", secure, validate(addListenInput), interactionController.recordListen);
-interactionRouter.get("/trending", interactionController.getTrendingSongs);
-interactionRouter.get("/recommendations", secure, interactionController.getRecommendations);
+interactionRouter.get("/trending", validate({ query: paginationQuery }), interactionController.getTrendingSongs);
+interactionRouter.get("/recommendations", secure, validate({ query: paginationQuery }), interactionController.getRecommendations);

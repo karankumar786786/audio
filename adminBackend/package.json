@@ -65,6 +65,7 @@
     "swagger-ui-express": "^5.0.1",
     "youtube-dl-exec": "^3.1.5",
     "ytdl-core": "^4.11.5",
+    "express-rate-limit": "^7.5.0",
     "zod": "3.23.8"
   }
 }

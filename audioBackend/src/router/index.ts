@@ -8,11 +8,13 @@ import { searchRouter } from "./search.route";
 import { authRouter } from "./auth.route";
 import { systemStatusController } from "../infra";
 
+import { authLimiter } from "../middlewares/rateLimiter.middleware";
+
 export const masterRouter = Router();
 
 masterRouter.get("/status", systemStatusController.getStatus);
 
-masterRouter.use("/auth", authRouter);
+masterRouter.use("/auth", authLimiter, authRouter);
 masterRouter.use("/songs", songRouter);
 masterRouter.use("/users", userRouter);
 masterRouter.use("/interactions", interactionRouter);

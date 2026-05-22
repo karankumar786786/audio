@@ -32,7 +32,11 @@ app.use(express.json());
 app.use(helmet());
 app.use(express.urlencoded({ extended: true }));
 
+import { generalLimiter } from "./middlewares/rateLimiter.middleware";
+app.use(generalLimiter);
+
 // Swagger Documentation
+
 app.use("/api-docs", swaggerRouter);
 
 // Routes Implementation
