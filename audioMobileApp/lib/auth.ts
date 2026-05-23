@@ -44,7 +44,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // 2. Auth Request
     const redirectUri = makeRedirectUri({
-        useProxy: true,
+        scheme: 'one-melody',
     });
     
     useEffect(() => {

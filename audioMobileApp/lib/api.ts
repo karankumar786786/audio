@@ -59,4 +59,4 @@ client.users.register = async (accessToken?: string) => {
 
 // Backward-compatible exports
 export const api = client.api;
-export const musicApi = client;
+export const musicApi = client as any;

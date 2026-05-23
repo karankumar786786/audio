@@ -5,7 +5,7 @@ export class CacheService {
     private readonly redis: Redis;
 
     constructor(private readonly logger?: Logger) {
-        const connectionString = process.env.REDIS_URL || "rediss://default:gQAAAAAAAUeXAAIgcDEzYTkxY2I1YjljMTE0MTExOWZmZGM1NDM0MTQ2ZWNmYw@sunny-wildcat-83863.upstash.io:6379";
+        const connectionString = process.env.REDIS_URL || "redis://localhost:6379";
         this.redis = new Redis(connectionString, {
             maxRetriesPerRequest: 3,
         });

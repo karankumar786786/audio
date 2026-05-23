@@ -31,7 +31,8 @@
       "expo-secure-store",
       "expo-video",
       "expo-font",
-      "expo-web-browser"
+      "expo-web-browser",
+      "expo-status-bar"
     ],
     "android": {
       "adaptiveIcon": {
