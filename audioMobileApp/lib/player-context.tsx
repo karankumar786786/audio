@@ -16,7 +16,7 @@ import { playerStore, playerActions, PlayerSong } from './player-store';
 
 export { PlayerSong };
 
-const S3_BASE_URL = "https://videotranscodeprod.s3.ap-south-1.amazonaws.com";
+const S3_BASE_URL = "https://audioprocessingproduction.s3.ap-south-1.amazonaws.com";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
