@@ -33,6 +33,30 @@ describe("Song API E2E", () => {
             expect(response.status).toBe(200);
             expect(response.body.data).toEqual(mockResult);
         });
+
+        it("should accept pagination query params and pass them to controller", async () => {
+            let capturedParams: any = null;
+            (infra.songController.getSongs as any).mockImplementation((req: any, res: any) => {
+                capturedParams = req.query;
+                res.status(200).json({ 
+                    success: true, 
+                    message: "Songs fetched", 
+                    data: {
+                        data: [],
+                        pagination: { page: Number(req.query.page), limit: Number(req.query.limit), total: 0, totalPages: 0, hasNext: false, hasPrev: false }
+                    } 
+                });
+            });
+
+            const response = await request(app)
+                .get("/api/v1/songs")
+                .query({ page: 2, limit: 5 });
+
+            expect(response.status).toBe(200);
+            expect(capturedParams).toEqual({ page: 2, limit: 5 });
+            expect(response.body.data.pagination.page).toBe(2);
+            expect(response.body.data.pagination.limit).toBe(5);
+        });
     });
 
     describe("GET /api/v1/songs/:id", () => {

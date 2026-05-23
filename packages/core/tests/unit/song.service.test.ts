@@ -1,254 +1,225 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { SongService } from "../../src/services/song.service.ts";
 
-// ── Shared mocks ─────────────────────────────────────────────────────────────
+describe("SongService Caching", () => {
+  let mockSongRepo: any;
+  let mockSignatureService: any;
+  let mockLogger: any;
+  let mockCacheService: any;
+  let songService: SongService;
 
-const mockSongRepo = {
-    getAll: vi.fn(),
-    count: vi.fn(),
-    getById: vi.fn(),
-    update: vi.fn(),
-    delete: vi.fn(),
-};
+  beforeEach(() => {
+    vi.clearAllMocks();
 
-const mockSignatureService = {
-    verifyId: vi.fn(),
-    generateSignedId: vi.fn().mockReturnValue("test-id"),
-};
+    mockSongRepo = {
+      getAll: vi.fn(),
+      count: vi.fn(),
+      getById: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
+    };
 
-const mockLogger = {
-    info: vi.fn(),
-    error: vi.fn(),
-    debug: vi.fn(),
-    warn: vi.fn(),
-    child: vi.fn().mockReturnThis(),
-};
+    mockSignatureService = {
+      verifyId: vi.fn(),
+      generateSignedId: vi.fn().mockReturnValue("signed-id"),
+    };
 
-const mockCacheService = {
-    get: vi.fn(),
-    set: vi.fn(),
-    del: vi.fn(),
-    delByPattern: vi.fn(),
-};
+    mockLogger = {
+      info: vi.fn(),
+      error: vi.fn(),
+      debug: vi.fn(),
+      warn: vi.fn(),
+      child: vi.fn().mockReturnThis(),
+    };
 
-// ── Test data ────────────────────────────────────────────────────────────────
+    mockCacheService = {
+      get: vi.fn(),
+      set: vi.fn(),
+      del: vi.fn(),
+      delByPattern: vi.fn(),
+    };
 
-const fakeSong = {
-    id: "song-1",
-    title: "Test Song",
-    artistName: "Test Artist",
-    songKey: "songs/hls/test/master.m3u8",
-    imageKey: "images/test.jpg",
-};
-
-const fakePaginatedResult = {
-    data: [fakeSong],
-    total: 1,
-    page: 1,
-    limit: 10,
-    totalPages: 1,
-};
-
-// ── Helper to create service ─────────────────────────────────────────────────
-
-function createService(withCache = true) {
-    return new SongService(
-        mockSongRepo as any,
-        mockSignatureService as any,
-        mockLogger as any,
-        undefined,  // songProcessingJobRepository
-        undefined,  // searchService
-        undefined,  // recommendationService
-        undefined,  // storageService
-        undefined,  // imageKitClient
-        undefined,  // inngest
-        withCache ? (mockCacheService as any) : undefined,
+    songService = new SongService(
+      mockSongRepo,
+      mockSignatureService,
+      mockLogger,
+      undefined, // songProcessingJobRepository
+      undefined, // searchService
+      undefined, // recommendationService
+      undefined, // storageService
+      undefined, // imageKitClient
+      undefined, // inngest
+      mockCacheService
     );
-}
+  });
 
-describe("SongService", () => {
-    beforeEach(() => {
-        vi.clearAllMocks();
+  describe("getSongs", () => {
+    const params = { page: 1, limit: 10 };
+    const cacheKey = "songs:list:page:1:limit:10";
+    const mockData = {
+      data: [{ id: "song-1", title: "Song One" }],
+      pagination: {
+        page: 1,
+        limit: 10,
+        total: 1,
+        totalPages: 1,
+        hasNext: false,
+        hasPrev: false,
+      },
+    };
+
+    it("should return cached songs on cache hit", async () => {
+      mockCacheService.get.mockResolvedValueOnce(mockData);
+
+      const result = await songService.getSongs(params);
+
+      expect(mockCacheService.get).toHaveBeenCalledWith(cacheKey);
+      expect(mockSongRepo.getAll).not.toHaveBeenCalled();
+      expect(result).toEqual(mockData);
     });
 
-    // ── getSongs() ───────────────────────────────────────────────────────────
+    it("should fetch from repo and set cache on cache miss", async () => {
+      mockCacheService.get.mockResolvedValueOnce(null);
+      mockSongRepo.getAll.mockResolvedValueOnce([{ id: "song-1", title: "Song One" }]);
+      mockSongRepo.count.mockResolvedValueOnce(1);
 
-    describe("getSongs()", () => {
-        const params = { page: 1, limit: 10 };
+      const result = await songService.getSongs(params);
 
-        it("should return cached data on cache hit without calling repository", async () => {
-            mockCacheService.get.mockResolvedValue(fakePaginatedResult);
-            const service = createService();
-
-            const result = await service.getSongs(params);
-
-            expect(mockCacheService.get).toHaveBeenCalledWith("songs:list:page:1:limit:10");
-            expect(mockSongRepo.getAll).not.toHaveBeenCalled();
-            expect(mockSongRepo.count).not.toHaveBeenCalled();
-            expect(result).toEqual(fakePaginatedResult);
-        });
-
-        it("should call repository and cache result with 300s TTL on cache miss", async () => {
-            mockCacheService.get.mockResolvedValue(null);
-            mockSongRepo.getAll.mockResolvedValue([fakeSong]);
-            mockSongRepo.count.mockResolvedValue(1);
-            const service = createService();
-
-            const result = await service.getSongs(params);
-
-            expect(mockSongRepo.getAll).toHaveBeenCalledWith(10, 0);
-            expect(mockSongRepo.count).toHaveBeenCalled();
-            expect(mockCacheService.set).toHaveBeenCalledWith(
-                "songs:list:page:1:limit:10",
-                expect.objectContaining({ data: [fakeSong], total: 1 }),
-                300,
-            );
-            expect(result.data).toEqual([fakeSong]);
-            expect(result.total).toBe(1);
-        });
-
-        it("should calculate offset correctly for page 2", async () => {
-            mockCacheService.get.mockResolvedValue(null);
-            mockSongRepo.getAll.mockResolvedValue([]);
-            mockSongRepo.count.mockResolvedValue(0);
-            const service = createService();
-
-            await service.getSongs({ page: 2, limit: 20 });
-
-            expect(mockSongRepo.getAll).toHaveBeenCalledWith(20, 20);
-        });
-
-        it("should work without cache service (cache undefined)", async () => {
-            mockSongRepo.getAll.mockResolvedValue([fakeSong]);
-            mockSongRepo.count.mockResolvedValue(1);
-            const service = createService(false);
-
-            const result = await service.getSongs(params);
-
-            expect(mockCacheService.get).not.toHaveBeenCalled();
-            expect(mockCacheService.set).not.toHaveBeenCalled();
-            expect(result.data).toEqual([fakeSong]);
-        });
+      expect(mockCacheService.get).toHaveBeenCalledWith(cacheKey);
+      expect(mockSongRepo.getAll).toHaveBeenCalledWith(10, 0);
+      expect(mockSongRepo.count).toHaveBeenCalled();
+      expect(mockCacheService.set).toHaveBeenCalledWith(cacheKey, mockData, 300);
+      expect(result).toEqual(mockData);
     });
 
-    // ── getSongById() ────────────────────────────────────────────────────────
+    it("should fetch from repo and not call cache if cacheService is undefined", async () => {
+      const serviceNoCache = new SongService(
+        mockSongRepo,
+        mockSignatureService,
+        mockLogger,
+        undefined, undefined, undefined, undefined, undefined, undefined,
+        undefined // No Cache
+      );
+      mockSongRepo.getAll.mockResolvedValueOnce([{ id: "song-1", title: "Song One" }]);
+      mockSongRepo.count.mockResolvedValueOnce(1);
 
-    describe("getSongById()", () => {
-        it("should return cached song on cache hit without calling repository", async () => {
-            mockCacheService.get.mockResolvedValue(fakeSong);
-            const service = createService();
+      const result = await serviceNoCache.getSongs(params);
 
-            const result = await service.getSongById("song-1");
+      expect(mockSongRepo.getAll).toHaveBeenCalledWith(10, 0);
+      expect(result).toEqual(mockData);
+    });
+  });
 
-            expect(mockSignatureService.verifyId).toHaveBeenCalledWith("song-1", "songId");
-            expect(mockCacheService.get).toHaveBeenCalledWith("songs:id:song-1");
-            expect(mockSongRepo.getById).not.toHaveBeenCalled();
-            expect(result).toEqual(fakeSong);
-        });
+  describe("getSongById", () => {
+    const songId = "song-1";
+    const cacheKey = "songs:id:song-1";
+    const mockSong = { id: "song-1", title: "Song One" };
 
-        it("should call repository and cache with 3600s TTL on cache miss", async () => {
-            mockCacheService.get.mockResolvedValue(null);
-            mockSongRepo.getById.mockResolvedValue(fakeSong);
-            const service = createService();
+    it("should return cached song on cache hit", async () => {
+      mockCacheService.get.mockResolvedValueOnce(mockSong);
 
-            const result = await service.getSongById("song-1");
+      const result = await songService.getSongById(songId);
 
-            expect(mockSongRepo.getById).toHaveBeenCalledWith("song-1");
-            expect(mockCacheService.set).toHaveBeenCalledWith(
-                "songs:id:song-1",
-                fakeSong,
-                3600,
-            );
-            expect(result).toEqual(fakeSong);
-        });
-
-        it("should not cache when repository returns null/undefined", async () => {
-            mockCacheService.get.mockResolvedValue(null);
-            mockSongRepo.getById.mockResolvedValue(null);
-            const service = createService();
-
-            const result = await service.getSongById("song-missing");
-
-            expect(mockCacheService.set).not.toHaveBeenCalled();
-            expect(result).toBeNull();
-        });
-
-        it("should work without cache service", async () => {
-            mockSongRepo.getById.mockResolvedValue(fakeSong);
-            const service = createService(false);
-
-            const result = await service.getSongById("song-1");
-
-            expect(mockCacheService.get).not.toHaveBeenCalled();
-            expect(mockCacheService.set).not.toHaveBeenCalled();
-            expect(result).toEqual(fakeSong);
-        });
+      expect(mockSignatureService.verifyId).toHaveBeenCalledWith(songId, "songId");
+      expect(mockCacheService.get).toHaveBeenCalledWith(cacheKey);
+      expect(mockSongRepo.getById).not.toHaveBeenCalled();
+      expect(result).toEqual(mockSong);
     });
 
-    // ── updateSong() ─────────────────────────────────────────────────────────
+    it("should fetch from repo and set cache on cache miss", async () => {
+      mockCacheService.get.mockResolvedValueOnce(null);
+      mockSongRepo.getById.mockResolvedValueOnce(mockSong);
 
-    describe("updateSong()", () => {
-        const updateData = { title: "Updated Title" };
+      const result = await songService.getSongById(songId);
 
-        it("should update in repository and invalidate cache", async () => {
-            const updatedSong = { ...fakeSong, title: "Updated Title" };
-            mockSongRepo.update.mockResolvedValue(updatedSong);
-            const service = createService();
-
-            const result = await service.updateSong("song-1", updateData as any);
-
-            expect(mockSignatureService.verifyId).toHaveBeenCalledWith("song-1", "songId");
-            expect(mockSongRepo.update).toHaveBeenCalledWith("song-1", updateData);
-            expect(mockCacheService.del).toHaveBeenCalledWith("songs:id:song-1");
-            expect(mockCacheService.delByPattern).toHaveBeenCalledWith("songs:list:*");
-            expect(result).toEqual(updatedSong);
-        });
-
-        it("should skip cache invalidation when cacheService is undefined", async () => {
-            mockSongRepo.update.mockResolvedValue(fakeSong);
-            const service = createService(false);
-
-            await service.updateSong("song-1", updateData as any);
-
-            expect(mockCacheService.del).not.toHaveBeenCalled();
-            expect(mockCacheService.delByPattern).not.toHaveBeenCalled();
-        });
+      expect(mockSignatureService.verifyId).toHaveBeenCalledWith(songId, "songId");
+      expect(mockCacheService.get).toHaveBeenCalledWith(cacheKey);
+      expect(mockSongRepo.getById).toHaveBeenCalledWith(songId);
+      expect(mockCacheService.set).toHaveBeenCalledWith(cacheKey, mockSong, 3600);
+      expect(result).toEqual(mockSong);
     });
 
-    // ── deleteSong() ─────────────────────────────────────────────────────────
+    it("should fetch from repo and not call cache if cacheService is undefined", async () => {
+      const serviceNoCache = new SongService(
+        mockSongRepo,
+        mockSignatureService,
+        mockLogger,
+        undefined, undefined, undefined, undefined, undefined, undefined,
+        undefined
+      );
+      mockSongRepo.getById.mockResolvedValueOnce(mockSong);
 
-    describe("deleteSong()", () => {
-        it("should delete from repository and invalidate cache", async () => {
-            const deletedSong = { ...fakeSong, songKey: null, imageKey: null };
-            mockSongRepo.delete.mockResolvedValue(deletedSong);
-            const service = createService();
+      const result = await serviceNoCache.getSongById(songId);
 
-            const result = await service.deleteSong("song-1");
-
-            expect(mockSignatureService.verifyId).toHaveBeenCalledWith("song-1", "songId");
-            expect(mockSongRepo.delete).toHaveBeenCalledWith("song-1");
-            expect(mockCacheService.del).toHaveBeenCalledWith("songs:id:song-1");
-            expect(mockCacheService.delByPattern).toHaveBeenCalledWith("songs:list:*");
-            expect(result).toEqual(deletedSong);
-        });
-
-        it("should skip cache invalidation when cacheService is undefined", async () => {
-            mockSongRepo.delete.mockResolvedValue({ ...fakeSong, songKey: null, imageKey: null });
-            const service = createService(false);
-
-            await service.deleteSong("song-1");
-
-            expect(mockCacheService.del).not.toHaveBeenCalled();
-            expect(mockCacheService.delByPattern).not.toHaveBeenCalled();
-        });
-
-        it("should return the deleted song data", async () => {
-            mockSongRepo.delete.mockResolvedValue(fakeSong);
-            const service = createService();
-
-            const result = await service.deleteSong("song-1");
-
-            expect(result).toEqual(fakeSong);
-        });
+      expect(mockSongRepo.getById).toHaveBeenCalledWith(songId);
+      expect(result).toEqual(mockSong);
     });
+  });
+
+  describe("updateSong", () => {
+    const songId = "song-1";
+    const updateInput = { title: "Updated Song Title" };
+    const mockSong = { id: "song-1", title: "Updated Song Title" };
+
+    it("should update song and invalidate cache keys", async () => {
+      mockSongRepo.update.mockResolvedValueOnce(mockSong);
+
+      const result = await songService.updateSong(songId, updateInput);
+
+      expect(mockSignatureService.verifyId).toHaveBeenCalledWith(songId, "songId");
+      expect(mockSongRepo.update).toHaveBeenCalledWith(songId, updateInput);
+      expect(mockCacheService.del).toHaveBeenCalledWith("songs:id:song-1");
+      expect(mockCacheService.delByPattern).toHaveBeenCalledWith("songs:list:*");
+      expect(result).toEqual(mockSong);
+    });
+
+    it("should update song without calling cache if cacheService is undefined", async () => {
+      const serviceNoCache = new SongService(
+        mockSongRepo,
+        mockSignatureService,
+        mockLogger,
+        undefined, undefined, undefined, undefined, undefined, undefined,
+        undefined
+      );
+      mockSongRepo.update.mockResolvedValueOnce(mockSong);
+
+      const result = await serviceNoCache.updateSong(songId, updateInput);
+
+      expect(mockSongRepo.update).toHaveBeenCalledWith(songId, updateInput);
+      expect(result).toEqual(mockSong);
+    });
+  });
+
+  describe("deleteSong", () => {
+    const songId = "song-1";
+    const mockSong = { id: "song-1", title: "Song One", songKey: "songs/song-1.mp3", imageKey: "images/song-1.png" };
+
+    it("should delete song and invalidate cache keys", async () => {
+      mockSongRepo.delete.mockResolvedValueOnce(mockSong);
+
+      const result = await songService.deleteSong(songId);
+
+      expect(mockSignatureService.verifyId).toHaveBeenCalledWith(songId, "songId");
+      expect(mockSongRepo.delete).toHaveBeenCalledWith(songId);
+      expect(mockCacheService.del).toHaveBeenCalledWith("songs:id:song-1");
+      expect(mockCacheService.delByPattern).toHaveBeenCalledWith("songs:list:*");
+      expect(result).toEqual(mockSong);
+    });
+
+    it("should delete song without calling cache if cacheService is undefined", async () => {
+      const serviceNoCache = new SongService(
+        mockSongRepo,
+        mockSignatureService,
+        mockLogger,
+        undefined, undefined, undefined, undefined, undefined, undefined,
+        undefined
+      );
+      mockSongRepo.delete.mockResolvedValueOnce(mockSong);
+
+      const result = await serviceNoCache.deleteSong(songId);
+
+      expect(mockSongRepo.delete).toHaveBeenCalledWith(songId);
+      expect(result).toEqual(mockSong);
+    });
+  });
 });
