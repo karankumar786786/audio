@@ -138,6 +138,10 @@ export class OneMelodyClient {
 
   /** --- USERS MODULE --- */
   public readonly users = {
+    register: async (accessToken?: string) => {
+      const res = await this.api.post<ApiResponse<any>>("/users/register", { accessToken });
+      return res.data;
+    },
     getById: async (id: string) => {
       const res = await this.api.get<ApiResponse<any>>(`/users/${id}`);
       return res.data;
