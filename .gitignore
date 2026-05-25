@@ -10,7 +10,6 @@ virtualenv/
 /audioBackend/node_modules/
 /audioFeatureExtraction/node_modules/
 /audioFrontend/node_modules/
-/audioMobileApp/node_modules/
 /audioProcessing/node_modules/
 
 # Local Environment and Secrets
@@ -30,19 +29,11 @@ yt-cookies.txt
 out/
 build/
 dist/
-audioMobileApp/web-build/
-audioMobileApp/dist/
 audioFeatureExtraction/temp/
 audioProcessing/tmp/
 tmp/
 temp/
 
-# Expo / Mobile App
-.expo/
-.eas/
-*.jks
-*.p8
-*.mobileprovision
 
 # Python / UV dependencies & cache
 __pycache__/
