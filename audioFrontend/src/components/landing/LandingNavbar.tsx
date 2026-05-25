@@ -23,7 +23,7 @@ export function LandingNavbar() {
         className="flex items-center gap-2.5 cursor-pointer group"
         onClick={() => router.push("/")}
       >
-        <div className="w-7 h-7 rounded-full overflow-hidden group-hover:scale-105 transition-transform duration-300 ring-1 ring-black/8 shadow-sm">
+        <div className="w-7 h-7 rounded-full overflow-hidden group-hover:scale-105 transition-transform duration-300 ">
           <Image src="/image.png" alt="One Melody" width={28} height={28} className="w-full h-full object-cover" />
         </div>
         <span className="text-[13px] font-bold tracking-widest text-zinc-800 italic uppercase">
@@ -32,7 +32,7 @@ export function LandingNavbar() {
       </div>
 
       {/* Nav links */}
-      <nav className="hidden md:flex items-center gap-7 text-[11px] font-semibold uppercase tracking-widest text-zinc-400">
+      <nav className="hidden md:flex items-center gap-7 text-[11px] font-semibold uppercase tracking-widest text-black">
         <a href="#features" className="hover:text-zinc-900 transition-colors duration-150">Features</a>
         <a href="#specs" className="hover:text-zinc-900 transition-colors duration-150">Specs</a>
         <a href="#faq" className="hover:text-zinc-900 transition-colors duration-150">FAQ</a>

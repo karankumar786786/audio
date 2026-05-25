@@ -105,7 +105,7 @@ export default function HomePage() {
           <div className="h-px flex-1 mx-8 bg-linear-to-r from-white/6 to-transparent" />
         </div>
 
-        <div className="flex flex-row overflow-x-auto gap-12 pb-6 no-scrollbar mask-fade-right px-1">
+        <div className="flex flex-row overflow-x-auto gap-12 pb-6 no-scrollbar mask-fade-right px-1 py-2">
           {isArtistsLoading ? (
             [1, 2, 3, 4, 5, 6].map((i) => (
               <div key={i} className="flex-none w-[160px] space-y-4">
@@ -135,7 +135,7 @@ export default function HomePage() {
           <div className="h-px flex-1 mx-8 bg-linear-to-r from-white/6 to-transparent" />
         </div>
 
-        <div className="flex flex-row overflow-x-auto gap-8 pb-6 no-scrollbar mask-fade-right px-1">
+        <div className="flex flex-row overflow-x-auto gap-8 pb-6 no-scrollbar mask-fade-right px-1 py-2">
           {isPlaylistsLoading ? (
             [1, 2, 3, 4, 5, 6].map((i) => (
               <div key={i} className="flex-none w-[180px] space-y-4">
@@ -168,7 +168,7 @@ export default function HomePage() {
               <div className="h-px flex-1 bg-linear-to-r from-white/6 to-transparent" />
             </div>
 
-            <div className="flex flex-row overflow-x-auto gap-6 pb-6 no-scrollbar mask-fade-right px-1">
+            <div className="flex flex-row overflow-x-auto gap-6 pb-6 no-scrollbar mask-fade-right px-1 py-2">
               {recommendations.data.data.slice(0, 10).map((song: Song) => (
                 <SongCard 
                   key={`rec-${song.id}`} 
