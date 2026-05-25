@@ -33,7 +33,7 @@ export default function Home() {
   if (!isMounted || systemUser) {
     return (
       <div className="flex items-center justify-center min-h-screen landing-bg">
-        <div className="animate-pulse text-zinc-400 font-semibold text-sm tracking-[0.25em] uppercase italic">
+        <div className="animate-pulse text-zinc-600 font-semibold text-sm tracking-[0.25em] uppercase italic">
           Initializing Soundscape...
         </div>
       </div>
@@ -41,10 +41,10 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen landing-bg text-zinc-900 selection:bg-primary/20 overflow-y-auto relative font-sans no-scrollbar pb-16">
+    <div className="min-h-screen landing-bg text-white selection:bg-primary/20 overflow-y-auto relative font-sans no-scrollbar pb-16">
 
-      {/* Very subtle dot grid */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(0,0,0,0.035)_1px,transparent_1px)] bg-[size:32px_32px] pointer-events-none z-0" />
+      {/* Very subtle dark grid */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.025)_1px,transparent_1px)] bg-[size:32px_32px] pointer-events-none z-0" />
 
       {/* Single soft green glow — top only */}
       <BackgroundBlob className="top-[-8%] left-[10%] w-[60%] h-[40%] bg-primary/10" delay={0} />
