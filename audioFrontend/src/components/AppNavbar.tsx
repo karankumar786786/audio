@@ -361,27 +361,13 @@ export function AppNavbar() {
       <div className="flex items-center gap-4 pointer-events-auto">
         {mounted && !!systemUser ? (
           <div className="flex items-center gap-3">
-            {/* User Profile Avatar Card */}
-            <div className="flex items-center gap-2.5 px-3 py-1.5 bg-white/5 border border-white/5 rounded-2xl shadow-xl">
-              <div className="w-7 h-7 rounded-xl overflow-hidden border border-white/10">
-                <img
-                  src={
-                    systemUser?.picture ||
-                    `https://avatar.vercel.sh/${systemUser?.email || "me"}`
-                  }
-                  className="w-full h-full object-cover"
-                  alt="Profile"
-                />
-              </div>
-              <div className="hidden sm:block text-left pr-1.5">
-                <p className="text-[10px] font-black text-white truncate max-w-[100px]">
-                  {systemUser?.name || "User"}
-                </p>
-                <p className="text-[8px] text-zinc-500 font-bold uppercase tracking-wider">
-                  Session Active
-                </p>
-              </div>
-            </div>
+            {/* Welcome Greeting */}
+            <span className="text-xs font-bold text-zinc-400">
+              Hi,{" "}
+              <span className="text-white font-black">
+                {systemUser?.name || "User"}
+              </span>
+            </span>
 
             {/* Logout button */}
             <button
