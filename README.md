@@ -2,6 +2,12 @@
 
 One Melody is a state-of-the-art, production-grade distributed music streaming platform structured as a monorepo. It features a modern user frontend, a comprehensive administration dashboard, dual user/admin backends, an asynchronous audio processing/HLS transcoding pipeline, and a dedicated Python digital signal processing (DSP) feature extraction service.
 
+## 🚀 Key Technical Highlights (Resume Ready)
+- **High-Performance Monorepo Architecture**: Designed and built a high-performance monorepo-based music platform using a microservices architecture (Next.js, Bun/Hono, Python FastAPI) served via Docker, Traefik, and Caddy.
+- **Asynchronous Event-Driven Orchestration**: Developed an asynchronous event-driven audio ingestion pipeline using Inngest, orchestrating HLS transcoding (FFmpeg), Whisper-based transcription, and Python-based Digital Signal Processing.
+- **Acoustic Analytics & Vector Recommendations**: Implemented Python DSP analytics using the Essentia library to extract acoustic features (BPM, spectral flux, zero-crossing rates) to build a vector recommendation engine powered by Recombee.
+- **Cryptographic Security Gateway**: Secured user routes and media files against IDOR attacks by deploying a custom cryptographic Signed ID utility at the API gateway layer.
+
 ---
 
 ## 📸 Product Walkthrough & Visual Interface
