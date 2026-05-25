@@ -1,10 +1,16 @@
-import React from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { ChevronDown } from "lucide-react";
+import type React from "react";
+
+export interface QualityTrack {
+  index: number;
+  bandwidth: number;
+  label: string;
+}
 
 interface PlayerQualitySelectorProps {
   selectedQuality: "auto" | number;
-  qualityTracks: any[];
+  qualityTracks: QualityTrack[];
   showQualityMenu: boolean;
   setShowQualityMenu: (show: boolean) => void;
   onSelectQuality: (quality: "auto" | number) => void;
@@ -20,6 +26,7 @@ export const PlayerQualitySelector: React.FC<PlayerQualitySelectorProps> = ({
   return (
     <div className="relative group ml-1">
       <button
+        type="button"
         onClick={() => setShowQualityMenu(!showQualityMenu)}
         className={`flex items-center gap-1.5 px-2 py-1 rounded-lg transition-all border ${
           showQualityMenu
@@ -28,7 +35,9 @@ export const PlayerQualitySelector: React.FC<PlayerQualitySelectorProps> = ({
         }`}
       >
         <span className="text-[9px] font-black italic tracking-wider">
-          {selectedQuality === "auto" ? "HD" : `${Math.round((selectedQuality as number) / 1000)}K`}
+          {selectedQuality === "auto"
+            ? "HD"
+            : `${Math.round((selectedQuality as number) / 1000)}K`}
         </span>
         <ChevronDown
           size={10}
@@ -49,6 +58,7 @@ export const PlayerQualitySelector: React.FC<PlayerQualitySelectorProps> = ({
             </p>
             <div className="max-h-[200px] overflow-y-auto custom-scrollbar">
               <button
+                type="button"
                 onClick={() => {
                   onSelectQuality("auto");
                   setShowQualityMenu(false);
@@ -61,8 +71,9 @@ export const PlayerQualitySelector: React.FC<PlayerQualitySelectorProps> = ({
               >
                 AUTO
               </button>
-              {qualityTracks.map((t: any) => (
+              {qualityTracks.map((t) => (
                 <button
+                  type="button"
                   key={t.bandwidth}
                   onClick={() => {
                     onSelectQuality(t.bandwidth);
@@ -74,7 +85,18 @@ export const PlayerQualitySelector: React.FC<PlayerQualitySelectorProps> = ({
                       : "text-zinc-400 hover:text-white hover:bg-white/5"
                   }`}
                 >
-                  {Math.round(t.bandwidth / 1000)}K {t.label || ""}
+                  {(() => {
+                    const kbps = `${Math.round(t.bandwidth / 1000)}K`;
+                    if (!t.label) return kbps;
+                    const cleanLabel = t.label.trim();
+                    if (
+                      cleanLabel.toLowerCase().includes(kbps.toLowerCase()) ||
+                      cleanLabel.toLowerCase().includes(kbps.replace("K", "k"))
+                    ) {
+                      return cleanLabel;
+                    }
+                    return `${kbps} - ${cleanLabel}`;
+                  })()}
                 </button>
               ))}
             </div>

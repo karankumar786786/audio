@@ -1,29 +1,26 @@
 "use client";
 
-import {
-  Search,
-  Bell,
-  Settings,
-  User,
-  Sparkles,
-  X,
-  History,
-  Loader2,
-  Mic2,
-  ListMusic,
-  Play,
-} from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
-import { useState, useEffect, useRef } from "react";
-import { musicApi } from "@/lib/api";
-import { playerStore } from "@/store/player.store";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useStore } from "@tanstack/react-store";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { AnimatePresence, motion } from "framer-motion";
+import {
+  History,
+  ListMusic,
+  Loader2,
+  LogOut,
+  Mic2,
+  Play,
+  Search,
+  Sparkles,
+  User,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
-import { playerActions } from "@/store/player.store";
-import { mapToPlayerSong } from "@/lib/player-utils";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import { musicApi } from "@/lib/api";
 import { getImageUrl } from "@/lib/image-utils";
+import { mapToPlayerSong } from "@/lib/player-utils";
+import { playerActions, playerStore } from "@/store/player.store";
 
 export function AppNavbar() {
   const systemUser = useStore(playerStore, (s) => s.systemUser);
@@ -60,8 +57,7 @@ export function AppNavbar() {
   });
 
   const saveHistory = useMutation({
-    mutationFn: (text: string) =>
-      musicApi.users.saveSearchHistory(text),
+    mutationFn: (text: string) => musicApi.users.saveSearchHistory(text),
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: ["search-history"] }),
   });
@@ -225,11 +221,11 @@ export function AppNavbar() {
                           >
                             <div className="w-10 h-10 rounded-lg bg-zinc-900 overflow-hidden shrink-0 border border-white/5">
                               <img
-                                src={getImageUrl(song.imageKey, { 
-                                  width: 100, 
-                                  height: 100, 
+                                src={getImageUrl(song.imageKey, {
+                                  width: 100,
+                                  height: 100,
                                   focus: "auto",
-                                  aspectRatio: "1-1"
+                                  aspectRatio: "1-1",
                                 })}
                                 className="w-full h-full object-cover"
                                 alt=""
@@ -271,7 +267,7 @@ export function AppNavbar() {
                                     width: 100,
                                     height: 100,
                                     focus: "face",
-                                    aspectRatio: "1-1"
+                                    aspectRatio: "1-1",
                                   })}
                                   className="w-full h-full object-cover"
                                   alt=""
@@ -288,10 +284,7 @@ export function AppNavbar() {
                                 Artist
                               </p>
                             </div>
-                            <Sparkles
-                              size={12}
-                              className="text-primary mr-2"
-                            />
+                            <Sparkles size={12} className="text-primary mr-2" />
                           </button>
                         ))}
                       </div>
@@ -316,7 +309,7 @@ export function AppNavbar() {
                                     width: 100,
                                     height: 100,
                                     focus: "auto",
-                                    aspectRatio: "1-1"
+                                    aspectRatio: "1-1",
                                   })}
                                   className="w-full h-full object-cover"
                                   alt=""
@@ -344,7 +337,7 @@ export function AppNavbar() {
                     {debouncedQuery.trim() &&
                       !isSearching &&
                       !searchResults?.data?.songs?.length &&
-                        !searchResults?.data?.artists?.length &&
+                      !searchResults?.data?.artists?.length &&
                       !searchResults?.data?.playlists?.length && (
                         <div className="p-8 text-center bg-white/5 rounded-2xl m-2">
                           <Search
@@ -366,28 +359,44 @@ export function AppNavbar() {
 
       {/* User & Actions */}
       <div className="flex items-center gap-4 pointer-events-auto">
-
         {mounted && !!systemUser ? (
-          <div className="flex items-center gap-4">
-            <motion.div
-              whileHover={{ scale: 1.05 }}
+          <div className="flex items-center gap-3">
+            {/* User Profile Avatar Card */}
+            <div className="flex items-center gap-2.5 px-3 py-1.5 bg-white/5 border border-white/5 rounded-2xl shadow-xl">
+              <div className="w-7 h-7 rounded-xl overflow-hidden border border-white/10">
+                <img
+                  src={
+                    systemUser?.picture ||
+                    `https://avatar.vercel.sh/${systemUser?.email || "me"}`
+                  }
+                  className="w-full h-full object-cover"
+                  alt="Profile"
+                />
+              </div>
+              <div className="hidden sm:block text-left pr-1.5">
+                <p className="text-[10px] font-black text-white truncate max-w-[100px]">
+                  {systemUser?.name || "User"}
+                </p>
+                <p className="text-[8px] text-zinc-500 font-bold uppercase tracking-wider">
+                  Session Active
+                </p>
+              </div>
+            </div>
+
+            {/* Logout button */}
+            <button
+              type="button"
               onClick={() => {
                 playerActions.clearSystemSession();
                 toast.success("Logged Out", {
                   description: "You have been successfully logged out.",
                 });
               }}
-              className="w-12 h-12 rounded-2xl overflow-hidden border-2 border-transparent hover:border-primary transition-all cursor-pointer shadow-2xl ring-4 ring-black group relative"
+              className="px-4 py-3 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 hover:border-red-500/35 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-xl flex items-center gap-2 cursor-pointer active:scale-95"
             >
-              <img
-                src={systemUser?.picture || `https://avatar.vercel.sh/${systemUser?.email || "me"}`}
-                className="w-full h-full object-cover"
-                alt="Profile"
-              />
-              <div className="absolute inset-0 bg-primary/80 items-center justify-center hidden group-hover:flex">
-                <X size={20} className="text-black" />
-              </div>
-            </motion.div>
+              <LogOut size={12} />
+              Log Out
+            </button>
           </div>
         ) : (
           <button
