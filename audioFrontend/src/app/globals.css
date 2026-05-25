@@ -32,6 +32,15 @@ body {
       transparent 75%);
 }
 
+/* ─── Landing Page Theme ─── */
+
+.landing-bg {
+  background-color: #f9f9f7;
+  background-image:
+    radial-gradient(ellipse 60% 40% at 50% -10%, oklch(0.75 0.25 142 / 14%), transparent 70%),
+    radial-gradient(ellipse 40% 30% at 90% 100%, oklch(0.75 0.25 142 / 08%), transparent 65%);
+}
+
 /* ─── Modern Utilities ─── */
 
 @utility glass-effect {
@@ -40,6 +49,22 @@ body {
 
 @utility glass-effect-strong {
   @apply bg-black/60 backdrop-blur-3xl border border-white/12;
+}
+
+/* Premium white card */
+@utility glass-light {
+  background: rgba(255, 255, 255, 0.80);
+  backdrop-filter: blur(24px) saturate(1.5);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 8px 32px rgba(0,0,0,0.07), 0 1px 0 rgba(255,255,255,1) inset;
+}
+
+/* Dark frosted card */
+@utility glass-dark {
+  background: rgba(10, 11, 10, 0.94);
+  backdrop-filter: blur(40px) saturate(1.5);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.50), 0 1px 0 rgba(255,255,255,0.04) inset;
 }
 
 @utility hover-scale {
@@ -181,7 +206,7 @@ body {
 /* Specific overrides for volume slider */
 .volume-slider {
   background: transparent !important;
-  height: 24px !important; /* Expansion of the hit area */
+  height: 24px !important;
 }
 
 /* Chrome/Safari Thumb */
@@ -196,7 +221,7 @@ body {
   opacity: 0;
   border: 2px solid var(--primary);
   transition: opacity 0.2s ease, transform 0.2s ease;
-  margin-top: 0; /* Center it in the 24px height */
+  margin-top: 0;
 }
 
 /* Firefox Thumb */
@@ -222,7 +247,7 @@ body {
 
 /* Specific overrides for progress slider */
 .progress-slider {
-  background: transparent !important; /* Managed by the parent wrapper's buffered div */
+  background: transparent !important;
   position: absolute;
   top: 0;
   left: 0;

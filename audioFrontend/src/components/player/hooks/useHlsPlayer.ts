@@ -41,8 +41,68 @@ export function useHlsPlayer(
           console.log("[Player] Loading stream URL:", streamUrl);
           isInternalChange.current = true;
 
-          // Check for native HLS support (Safari)
-          if (audioElement.canPlayType("application/vnd.apple.mpegurl")) {
+          // Dynamic import of hls.js only on client side to prevent Next.js SSR errors
+          const HlsModule = await import("hls.js");
+          const Hls = HlsModule.default;
+
+          if (Hls.isSupported()) {
+            hlsInstance = new Hls({
+              enableWorker: true,
+              lowLatencyMode: false,
+              backBufferLength: 90,
+              maxBufferLength: 20,
+              maxMaxBufferLength: 20,
+            });
+            hlsRef.current = hlsInstance;
+
+            hlsInstance.attachMedia(audioElement);
+
+            hlsInstance.on(Hls.Events.MEDIA_ATTACHED, () => {
+              if (isMounted) {
+                hlsInstance.loadSource(streamUrl);
+              }
+            });
+
+            hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => {
+              if (!isMounted) return;
+              syncTracks(hlsInstance);
+
+              if (isPlaying) {
+                audioElement.play().catch((err) => {
+                  console.warn("[Player] Hls.js autoplay failed:", err);
+                });
+              }
+            });
+
+            hlsInstance.on(Hls.Events.ERROR, (event: any, data: any) => {
+              if (!isMounted) return;
+
+              if (data.fatal) {
+                console.error("[Hls.js] ❌ Fatal error details:", data);
+                switch (data.type) {
+                  case Hls.ErrorTypes.NETWORK_ERROR:
+                    console.warn("[Hls.js] Fatal network error, trying to recover...");
+                    hlsInstance.startLoad();
+                    break;
+                  case Hls.ErrorTypes.MEDIA_ERROR:
+                    console.warn("[Hls.js] Fatal media error, trying to recover...");
+                    hlsInstance.recoverMediaError();
+                    break;
+                  default:
+                    console.error("[Hls.js] Unrecoverable fatal error:", data.details);
+                    toast.error("Playback error", {
+                      description: `Unrecoverable error: ${data.details}.`,
+                    });
+                    hlsInstance.destroy();
+                    hlsRef.current = null;
+                    break;
+                }
+              } else {
+                console.warn("[Hls.js] ⚠️ Non-fatal warning details:", data);
+              }
+            });
+          } else if (audioElement.canPlayType("application/vnd.apple.mpegurl")) {
+            // Check for native HLS support (Safari on iOS)
             audioElement.src = streamUrl;
             playerActions.setQualityTracks([]); // No manual tracks for native Safari HLS
             
@@ -52,65 +112,7 @@ export function useHlsPlayer(
               });
             }
           } else {
-            // Dynamic import of hls.js only on client side to prevent Next.js SSR errors
-            const HlsModule = await import("hls.js");
-            const Hls = HlsModule.default;
-
-            if (Hls.isSupported()) {
-              hlsInstance = new Hls({
-                enableWorker: true,
-                lowLatencyMode: true,
-                backBufferLength: 90,
-              });
-              hlsRef.current = hlsInstance;
-
-              hlsInstance.attachMedia(audioElement);
-
-              hlsInstance.on(Hls.Events.MEDIA_ATTACHED, () => {
-                if (isMounted) {
-                  hlsInstance.loadSource(streamUrl);
-                }
-              });
-
-              hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => {
-                if (!isMounted) return;
-                syncTracks(hlsInstance);
-
-                if (isPlaying) {
-                  audioElement.play().catch((err) => {
-                    console.warn("[Player] Hls.js autoplay failed:", err);
-                  });
-                }
-              });
-
-              hlsInstance.on(Hls.Events.ERROR, (event: any, data: any) => {
-                if (!isMounted) return;
-                console.error("[Hls.js] ❌ Error details:", data);
-
-                if (data.fatal) {
-                  switch (data.type) {
-                    case Hls.ErrorTypes.NETWORK_ERROR:
-                      console.warn("[Hls.js] Fatal network error, trying to recover...");
-                      hlsInstance.startLoad();
-                      break;
-                    case Hls.ErrorTypes.MEDIA_ERROR:
-                      console.warn("[Hls.js] Fatal media error, trying to recover...");
-                      hlsInstance.recoverMediaError();
-                      break;
-                    default:
-                      console.error("[Hls.js] Unrecoverable fatal error:", data.details);
-                      toast.error("Playback error", {
-                        description: `Unrecoverable error: ${data.details}.`,
-                      });
-                      hlsInstance.destroy();
-                      hlsRef.current = null;
-                      break;
-                  }
-                }
-              });
-            } else {
-              toast.error("HLS playback is not supported in this browser.");
-            }
+            toast.error("HLS playback is not supported in this browser.");
           }
 
           setTimeout(() => {
