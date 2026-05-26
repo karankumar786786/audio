@@ -211,8 +211,6 @@ export class AudioTranscoder {
                 `init_segment=${toShaka(path.join(profileDir, "init.mp4"))}`,
                 `segment_template=${toShaka(path.join(profileDir, `${profile.label}_$Number%05d$.m4s`))}`,
                 `playlist_name=${toShaka(path.join(profileDir, "playlist.m3u8"))}`,
-                `hls_group_id=audio`,
-                `hls_name=${profile.label}`,
                 `bandwidth=${profile.bandwidth}`,
             ].join(",");
         });

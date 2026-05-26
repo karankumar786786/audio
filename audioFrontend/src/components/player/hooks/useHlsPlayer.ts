@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef } from "react";
 import { toast } from "sonner";
-import { playerActions } from "../../../store/player.store";
+import { playerActions, playerStore } from "../../../store/player.store";
 
 export function useHlsPlayer(
   audioElement: HTMLAudioElement | null,
@@ -68,6 +68,23 @@ export function useHlsPlayer(
             hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => {
               if (!isMounted) return;
               syncTracks(hlsInstance);
+
+              // Apply the user's previously selected quality if applicable
+              const activeQuality = playerStore.state.selectedQuality;
+              if (activeQuality === "auto") {
+                hlsInstance.currentLevel = -1;
+              } else {
+                const idx = hlsInstance.levels.findIndex(
+                  (level: any) => level.bitrate === activeQuality,
+                );
+                if (idx !== -1) {
+                  hlsInstance.currentLevel = idx;
+                } else {
+                  // Fall back to auto if that specific bitrate doesn't exist in the new song
+                  hlsInstance.currentLevel = -1;
+                  playerActions.setSelectedQuality("auto");
+                }
+              }
 
               if (isPlaying) {
                 audioElement.play().catch((err) => {
@@ -156,8 +173,9 @@ export function useHlsPlayer(
   useEffect(() => {
     if (!hlsRef.current) return;
     const hls = hlsRef.current;
-    // Reference currentSongId to trigger re-run and satisfy linter check
-    const _songId = currentSongId;
+
+    // Only apply if levels are loaded
+    if (!hls.levels || hls.levels.length === 0) return;
 
     if (selectedQuality === "auto") {
       hls.currentLevel = -1; // -1 represents AUTO level selection
@@ -169,7 +187,7 @@ export function useHlsPlayer(
         hls.currentLevel = idx;
       }
     }
-  }, [selectedQuality, currentSongId]);
+  }, [selectedQuality]);
 
   return { player: hlsRef.current, isInternalChange };
 }
