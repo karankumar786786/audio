@@ -70,6 +70,10 @@ if (typeof window !== "undefined") {
   const token = localStorage.getItem("system_token");
   const refreshToken = localStorage.getItem("system_refresh_token");
   if (token) {
-    playerStore.setState((s) => ({ ...s, systemToken: token, systemRefreshToken: refreshToken }));
+    playerStore.setState((s) => ({
+      ...s,
+      systemToken: token,
+      systemRefreshToken: refreshToken,
+    }));
   }
 }

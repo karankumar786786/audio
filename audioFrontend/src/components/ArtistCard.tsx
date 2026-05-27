@@ -22,17 +22,19 @@ export function ArtistCard({ artist }: ArtistCardProps) {
       >
         <div className="relative aspect-square overflow-hidden rounded-full bg-zinc-950 border border-white/5 mx-auto transition-all duration-500 group-hover:ring-4 group-hover:ring-primary/50 group-hover:shadow-[0_0_35px_rgba(120,240,142,0.25)]">
           <img
-            src={getImageUrl(artist.coverImageKey || artist.bannerImageKey, {
-              width: 300,
-              height: 300,
-              focus: "auto",
-              aspectRatio: "1-1",
-            }) || "/placeholder-artist.png"}
+            src={
+              getImageUrl(artist.coverImageKey || artist.bannerImageKey, {
+                width: 300,
+                height: 300,
+                focus: "auto",
+                aspectRatio: "1-1",
+              }) || "/placeholder-artist.png"
+            }
             alt={artist.name}
             className="h-full w-full object-cover group-hover:scale-108 transition-transform duration-700 ease-out"
           />
           <div className="absolute inset-0 bg-black/45 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center backdrop-blur-[2px]">
-            <motion.div 
+            <motion.div
               initial={{ scale: 0.8 }}
               whileHover={{ scale: 1.1 }}
               className="w-11 h-11 rounded-full bg-primary flex items-center justify-center text-black shadow-lg"

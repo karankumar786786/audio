@@ -16,7 +16,7 @@ export default function ArtistsPage() {
 
   return (
     <div className="px-10 pb-20 pt-6 space-y-12">
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
@@ -27,7 +27,8 @@ export default function ArtistsPage() {
         </div>
         <div>
           <h2 className="text-3xl font-black italic tracking-tight uppercase text-white flex items-center gap-2">
-            Artists <Sparkles size={20} className="text-primary animate-pulse" />
+            Artists{" "}
+            <Sparkles size={20} className="text-primary animate-pulse" />
           </h2>
           <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500 italic mt-0.5">
             Verified vocal synchronization nodes in the network
@@ -46,15 +47,15 @@ export default function ArtistsPage() {
           ))}
         </div>
       ) : artists.length > 0 ? (
-        <motion.div 
+        <motion.div
           initial="hidden"
           animate="show"
           variants={{
             hidden: { opacity: 0 },
             show: {
               opacity: 1,
-              transition: { staggerChildren: 0.04 }
-            }
+              transition: { staggerChildren: 0.04 },
+            },
           }}
           className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-8"
         >
@@ -63,7 +64,11 @@ export default function ArtistsPage() {
               key={artist.id}
               variants={{
                 hidden: { opacity: 0, y: 15 },
-                show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 100 } }
+                show: {
+                  opacity: 1,
+                  y: 0,
+                  transition: { type: "spring", stiffness: 100 },
+                },
               }}
             >
               <ArtistCard artist={artist} />

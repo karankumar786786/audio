@@ -4,7 +4,9 @@ interface PlayerBackgroundProps {
   posterUrl: string;
 }
 
-export const PlayerBackground: React.FC<PlayerBackgroundProps> = ({ posterUrl }) => {
+export const PlayerBackground: React.FC<PlayerBackgroundProps> = ({
+  posterUrl,
+}) => {
   return (
     <div className="absolute inset-0 pointer-events-none overflow-hidden">
       <div

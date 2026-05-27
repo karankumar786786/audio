@@ -9,7 +9,11 @@ interface Interactive3DTiltCardProps {
   style?: React.CSSProperties;
 }
 
-export function Interactive3DTiltCard({ children, className = "", style }: Interactive3DTiltCardProps) {
+export function Interactive3DTiltCard({
+  children,
+  className = "",
+  style,
+}: Interactive3DTiltCardProps) {
   const [tilt, setTilt] = useState({ x: 0, y: 0 });
   const [glare, setGlare] = useState({ x: 0, y: 0 });
   const [hovered, setHovered] = useState(false);
@@ -53,7 +57,7 @@ export function Interactive3DTiltCard({ children, className = "", style }: Inter
           }}
         />
       )}
-      <div 
+      <div
         style={{ transform: "translateZ(30px)" }}
         className="transition-transform duration-200 h-full w-full"
       >

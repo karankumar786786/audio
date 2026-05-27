@@ -14,8 +14,11 @@ export interface TranscriptionEntry {
 }
 
 export function useLyrics(captionUrl: string | undefined, currentTime: number) {
-  const [transcriptions, setTranscriptions] = useState<TranscriptionEntry[]>([]);
-  const [currentCaption, setCurrentCaption] = useState<TranscriptionEntry | null>(null);
+  const [transcriptions, setTranscriptions] = useState<TranscriptionEntry[]>(
+    [],
+  );
+  const [currentCaption, setCurrentCaption] =
+    useState<TranscriptionEntry | null>(null);
 
   useEffect(() => {
     if (!captionUrl) {
@@ -47,18 +50,26 @@ export function useLyrics(captionUrl: string | undefined, currentTime: number) {
             };
             chunks.push(currentChunk);
           } else if (currentChunk) {
-            const wordMatches = Array.from(l.matchAll(/<([\d:.]+)>\s*([^<]+)/g));
+            const wordMatches = Array.from(
+              l.matchAll(/<([\d:.]+)>\s*([^<]+)/g),
+            );
             if (wordMatches.length > 0) {
               wordMatches.forEach((m, idx) => {
                 const wStart = timeToSec(m[1]);
                 const wText = m[2].trim();
                 let wEnd = currentChunk!.end_time_seconds;
-                if (idx < wordMatches.length - 1) wEnd = timeToSec(wordMatches[idx + 1][1]);
-                currentChunk!.words.push({ text: wText, start: wStart, end: wEnd });
+                if (idx < wordMatches.length - 1)
+                  wEnd = timeToSec(wordMatches[idx + 1][1]);
+                currentChunk!.words.push({
+                  text: wText,
+                  start: wStart,
+                  end: wEnd,
+                });
               });
               currentChunk.transcript += l.replace(/<[^>]+>/g, "").trim();
             } else {
-              currentChunk.transcript += (currentChunk.transcript ? " " : "") + l;
+              currentChunk.transcript +=
+                (currentChunk.transcript ? " " : "") + l;
             }
           }
         }
@@ -71,7 +82,10 @@ export function useLyrics(captionUrl: string | undefined, currentTime: number) {
     let active: TranscriptionEntry | null = null;
     for (let i = transcriptions.length - 1; i >= 0; i--) {
       const e = transcriptions[i];
-      if (currentTime >= e.start_time_seconds && currentTime <= e.end_time_seconds) {
+      if (
+        currentTime >= e.start_time_seconds &&
+        currentTime <= e.end_time_seconds
+      ) {
         active = e;
         break;
       }

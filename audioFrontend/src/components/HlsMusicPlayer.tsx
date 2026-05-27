@@ -37,6 +37,7 @@ export function HlsMusicPlayer() {
     selectedQuality,
     favourites,
     systemUser,
+    isLyricsOpen,
   } = state;
 
   const [localTime, setLocalTime] = useState(0);
@@ -56,10 +57,13 @@ export function HlsMusicPlayer() {
     currentSong?.id,
     currentSong?.streamUrl,
     isPlaying,
-    selectedQuality
+    selectedQuality,
   );
 
-  const { currentCaption } = useLyrics(currentSong?.captionUrl, localTime);
+  const { currentCaption, transcriptions } = useLyrics(
+    currentSong?.captionUrl,
+    localTime,
+  );
 
   useAudioSync(
     audioRef.current,
@@ -70,7 +74,7 @@ export function HlsMusicPlayer() {
     isMuted,
     duration,
     setLocalTime,
-    setBuffered
+    setBuffered,
   );
 
   // 2b. Sync store currentTime resets back to audio element (for restart/previous)
@@ -104,7 +108,9 @@ export function HlsMusicPlayer() {
     setIsTogglingFav(true);
 
     toast.promise(playerActions.toggleFavourite(currentSong.id), {
-      loading: wasFav ? "Removing from Favourites..." : "Adding to Favourites...",
+      loading: wasFav
+        ? "Removing from Favourites..."
+        : "Adding to Favourites...",
       success: () => {
         setIsTogglingFav(false);
         return wasFav ? "Removed from Favourites" : "Added to Favourites";
@@ -135,58 +141,80 @@ export function HlsMusicPlayer() {
           <Music className="h-8 w-8 text-zinc-700" />
         </div>
         <p className="text-zinc-600 text-[10px] font-black uppercase tracking-[0.2em] italic leading-relaxed">
-          Select a track<br />to start playing
+          Select a track
+          <br />
+          to start playing
         </p>
       </div>
     );
   }
 
   // 4. Asset URLs (Gauranteed currentSong exists here)
-  const optimizedPosterUrl = (currentSong.imageKey
-    ? getImageUrl(currentSong.imageKey, {
-        width: 720,
-        height: 720,
-        focus: "auto",
-        aspectRatio: "1-1",
-        quality: 90,
-      })
-    : currentSong.posterUrl) || "";
+  const optimizedPosterUrl =
+    (currentSong.imageKey
+      ? getImageUrl(currentSong.imageKey, {
+          width: 720,
+          height: 720,
+          focus: "auto",
+          aspectRatio: "1-1",
+          quality: 90,
+        })
+      : currentSong.posterUrl) || "";
 
   return (
     <>
       <div className="w-[340px] glass-effect-strong border-l border-white/4 flex flex-col h-screen overflow-hidden flex-none relative z-50">
         <PlayerBackground posterUrl={optimizedPosterUrl} />
-        
+
         <audio ref={audioRef} className="hidden" />
 
-        <PlayerAlbumArt 
-            songId={currentSong.id} 
-            posterUrl={optimizedPosterUrl} 
-            title={currentSong.title} 
-        />
+        {/* Morphing Header Layout (Artwork + Song Info) */}
+        <div
+          className={`flex-none flex transition-all duration-500 ease-in-out ${
+            isLyricsOpen
+              ? "flex-row items-center px-6 py-4 border-b border-white/5 bg-white/2 gap-4"
+              : "flex-col"
+          }`}
+        >
+          <PlayerAlbumArt
+            songId={currentSong.id}
+            posterUrl={optimizedPosterUrl}
+            title={currentSong.title}
+            isCollapsed={isLyricsOpen}
+          />
 
-        <PlayerTrackInfo 
+          <PlayerTrackInfo
             title={currentSong.title}
             artistName={currentSong.artistName}
             isFavourite={isFavourite}
             onToggleFavourite={handleToggleFavourite}
             onAddToPlaylist={() => {
-                if (!systemUser?.id) {
-                    toast.error("Sign in required");
-                    return;
-                }
-                setIsPlaylistModalOpen(true);
+              if (!systemUser?.id) {
+                toast.error("Sign in required");
+                return;
+              }
+              setIsPlaylistModalOpen(true);
             }}
-        />
+            isCollapsed={isLyricsOpen}
+          />
+        </div>
 
-        <PlayerLyricsOverlay 
-            currentCaption={currentCaption} 
-            localTime={localTime} 
+        <PlayerLyricsOverlay
+          currentCaption={currentCaption}
+          transcriptions={transcriptions}
+          localTime={localTime}
+          isLyricsOpen={isLyricsOpen}
+          onSeek={(time) => {
+            if (audioRef.current) {
+              audioRef.current.currentTime = time;
+              setLocalTime(time);
+            }
+          }}
         />
 
         {/* ─── Controls ─── */}
         <div className="flex-none px-6 pb-6 pt-2 space-y-4 relative z-10">
-          <PlayerProgressBar 
+          <PlayerProgressBar
             currentTime={localTime}
             duration={duration}
             bufferedTime={buffered}
@@ -194,7 +222,7 @@ export function HlsMusicPlayer() {
           />
 
           <div className="space-y-4 pt-1">
-            <PlayerMainControls 
+            <PlayerMainControls
               isPlaying={isPlaying}
               isLoading={state.isRefilling} // Using refill state as a proxy for generic loading if needed
               onPlayPause={() => {
@@ -204,7 +232,8 @@ export function HlsMusicPlayer() {
                     audio.pause();
                   } else {
                     audio.play().catch((err) => {
-                      if (err.name !== "AbortError") console.warn("[Player] Manual play failed:", err);
+                      if (err.name !== "AbortError")
+                        console.warn("[Player] Manual play failed:", err);
                     });
                   }
                 }
@@ -214,7 +243,7 @@ export function HlsMusicPlayer() {
               onPrev={() => playerActions.previous()}
             />
 
-            <PlayerUtilityRow 
+            <PlayerUtilityRow
               isShuffle={isShuffle}
               repeatMode={repeatMode}
               onToggleShuffle={() => {
@@ -223,7 +252,11 @@ export function HlsMusicPlayer() {
               }}
               onToggleRepeat={() => {
                 playerActions.toggleRepeat();
-                const modes: Record<string, string> = { none: "all", all: "one", one: "none" };
+                const modes: Record<string, string> = {
+                  none: "all",
+                  all: "one",
+                  one: "none",
+                };
                 const next = modes[repeatMode] || "none";
                 toast.success(`Repeat: ${next.toUpperCase()}`);
               }}

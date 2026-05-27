@@ -18,8 +18,11 @@ export const playbackActions = {
       let idx = updatedQueue.findIndex((item) => item.queueId === song.queueId);
       if (idx === -1) {
         // Look for the song ahead first
-        idx = updatedQueue.findIndex((item, i) => i >= s.lastQueueIndex && item.id === song.id);
-        if (idx === -1) idx = updatedQueue.findIndex((item) => item.id === song.id);
+        idx = updatedQueue.findIndex(
+          (item, i) => i >= s.lastQueueIndex && item.id === song.id,
+        );
+        if (idx === -1)
+          idx = updatedQueue.findIndex((item) => item.id === song.id);
       }
 
       if (idx === -1) {
@@ -27,12 +30,18 @@ export const playbackActions = {
         const insertIdx = Math.max(0, s.lastQueueIndex + 1);
         updatedQueue.splice(insertIdx, 0, song);
         idx = insertIdx;
-        console.log(`[Playback] song NOT in queue. INSERTED "${song.title}" at index ${idx}. QueueID: ${song.queueId}`);
+        console.log(
+          `[Playback] song NOT in queue. INSERTED "${song.title}" at index ${idx}. QueueID: ${song.queueId}`,
+        );
       } else {
-        console.log(`[Playback] song found in queue. JUMPING to "${song.title}" at index ${idx}. QueueID: ${song.queueId}`);
+        console.log(
+          `[Playback] song found in queue. JUMPING to "${song.title}" at index ${idx}. QueueID: ${song.queueId}`,
+        );
       }
 
-      console.log(`[Queue State] Current Index: ${idx}, Total Songs: ${updatedQueue.length}`);
+      console.log(
+        `[Queue State] Current Index: ${idx}, Total Songs: ${updatedQueue.length}`,
+      );
 
       const newState = {
         ...s,

@@ -39,7 +39,8 @@ export const PlayerProgressBar: React.FC<PlayerProgressBarProps> = ({
           className="absolute top-1/2 -translate-y-1/2 left-0 h-[3px] rounded-full group-hover:h-[5px] transition-all pointer-events-none"
           style={{
             width: `${progressPct}%`,
-            background: "linear-gradient(90deg, var(--primary), oklch(0.6 0.2 142))",
+            background:
+              "linear-gradient(90deg, var(--primary), oklch(0.6 0.2 142))",
           }}
         />
 

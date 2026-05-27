@@ -24,24 +24,24 @@ export const PlayerQualitySelector: React.FC<PlayerQualitySelectorProps> = ({
   onSelectQuality,
 }) => {
   return (
-    <div className="relative group ml-1">
+    <div className="relative group ml-1.5">
       <button
         type="button"
         onClick={() => setShowQualityMenu(!showQualityMenu)}
-        className={`flex items-center gap-1.5 px-2 py-1 rounded-lg transition-all border ${
+        className={`flex items-center gap-1 px-1.5 py-1 rounded-lg transition-all cursor-pointer text-[10px] font-black italic tracking-wider ${
           showQualityMenu
-            ? "bg-primary/10 border-primary/30 text-primary"
-            : "bg-white/5 border-white/5 text-zinc-500 hover:text-white"
+            ? "text-primary bg-primary/10 shadow-[0_0_12px_rgba(120,240,142,0.15)]"
+            : "text-zinc-600 hover:text-zinc-400"
         }`}
       >
-        <span className="text-[9px] font-black italic tracking-wider">
+        <span>
           {selectedQuality === "auto"
             ? "HD"
             : `${Math.round((selectedQuality as number) / 1000)}K`}
         </span>
         <ChevronDown
           size={10}
-          className={`transition-transform duration-300 ${showQualityMenu ? "rotate-180" : ""}`}
+          className={`transition-transform duration-300 shrink-0 ${showQualityMenu ? "rotate-180" : ""}`}
         />
       </button>
 

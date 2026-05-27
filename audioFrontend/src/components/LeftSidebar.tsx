@@ -73,9 +73,9 @@ export function LeftSidebar() {
         {/* Logo */}
         <div className="flex items-center gap-3 mb-12 group cursor-pointer shrink-0">
           <div className="w-10 h-10 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-500 overflow-hidden">
-            <img 
-              src="/image.png" 
-              alt="Logo" 
+            <img
+              src="/image.png"
+              alt="Logo"
               className="w-full h-full object-contain filter drop-shadow-[0_0_8px_rgba(var(--primary),0.5)]"
             />
           </div>
@@ -208,7 +208,10 @@ export function LeftSidebar() {
                         : "text-zinc-500 hover:text-white hover:bg-white/3"
                     }`}
                   >
-                    <ListMusic size={14} className={`shrink-0 ${pathname === `/playlists/${playlist.id}` ? "opacity-100" : "opacity-30"}`} />
+                    <ListMusic
+                      size={14}
+                      className={`shrink-0 ${pathname === `/playlists/${playlist.id}` ? "opacity-100" : "opacity-30"}`}
+                    />
                     <span className="truncate">{playlist.name}</span>
                   </Link>
                 ))

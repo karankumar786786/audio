@@ -32,7 +32,7 @@ export function HeroSection({
   const currentSong = songs[index] || songs[0];
   const systemUser = useStore(playerStore, (s) => s.systemUser);
   const favourites = useStore(playerStore, (s) => s.favourites);
-  
+
   const isFavourite = currentSong ? favourites.has(currentSong.id) : false;
 
   const handleToggleFavourite = async (e: React.MouseEvent) => {
@@ -47,16 +47,18 @@ export function HeroSection({
     }
 
     toast.promise(playerActions.toggleFavourite(currentSong.id), {
-      loading: isFavourite ? "Removing from Favourites..." : "Adding to Favourites...",
+      loading: isFavourite
+        ? "Removing from Favourites..."
+        : "Adding to Favourites...",
       success: () => {
         return isFavourite ? "Removed from Favourites" : "Added to Favourites";
       },
       error: "Failed to update favourites",
       description: () => {
-        return isFavourite 
+        return isFavourite
           ? `"${currentSong.title}" removed from your collection.`
           : `"${currentSong.title}" added to your collection.`;
-      }
+      },
     });
   };
 
@@ -121,10 +123,6 @@ export function HeroSection({
             transition={{ delay: 0.1, duration: 0.5 }}
             className="space-y-4"
           >
-            <div className="text-[10px] font-black tracking-[0.3em] text-primary/80 uppercase">
-              Featured Track
-            </div>
-
             <h1 className="text-5xl lg:text-6xl font-black text-white tracking-tight leading-none max-w-2xl drop-shadow-xl line-clamp-2">
               {currentSong.title}
             </h1>
@@ -164,9 +162,13 @@ export function HeroSection({
             <button
               onClick={handleToggleFavourite}
               className={`h-14 w-14 rounded-full border border-white/10 flex items-center justify-center transition-all duration-300 hover:bg-white/5 active:scale-95 cursor-pointer ${
-                isFavourite ? "text-primary border-primary/30 shadow-[0_0_20px_rgba(120,240,142,0.1)]" : "text-white hover:text-primary"
+                isFavourite
+                  ? "text-primary border-primary/30 shadow-[0_0_20px_rgba(120,240,142,0.1)]"
+                  : "text-white hover:text-primary"
               }`}
-              title={isFavourite ? "Remove from Favourites" : "Add to Favourites"}
+              title={
+                isFavourite ? "Remove from Favourites" : "Add to Favourites"
+              }
             >
               <Heart fill={isFavourite ? "currentColor" : "none"} size={18} />
             </button>
@@ -189,7 +191,7 @@ export function HeroSection({
               <motion.div
                 variants={{
                   hover: { x: 100, rotate: 180 },
-                  initial: { x: 0, rotate: 0 }
+                  initial: { x: 0, rotate: 0 },
                 }}
                 initial="initial"
                 transition={{ type: "spring", stiffness: 200, damping: 25 }}
@@ -204,7 +206,11 @@ export function HeroSection({
                 {/* Vinyl Label */}
                 <div className="w-[76px] h-[76px] rounded-full overflow-hidden relative border border-black/50 shadow-inner flex items-center justify-center animate-spin-slow">
                   <img
-                    src={getImageUrl(currentSong.imageKey, { width: 100, height: 100, focus: "auto" })}
+                    src={getImageUrl(currentSong.imageKey, {
+                      width: 100,
+                      height: 100,
+                      focus: "auto",
+                    })}
                     className="w-full h-full object-cover"
                     alt=""
                   />
@@ -216,7 +222,7 @@ export function HeroSection({
               <motion.div
                 variants={{
                   hover: { y: -6, rotate: -2, scale: 1.02 },
-                  initial: { y: 0, rotate: 0, scale: 1 }
+                  initial: { y: 0, rotate: 0, scale: 1 },
                 }}
                 initial="initial"
                 transition={{ type: "spring", stiffness: 250, damping: 20 }}
@@ -242,7 +248,9 @@ export function HeroSection({
       {songs.length > 1 && (
         <div className="absolute bottom-8 right-16 z-20 flex items-center gap-6">
           <span className="text-[10px] font-black tracking-widest text-zinc-500">
-            {(index + 1).toString().padStart(2, "0")} <span className="text-zinc-700 font-normal">/</span> {songs.length.toString().padStart(2, "0")}
+            {(index + 1).toString().padStart(2, "0")}{" "}
+            <span className="text-zinc-700 font-normal">/</span>{" "}
+            {songs.length.toString().padStart(2, "0")}
           </span>
 
           <div className="flex items-center gap-2">
@@ -272,4 +280,3 @@ export function HeroSection({
     </section>
   );
 }
-

@@ -22,12 +22,15 @@ export function PlaylistCard({ playlist }: PlaylistCardProps) {
       >
         <div className="relative aspect-square overflow-hidden rounded-[2.5rem] bg-zinc-950 border border-white/5 shadow-2xl transition-all duration-500 group-hover:ring-4 group-hover:ring-primary/50 group-hover:shadow-[0_0_35px_rgba(120,240,142,0.25)]">
           <img
-            src={getImageUrl(playlist.coverImageKey || playlist.bannerImageKey, {
-              width: 400,
-              height: 400,
-              focus: "auto",
-              aspectRatio: "1-1",
-            })}
+            src={getImageUrl(
+              playlist.coverImageKey || playlist.bannerImageKey,
+              {
+                width: 400,
+                height: 400,
+                focus: "auto",
+                aspectRatio: "1-1",
+              },
+            )}
             alt={playlist.name}
             className="h-full w-full object-cover group-hover:scale-108 transition-transform duration-700 ease-out"
           />
@@ -38,7 +41,11 @@ export function PlaylistCard({ playlist }: PlaylistCardProps) {
               whileTap={{ scale: 0.95 }}
               className="h-12 w-12 rounded-full bg-primary flex items-center justify-center shadow-lg shadow-primary/20"
             >
-              <Play fill="black" size={20} className="text-black translate-x-0.5" />
+              <Play
+                fill="black"
+                size={20}
+                className="text-black translate-x-0.5"
+              />
             </motion.div>
           </div>
         </div>

@@ -4,7 +4,16 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { musicApi } from "@/lib/api";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
-import { ListMusic, Play, Pause, Trash2, Clock, Music, ArrowLeft, Sparkles } from "lucide-react";
+import {
+  ListMusic,
+  Play,
+  Pause,
+  Trash2,
+  Clock,
+  Music,
+  ArrowLeft,
+  Sparkles,
+} from "lucide-react";
 import { playerActions, playerStore } from "@/store/player.store";
 import { mapListToPlayerSongs, mapToPlayerSong } from "@/lib/player-utils";
 import { useStore } from "@tanstack/react-store";
@@ -17,7 +26,7 @@ export default function PlaylistPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const queryClient = useQueryClient();
-  
+
   const systemUser = useStore(playerStore, (s) => s.systemUser);
   const currentSong = useStore(playerStore, (s) => s.currentSong);
   const isPlaying = useStore(playerStore, (s) => s.isPlaying);
@@ -70,12 +79,12 @@ export default function PlaylistPage() {
 
   const removeSong = useMutation({
     mutationFn: (songId: string) =>
-      musicApi.users.removeSongFromPlaylist(
-        id as string,
-        songId,
-      ),
+      musicApi.users.removeSongFromPlaylist(id as string, songId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["playlist-songs", id], exact: false });
+      queryClient.invalidateQueries({
+        queryKey: ["playlist-songs", id],
+        exact: false,
+      });
     },
   });
 
@@ -98,7 +107,8 @@ export default function PlaylistPage() {
 
   const playlist = playlistResponse?.data;
   const songs = songsResponse?.data?.data || [];
-  const isUserPlaylist = playlistType === "user" || (playlist && "userId" in playlist);
+  const isUserPlaylist =
+    playlistType === "user" || (playlist && "userId" in playlist);
 
   const handleStreamAll = () => {
     if (songs.length === 0) return;
@@ -113,19 +123,19 @@ export default function PlaylistPage() {
     width: 1600,
     height: 800,
     focus: "auto",
-    aspectRatio: "2-1"
+    aspectRatio: "2-1",
   });
   const coverUrl = getImageUrl(playlist?.coverImageKey, {
     width: 400,
     height: 400,
     focus: "auto",
-    aspectRatio: "1-1"
+    aspectRatio: "1-1",
   });
 
   return (
     <div className="px-10 pb-20 space-y-10 relative">
       {/* Back Button */}
-      <button 
+      <button
         onClick={() => router.back()}
         className="flex items-center gap-2 text-zinc-400 hover:text-white transition-colors text-xs font-black uppercase tracking-wider bg-white/5 border border-white/5 px-4 py-2.5 rounded-full hover:bg-white/10 active:scale-95 duration-200"
       >
@@ -141,7 +151,12 @@ export default function PlaylistPage() {
               alt=""
               initial={{ scale: 1 }}
               animate={{ scale: 1.05 }}
-              transition={{ duration: 20, repeat: Infinity, repeatType: "mirror", ease: "linear" }}
+              transition={{
+                duration: 20,
+                repeat: Infinity,
+                repeatType: "mirror",
+                ease: "linear",
+              }}
               className="h-full w-full object-cover opacity-25 blur-[2px] transition-all duration-[2s]"
             />
           ) : (
@@ -154,7 +169,11 @@ export default function PlaylistPage() {
           {/* Cover Art */}
           <div className="h-60 w-60 shrink-0 overflow-hidden rounded-[2.5rem] border-[6px] border-black/40 shadow-2xl md:block group-hover:scale-103 transition-transform duration-700 relative bg-zinc-950 flex items-center justify-center">
             {playlist?.coverImageKey ? (
-              <img src={coverUrl} alt="" className="h-full w-full object-cover" />
+              <img
+                src={coverUrl}
+                alt=""
+                className="h-full w-full object-cover"
+              />
             ) : (
               <ListMusic className="text-zinc-700" size={72} />
             )}
@@ -171,7 +190,8 @@ export default function PlaylistPage() {
             </div>
 
             <p className="max-w-xl text-zinc-400 font-medium italic text-xs opacity-80 line-clamp-2 leading-relaxed">
-              {playlist?.description || "A curated cluster of synchronized acoustic signals compiled for neural alignment."}
+              {playlist?.description ||
+                "A curated cluster of synchronized acoustic signals compiled for neural alignment."}
             </p>
 
             <div className="flex items-center gap-4">
@@ -187,14 +207,14 @@ export default function PlaylistPage() {
               {isUserPlaylist && (
                 <button
                   onClick={() => {
-                      toast.promise(deletePlaylist.mutateAsync(), {
-                        loading: "Deleting Playlist...",
-                        success: "Playlist Deleted",
-                        error: "Delete Failed",
-                        description: "The playlist has been removed from the synchronization grid."
-                      });
-                    }
-                  }
+                    toast.promise(deletePlaylist.mutateAsync(), {
+                      loading: "Deleting Playlist...",
+                      success: "Playlist Deleted",
+                      error: "Delete Failed",
+                      description:
+                        "The playlist has been removed from the synchronization grid.",
+                    });
+                  }}
                   className="h-14 w-14 rounded-2xl bg-red-500/10 border border-red-500/10 flex items-center justify-center text-red-500 hover:bg-red-500 hover:text-white transition-all duration-300 shadow-lg hover:shadow-red-500/20 active:scale-95"
                   title="Delete Playlist"
                 >
@@ -244,7 +264,7 @@ export default function PlaylistPage() {
                       }
                     }}
                     className={`group grid grid-cols-12 items-center gap-4 p-4 rounded-[1.8rem] border transition-all duration-300 text-left cursor-pointer ${
-                      isActive 
+                      isActive
                         ? "bg-primary/5 border-primary/20 shadow-[0_4px_20px_rgba(120,240,142,0.08)]"
                         : "bg-white/1 border-transparent hover:border-white/5 hover:bg-white/3"
                     }`}
@@ -253,9 +273,15 @@ export default function PlaylistPage() {
                     <div className="col-span-1 text-center text-zinc-500 font-black text-xs group-hover:text-primary transition-colors italic flex items-center justify-center">
                       {isActive ? (
                         isCurrentPlaying ? (
-                          <Pause size={14} className="text-primary fill-primary" />
+                          <Pause
+                            size={14}
+                            className="text-primary fill-primary"
+                          />
                         ) : (
-                          <Play size={14} className="text-primary fill-primary" />
+                          <Play
+                            size={14}
+                            className="text-primary fill-primary"
+                          />
                         )
                       ) : (
                         <span className="group-hover:hidden">
@@ -263,16 +289,25 @@ export default function PlaylistPage() {
                         </span>
                       )}
                       {!isActive && (
-                        <Play size={12} className="hidden group-hover:block text-primary fill-primary" />
+                        <Play
+                          size={12}
+                          className="hidden group-hover:block text-primary fill-primary"
+                        />
                       )}
                     </div>
 
                     {/* Title & Image */}
                     <div className="col-span-6 md:col-span-7 flex items-center gap-4">
                       <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl border border-white/5 shadow-md">
-                        {(song.imageKey || song.coverImageKey) ? (
+                        {song.imageKey || song.coverImageKey ? (
                           <img
-                            src={getImageUrl(song.imageKey || song.coverImageKey, { width: 100, height: 100, aspectRatio: "1-1" })!}
+                            src={
+                              getImageUrl(song.imageKey || song.coverImageKey, {
+                                width: 100,
+                                height: 100,
+                                aspectRatio: "1-1",
+                              })!
+                            }
                             alt={song.title}
                             className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500"
                           />
@@ -283,9 +318,13 @@ export default function PlaylistPage() {
                         )}
                       </div>
                       <div className="min-w-0">
-                        <h4 className={`font-black italic uppercase tracking-tighter transition-colors truncate text-base leading-tight ${
-                          isActive ? "text-primary" : "text-white group-hover:text-primary"
-                        }`}>
+                        <h4
+                          className={`font-black italic uppercase tracking-tighter transition-colors truncate text-base leading-tight ${
+                            isActive
+                              ? "text-primary"
+                              : "text-white group-hover:text-primary"
+                          }`}
+                        >
                           {song.title}
                         </h4>
                         <div className="flex items-center gap-2 mt-0.5">
@@ -319,7 +358,8 @@ export default function PlaylistPage() {
                               loading: "Severing Node...",
                               success: "Track Removed",
                               error: "Failed to remove",
-                              description: "The song has been decoupled from this cluster."
+                              description:
+                                "The song has been decoupled from this cluster.",
                             });
                           }}
                           className="p-2.5 rounded-xl bg-red-500/5 text-red-500/40 hover:bg-red-500 hover:text-white opacity-0 group-hover:opacity-100 transition-all scale-75 group-hover:scale-100 shadow-md shadow-red-500/10 ml-2"
@@ -334,7 +374,9 @@ export default function PlaylistPage() {
             ) : (
               <div className="py-32 text-center border-2 border-dashed border-zinc-900 rounded-[3rem]">
                 <Music className="mx-auto text-zinc-800 mb-4" size={48} />
-                <p className="text-zinc-600 font-black uppercase italic tracking-[0.3em] text-[9px]">Neural Pathways Empty</p>
+                <p className="text-zinc-600 font-black uppercase italic tracking-[0.3em] text-[9px]">
+                  Neural Pathways Empty
+                </p>
               </div>
             )}
           </div>

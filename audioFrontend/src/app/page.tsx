@@ -42,13 +42,18 @@ export default function Home() {
 
   return (
     <div className="min-h-screen landing-bg text-white selection:bg-primary/20 overflow-y-auto relative font-sans no-scrollbar pb-16">
-
       {/* Very subtle dark grid */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.025)_1px,transparent_1px)] bg-[size:32px_32px] pointer-events-none z-0" />
 
       {/* Single soft green glow — top only */}
-      <BackgroundBlob className="top-[-8%] left-[10%] w-[60%] h-[40%] bg-primary/10" delay={0} />
-      <BackgroundBlob className="bottom-[-5%] right-[5%] w-[40%] h-[35%] bg-primary/6" delay={6} />
+      <BackgroundBlob
+        className="top-[-8%] left-[10%] w-[60%] h-[40%] bg-primary/10"
+        delay={0}
+      />
+      <BackgroundBlob
+        className="bottom-[-5%] right-[5%] w-[40%] h-[35%] bg-primary/6"
+        delay={6}
+      />
 
       {/* Navbar */}
       <LandingNavbar />
@@ -70,7 +75,6 @@ export default function Home() {
 
       {/* Footer */}
       <LandingFooter />
-
     </div>
   );
 }

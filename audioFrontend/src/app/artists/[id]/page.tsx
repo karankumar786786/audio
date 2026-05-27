@@ -47,25 +47,25 @@ export default function ArtistPage() {
 
   const artist = artistResponse?.data;
   const songs = songsResponse?.data?.data || [];
-  
-  const bannerUrl = getImageUrl(artist?.bannerImageKey, { 
-    width: 1600, 
-    height: 800, 
+
+  const bannerUrl = getImageUrl(artist?.bannerImageKey, {
+    width: 1600,
+    height: 800,
     focus: "auto",
-    aspectRatio: "2-1" 
+    aspectRatio: "2-1",
   });
-  
-  const coverUrl = getImageUrl(artist?.coverImageKey, { 
-    width: 400, 
-    height: 400, 
+
+  const coverUrl = getImageUrl(artist?.coverImageKey, {
+    width: 400,
+    height: 400,
     focus: "face",
-    aspectRatio: "1-1" 
+    aspectRatio: "1-1",
   });
 
   return (
     <div className="px-10 pb-20 space-y-10 relative">
       {/* Back Button */}
-      <button 
+      <button
         onClick={() => router.back()}
         className="flex items-center gap-2 text-zinc-400 hover:text-white transition-colors text-xs font-black uppercase tracking-wider bg-white/5 border border-white/5 px-4 py-2.5 rounded-full hover:bg-white/10 active:scale-95 duration-200"
       >
@@ -76,12 +76,17 @@ export default function ArtistPage() {
       <section className="relative h-[480px] w-full overflow-hidden rounded-[3.5rem] border border-white/5 shadow-2xl group">
         <div className="absolute inset-0 bg-zinc-950">
           {artist?.bannerImageKey ? (
-            <motion.img 
-              src={bannerUrl} 
+            <motion.img
+              src={bannerUrl}
               alt={artist.name}
               initial={{ scale: 1 }}
               animate={{ scale: 1.05 }}
-              transition={{ duration: 20, repeat: Infinity, repeatType: "mirror", ease: "linear" }}
+              transition={{
+                duration: 20,
+                repeat: Infinity,
+                repeatType: "mirror",
+                ease: "linear",
+              }}
               className="h-full w-full object-cover opacity-25 blur-[2px] transition-all duration-[2s]"
             />
           ) : (
@@ -93,19 +98,24 @@ export default function ArtistPage() {
         <div className="absolute inset-0 flex items-end p-12 gap-10 z-20">
           {/* Main Portrait */}
           <div className="h-60 w-60 shrink-0 overflow-hidden rounded-[2.5rem] border-[6px] border-black/40 shadow-2xl hidden md:block group-hover:scale-103 transition-transform duration-700 relative bg-zinc-950">
-             {artist?.coverImageKey ? (
-               <img src={coverUrl} alt={artist.name} className="h-full w-full object-cover" />
-             ) : (
-               <div className="h-full w-full flex items-center justify-center text-zinc-700 text-6xl font-black italic">
-                 {artist?.name?.charAt(0)}
-               </div>
-             )}
+            {artist?.coverImageKey ? (
+              <img
+                src={coverUrl}
+                alt={artist.name}
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <div className="h-full w-full flex items-center justify-center text-zinc-700 text-6xl font-black italic">
+                {artist?.name?.charAt(0)}
+              </div>
+            )}
           </div>
 
           <div className="flex-1 space-y-5 pb-2">
             <div className="space-y-1">
               <span className="inline-flex items-center gap-1.5 text-[9px] font-black uppercase tracking-[0.3em] text-primary italic bg-primary/10 px-3 py-1 rounded-full border border-primary/20">
-                <Sparkles size={10} className="fill-primary" /> Verified Artist Profile
+                <Sparkles size={10} className="fill-primary" /> Verified Artist
+                Profile
               </span>
               <h1 className="text-6xl md:text-7xl font-black text-white italic tracking-tighter uppercase drop-shadow-[0_4px_12px_rgba(0,0,0,0.5)]">
                 {artist?.name}
@@ -119,7 +129,7 @@ export default function ArtistPage() {
             )}
 
             <div className="flex items-center gap-6">
-              <button 
+              <button
                 onClick={() => {
                   if (songs.length > 0) {
                     playerActions.playAll(mapListToPlayerSongs(songs));
@@ -177,7 +187,7 @@ export default function ArtistPage() {
                       }
                     }}
                     className={`group grid grid-cols-12 items-center gap-4 p-4 rounded-[1.8rem] border transition-all duration-300 text-left cursor-pointer ${
-                      isActive 
+                      isActive
                         ? "bg-primary/5 border-primary/20 shadow-[0_4px_20px_rgba(120,240,142,0.08)]"
                         : "bg-white/1 border-transparent hover:border-white/5 hover:bg-white/3"
                     }`}
@@ -186,9 +196,15 @@ export default function ArtistPage() {
                     <div className="col-span-1 text-center text-zinc-500 font-black text-xs group-hover:text-primary transition-colors italic flex items-center justify-center">
                       {isActive ? (
                         isCurrentPlaying ? (
-                          <Pause size={14} className="text-primary fill-primary" />
+                          <Pause
+                            size={14}
+                            className="text-primary fill-primary"
+                          />
                         ) : (
-                          <Play size={14} className="text-primary fill-primary" />
+                          <Play
+                            size={14}
+                            className="text-primary fill-primary"
+                          />
                         )
                       ) : (
                         <span className="group-hover:hidden">
@@ -196,7 +212,10 @@ export default function ArtistPage() {
                         </span>
                       )}
                       {!isActive && (
-                        <Play size={12} className="hidden group-hover:block text-primary fill-primary" />
+                        <Play
+                          size={12}
+                          className="hidden group-hover:block text-primary fill-primary"
+                        />
                       )}
                     </div>
 
@@ -205,7 +224,13 @@ export default function ArtistPage() {
                       <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl border border-white/5 shadow-md">
                         {song.imageKey ? (
                           <img
-                            src={getImageUrl(song.imageKey, { width: 100, height: 100, aspectRatio: "1-1" })!}
+                            src={
+                              getImageUrl(song.imageKey, {
+                                width: 100,
+                                height: 100,
+                                aspectRatio: "1-1",
+                              })!
+                            }
                             alt={song.title}
                             className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500"
                           />
@@ -216,9 +241,13 @@ export default function ArtistPage() {
                         )}
                       </div>
                       <div className="min-w-0">
-                        <h4 className={`font-black italic uppercase tracking-tighter transition-colors truncate text-base ${
-                          isActive ? "text-primary" : "text-white group-hover:text-primary"
-                        }`}>
+                        <h4
+                          className={`font-black italic uppercase tracking-tighter transition-colors truncate text-base ${
+                            isActive
+                              ? "text-primary"
+                              : "text-white group-hover:text-primary"
+                          }`}
+                        >
                           {song.title}
                         </h4>
                         <div className="flex items-center gap-2 mt-0.5">
@@ -251,7 +280,9 @@ export default function ArtistPage() {
             ) : (
               <div className="py-28 text-center border-2 border-dashed border-zinc-900 rounded-[3rem]">
                 <Music className="mx-auto text-zinc-800 mb-4" size={48} />
-                <p className="text-zinc-600 font-black uppercase italic tracking-[0.3em] text-[9px]">Transmission Silent</p>
+                <p className="text-zinc-600 font-black uppercase italic tracking-[0.3em] text-[9px]">
+                  Transmission Silent
+                </p>
               </div>
             )}
           </div>

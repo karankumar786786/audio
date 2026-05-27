@@ -33,16 +33,19 @@ export const PlayerUtilityRow: React.FC<PlayerUtilityRowProps> = ({
   onVolumeChange,
   onToggleMute,
 }) => {
-  const VolumeIcon = isMuted || volume === 0 ? VolumeX : volume < 0.5 ? Volume1 : Volume2;
+  const VolumeIcon =
+    isMuted || volume === 0 ? VolumeX : volume < 0.5 ? Volume1 : Volume2;
   const volumePct = isMuted ? 0 : volume * 100;
 
   return (
-    <div className="flex items-center justify-between px-1 gap-4">
-      <div className="flex items-center gap-1.5 shrink-0">
+    <div className="flex items-center justify-between px-1 gap-4 select-none">
+      <div className="flex items-center gap-1 shrink-0">
         <button
           onClick={onToggleShuffle}
-          className={`p-1.5 rounded-lg transition-all ${
-            isShuffle ? "text-primary bg-primary/10" : "text-zinc-600 hover:text-zinc-400"
+          className={`p-1.5 rounded-lg transition-all cursor-pointer ${
+            isShuffle
+              ? "text-primary bg-primary/10 shadow-[0_0_10px_rgba(120,240,142,0.1)]"
+              : "text-zinc-600 hover:text-zinc-400"
           }`}
           title="Shuffle"
         >
@@ -51,8 +54,10 @@ export const PlayerUtilityRow: React.FC<PlayerUtilityRowProps> = ({
 
         <button
           onClick={onToggleRepeat}
-          className={`p-1.5 rounded-lg transition-all ${
-            repeatMode !== "none" ? "text-primary bg-primary/10" : "text-zinc-600 hover:text-zinc-400"
+          className={`p-1.5 rounded-lg transition-all cursor-pointer ${
+            repeatMode !== "none"
+              ? "text-primary bg-primary/10 shadow-[0_0_10px_rgba(120,240,142,0.1)]"
+              : "text-zinc-600 hover:text-zinc-400"
           }`}
           title="Repeat Mode"
         >
@@ -68,13 +73,14 @@ export const PlayerUtilityRow: React.FC<PlayerUtilityRowProps> = ({
         />
       </div>
 
-      <div className="flex-1 flex items-center gap-3 min-w-[100px] max-w-[160px]">
+      <div className="flex-1 flex items-center gap-2.5 min-w-[100px] max-w-[160px]">
         <button
           onClick={onToggleMute}
-          className="text-zinc-600 hover:text-white transition-colors shrink-0"
+          className="text-zinc-600 hover:text-white transition-colors shrink-0 cursor-pointer p-1 rounded hover:bg-white/5"
         >
           <VolumeIcon size={14} />
         </button>
+
         <div className="relative flex-1 group h-4 flex items-center">
           <div className="absolute top-1/2 -translate-y-1/2 left-0 w-full h-[3px] bg-white/5 rounded-full" />
           <div
@@ -89,7 +95,9 @@ export const PlayerUtilityRow: React.FC<PlayerUtilityRowProps> = ({
             value={isMuted ? 0 : volume}
             onInput={onVolumeChange}
             className="modern-slider volume-slider"
-            style={{ "--volume-percent": `${volumePct}%` } as React.CSSProperties}
+            style={
+              { "--volume-percent": `${volumePct}%` } as React.CSSProperties
+            }
           />
         </div>
       </div>

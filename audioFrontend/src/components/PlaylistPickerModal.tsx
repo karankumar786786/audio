@@ -134,12 +134,13 @@ export function PlaylistPickerModal({
                       if (e.key === "Enter" && newName.trim()) {
                         toast.promise(createAndAdd.mutateAsync(), {
                           loading: "Creating Playlist...",
-                          success: (playlist) => `Playlist "${playlist.name}" Created`,
+                          success: (playlist) =>
+                            `Playlist "${playlist.name}" Created`,
                           error: "Failed to create playlist",
-                          description: (playlist: any) => 
-                            playlist?.name 
+                          description: (playlist: any) =>
+                            playlist?.name
                               ? `Created "${playlist.name}" and added "${songTitle}".`
-                              : "Failed to create new playlist."
+                              : "Failed to create new playlist.",
                         });
                       }
                       if (e.key === "Escape") setIsCreating(false);
@@ -158,12 +159,13 @@ export function PlaylistPickerModal({
                         if (newName.trim()) {
                           toast.promise(createAndAdd.mutateAsync(), {
                             loading: "Creating Playlist...",
-                            success: (playlist) => `Playlist "${playlist.name}" Created`,
+                            success: (playlist) =>
+                              `Playlist "${playlist.name}" Created`,
                             error: "Failed to create playlist",
-                            description: (playlist: any) => 
-                              playlist?.name 
+                            description: (playlist: any) =>
+                              playlist?.name
                                 ? `Created "${playlist.name}" and added "${songTitle}".`
-                                : "Failed to create new playlist."
+                                : "Failed to create new playlist.",
                           });
                         }
                       }}
@@ -219,12 +221,15 @@ export function PlaylistPickerModal({
                       <button
                         key={playlist.id}
                         onClick={() => {
-                          toast.promise(addToPlaylist.mutateAsync(playlist.id), {
-                            loading: "Adding to Playlist...",
-                            success: "Added to Playlist",
-                            error: "Failed to add to playlist",
-                            description: `"${songTitle}" added to ${playlist.name}.`
-                          });
+                          toast.promise(
+                            addToPlaylist.mutateAsync(playlist.id),
+                            {
+                              loading: "Adding to Playlist...",
+                              success: "Added to Playlist",
+                              error: "Failed to add to playlist",
+                              description: `"${songTitle}" added to ${playlist.name}.`,
+                            },
+                          );
                         }}
                         disabled={addToPlaylist.isPending}
                         className="w-full flex items-center justify-between p-3.5 rounded-xl  border border-transparent hover:bg-white/4 transition-all group disabled:opacity-50"

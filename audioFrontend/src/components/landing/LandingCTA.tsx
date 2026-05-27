@@ -16,8 +16,13 @@ export function LandingCTA() {
         }}
       >
         {/* Subtle green glow */}
-        <div className="absolute inset-0 rounded-[2rem] pointer-events-none"
-          style={{ background: "radial-gradient(ellipse 60% 50% at 50% 0%, rgba(120,240,142,0.12), transparent 70%)" }} />
+        <div
+          className="absolute inset-0 rounded-[2rem] pointer-events-none"
+          style={{
+            background:
+              "radial-gradient(ellipse 60% 50% at 50% 0%, rgba(120,240,142,0.12), transparent 70%)",
+          }}
+        />
 
         <p className="text-xs font-bold uppercase tracking-[0.25em] text-primary mb-4 relative z-10">
           Start Listening
@@ -26,7 +31,8 @@ export function LandingCTA() {
           Hear the Difference.
         </h2>
         <p className="text-zinc-500 text-base max-w-sm mx-auto mb-8 leading-relaxed relative z-10">
-          Create an account with your email and access personalized, buffer-free audio anywhere.
+          Create an account with your email and access personalized, buffer-free
+          audio anywhere.
         </p>
         <div className="relative z-10">
           <button

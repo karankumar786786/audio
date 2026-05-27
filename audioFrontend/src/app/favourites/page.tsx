@@ -55,9 +55,7 @@ export default function FavouritesPage() {
           </div>
         ) : (
           <div className="py-32 text-center text-zinc-500 border-2 border-dashed border-zinc-900 rounded-[4rem] font-bold italic tracking-tight uppercase px-10">
-            {systemUser
-              ? "No Songs Found"
-              : "Authentication is required"}
+            {systemUser ? "No Songs Found" : "Authentication is required"}
           </div>
         )}
       </section>

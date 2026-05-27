@@ -67,7 +67,9 @@ export default function HomePage() {
   useEffect(() => {
     if (!trending?.data?.data || trending.data.data.length <= 1) return;
     const interval = setInterval(() => {
-      setHeroIndex((prev) => (prev + 1) % Math.min(trending.data.data.length, 5));
+      setHeroIndex(
+        (prev) => (prev + 1) % Math.min(trending.data.data.length, 5),
+      );
     }, 8000);
     return () => clearInterval(interval);
   }, [trending?.data?.data]);
@@ -90,14 +92,13 @@ export default function HomePage() {
 
   return (
     <div className="px-10 pb-20 pt-8 space-y-16">
-      
       {/* 1. Hero Section (Featured/Trending) */}
       <motion.div
         initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
       >
-        <HeroSection 
+        <HeroSection
           songs={trending?.data?.data?.slice(0, 5) || []}
           index={heroIndex}
           setIndex={setHeroIndex}
@@ -121,24 +122,22 @@ export default function HomePage() {
           <div className="h-px flex-1 mx-8 bg-linear-to-r from-white/6 to-transparent" />
         </div>
 
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.2 }}
           className="flex flex-row overflow-x-auto gap-12 pb-6 no-scrollbar mask-fade-right px-1 py-2"
         >
-          {isArtistsLoading ? (
-            [1, 2, 3, 4, 5, 6].map((i) => (
-              <div key={i} className="flex-none w-[160px] space-y-4">
-                <div className="aspect-square rounded-full bg-zinc-900/60 animate-pulse border border-white/5" />
-                <div className="h-3 w-3/4 bg-zinc-900/60 rounded mx-auto animate-pulse" />
-              </div>
-            ))
-          ) : (
-            artists?.data?.data?.map((artist: Artist) => (
-              <ArtistCard key={artist.id} artist={artist} />
-            ))
-          )}
+          {isArtistsLoading
+            ? [1, 2, 3, 4, 5, 6].map((i) => (
+                <div key={i} className="flex-none w-[160px] space-y-4">
+                  <div className="aspect-square rounded-full bg-zinc-900/60 animate-pulse border border-white/5" />
+                  <div className="h-3 w-3/4 bg-zinc-900/60 rounded mx-auto animate-pulse" />
+                </div>
+              ))
+            : artists?.data?.data?.map((artist: Artist) => (
+                <ArtistCard key={artist.id} artist={artist} />
+              ))}
         </motion.div>
       </section>
 
@@ -158,24 +157,22 @@ export default function HomePage() {
           <div className="h-px flex-1 mx-8 bg-linear-to-r from-white/6 to-transparent" />
         </div>
 
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.3 }}
           className="flex flex-row overflow-x-auto gap-8 pb-6 no-scrollbar mask-fade-right px-1 py-2"
         >
-          {isPlaylistsLoading ? (
-            [1, 2, 3, 4, 5, 6].map((i) => (
-              <div key={i} className="flex-none w-[180px] space-y-4">
-                <div className="aspect-square rounded-[2.5rem] bg-zinc-900/60 animate-pulse border border-white/5" />
-                <div className="h-3 w-1/2 bg-zinc-900/60 rounded animate-pulse" />
-              </div>
-            ))
-          ) : (
-            playlists?.data?.data?.map((playlist: Playlist) => (
-              <PlaylistCard key={playlist.id} playlist={playlist} />
-            ))
-          )}
+          {isPlaylistsLoading
+            ? [1, 2, 3, 4, 5, 6].map((i) => (
+                <div key={i} className="flex-none w-[180px] space-y-4">
+                  <div className="aspect-square rounded-[2.5rem] bg-zinc-900/60 animate-pulse border border-white/5" />
+                  <div className="h-3 w-1/2 bg-zinc-900/60 rounded animate-pulse" />
+                </div>
+              ))
+            : playlists?.data?.data?.map((playlist: Playlist) => (
+                <PlaylistCard key={playlist.id} playlist={playlist} />
+              ))}
         </motion.div>
       </section>
 
@@ -198,16 +195,16 @@ export default function HomePage() {
                 <div className="h-px flex-1 bg-linear-to-r from-white/6 to-transparent" />
               </div>
 
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.5, delay: 0.35 }}
                 className="flex flex-row overflow-x-auto gap-6 pb-6 no-scrollbar mask-fade-right px-1 py-2"
               >
                 {recommendations.data.data.slice(0, 10).map((song: Song) => (
-                  <SongCard 
-                    key={`rec-${song.id}`} 
-                    song={song} 
+                  <SongCard
+                    key={`rec-${song.id}`}
+                    song={song}
                     className="flex-none w-[220px]"
                   />
                 ))}
@@ -248,15 +245,15 @@ export default function HomePage() {
             Failed to load tracks
           </div>
         ) : (
-          <motion.div 
+          <motion.div
             initial="hidden"
             animate="show"
             variants={{
               hidden: { opacity: 0 },
               show: {
                 opacity: 1,
-                transition: { staggerChildren: 0.05 }
-              }
+                transition: { staggerChildren: 0.05 },
+              },
             }}
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6"
           >

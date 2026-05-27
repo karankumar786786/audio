@@ -16,7 +16,12 @@ interface SongCardProps {
   className?: string;
 }
 
-export function SongCard({ song, priority, onRemove, className }: SongCardProps) {
+export function SongCard({
+  song,
+  priority,
+  onRemove,
+  className,
+}: SongCardProps) {
   const systemUser = useStore(playerStore, (s) => s.systemUser);
   const favourites = useStore(playerStore, (s) => s.favourites);
   const currentSong = useStore(playerStore, (s) => s.currentSong);
@@ -41,16 +46,18 @@ export function SongCard({ song, priority, onRemove, className }: SongCardProps)
     }
 
     toast.promise(playerActions.toggleFavourite(song.id), {
-      loading: isFavourite ? "Removing from Favourites..." : "Adding to Favourites...",
+      loading: isFavourite
+        ? "Removing from Favourites..."
+        : "Adding to Favourites...",
       success: () => {
         return isFavourite ? "Removed from Favourites" : "Added to Favourites";
       },
       error: "Failed to update favourites",
       description: () => {
-        return isFavourite 
+        return isFavourite
           ? `"${song.title}" removed from your collection.`
           : `"${song.title}" added to your collection.`;
-      }
+      },
     });
   };
 
@@ -110,19 +117,33 @@ export function SongCard({ song, priority, onRemove, className }: SongCardProps)
             <div className="absolute bottom-3 right-3 bg-black/85 backdrop-blur-md px-2.5 py-2 rounded-xl flex items-end gap-[3.5px] border border-white/10 z-20 shadow-lg">
               <motion.div
                 animate={{ height: [4, 14, 4] }}
-                transition={{ duration: 1.1, repeat: Infinity, ease: "easeInOut" }}
+                transition={{
+                  duration: 1.1,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
                 className="w-[2.5px] bg-primary rounded-full"
                 style={{ height: 4 }}
               />
               <motion.div
                 animate={{ height: [8, 18, 8] }}
-                transition={{ duration: 0.7, repeat: Infinity, ease: "easeInOut", delay: 0.25 }}
+                transition={{
+                  duration: 0.7,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                  delay: 0.25,
+                }}
                 className="w-[2.5px] bg-primary rounded-full"
                 style={{ height: 8 }}
               />
               <motion.div
                 animate={{ height: [5, 12, 5] }}
-                transition={{ duration: 1.3, repeat: Infinity, ease: "easeInOut", delay: 0.55 }}
+                transition={{
+                  duration: 1.3,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                  delay: 0.55,
+                }}
                 className="w-[2.5px] bg-primary rounded-full"
                 style={{ height: 5 }}
               />
@@ -131,14 +152,20 @@ export function SongCard({ song, priority, onRemove, className }: SongCardProps)
         </div>
 
         <div className="space-y-1.5 px-1.5 pb-1">
-          <h3 className={`font-black truncate text-[0.9rem] uppercase italic tracking-tighter transition-colors duration-300 ${
-            isActiveSong ? "text-primary" : "text-white"
-          }`}>
+          <h3
+            className={`font-black truncate text-[0.9rem] uppercase italic tracking-tighter transition-colors duration-300 ${
+              isActiveSong ? "text-primary" : "text-white"
+            }`}
+          >
             {song.title}
           </h3>
-          <p className={`text-[10px] font-black uppercase tracking-[0.15em] truncate transition-colors italic ${
-            isActiveSong ? "text-primary/70" : "text-zinc-500 group-hover:text-primary"
-          }`}>
+          <p
+            className={`text-[10px] font-black uppercase tracking-[0.15em] truncate transition-colors italic ${
+              isActiveSong
+                ? "text-primary/70"
+                : "text-zinc-500 group-hover:text-primary"
+            }`}
+          >
             {song.artistName}
           </p>
         </div>
