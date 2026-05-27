@@ -92,12 +92,11 @@ export const PlayerLyricsOverlay: React.FC<PlayerLyricsOverlayProps> = ({
           );
         })}
       </div>
+
       <div className="text-center space-y-1">
-        <p className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.25em] italic">
-          Aura Sync Active
-        </p>
-        <p className="text-[8px] font-bold text-zinc-700 uppercase tracking-widest">
-          {isPlaying ? "Streaming lossless audio" : "Playback paused"}
+        <p className="text-[10px] font-black text-zinc-500 uppercase text-[10px] font-black text-zinc-500  ">
+          
+          {isPlaying ? "Lossless audio streaming" : "Playback paused"}
         </p>
       </div>
     </motion.div>
@@ -175,8 +174,8 @@ export const PlayerLyricsOverlay: React.FC<PlayerLyricsOverlayProps> = ({
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center space-y-4">
               <EqualizerFallback />
-              <p className="text-[10px] font-black text-zinc-600 uppercase tracking-widest italic -mt-2">
-                No Synced Lyrics File Available
+              <p className="text-sm text-zinc-500 font-medium -mt-2">
+                No synced lyrics available
               </p>
             </div>
           </div>
