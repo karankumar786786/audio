@@ -22,6 +22,10 @@ export function useAudioSync(
   const currentSongRef = useRef(currentSong);
   currentSongRef.current = currentSong;
 
+  // Keep a ref for isPlaying so event listeners have the latest value
+  const isPlayingRef = useRef(isPlaying);
+  isPlayingRef.current = isPlaying;
+
   // 1. Sync Volume
   useEffect(() => {
     if (!audioElement) return;
@@ -82,9 +86,7 @@ export function useAudioSync(
 
     // Handle when the audio element can play after a pause -> play toggle
     const onCanPlay = () => {
-      // If the store says we should be playing but the audio is paused, start playing
-      const { isPlaying: shouldPlay } = require("../../../store/player.store").playerStore.state;
-      if (shouldPlay && audioElement.paused) {
+      if (isPlayingRef.current && audioElement.paused) {
         audioElement.play().catch((err) => {
           if (err.name !== "AbortError") console.warn("[Player] Play on canplay failed:", err);
         });
