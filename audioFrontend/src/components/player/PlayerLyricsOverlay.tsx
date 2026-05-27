@@ -40,46 +40,86 @@ export const PlayerLyricsOverlay: React.FC<PlayerLyricsOverlayProps> = ({
     }, 0);
   }
 
-  // Auto-scroll centering effect
+  const prevOpenRef = useRef(false);
+  const prevActiveIndexRef = useRef(-1);
+
+  // Auto-scroll: keep active lyric line centered in the container
   useEffect(() => {
-    if (isLyricsOpen && containerRef.current && activeRef.current) {
+    if (!isLyricsOpen) {
+      prevOpenRef.current = false;
+      prevActiveIndexRef.current = -1;
+      return;
+    }
+
+    const justOpened = !prevOpenRef.current;
+    const lineChanged = activeIndex !== prevActiveIndexRef.current;
+    prevOpenRef.current = true;
+    prevActiveIndexRef.current = activeIndex;
+
+    const performScroll = (smooth: boolean) => {
       const container = containerRef.current;
       const activeLine = activeRef.current;
+      if (!container || !activeLine) return false;
 
-      const timeoutId = setTimeout(() => {
-        const containerRect = container.getBoundingClientRect();
-        const screenMiddleRelative = window.innerHeight / 2 - containerRect.top;
-        const lineCenterRelative =
-          activeLine.offsetTop + activeLine.clientHeight / 2;
+      const containerRect = container.getBoundingClientRect();
+      const targetScrollTop =
+        containerRect.top +
+        activeLine.offsetTop +
+        activeLine.clientHeight / 2 -
+        window.innerHeight / 2;
 
-        const targetScrollTop = lineCenterRelative - screenMiddleRelative;
+      if (smooth) {
         container.scrollTo({
           top: targetScrollTop,
           behavior: "smooth",
         });
-      }, 80);
-
-      return () => clearTimeout(timeoutId);
-    }
-  }, [activeIndex, isLyricsOpen]);
-
-  // Window resize scroll realignment
-  useEffect(() => {
-    const handleResize = () => {
-      if (isLyricsOpen && containerRef.current && activeRef.current) {
-        const container = containerRef.current;
-        const activeLine = activeRef.current;
-        const containerRect = container.getBoundingClientRect();
-        const screenMiddleRelative = window.innerHeight / 2 - containerRect.top;
-        const lineCenterRelative =
-          activeLine.offsetTop + activeLine.clientHeight / 2;
-        container.scrollTop = lineCenterRelative - screenMiddleRelative;
+      } else {
+        container.scrollTop = targetScrollTop;
       }
+      return true;
     };
 
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, [activeIndex, isLyricsOpen]);
+    const runTransitionSnaps = () => {
+      const intervals = [0, 80, 160, 240, 320, 400, 500, 650];
+      const timerIds = intervals.map((tDelay) =>
+        setTimeout(() => {
+          performScroll(false);
+        }, tDelay),
+      );
+      return () => {
+        timerIds.forEach((id) => clearTimeout(id));
+      };
+    };
+
+    // If activeRef is not available immediately, poll for a few frames until the DOM settles
+    if (!activeRef.current) {
+      let attempts = 0;
+      const pollScroll = () => {
+        if (performScroll(!justOpened)) {
+          if (justOpened) {
+            runTransitionSnaps();
+          }
+          return;
+        }
+        if (attempts < 30) {
+          attempts++;
+          requestAnimationFrame(pollScroll);
+        }
+      };
+      requestAnimationFrame(pollScroll);
+      return;
+    }
+
+    if (justOpened) {
+      return runTransitionSnaps();
+    }
+
+    const timeoutId = setTimeout(() => {
+      performScroll(true);
+    }, 0);
+
+    return () => clearTimeout(timeoutId);
+  }, [activeIndex, isLyricsOpen, transcriptions.length]);
 
   // Fallback Equalizer component
   const EqualizerFallback = () => (
@@ -138,7 +178,7 @@ export const PlayerLyricsOverlay: React.FC<PlayerLyricsOverlayProps> = ({
         {transcriptions.length > 0 ? (
           <div
             ref={containerRef}
-            className="flex-1 overflow-y-auto no-scrollbar py-4 px-6 space-y-8 scroll-smooth min-h-0 relative"
+            className="flex-1 overflow-y-auto no-scrollbar py-4 px-6 space-y-8 min-h-0 relative"
           >
             {/* Top Spacer to allow centering of first lines */}
             <div className="h-[40vh] shrink-0" />
