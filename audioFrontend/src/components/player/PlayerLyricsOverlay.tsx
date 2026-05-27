@@ -24,9 +24,21 @@ export const PlayerLyricsOverlay: React.FC<PlayerLyricsOverlayProps> = ({
   const containerRef = useRef<HTMLDivElement | null>(null);
 
   // Find active line index
-  const activeIndex = transcriptions.findIndex(
+  let activeIndex = transcriptions.findIndex(
     (t) => t.start_time_seconds === currentCaption?.start_time_seconds,
   );
+
+  const hasExactActive = activeIndex !== -1;
+
+  if (activeIndex === -1 && transcriptions.length > 0) {
+    // Find the last line that has start_time_seconds <= localTime
+    activeIndex = transcriptions.reduce((acc, line, idx) => {
+      if (line.start_time_seconds <= localTime) {
+        return idx;
+      }
+      return acc;
+    }, 0);
+  }
 
   // Auto-scroll centering effect
   useEffect(() => {
@@ -35,12 +47,12 @@ export const PlayerLyricsOverlay: React.FC<PlayerLyricsOverlayProps> = ({
       const activeLine = activeRef.current;
 
       const timeoutId = setTimeout(() => {
-        const containerHeight = container.clientHeight;
-        const lineOffsetTop = activeLine.offsetTop;
-        const lineHeight = activeLine.clientHeight;
+        const containerRect = container.getBoundingClientRect();
+        const screenMiddleRelative = window.innerHeight / 2 - containerRect.top;
+        const lineCenterRelative =
+          activeLine.offsetTop + activeLine.clientHeight / 2;
 
-        const targetScrollTop =
-          lineOffsetTop - containerHeight / 2 + lineHeight / 2;
+        const targetScrollTop = lineCenterRelative - screenMiddleRelative;
         container.scrollTo({
           top: targetScrollTop,
           behavior: "smooth",
@@ -49,6 +61,24 @@ export const PlayerLyricsOverlay: React.FC<PlayerLyricsOverlayProps> = ({
 
       return () => clearTimeout(timeoutId);
     }
+  }, [activeIndex, isLyricsOpen]);
+
+  // Window resize scroll realignment
+  useEffect(() => {
+    const handleResize = () => {
+      if (isLyricsOpen && containerRef.current && activeRef.current) {
+        const container = containerRef.current;
+        const activeLine = activeRef.current;
+        const containerRect = container.getBoundingClientRect();
+        const screenMiddleRelative = window.innerHeight / 2 - containerRect.top;
+        const lineCenterRelative =
+          activeLine.offsetTop + activeLine.clientHeight / 2;
+        container.scrollTop = lineCenterRelative - screenMiddleRelative;
+      }
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, [activeIndex, isLyricsOpen]);
 
   // Fallback Equalizer component
@@ -95,7 +125,6 @@ export const PlayerLyricsOverlay: React.FC<PlayerLyricsOverlayProps> = ({
 
       <div className="text-center space-y-1">
         <p className="text-[10px] font-black text-zinc-500 uppercase text-[10px] font-black text-zinc-500  ">
-          
           {isPlaying ? "Lossless audio streaming" : "Playback paused"}
         </p>
       </div>
@@ -116,6 +145,7 @@ export const PlayerLyricsOverlay: React.FC<PlayerLyricsOverlayProps> = ({
 
             {transcriptions.map((line, idx) => {
               const isActive = idx === activeIndex;
+              const isExactActive = isActive && hasExactActive;
               const isPast = idx < activeIndex;
 
               return (
@@ -124,18 +154,26 @@ export const PlayerLyricsOverlay: React.FC<PlayerLyricsOverlayProps> = ({
                   key={line.start_time_seconds}
                   onClick={() => onSeek?.(line.start_time_seconds)}
                   animate={{
-                    opacity: isActive ? 1 : isPast ? 0.35 : 0.15,
-                    scale: isActive ? 1.05 : 0.96,
+                    opacity: isExactActive
+                      ? 1
+                      : isActive
+                        ? 0.6
+                        : isPast
+                          ? 0.35
+                          : 0.15,
+                    scale: isExactActive ? 1.05 : isActive ? 1.01 : 0.96,
                     filter: isActive ? "blur(0px)" : "blur(0.5px)",
                   }}
                   transition={{ duration: 0.35, ease: "easeOut" }}
                   className={`text-center px-4 py-1.5 cursor-pointer transition-all duration-300 hover:opacity-100 hover:scale-[1.01] font-black tracking-tight leading-relaxed italic ${
-                    isActive
+                    isExactActive
                       ? "text-white text-[22px]"
-                      : "text-zinc-600 text-[15px]"
+                      : isActive
+                        ? "text-white/80 text-[18px]"
+                        : "text-zinc-600 text-[15px]"
                   }`}
                 >
-                  {isActive && line.words.length > 0 ? (
+                  {isExactActive && line.words.length > 0 ? (
                     <div className="flex flex-wrap justify-center gap-x-[5px] gap-y-1">
                       {line.words.map((word, wIdx) => {
                         const isWordActive =

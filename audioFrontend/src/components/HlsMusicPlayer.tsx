@@ -140,10 +140,8 @@ export function HlsMusicPlayer() {
         <div className="w-20 h-20 rounded-3xl bg-zinc-900/80 border border-white/5 flex items-center justify-center mb-6">
           <Music className="h-8 w-8 text-zinc-700" />
         </div>
-        <p className="text-zinc-600 text-[10px] font-black uppercase tracking-[0.2em] italic leading-relaxed">
-          Select a track
-          <br />
-          to start playing
+        <p className="text-zinc-500 text-xs font-semibold leading-relaxed">
+          Select a track to start playing
         </p>
       </div>
     );
