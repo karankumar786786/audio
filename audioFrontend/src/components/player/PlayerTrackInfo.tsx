@@ -20,7 +20,7 @@ export const PlayerTrackInfo: React.FC<PlayerTrackInfoProps> = ({
     <div className="flex-none px-6 py-1 relative z-10">
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
-          <h2 className="text-base font-black text-white italic uppercase tracking-tight truncate leading-tight text-glow-green">
+          <h2 className="text-base font-black text-white italic uppercase tracking-tight truncate leading-tight">
             {title}
           </h2>
           <p className="text-[10px] font-black text-primary/70 uppercase tracking-[0.15em] italic mt-0.5 truncate">
