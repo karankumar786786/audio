@@ -39,7 +39,8 @@ export const PlayerLyricsOverlay: React.FC<PlayerLyricsOverlayProps> = ({
         const lineOffsetTop = activeLine.offsetTop;
         const lineHeight = activeLine.clientHeight;
 
-        const targetScrollTop = lineOffsetTop - containerHeight / 2 + lineHeight / 2;
+        const targetScrollTop =
+          lineOffsetTop - containerHeight / 2 + lineHeight / 2;
         container.scrollTo({
           top: targetScrollTop,
           behavior: "smooth",
@@ -106,6 +107,7 @@ export const PlayerLyricsOverlay: React.FC<PlayerLyricsOverlayProps> = ({
   if (isLyricsOpen) {
     return (
       <div className="flex-1 overflow-hidden relative z-10 flex flex-col min-h-0 w-full lyrics-mask select-none">
+        {transcriptions.length > 0 ? (
           <div
             ref={containerRef}
             className="flex-1 overflow-y-auto no-scrollbar py-4 px-6 space-y-8 scroll-smooth min-h-0 relative"
