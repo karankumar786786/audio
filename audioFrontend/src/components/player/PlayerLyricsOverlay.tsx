@@ -35,15 +35,16 @@ export const PlayerLyricsOverlay: React.FC<PlayerLyricsOverlayProps> = ({
       const activeLine = activeRef.current;
 
       const timeoutId = setTimeout(() => {
-        const targetScrollTop =
-          activeLine.offsetTop -
-          container.clientHeight / 2 +
-          activeLine.clientHeight / 2;
+        const containerHeight = container.clientHeight;
+        const lineOffsetTop = activeLine.offsetTop;
+        const lineHeight = activeLine.clientHeight;
+
+        const targetScrollTop = lineOffsetTop - containerHeight / 2 + lineHeight / 2;
         container.scrollTo({
           top: targetScrollTop,
           behavior: "smooth",
         });
-      }, 55);
+      }, 80);
 
       return () => clearTimeout(timeoutId);
     }
@@ -105,11 +106,13 @@ export const PlayerLyricsOverlay: React.FC<PlayerLyricsOverlayProps> = ({
   if (isLyricsOpen) {
     return (
       <div className="flex-1 overflow-hidden relative z-10 flex flex-col min-h-0 w-full lyrics-mask select-none">
-        {transcriptions.length > 0 ? (
           <div
             ref={containerRef}
-            className="flex-1 overflow-y-auto no-scrollbar py-[140px] px-6 space-y-8 scroll-smooth min-h-0 relative"
+            className="flex-1 overflow-y-auto no-scrollbar py-4 px-6 space-y-8 scroll-smooth min-h-0 relative"
           >
+            {/* Top Spacer to allow centering of first lines */}
+            <div className="h-[40vh] shrink-0" />
+
             {transcriptions.map((line, idx) => {
               const isActive = idx === activeIndex;
               const isPast = idx < activeIndex;
@@ -162,6 +165,9 @@ export const PlayerLyricsOverlay: React.FC<PlayerLyricsOverlayProps> = ({
                 </motion.div>
               );
             })}
+
+            {/* Bottom Spacer to allow centering of last lines */}
+            <div className="h-[40vh] shrink-0" />
           </div>
         ) : (
           <div className="flex-1 flex items-center justify-center">
