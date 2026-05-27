@@ -69,16 +69,18 @@ export function SongCard({ song, priority, onRemove, className }: SongCardProps)
   return (
     <>
       <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, ease: "easeOut" }}
+        whileHover={{ y: -6 }}
         onClick={handlePlay}
-        className={`glass-effect hover-scale p-3.5 rounded-[1.8rem] group cursor-pointer relative overflow-hidden ${
+        className={`glass-effect p-3.5 rounded-[1.8rem] group cursor-pointer relative overflow-hidden transition-all duration-300 ${
           isActiveSong
-            ? "ring-1 ring-primary/40 shadow-[0_0_20px_rgba(120,240,142,0.12)] bg-primary/2"
-            : "hover:shadow-[0_0_25px_rgba(120,240,142,0.1)]"
+            ? "ring-2 ring-primary/60 bg-gradient-to-b from-primary/5 to-transparent shadow-[0_12px_30px_rgba(120,240,142,0.15)]"
+            : "hover:border-white/15 hover:shadow-[0_20px_40px_rgba(0,0,0,0.6),0_0_30px_rgba(120,240,142,0.06)] hover:bg-white/5"
         } ${className || ""}`}
       >
-        <div className="aspect-square bg-zinc-900 rounded-[1.4rem] mb-4 relative shadow-2xl overflow-hidden ring-1 ring-white/4">
+        <div className="aspect-square bg-zinc-950 rounded-[1.4rem] mb-4 relative shadow-2xl overflow-hidden ring-1 ring-white/6">
           <img
             src={getImageUrl(song.imageKey, {
               width: 400,
@@ -86,41 +88,50 @@ export function SongCard({ song, priority, onRemove, className }: SongCardProps)
               focus: "auto",
               aspectRatio: "1-1",
             })}
-            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+            className="w-full h-full object-cover group-hover:scale-108 transition-transform duration-700 ease-out"
             alt={song.title}
             loading={priority ? "eager" : "lazy"}
           />
 
-          <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-all duration-500 flex items-center justify-center backdrop-blur-[2px]">
+          <div className="absolute inset-0 bg-black/45 opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center backdrop-blur-[3px] z-10">
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-black shadow-xl shadow-primary/20 transition-all duration-300"
+            >
+              <Play fill="black" size={20} className="translate-x-0.5" />
+            </motion.div>
           </div>
 
           {/* Micro Equalizer Overlay on playing song cover art */}
           {isActiveSong && isPlaying && (
-            <div className="absolute bottom-3 right-3 bg-black/60 backdrop-blur-md px-2 py-1.5 rounded-lg flex items-end gap-[3px] border border-white/5 z-20">
+            <div className="absolute bottom-3 right-3 bg-black/85 backdrop-blur-md px-2.5 py-2 rounded-xl flex items-end gap-[3.5px] border border-white/10 z-20 shadow-lg">
               <motion.div
-                animate={{ height: [4, 12, 4] }}
-                transition={{ duration: 1, repeat: Infinity, ease: "easeInOut" }}
-                className="w-[2px] bg-primary rounded-full"
+                animate={{ height: [4, 14, 4] }}
+                transition={{ duration: 1.1, repeat: Infinity, ease: "easeInOut" }}
+                className="w-[2.5px] bg-primary rounded-full"
                 style={{ height: 4 }}
               />
               <motion.div
-                animate={{ height: [6, 16, 6] }}
-                transition={{ duration: 0.8, repeat: Infinity, ease: "easeInOut", delay: 0.2 }}
-                className="w-[2px] bg-primary rounded-full"
-                style={{ height: 6 }}
+                animate={{ height: [8, 18, 8] }}
+                transition={{ duration: 0.7, repeat: Infinity, ease: "easeInOut", delay: 0.25 }}
+                className="w-[2.5px] bg-primary rounded-full"
+                style={{ height: 8 }}
               />
               <motion.div
-                animate={{ height: [3, 9, 3] }}
-                transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut", delay: 0.4 }}
-                className="w-[2px] bg-primary rounded-full"
-                style={{ height: 3 }}
+                animate={{ height: [5, 12, 5] }}
+                transition={{ duration: 1.3, repeat: Infinity, ease: "easeInOut", delay: 0.55 }}
+                className="w-[2.5px] bg-primary rounded-full"
+                style={{ height: 5 }}
               />
             </div>
           )}
         </div>
 
         <div className="space-y-1.5 px-1.5 pb-1">
-          <h3 className={`font-black truncate text-[0.9rem] uppercase italic tracking-tighter text-glow-green transition-colors duration-300 ${
+          <h3 className={`font-black truncate text-[0.9rem] uppercase italic tracking-tighter transition-colors duration-300 ${
             isActiveSong ? "text-primary" : "text-white"
           }`}>
             {song.title}

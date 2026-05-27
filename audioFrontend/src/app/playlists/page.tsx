@@ -2,10 +2,10 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { musicApi } from "@/lib/api";
-import Link from "next/link";
-import { ListMusic, Sparkles, ChevronRight } from "lucide-react";
+import { PlaylistCard } from "../../components/PlaylistCard";
+import { ListMusic, Sparkles } from "lucide-react";
 import { useState, useEffect } from "react";
-import { getImageUrl } from "@/lib/image-utils";
+import { motion } from "framer-motion";
 
 export default function PlaylistsPage() {
   const [isMounted, setIsMounted] = useState(false);
@@ -25,87 +25,66 @@ export default function PlaylistsPage() {
   if (!isMounted) return null;
 
   return (
-    <div className="px-10 pb-20 pt-8">
-      {/* System Playlists */}
-      <section>
-        <div className="flex items-center gap-6 mb-8 px-2">
-          <h2 className="text-3xl font-black italic tracking-tighter uppercase text-white">
-            Playlists
+    <div className="px-10 pb-20 pt-6 space-y-12">
+      <motion.div 
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="flex items-center gap-6"
+      >
+        <div className="p-2.5 bg-primary/10 rounded-xl border border-primary/20">
+          <ListMusic className="text-primary" size={24} />
+        </div>
+        <div>
+          <h2 className="text-3xl font-black italic tracking-tight uppercase text-white flex items-center gap-2">
+            Playlists <Sparkles size={20} className="text-primary animate-pulse" />
           </h2>
-          <div className="h-px flex-1 bg-linear-to-r from-violet-500/50 to-transparent" />
+          <p className="text-[10px] font-black uppercase tracking-widest text-zinc-500 italic mt-0.5">
+            Curated acoustic collections for optimal resonance
+          </p>
         </div>
+      </motion.div>
 
-        <div className="flex flex-col gap-2">
-          {isSystemLoading ? (
-            [1, 2, 3].map((i) => (
-              <div
-                key={i}
-                className="h-28 bg-zinc-900/40 border border-white/5 rounded-3xl animate-pulse"
-              />
-            ))
-          ) : (
-            systemPlaylists.map((playlist: any) => (
-              <PlaylistRow key={playlist.id} playlist={playlist} isSystem />
-            ))
-          )}
+      {isSystemLoading ? (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-8">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div key={i} className="space-y-4 animate-pulse">
+              <div className="aspect-square rounded-[2rem] bg-zinc-900/60 border border-white/5 shimmer-loader" />
+              <div className="h-3.5 w-2/3 bg-zinc-900/60 rounded" />
+              <div className="h-2.5 w-1/3 bg-zinc-900/60 rounded" />
+            </div>
+          ))}
         </div>
-      </section>
+      ) : systemPlaylists.length > 0 ? (
+        <motion.div 
+          initial="hidden"
+          animate="show"
+          variants={{
+            hidden: { opacity: 0 },
+            show: {
+              opacity: 1,
+              transition: { staggerChildren: 0.04 }
+            }
+          }}
+          className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-8"
+        >
+          {systemPlaylists.map((playlist: any) => (
+            <motion.div
+              key={playlist.id}
+              variants={{
+                hidden: { opacity: 0, y: 15 },
+                show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 100 } }
+              }}
+            >
+              <PlaylistCard playlist={playlist} />
+            </motion.div>
+          ))}
+        </motion.div>
+      ) : (
+        <div className="py-32 text-center text-zinc-700 border-2 border-dashed border-zinc-900 rounded-[4rem] font-bold italic tracking-tight uppercase">
+          No Playlists found
+        </div>
+      )}
     </div>
-  );
-}
-
-function PlaylistRow({
-  playlist,
-  isSystem = false,
-}: {
-  playlist: any;
-  isSystem?: boolean;
-}) {
-  const coverUrl = getImageUrl(playlist.coverImageKey, { 
-    width: 300, 
-    height: 300, 
-    focus: "auto",
-    aspectRatio: "1-1"
-  });
-
-  return (
-    <Link 
-      href={`/playlists/${playlist.id}${isSystem ? "?type=system" : "?type=user"}`} 
-      className="group flex items-center gap-8 p-5 rounded-[2.5rem]   hover:bg-white/3 border border-transparent hover:border-white/5 transition-all duration-500"
-    >
-      <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-3xl border border-white/5 shadow-2xl">
-        {playlist.coverImageKey ? (
-          <img 
-            src={coverUrl} 
-            alt={playlist.name || playlist.title}
-            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center bg-primary-500/10 text-primary">
-            <ListMusic className="opacity-40" size={32} />
-          </div>
-        )}
-        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-            <Sparkles size={20} className="text-white fill-white" />
-        </div>
-      </div>
-
-      <div className="flex-1 min-w-0 space-y-1.5">
-        <div className="flex items-center gap-4">
-          <h3 className="text-xl font-black italic uppercase tracking-tighter text-white group-hover:text-primary transition-colors truncate">
-            {playlist.name || playlist.title}
-          </h3>
-        </div>
-        <p className="text-zinc-500 text-xs font-medium italic opacity-60 group-hover:opacity-100 transition-opacity line-clamp-1 max-w-2xl">
-          {playlist.description || ""}
-        </p>
-      </div>
-
-      <div className="shrink-0 flex items-center gap-6 pr-4">
-        <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/5 flex items-center justify-center text-zinc-500 group-hover:bg-primary group-hover:text-black group-hover:shadow-2xl group-hover:shadow-primary/20 transition-all duration-300">
-           <ChevronRight size={24} strokeWidth={3} />
-        </div>
-      </div>
-    </Link>
   );
 }

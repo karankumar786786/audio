@@ -7,13 +7,21 @@ import { HeroSection } from "../../components/HeroSection";
 import { ArtistCard } from "../../components/ArtistCard";
 import { PlaylistCard } from "../../components/PlaylistCard";
 import { useEffect, useState } from "react";
-import {  Clock, Users2, ListMusic, Zap } from "lucide-react";
+import { Clock, Users2, ListMusic, Zap, Sparkles } from "lucide-react";
 import { useStore } from "@tanstack/react-store";
 import { playerActions, playerStore } from "../../store/player.store";
+import { motion } from "framer-motion";
 
 export default function HomePage() {
   const systemUser = useStore(playerStore, (s) => s.systemUser);
   const [heroIndex, setHeroIndex] = useState(0);
+
+  const getGreeting = () => {
+    const hrs = new Date().getHours();
+    if (hrs < 12) return "Good Morning";
+    if (hrs < 18) return "Good Afternoon";
+    return "Good Evening";
+  };
 
   // Trending Songs (Featured)
   const { data: trending, isLoading: isTrendingLoading } = useQuery({
@@ -81,21 +89,29 @@ export default function HomePage() {
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   return (
-    <div className="px-10 pb-20 space-y-20">
+    <div className="px-10 pb-20 pt-8 space-y-16">
       
       {/* 1. Hero Section (Featured/Trending) */}
-      <HeroSection 
-        songs={trending?.data?.data?.slice(0, 5) || []}
-        index={heroIndex}
-        setIndex={setHeroIndex}
-        isLoading={isTrendingLoading}
-      />
+      <motion.div
+        initial={{ opacity: 0, y: 15 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+      >
+        <HeroSection 
+          songs={trending?.data?.data?.slice(0, 5) || []}
+          index={heroIndex}
+          setIndex={setHeroIndex}
+          isLoading={isTrendingLoading}
+        />
+      </motion.div>
+
+      <div className="h-px bg-linear-to-r from-white/10 via-white/5 to-transparent" />
 
       {/* 2. Top Artists Section */}
-      <section>
-        <div className="flex items-center justify-between mb-8 px-1">
+      <section className="space-y-6">
+        <div className="flex items-center justify-between px-1">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-primary/10 rounded-xl border border-primary/20">
+            <div className="p-2.5 bg-primary/10 rounded-xl border border-primary/20">
               <Users2 className="text-primary" size={18} />
             </div>
             <h2 className="text-2xl font-black italic tracking-tight uppercase text-white">
@@ -105,12 +121,17 @@ export default function HomePage() {
           <div className="h-px flex-1 mx-8 bg-linear-to-r from-white/6 to-transparent" />
         </div>
 
-        <div className="flex flex-row overflow-x-auto gap-12 pb-6 no-scrollbar mask-fade-right px-1 py-2">
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className="flex flex-row overflow-x-auto gap-12 pb-6 no-scrollbar mask-fade-right px-1 py-2"
+        >
           {isArtistsLoading ? (
             [1, 2, 3, 4, 5, 6].map((i) => (
               <div key={i} className="flex-none w-[160px] space-y-4">
-                <div className="aspect-square rounded-full bg-zinc-900 animate-pulse border border-white/3" />
-                <div className="h-3 w-3/4 bg-zinc-900 rounded mx-auto animate-pulse" />
+                <div className="aspect-square rounded-full bg-zinc-900/60 animate-pulse border border-white/5" />
+                <div className="h-3 w-3/4 bg-zinc-900/60 rounded mx-auto animate-pulse" />
               </div>
             ))
           ) : (
@@ -118,14 +139,16 @@ export default function HomePage() {
               <ArtistCard key={artist.id} artist={artist} />
             ))
           )}
-        </div>
+        </motion.div>
       </section>
 
+      <div className="h-px bg-linear-to-r from-white/10 via-white/5 to-transparent" />
+
       {/* 3. Featured Playlists Section */}
-      <section>
-        <div className="flex items-center justify-between mb-8 px-1">
+      <section className="space-y-6">
+        <div className="flex items-center justify-between px-1">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-primary/10 rounded-xl border border-primary/20">
+            <div className="p-2.5 bg-primary/10 rounded-xl border border-primary/20">
               <ListMusic className="text-primary" size={18} />
             </div>
             <h2 className="text-2xl font-black italic tracking-tight uppercase text-white">
@@ -135,12 +158,17 @@ export default function HomePage() {
           <div className="h-px flex-1 mx-8 bg-linear-to-r from-white/6 to-transparent" />
         </div>
 
-        <div className="flex flex-row overflow-x-auto gap-8 pb-6 no-scrollbar mask-fade-right px-1 py-2">
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.3 }}
+          className="flex flex-row overflow-x-auto gap-8 pb-6 no-scrollbar mask-fade-right px-1 py-2"
+        >
           {isPlaylistsLoading ? (
             [1, 2, 3, 4, 5, 6].map((i) => (
               <div key={i} className="flex-none w-[180px] space-y-4">
-                <div className="aspect-square rounded-[2.5rem] bg-zinc-900 animate-pulse border border-white/3" />
-                <div className="h-3 w-1/2 bg-zinc-900 rounded animate-pulse" />
+                <div className="aspect-square rounded-[2.5rem] bg-zinc-900/60 animate-pulse border border-white/5" />
+                <div className="h-3 w-1/2 bg-zinc-900/60 rounded animate-pulse" />
               </div>
             ))
           ) : (
@@ -148,44 +176,54 @@ export default function HomePage() {
               <PlaylistCard key={playlist.id} playlist={playlist} />
             ))
           )}
-        </div>
+        </motion.div>
       </section>
 
       {/* 4. Recommendations (Conditional) */}
       {systemUser &&
         recommendations?.data?.data &&
         recommendations.data.data.length > 0 && (
-          <section>
-            <div className="flex items-center gap-4 mb-8 px-1">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-primary/10 rounded-xl border border-primary/20">
-                  <Zap className="text-primary fill-primary" size={18} />
+          <>
+            <div className="h-px bg-linear-to-r from-white/10 via-white/5 to-transparent" />
+            <section className="space-y-6">
+              <div className="flex items-center gap-4 px-1">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 bg-primary/10 rounded-xl border border-primary/20">
+                    <Zap className="text-primary fill-primary" size={18} />
+                  </div>
+                  <h2 className="text-2xl font-black italic tracking-tight uppercase text-white">
+                    Recommendations
+                  </h2>
                 </div>
-                <h2 className="text-2xl font-black italic tracking-tight uppercase text-white">
-                  Recommendations
-                </h2>
+                <div className="h-px flex-1 bg-linear-to-r from-white/6 to-transparent" />
               </div>
-              <div className="h-px flex-1 bg-linear-to-r from-white/6 to-transparent" />
-            </div>
 
-            <div className="flex flex-row overflow-x-auto gap-6 pb-6 no-scrollbar mask-fade-right px-1 py-2">
-              {recommendations.data.data.slice(0, 10).map((song: Song) => (
-                <SongCard 
-                  key={`rec-${song.id}`} 
-                  song={song} 
-                  className="flex-none w-[220px]"
-                />
-              ))}
-            </div>
-          </section>
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5, delay: 0.35 }}
+                className="flex flex-row overflow-x-auto gap-6 pb-6 no-scrollbar mask-fade-right px-1 py-2"
+              >
+                {recommendations.data.data.slice(0, 10).map((song: Song) => (
+                  <SongCard 
+                    key={`rec-${song.id}`} 
+                    song={song} 
+                    className="flex-none w-[220px]"
+                  />
+                ))}
+              </motion.div>
+            </section>
+          </>
         )}
 
+      <div className="h-px bg-linear-to-r from-white/10 via-white/5 to-transparent" />
+
       {/* 5. Discovery Feed */}
-      <section>
-        <div className="flex items-center justify-between mb-8 px-1">
+      <section className="space-y-6">
+        <div className="flex items-center justify-between px-1">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-zinc-800/60 rounded-xl border border-white/4">
+              <div className="p-2.5 bg-zinc-800/60 rounded-xl border border-white/4">
                 <Clock className="text-zinc-400" size={18} />
               </div>
               <h2 className="text-2xl font-black italic tracking-tight uppercase text-white">
@@ -201,7 +239,7 @@ export default function HomePage() {
             {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((i) => (
               <div
                 key={i}
-                className="aspect-square bg-zinc-900/30 border border-white/3 rounded-4xl animate-pulse"
+                className="aspect-square bg-zinc-900/30 border border-white/3 rounded-[1.8rem] animate-pulse shimmer-loader"
               />
             ))}
           </div>
@@ -210,17 +248,28 @@ export default function HomePage() {
             Failed to load tracks
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
+          <motion.div 
+            initial="hidden"
+            animate="show"
+            variants={{
+              hidden: { opacity: 0 },
+              show: {
+                opacity: 1,
+                transition: { staggerChildren: 0.05 }
+              }
+            }}
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6"
+          >
             {data?.pages.map((page, i) =>
               page.data.data.map((song: Song, songIdx: number) => (
-                  <SongCard
-                    key={`${song.id}-${i}-${songIdx}`}
-                    song={song}
-                    priority={i === 0 && songIdx < 6}
-                  />
-                )),
+                <SongCard
+                  key={`${song.id}-${i}-${songIdx}`}
+                  song={song}
+                  priority={i === 0 && songIdx < 6}
+                />
+              )),
             )}
-          </div>
+          </motion.div>
         )}
 
         {/* Loader/Trigger */}
