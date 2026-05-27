@@ -18,8 +18,11 @@ export function useAudioSync(
     time: 0,
     duration: 0,
   });
+  // Keep refs of values the ended handler needs to avoid stale closures
+  const currentSongRef = useRef(currentSong);
+  currentSongRef.current = currentSong;
 
-  // 1. Sync Play/Pause and Volume
+  // 1. Sync Volume
   useEffect(() => {
     if (!audioElement) return;
     
@@ -29,10 +32,11 @@ export function useAudioSync(
     audioElement.muted = isMuted || targetVolume === 0;
   }, [audioElement, volume, isMuted]);
 
+  // 2. Sync Play/Pause state to the audio element
   useEffect(() => {
     if (!audioElement) return;
     if (isPlaying) {
-      if (audioElement.paused) {
+      if (audioElement.paused && audioElement.readyState >= 2) {
         audioElement.play().catch((err) => {
           if (err.name !== "AbortError") console.warn("[Player] Play failed:", err);
         });
@@ -42,9 +46,9 @@ export function useAudioSync(
         audioElement.pause();
       }
     }
-  }, [audioElement, isPlaying, currentSong?.id]);
+  }, [audioElement, isPlaying, isInternalChange]);
 
-  // 2. Native Event Listeners
+  // 3. Native Event Listeners
   useEffect(() => {
     if (!audioElement) return;
 
@@ -60,10 +64,12 @@ export function useAudioSync(
       // Robust check: Only trigger 'next' if we are actually at/near the end of the song.
       // This prevents the common browser issue where interruptions or source changes 
       // fire an 'ended' event prematurely.
-      const isNearEnd = Math.abs(audioElement.currentTime - audioElement.duration) < 1.0;
-      if (!isNearEnd) {
-        console.debug("[Player] Ignoring 'ended' event (not at end of duration)");
-        return;
+      if (audioElement.duration && isFinite(audioElement.duration)) {
+        const isNearEnd = Math.abs(audioElement.currentTime - audioElement.duration) < 1.5;
+        if (!isNearEnd) {
+          console.debug("[Player] Ignoring 'ended' event (not at end of duration)");
+          return;
+        }
       }
 
       const last = lastStateRef.current;
@@ -74,20 +80,33 @@ export function useAudioSync(
       playerActions.next();
     };
 
+    // Handle when the audio element can play after a pause -> play toggle
+    const onCanPlay = () => {
+      // If the store says we should be playing but the audio is paused, start playing
+      const { isPlaying: shouldPlay } = require("../../../store/player.store").playerStore.state;
+      if (shouldPlay && audioElement.paused) {
+        audioElement.play().catch((err) => {
+          if (err.name !== "AbortError") console.warn("[Player] Play on canplay failed:", err);
+        });
+      }
+    };
+
     audioElement.addEventListener("play", onPlay);
     audioElement.addEventListener("playing", onPlay);
     audioElement.addEventListener("pause", onPause);
     audioElement.addEventListener("ended", handleEnded);
+    audioElement.addEventListener("canplay", onCanPlay);
 
     return () => {
       audioElement.removeEventListener("play", onPlay);
       audioElement.removeEventListener("playing", onPlay);
       audioElement.removeEventListener("pause", onPause);
       audioElement.removeEventListener("ended", handleEnded);
+      audioElement.removeEventListener("canplay", onCanPlay);
     };
-  }, [audioElement]);
+  }, [audioElement, isInternalChange]);
 
-  // 3. Listen Recording Logic
+  // 4. Listen Recording Logic
   useEffect(() => {
     const last = lastStateRef.current;
     if (currentSong?.id !== last.id) {
@@ -118,7 +137,7 @@ export function useAudioSync(
     };
   }, []);
 
-  // 4. High Precision Sync (RAF)
+  // 5. High Precision Sync (RAF)
   const syncTime = useCallback(() => {
     if (!audioElement) {
       animFrameRef.current = requestAnimationFrame(syncTime);
@@ -132,17 +151,17 @@ export function useAudioSync(
       setBuffered(audioElement.buffered.end(audioElement.buffered.length - 1));
     }
     
-    if (audioElement.duration && audioElement.duration !== duration) {
+    if (audioElement.duration && isFinite(audioElement.duration) && audioElement.duration !== duration) {
       playerActions.setDuration(audioElement.duration);
     }
     
-    if (currentSong && lastStateRef.current.id === currentSong.id) {
+    if (currentSongRef.current && lastStateRef.current.id === currentSongRef.current.id) {
       lastStateRef.current.time = t;
       lastStateRef.current.duration = audioElement.duration || duration || lastStateRef.current.duration;
     }
     
     animFrameRef.current = requestAnimationFrame(syncTime);
-  }, [audioElement, currentSong, duration, setLocalTime, setBuffered]);
+  }, [audioElement, duration, setLocalTime, setBuffered]);
 
   useEffect(() => {
     animFrameRef.current = requestAnimationFrame(syncTime);

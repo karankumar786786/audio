@@ -73,6 +73,17 @@ export function HlsMusicPlayer() {
     setBuffered
   );
 
+  // 2b. Sync store currentTime resets back to audio element (for restart/previous)
+  const storeCurrentTime = useStore(playerStore, (s) => s.currentTime);
+  useEffect(() => {
+    if (!audioRef.current) return;
+    // If the store was set to 0 (restart) and the audio is significantly ahead, seek back
+    if (storeCurrentTime === 0 && audioRef.current.currentTime > 1) {
+      audioRef.current.currentTime = 0;
+      setLocalTime(0);
+    }
+  }, [storeCurrentTime, setLocalTime]);
+
   // 3. User Actions
   const isFavourite = currentSong ? favourites.has(currentSong.id) : false;
 
@@ -186,7 +197,19 @@ export function HlsMusicPlayer() {
             <PlayerMainControls 
               isPlaying={isPlaying}
               isLoading={state.isRefilling} // Using refill state as a proxy for generic loading if needed
-              onPlayPause={() => playerActions.setIsPlaying(!isPlaying)}
+              onPlayPause={() => {
+                const audio = audioRef.current;
+                if (audio) {
+                  if (isPlaying) {
+                    audio.pause();
+                  } else {
+                    audio.play().catch((err) => {
+                      if (err.name !== "AbortError") console.warn("[Player] Manual play failed:", err);
+                    });
+                  }
+                }
+                playerActions.setIsPlaying(!isPlaying);
+              }}
               onNext={() => playerActions.next()}
               onPrev={() => playerActions.previous()}
             />

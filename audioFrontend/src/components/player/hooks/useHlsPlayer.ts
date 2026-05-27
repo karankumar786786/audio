@@ -11,6 +11,9 @@ export function useHlsPlayer(
 ) {
   const hlsRef = useRef<any>(null);
   const isInternalChange = useRef(false);
+  // Track isPlaying in a ref so the HLS init effect doesn't re-run on play/pause
+  const isPlayingRef = useRef(isPlaying);
+  isPlayingRef.current = isPlaying;
 
   const syncTracks = useCallback((hls: any) => {
     if (!hls) return;
@@ -23,10 +26,10 @@ export function useHlsPlayer(
     playerActions.setQualityTracks(tracks);
   }, []);
 
-  // Initialize and Load
+  // Initialize and Load — ONLY when song/stream changes, NOT on play/pause
   useEffect(() => {
     if (!audioElement) return;
-    // Reference currentSongId to trigger re-run and satisfy linter check
+    // Reference currentSongId to trigger re-run
     const _songId = currentSongId;
 
     let isMounted = true;
@@ -86,9 +89,12 @@ export function useHlsPlayer(
                 }
               }
 
-              if (isPlaying) {
+              // Use the ref to check current isPlaying state (not stale closure)
+              if (isPlayingRef.current) {
                 audioElement.play().catch((err) => {
-                  console.warn("[Player] Hls.js autoplay failed:", err);
+                  if (err.name !== "AbortError") {
+                    console.warn("[Player] Hls.js autoplay failed:", err);
+                  }
                 });
               }
             });
@@ -137,9 +143,11 @@ export function useHlsPlayer(
             audioElement.src = streamUrl;
             playerActions.setQualityTracks([]); // No manual tracks for native Safari HLS
 
-            if (isPlaying) {
+            if (isPlayingRef.current) {
               audioElement.play().catch((err) => {
-                console.warn("[Player] Native HLS autoplay failed:", err);
+                if (err.name !== "AbortError") {
+                  console.warn("[Player] Native HLS autoplay failed:", err);
+                }
               });
             }
           } else {
@@ -167,7 +175,11 @@ export function useHlsPlayer(
         hlsRef.current = null;
       }
     };
-  }, [currentSongId, streamUrl, audioElement, isPlaying, syncTracks]);
+    // IMPORTANT: isPlaying is intentionally NOT in the dependency array.
+    // It's tracked via isPlayingRef so that toggling play/pause does NOT
+    // destroy and recreate the HLS instance (which was causing the pause-reset bug).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentSongId, streamUrl, audioElement, syncTracks]);
 
   // Quality Switching
   useEffect(() => {

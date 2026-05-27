@@ -44,10 +44,26 @@ export const queueActions = {
     }
   },
 
+  /**
+   * Refills the internal queue with recommended/trending songs.
+   * Called automatically when:
+   * - Queue is initialized empty (isInit=true)
+   * - Remaining songs in queue drop to ≤2 (after playing or skipping)
+   * 
+   * The queue acts as a FIFO-like buffer:
+   * - Songs are appended at the end
+   * - Old played songs are pruned when queue grows too large
+   * - Duplicates are filtered out to avoid replaying the same song
+   */
   refillQueue: async (isInit = false) => {
     const { queue, currentSong, systemUser, isRefilling, lastQueueIndex } = playerStore.state;
     if (isRefilling) return;
-    if (!isInit && queue.length - lastQueueIndex > 3) return;
+    
+    // Calculate remaining songs ahead of the current position
+    const remaining = queue.length - (lastQueueIndex + 1);
+    
+    // Don't refill if we have enough songs ahead (unless it's an init call)
+    if (!isInit && remaining > 2) return;
 
     try {
       playerStore.setState((s) => ({ ...s, isRefilling: true }));
@@ -71,10 +87,13 @@ export const queueActions = {
         const rawData = Array.isArray(res.data) ? res.data : (res.data.data || []);
         const newSongs = mapListToPlayerSongs(rawData);
         // Strictly filter against current queue to ensure uniqueness
-        const existingIds = new Set(queue.map(s => s.id));
+        const { queue: latestQueue } = playerStore.state;
+        const existingIds = new Set(latestQueue.map(s => s.id));
+        // Also exclude currently playing song
+        if (currentSong?.id) existingIds.add(currentSong.id);
         const uniqueNewSongs = newSongs.filter(s => !existingIds.has(s.id));
 
-        console.log(`[Queue] API returned ${newSongs.length} songs. Added all ${uniqueNewSongs.length} to queue. Total queue: ${queue.length + newSongs.length}`);
+        console.log(`[Queue] API returned ${newSongs.length} songs. ${uniqueNewSongs.length} are unique and new.`);
 
         if (uniqueNewSongs.length > 0) {
           playerStore.setState((s) => {
@@ -89,7 +108,7 @@ export const queueActions = {
               console.log(`[Queue] Pruned ${toRemove} old songs from history.`);
             }
 
-            console.log(`[Queue] APPENDED ${uniqueNewSongs.length} songs to the END of the queue. New total: ${updatedQueue.length}. Titles: ${uniqueNewSongs.map(s => s.title).join(', ')}`);
+            console.log(`[Queue] APPENDED ${uniqueNewSongs.length} songs. New total: ${updatedQueue.length}. Titles: ${uniqueNewSongs.map(s => s.title).join(', ')}`);
             if (typeof window !== "undefined") {
               localStorage.setItem("last_queue", JSON.stringify(updatedQueue));
             }
@@ -102,6 +121,9 @@ export const queueActions = {
                 playbackActions.setIsPlaying(false);
             });
           }
+        } else if (newSongs.length === 0) {
+          // API returned no songs at all — nothing we can do
+          console.warn("[Queue] API returned 0 songs. Queue may be exhausted.");
         }
       }
     } catch (err) {
@@ -135,13 +157,40 @@ export const queueActions = {
     const { queue } = playerStore.state;
     if (queue.length === 0) {
       await queueActions.refillQueue(true);
+    } else {
+      // Even if queue has songs, check if we need more
+      const { lastQueueIndex } = playerStore.state;
+      const remaining = queue.length - (lastQueueIndex + 1);
+      if (remaining <= 2) {
+        await queueActions.refillQueue();
+      }
     }
   },
 
+  /**
+   * Advances to the next song in the queue.
+   * After playing, the song is effectively "consumed" by advancing the index.
+   * If only 2 songs remain ahead, triggers a refill from recommendations.
+   * If queue is exhausted and no repeat mode, tries to refill before stopping.
+   */
   next: () => {
     const { queue, lastQueueIndex, isShuffle, repeatMode, currentSong } = playerStore.state;
-    if (queue.length === 0) return;
+    
+    // Edge case: empty queue — try to refill
+    if (queue.length === 0) {
+      console.log("[Queue] Queue empty on next(). Attempting refill...");
+      queueActions.refillQueue().then(() => {
+        const { queue: refilled } = playerStore.state;
+        if (refilled.length > 0) {
+          import("@/store/player/playback.actions").then(({ playbackActions }) => {
+            playbackActions.play(refilled[0]);
+          });
+        }
+      });
+      return;
+    }
 
+    // Repeat one: replay current song
     if (repeatMode === "one" && currentSong) {
       import("@/store/player/playback.actions").then(({ playbackActions }) => playbackActions.play(currentSong));
       return;
@@ -149,14 +198,26 @@ export const queueActions = {
 
     let nextIdx = lastQueueIndex + 1;
     if (isShuffle) {
-      // Improved shuffle: Avoid immediately repeating the same song if the queue has other options
-      const availableIndices = Array.from({ length: queue.length }, (_, i) => i)
-        .filter(i => i !== lastQueueIndex);
+      // Improved shuffle: pick from songs AHEAD in the queue to avoid replaying old songs
+      const aheadIndices = Array.from({ length: queue.length }, (_, i) => i)
+        .filter(i => i > lastQueueIndex && i !== lastQueueIndex);
       
-      if (availableIndices.length > 0) {
-        nextIdx = availableIndices[Math.floor(Math.random() * availableIndices.length)];
+      if (aheadIndices.length > 0) {
+        nextIdx = aheadIndices[Math.floor(Math.random() * aheadIndices.length)];
       } else {
-        nextIdx = 0; // Fallback to start if only one song
+        // No songs ahead; if repeat all, pick from whole queue
+        if (repeatMode === "all") {
+          const allIndices = Array.from({ length: queue.length }, (_, i) => i)
+            .filter(i => i !== lastQueueIndex);
+          if (allIndices.length > 0) {
+            nextIdx = allIndices[Math.floor(Math.random() * allIndices.length)];
+          } else {
+            nextIdx = 0;
+          }
+        } else {
+          // No songs ahead and no repeat — try to refill
+          nextIdx = queue.length; // Will trigger the refill logic below
+        }
       }
     }
 
@@ -165,19 +226,42 @@ export const queueActions = {
         localStorage.setItem("last_queue_index", nextIdx.toString());
       }
       import("@/store/player/playback.actions").then(({ playbackActions }) => playbackActions.play(queue[nextIdx]));
+      
+      // Check if we need to refill: 2 or fewer songs remaining after this one
       const remaining = queue.length - (nextIdx + 1);
       if (remaining <= 2) {
+        console.log(`[Queue] Only ${remaining} songs remaining after current. Triggering refill...`);
         queueActions.refillQueue();
       }
     } else if (repeatMode === "all") {
+      // Wrap around to beginning
+      if (typeof window !== "undefined") {
+        localStorage.setItem("last_queue_index", "0");
+      }
       import("@/store/player/playback.actions").then(({ playbackActions }) => playbackActions.play(queue[0]));
     } else {
-      import("@/store/player/playback.actions").then(({ playbackActions }) => playbackActions.setIsPlaying(false));
+      // Queue exhausted, no repeat — try to fetch more songs before stopping
+      console.log("[Queue] Queue exhausted. Attempting to refill before stopping...");
+      queueActions.refillQueue().then(() => {
+        const { queue: refreshed, lastQueueIndex: currentIdx } = playerStore.state;
+        const nextAvailable = currentIdx + 1;
+        if (nextAvailable < refreshed.length) {
+          if (typeof window !== "undefined") {
+            localStorage.setItem("last_queue_index", nextAvailable.toString());
+          }
+          import("@/store/player/playback.actions").then(({ playbackActions }) => playbackActions.play(refreshed[nextAvailable]));
+        } else {
+          // Truly exhausted
+          console.log("[Queue] No more songs available. Stopping playback.");
+          import("@/store/player/playback.actions").then(({ playbackActions }) => playbackActions.setIsPlaying(false));
+        }
+      });
     }
   },
 
   previous: () => {
     const { queue, lastQueueIndex, currentTime } = playerStore.state;
+    // If more than 3 seconds into the song, restart it
     if (currentTime > 3) {
       import("@/store/player/playback.actions").then(({ playbackActions }) => playbackActions.setCurrentTime(0));
       return;
@@ -189,6 +273,9 @@ export const queueActions = {
         localStorage.setItem("last_queue_index", prevIdx.toString());
       }
       import("@/store/player/playback.actions").then(({ playbackActions }) => playbackActions.play(queue[prevIdx]));
+    } else if (queue.length > 0) {
+      // At the beginning of the queue, restart the current song
+      import("@/store/player/playback.actions").then(({ playbackActions }) => playbackActions.setCurrentTime(0));
     }
   },
 };
