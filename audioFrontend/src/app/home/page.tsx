@@ -1,20 +1,21 @@
 "use client";
 
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
-import { musicApi, type Song, type Artist, type Playlist } from "../../lib/api";
-import { SongCard } from "../../components/SongCard";
-import { HeroSection } from "../../components/HeroSection";
-import { ArtistCard } from "../../components/ArtistCard";
-import { PlaylistCard } from "../../components/PlaylistCard";
-import { useEffect, useState } from "react";
-import { Clock, Users2, ListMusic, Zap, Sparkles } from "lucide-react";
 import { useStore } from "@tanstack/react-store";
-import { playerActions, playerStore } from "../../store/player.store";
 import { motion } from "framer-motion";
+import { Clock, ListMusic, Sparkles, Users2, Zap } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { ArtistCard } from "../../components/ArtistCard";
+import { HeroSection } from "../../components/HeroSection";
+import { PlaylistCard } from "../../components/PlaylistCard";
+import { SongCard } from "../../components/SongCard";
+import { type Artist, musicApi, type Playlist, type Song } from "../../lib/api";
+import { playerActions, playerStore } from "../../store/player.store";
 
 export default function HomePage() {
   const systemUser = useStore(playerStore, (s) => s.systemUser);
   const [heroIndex, setHeroIndex] = useState(0);
+  const triggerRef = useRef<HTMLDivElement>(null);
 
   const getGreeting = () => {
     const hrs = new Date().getHours();
@@ -76,18 +77,27 @@ export default function HomePage() {
 
   // Infinite scroll observer
   useEffect(() => {
+    const target = triggerRef.current;
+    if (!target) return;
+
+    const rootElement = document.querySelector("main");
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
           fetchNextPage();
         }
       },
-      { threshold: 0.1 },
+      {
+        root: rootElement,
+        rootMargin: "200px",
+        threshold: 0.01,
+      },
     );
 
-    const target = document.getElementById("infinite-scroll-trigger");
-    if (target) observer.observe(target);
-    return () => observer.disconnect();
+    observer.observe(target);
+    return () => {
+      observer.unobserve(target);
+    };
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   return (
@@ -271,6 +281,7 @@ export default function HomePage() {
 
         {/* Loader/Trigger */}
         <div
+          ref={triggerRef}
           id="infinite-scroll-trigger"
           className="h-32 flex items-center justify-center mt-12"
         >

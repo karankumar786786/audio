@@ -3,12 +3,10 @@ FROM oven/bun:latest AS build
 
 WORKDIR /app
 
-# Copy lockfile and package.json
-COPY package.json bun.lock ./
-RUN bun install --frozen-lockfile
-
-# Copy source code
+# Copy all source files
 COPY . .
+
+RUN bun install --frozen-lockfile
 
 # runtime stage
 FROM oven/bun:latest
@@ -22,12 +20,10 @@ RUN curl -L https://github.com/shaka-project/shaka-packager/releases/download/v3
 
 WORKDIR /app
 
-# Copy from build stage
-COPY --from=build /app/node_modules ./node_modules
-COPY --from=build /app/src ./src
-COPY --from=build /app/package.json ./package.json
+# Copy the entire built workspace
+COPY --from=build /app ./
 
 ENV NODE_ENV=production
 EXPOSE 3002
 
-CMD ["bun", "src/index.ts"]
+CMD ["bun", "audioProcessing/src/index.ts"]

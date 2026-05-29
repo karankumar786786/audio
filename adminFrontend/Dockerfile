@@ -1,15 +1,15 @@
 # build stage
 FROM node:20-slim AS build
 
+# Install Bun globally
+RUN npm install -g bun
+
 WORKDIR /app
 
-# Copy lockfile and package.json
-COPY package.json bun.lock ./
-
-RUN npm install --legacy-peer-deps
-
-# Copy source code
+# Copy all source files
 COPY . .
+
+RUN bun install --frozen-lockfile
 
 # Remove ALL native SWC binaries to force WASM fallback
 RUN find node_modules -type d -name "@next" | xargs -I{} find {} -maxdepth 1 -name "swc-*" -type d | xargs rm -rf
@@ -26,8 +26,9 @@ ARG NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY=$NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY
 
-# Run build with explicitly specified Webpack to avoid Turbopack native binary crashes
-RUN npx next build --webpack
+# Run build
+WORKDIR /app/adminFrontend
+RUN bun run build
 
 # runtime stage
 FROM oven/bun:latest AS runner
@@ -37,10 +38,10 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
-COPY --from=build /app/.next/standalone ./
-COPY --from=build /app/.next/static ./.next/static
-COPY --from=build /app/public ./public
+COPY --from=build /app/adminFrontend/.next/standalone ./
+COPY --from=build /app/adminFrontend/.next/static ./adminFrontend/.next/static
+COPY --from=build /app/adminFrontend/public ./adminFrontend/public
 
 EXPOSE 3000
 
-CMD ["bun", "server.js"]
+CMD ["bun", "adminFrontend/server.js"]

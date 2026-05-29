@@ -36,7 +36,8 @@ services:
 
   audio-frontend:
     build:
-      context: ./audioFrontend
+      context: .
+      dockerfile: ./audioFrontend/Dockerfile
       args:
         - NEXT_PUBLIC_AUTH0_DOMAIN=dev-csos8ec54uie5f2g.us.auth0.com
         - NEXT_PUBLIC_AUTH0_CLIENT_ID=CH6haqIQJOrvzdlvf0o6Jn76snA0nbPJ
@@ -56,29 +57,10 @@ services:
     networks:
       - onemelody-network
 
-  admin-frontend:
-    build:
-      context: ./adminFrontend
-      args:
-        - NEXT_PUBLIC_API_URL=https://admin-api.one-org.me/api/v1
-        - NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY=public_P5bD0aFcjhqTI9mkyoaZDc815Is=
-    image: karankumar9955/onemelodyadminfrontend:latest
-    container_name: admin-frontend
-    restart: unless-stopped
-    env_file:
-      - production/adminfrontend.env
-    environment:
-      - NODE_ENV=production
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.admin-frontend.rule=Host(`admin.one-org.me`)"
-      - "traefik.docker.network=onemelody-network"
-      - "traefik.http.services.admin-frontend.loadbalancer.server.port=3000"
-    networks:
-      - onemelody-network
-
   audio-backend:
-    build: ./audioBackend
+    build:
+      context: .
+      dockerfile: ./audioBackend/Dockerfile
     image: karankumar9955/onemelodyaudiobackend:latest
     container_name: audio-backend
     restart: unless-stopped
@@ -91,61 +73,6 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.audio-backend.rule=Host(`api.one-org.me`)"
       - "traefik.http.services.audio-backend.loadbalancer.server.port=3000"
-      - "traefik.docker.network=onemelody-network"
-    networks:
-      - onemelody-network
-
-  admin-backend:
-    build: ./adminBackend
-    image: karankumar9955/onemelodyadminbackend:latest
-    container_name: admin-backend
-    restart: unless-stopped
-    env_file:
-      - production/adminbackend.env
-    environment:
-      - NODE_ENV=production
-      - PORT=4001
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.admin-backend.rule=Host(`admin-api.one-org.me`)"
-      - "traefik.http.services.admin-backend.loadbalancer.server.port=4001"
-      - "traefik.docker.network=onemelody-network"
-    networks:
-      - onemelody-network
-
-  audio-processing:
-    build: ./audioProcessing
-    image: karankumar9955/onemelodyaudioprocessing:latest
-    container_name: audio-processing
-    volumes:
-      - ./yt-cookies.txt:/app/yt-cookies.txt
-    restart: unless-stopped
-    env_file:
-      - production/audioprocessing.env
-    environment:
-      - NODE_ENV=production
-      - PORT=3002
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.audio-processing.rule=Host(`process.one-org.me`)"
-      - "traefik.http.services.audio-processing.loadbalancer.server.port=3002"
-      - "traefik.docker.network=onemelody-network"
-    networks:
-      - onemelody-network
-
-  audio-feature-extraction:
-    build: ./audioFeatureExtraction
-    image: karankumar9955/onemelodyaudiofeaturesextraction:latest
-    container_name: audio-feature-extraction
-    restart: unless-stopped
-    env_file:
-      - production/audiofeatureextraction.env
-    environment:
-      - NODE_ENV=production
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.audio-feature-extraction.rule=Host(`extract.one-org.me`)"
-      - "traefik.http.services.audio-feature-extraction.loadbalancer.server.port=8000"
       - "traefik.docker.network=onemelody-network"
     networks:
       - onemelody-network
