@@ -19,7 +19,7 @@ export function mapToPlayerSong(song: Song): PlayerSong {
   return {
     ...song,
     queueId:
-      typeof crypto !== "undefined"
+      typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
         ? crypto.randomUUID()
         : Math.random().toString(36).substring(7),
     streamUrl: `${streamBase}/master.m3u8`,
@@ -48,7 +48,7 @@ export function normalizePlayerSong(song: any): PlayerSong {
     ...song,
     queueId:
       song.queueId ||
-      (typeof crypto !== "undefined"
+      (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
         ? crypto.randomUUID()
         : Math.random().toString(36).substring(7)),
     streamUrl: `${streamBase}/master.m3u8`,

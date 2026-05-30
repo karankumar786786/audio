@@ -21,6 +21,7 @@ app.use(cors({
         "http://localhost:3002", 
         "http://localhost:4444", 
         "http://localhost:5173",
+        "http://3.239.229.45",
         "https://one-org.me",
         "https://admin.one-org.me",
         "https://api.one-org.me"

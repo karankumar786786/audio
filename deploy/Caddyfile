@@ -1,0 +1,8 @@
+one-org.me, www.one-org.me, api.one-org.me {
+    reverse_proxy traefik:80 {
+        transport http {
+            read_timeout 600s
+            write_timeout 600s
+        }
+    }
+}
