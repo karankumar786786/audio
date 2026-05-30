@@ -188,35 +188,7 @@ export function HeroSection({
               whileHover="hover"
             >
               {/* Vinyl Record */}
-              <motion.div
-                variants={{
-                  hover: { x: 100, rotate: 180 },
-                  initial: { x: 0, rotate: 0 },
-                }}
-                initial="initial"
-                transition={{ type: "spring", stiffness: 200, damping: 25 }}
-                className="absolute top-2 left-2 w-[224px] h-[224px] rounded-full bg-[#0d0d0d] flex items-center justify-center shadow-2xl z-0 pointer-events-none border border-black/80"
-                style={{
-                  backgroundImage: `
-                    radial-gradient(circle, transparent 20%, #000 20%, #000 21%, transparent 21%),
-                    radial-gradient(circle, #080808 30%, #121212 35%, #080808 40%, #181818 45%, #080808 50%, #1a1a1a 55%, #080808 60%, #1c1c1c 65%, #080808 70%)
-                  `,
-                }}
-              >
-                {/* Vinyl Label */}
-                <div className="w-[76px] h-[76px] rounded-full overflow-hidden relative border border-black/50 shadow-inner flex items-center justify-center animate-spin-slow">
-                  <img
-                    src={getImageUrl(currentSong.imageKey, {
-                      width: 100,
-                      height: 100,
-                      focus: "auto",
-                    })}
-                    className="w-full h-full object-cover"
-                    alt=""
-                  />
-                  <div className="absolute inset-0 m-auto w-3 h-3 rounded-full bg-black border border-zinc-900" />
-                </div>
-              </motion.div>
+              
 
               {/* Album Cover Card */}
               <motion.div
