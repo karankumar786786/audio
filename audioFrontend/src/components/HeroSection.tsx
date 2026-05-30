@@ -74,7 +74,7 @@ export function HeroSection({
           <div className="h-6 w-32 bg-white/5 rounded-full" />
           <div className="h-14 w-40 bg-white/5 rounded-full pt-4" />
         </div>
-        <div className="w-[240px] h-[240px] rounded-[2rem] bg-white/5 hidden md:block" />
+        <div className="w-[240px] h-[240px] rounded-4xl bg-white/5 hidden md:block" />
       </div>
     );
   }
@@ -102,12 +102,12 @@ export function HeroSection({
             alt=""
           />
         </AnimatePresence>
-        <div className="absolute inset-0 bg-gradient-to-r from-black via-black/85 to-transparent z-0" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/20 z-0" />
+        <div className="absolute inset-0 bg-linear-to-r from-black via-black/85 to-transparent z-0" />
+        <div className="absolute inset-0 bg-linear-to-t from-black via-transparent to-black/20 z-0" />
       </div>
 
       {/* Grid Pattern Overlay */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.025)_1px,transparent_1px)] bg-[size:32px_32px] pointer-events-none opacity-40 z-0" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.025)_1px,transparent_1px)] bg-size-[32px_32px] pointer-events-none opacity-40 z-0" />
 
       {/* Color accent glow */}
       <div className="absolute top-1/2 right-[15%] -translate-y-1/2 w-[350px] h-[350px] rounded-full bg-primary/10 blur-[120px] pointer-events-none z-0" />
@@ -198,7 +198,7 @@ export function HeroSection({
                 }}
                 initial="initial"
                 transition={{ type: "spring", stiffness: 250, damping: 20 }}
-                className="absolute inset-0 rounded-[2rem] overflow-hidden border border-white/10 z-10 bg-zinc-900 shadow-2xl animate-float"
+                className="absolute inset-0 rounded-4xl overflow-hidden border border-white/10 z-10 bg-zinc-900 shadow-2xl animate-float"
               >
                 <img
                   src={getImageUrl(currentSong.imageKey, {
@@ -209,7 +209,7 @@ export function HeroSection({
                   className="w-full h-full object-cover select-none pointer-events-none"
                   alt={currentSong.title}
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none" />
+                <div className="absolute inset-0 bg-linear-to-t from-black/50 via-transparent to-transparent pointer-events-none" />
               </motion.div>
             </motion.div>
           </AnimatePresence>
