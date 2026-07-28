@@ -533,7 +533,7 @@
 
     "@next/swc-linux-x64-musl": ["@next/swc-linux-x64-musl@16.2.3", "", { "os": "linux", "cpu": "x64" }, "sha512-Kt44hGJfZSefebhk/7nIdivoDr3Ugp5+oNz9VvF3GUtfxutucUIHfIO0ZYO8QlOPDQloUVQn4NVC/9JvHRk9hw=="],
 
-    "@next/swc-wasm-nodejs": ["@next/swc-wasm-nodejs@16.2.6", "", {}, "sha512-hwa9pdxfzDsug/m4eukZiy2bOXasDAlZG41YCNHqJfXaVQ0c544ox6MvAbvJn7GaVHDrkD+pwVeJz2djKjcsUA=="],
+    "@next/swc-wasm-nodejs": ["@next/swc-wasm-nodejs@16.2.12", "", {}, "sha512-rNJf+wneZ68vBz9fch4/kR94Z9+FZtQ93eJnYL8RBbHkrnDZ0HY8hHgOP8YYeTDkWzWqriB2ZGobLriw+6M+DQ=="],
 
     "@next/swc-win32-arm64-msvc": ["@next/swc-win32-arm64-msvc@16.2.3", "", { "os": "win32", "cpu": "arm64" }, "sha512-O2NZ9ie3Tq6xj5Z5CSwBT3+aWAMW2PIZ4egUi9MaWLkwaehgtB7YZjPm+UpcNpKOme0IQuqDcor7BsW6QBiQBw=="],
 
