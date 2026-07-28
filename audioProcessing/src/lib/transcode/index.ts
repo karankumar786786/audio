@@ -2,7 +2,7 @@ import * as path from "node:path";
 import * as fs from "node:fs";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
-import chokidar, { FSWatcher } from "chokidar";
+
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import pLimit from "p-limit";
 
@@ -25,8 +25,7 @@ export const AUDIO_QUALITY_PROFILES: AudioQualityProfile[] = [
     { label: "320kbps", bitrate: "320k", sampleRate: 44100, channels: 2, bandwidth: 320000 },
 ];
 
-// Derived from awaitWriteFinish.stabilityThreshold + buffer — must stay in sync
-const WATCHER_CLOSE_DELAY_MS = 1500;
+
 
 // ── Audio Transcoder ──────────────────────────────────────────────────────────
 
@@ -60,7 +59,7 @@ export class AudioTranscoder {
     private readonly segmentTime: number;
     private readonly client: S3Client;
     private readonly basePath: string;
-    private readonly pendingUploads = new Set<Promise<void>>();
+
     private readonly limit = pLimit(5);
     private readonly bucketName: string;
     private readonly logger: any;
@@ -95,9 +94,6 @@ export class AudioTranscoder {
 
         const audioName = path.basename(outputDir);
 
-        // Watch outputDir and stream new files to S3 as they appear
-        const watcher = this.watchAndUpload(outputDir, audioName, this.bucketName);
-
         // STEP 1 — Transcode input → multi-bitrate AACs
         const audioDir = path.join(outputDir, "audio");
         fs.mkdirSync(audioDir, { recursive: true });
@@ -107,8 +103,16 @@ export class AudioTranscoder {
         // STEP 2 — Package → master.m3u8 + master.mpd
         await this.runShakaPackager(outputDir, rawAudioPaths);
 
-        // STEP 3 — Flush watcher, wait for all in-flight uploads
-        await this.closeWatcher(watcher);
+        // STEP 3 — Upload all packaged files to S3
+        const allFiles = this.getAllFiles(outputDir);
+        const filesToUpload = allFiles.filter(fp => !/raw_audio_.*\.m4a$/.test(fp));
+
+        this.logger.info(`☁️  Uploading ${filesToUpload.length} files to S3...`);
+        const uploadPromises = filesToUpload.map(fp =>
+            this.limit(() => this.uploadFileToS3(fp, outputDir, audioName, this.bucketName))
+        );
+        await Promise.all(uploadPromises);
+        this.logger.info("☁️  All uploads settled");
 
         // CLEANUP — Remove local transcoded files after upload
         fs.rmSync(outputDir, { recursive: true, force: true });
@@ -269,33 +273,19 @@ export class AudioTranscoder {
 
     // ── Private — S3 upload ───────────────────────────────────────────────────
 
-    /**
-     * Watches outputDir with chokidar and uploads every new/changed file to S3.
-     * The intermediate raw_audio.m4a is excluded from uploads.
-     */
-    private watchAndUpload(outputDir: string, audioName: string, bucketName: string): FSWatcher {
-        const watcher = chokidar.watch(outputDir, {
-            persistent: true,
-            ignoreInitial: false,           // upload files that already exist
-            ignored: /raw_audio_.*\.m4a$/,  // skip the intermediate transcoded files
-            awaitWriteFinish: {
-                stabilityThreshold: 500,    // wait 500ms of silence before firing
-                pollInterval: 100,
-            },
-        });
+    private getAllFiles(dirPath: string, arrayOfFiles: string[] = []): string[] {
+        const files = fs.readdirSync(dirPath);
 
-        watcher.on("add", (fp) => this.scheduleUpload(fp, outputDir, audioName, bucketName));
-        watcher.on("change", (fp) => this.scheduleUpload(fp, outputDir, audioName, bucketName));
-        watcher.on("error", (err) => this.logger.error(err, "🔴 Watcher error:"));
+        for (const file of files) {
+            const absolutePath = path.join(dirPath, file);
+            if (fs.statSync(absolutePath).isDirectory()) {
+                this.getAllFiles(absolutePath, arrayOfFiles);
+            } else {
+                arrayOfFiles.push(absolutePath);
+            }
+        }
 
-        this.logger.info(`👁  Watching ${outputDir} for S3 uploads...`);
-        return watcher;
-    }
-
-    private scheduleUpload(filePath: string, outputDir: string, audioName: string, bucketName: string): void {
-        const p = this.limit(() => this.uploadFileToS3(filePath, outputDir, audioName, bucketName))
-            .finally(() => this.pendingUploads.delete(p));
-        this.pendingUploads.add(p);
+        return arrayOfFiles;
     }
 
     private async uploadFileToS3(
@@ -346,21 +336,5 @@ export class AudioTranscoder {
             ".json": "application/json",    // JSON transcription
         };
         return map[ext] ?? "application/octet-stream";
-    }
-
-    private closeWatcher(watcher: FSWatcher): Promise<void> {
-        return new Promise((resolve) => {
-            // Delay must exceed awaitWriteFinish.stabilityThreshold (500ms)
-            setTimeout(() => {
-                watcher.close().then(async () => {
-                    this.logger.info("👁  Watcher closed — waiting for in-flight uploads...");
-                    if (this.pendingUploads.size > 0) {
-                        await Promise.allSettled(Array.from(this.pendingUploads));
-                    }
-                    this.logger.info("☁️  All uploads settled");
-                    resolve();
-                });
-            }, WATCHER_CLOSE_DELAY_MS);
-        });
     }
 }
