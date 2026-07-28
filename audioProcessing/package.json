@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "dev": "bun --watch src/index.ts",
-    "inngest": "npx inngest-cli@latest dev --url http://localhost:3002/api/inngest"
+    "inngest": "npx inngest-cli@latest dev --no-discovery -u http://localhost:3002/api/inngest -u http://localhost:4001/api/inngest -u http://localhost:8000/api/inngest"
   },
   "devDependencies": {
     "@types/bun": "latest",
